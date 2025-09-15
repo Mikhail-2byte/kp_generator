@@ -33,13 +33,15 @@ def validate_form_data(form_data):
             errors.append(f'Поле "{field}" является обязательным.')
     
     # Проверка числовых значений
-    numeric_fields = ['quantity', 'cost_price', 'weight', 'logistics']
+    numeric_fields = ['quantity', 'cost_price', 'weight', 'logistics', 'duty_percent']
     for field in numeric_fields:
         if form_data.get(field) and form_data[field].strip():
             try:
                 value = float(form_data[field])
-                if value <= 0:
-                    errors.append(f'Поле "{field}" должно быть положительным числом.')
+                if value < 0:
+                    errors.append(f'Поле "{field}" должно быть неотрицательным числом.')
+                if field == 'duty_percent' and value > 100:
+                    errors.append(f'Поле "{field}" не может превышать 100%.')
             except ValueError:
                 errors.append(f'Поле "{field}" должно быть числом.')
     
@@ -66,6 +68,7 @@ def generate():
         return render_template('index.html', form_data=form_data)
     
     try:
+        # Извлечение и преобразование данных
         company = form_data['company'].strip()
         product = form_data['product'].strip()
         quantity = int(form_data['quantity'])
@@ -73,6 +76,14 @@ def generate():
         weight = float(form_data['weight'])
         logistics = float(form_data['logistics'])
         
+        # Новые поля
+        tender_number = form_data.get('tender_number', '').strip()
+        drawing_number = form_data.get('drawing_number', '').strip()
+        material = form_data.get('material', '').strip()  # Добавлено поле material
+        delivery_address = form_data.get('delivery_address', '').strip()
+        duty_percent = float(form_data.get('duty_percent', 0))
+        
+        # Проверка существования шаблонов
         excel_template_path = os.path.join('templates_docs', 'template.xlsx')
         word_template_path = os.path.join('templates_docs', 'template.docx')
         
@@ -86,6 +97,7 @@ def generate():
             app.logger.error(f'Word template not found: {word_template_path}')
             return render_template('index.html', form_data=form_data)
         
+        # Производим расчеты
         total_cost = quantity * cost_price
         total_weight = quantity * weight
         cost_price_per_unit = (total_cost + logistics) / quantity
@@ -103,6 +115,16 @@ def generate():
             wb = load_workbook(excel_template_path)
             ws = wb.active
             
+            # Заполняем новые поля
+            from datetime import datetime
+            ws['D2'] = datetime.now().strftime('%d.%m.%Y')  # Дата формирования
+            ws['D5'] = tender_number  # Номер тендера
+            ws['D10'] = material  # Материал (новая ячейка)
+            ws['E10'] = drawing_number  # Номер чертежа
+            ws['P4'] = delivery_address  # Адрес доставки
+            ws['X10'] = duty_percent / 100  # Процент пошлины (в формате 0.1 для 10%)
+            
+            # Существующие данные
             data = {
                 '{{ company }}': company,
                 '{{ product }}': product,
@@ -134,13 +156,19 @@ def generate():
                 '{{ product }}': product,
                 '{{ quantity }}': str(quantity),
                 '{{ final_price }}': f"{final_price:.2f}",
+                '{{ tender_number }}': tender_number,
+                '{{ drawing_number }}': drawing_number,
+                '{{ material }}': material,  # Добавлено поле material
+                '{{ delivery_address }}': delivery_address,
             }
             
+            # Замена в параграфах
             for paragraph in doc.paragraphs:
                 for key, value in word_data.items():
                     if key in paragraph.text:
                         paragraph.text = paragraph.text.replace(key, value)
             
+            # Замена в таблицах
             for table in doc.tables:
                 for row in table.rows:
                     for cell in row.cells:

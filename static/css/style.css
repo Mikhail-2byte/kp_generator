@@ -121,6 +121,16 @@ h1 {
   transition: background 0.3s ease;
 }
 
+textarea.form-control {
+    min-height: 80px;
+    resize: vertical;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+
 .theme-toggle::before {
   content: '';
   display: block;
@@ -174,6 +184,7 @@ h1 {
     right: 10px;
   }
 }
+
 
 /* Smooth transitions */
 * {

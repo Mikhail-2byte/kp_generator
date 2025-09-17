@@ -15,6 +15,10 @@
   --alert-bg: #f8d7da;
   --alert-text: #721c24;
   --alert-border: #f5c6cb;
+  --btn-info: #0dcaf0;
+  --btn-warning: #ffc107;
+  --btn-success: #198754;
+  --btn-danger: #dc3545;
 }
 
 [data-theme="dark"] {
@@ -34,6 +38,10 @@
   --alert-bg: #422;
   --alert-text: #ffcdd2;
   --alert-border: #733;
+  --btn-info: #0dcaf0;
+  --btn-warning: #ffc107;
+  --btn-success: #198754;
+  --btn-danger: #dc3545;
 }
 
 /* Apply theme variables */
@@ -121,16 +129,6 @@ h1 {
   transition: background 0.3s ease;
 }
 
-textarea.form-control {
-    min-height: 80px;
-    resize: vertical;
-}
-
-.form-group {
-    margin-bottom: 1rem;
-}
-
-
 .theme-toggle::before {
   content: '';
   display: block;
@@ -185,8 +183,146 @@ textarea.form-control {
   }
 }
 
-
 /* Smooth transitions */
 * {
   transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Кнопка логистики */
+.logistics-button {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1000;
+}
+
+/* Кнопка пошлины */
+.duty-button {
+    position: fixed;
+    top: 70px; /* Располагаем ниже кнопки логистики */
+    left: 20px;
+    z-index: 1000;
+}
+
+/* Кнопка стандартов GB */
+.gb-standards-button {
+    position: fixed;
+    top: 120px; /* Располагаем ниже кнопки пошлины */
+    left: 20px;
+    z-index: 1000;
+}
+
+/* Кнопка цены металла */
+.metal-price-button {
+    position: fixed;
+    top: 170px; /* Располагаем ниже кнопки стандартов GB */
+    left: 20px;
+    z-index: 1000;
+}
+
+/* Кнопка цены крановых колес */
+.crane-wheels-button {
+    position: fixed;
+    top: 220px; /* Располагаем ниже кнопки цены металла */
+    left: 20px;
+    z-index: 1000;
+}
+
+/* Общий стиль для всех информационных кнопок */
+.logistics-button .btn,
+.duty-button .btn,
+.gb-standards-button .btn,
+.metal-price-button .btn,
+.crane-wheels-button .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    background-color: transparent;
+    border-color: var(--btn-primary-bg); /* Голубая рамка в любой теме */
+}
+
+/* Светлая тема - черный текст */
+[data-theme="light"] .logistics-button .btn,
+[data-theme="light"] .duty-button .btn,
+[data-theme="light"] .gb-standards-button .btn,
+[data-theme="light"] .metal-price-button .btn,
+[data-theme="light"] .crane-wheels-button .btn {
+    color: #000000; /* Черный текст в светлой теме */
+}
+
+/* Темная тема - белый текст */
+[data-theme="dark"] .logistics-button .btn,
+[data-theme="dark"] .duty-button .btn,
+[data-theme="dark"] .gb-standards-button .btn,
+[data-theme="dark"] .metal-price-button .btn,
+[data-theme="dark"] .crane-wheels-button .btn {
+    color: #ffffff; /* Белый текст в темной теме */
+}
+
+/* Стиль при наведении для всех информационных кнопок */
+.logistics-button .btn:hover,
+.duty-button .btn:hover,
+.gb-standards-button .btn:hover,
+.metal-price-button .btn:hover,
+.crane-wheels-button .btn:hover {
+    background-color: var(--btn-primary-bg);
+    color: white;
+    border-color: var(--btn-primary-bg);
+}
+/* Стили для модальных окон - всегда светлая тема */
+.modal-content {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+}
+
+.modal-header,
+.modal-body,
+.modal-footer {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border-color: #dee2e6 !important;
+}
+
+.modal-title {
+    color: #000000 !important;
+}
+
+.modal .btn-close {
+    filter: invert(0) !important;
+}
+
+/* Адаптивность для модальных окон и кнопок */
+@media (max-width: 768px) {
+    .logistics-button {
+        top: 10px;
+        left: 10px;
+    }
+    
+    .duty-button {
+        top: 60px; /* Располагаем ниже кнопки логистики на мобильных */
+        left: 10px;
+    }
+    
+    .gb-standards-button {
+        top: 110px; /* Располагаем ниже кнопки пошлины на мобильных */
+        left: 10px;
+    }
+    
+    .metal-price-button {
+        top: 160px; /* Располагаем ниже кнопки стандартов GB на мобильных */
+        left: 10px;
+    }
+    
+    .crane-wheels-button {
+        top: 210px; /* Располагаем ниже кнопки цены металла на мобильных */
+        left: 10px;
+    }
+    
+    .logistics-button .btn,
+    .duty-button .btn,
+    .gb-standards-button .btn,
+    .metal-price-button .btn,
+    .crane-wheels-button .btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+    }
 }

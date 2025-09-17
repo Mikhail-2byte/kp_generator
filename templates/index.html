@@ -19,6 +19,133 @@
             </svg>
         </div>
     </div>
+    <!-- Кнопка логистики -->
+    <div class="logistics-button">
+        <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#logisticsModal">
+            Логистика
+        </button>
+    </div>
+
+    <!-- Кнопка пошлины -->
+    <div class="duty-button">
+        <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#dutyModal">
+            Пошлина
+        </button>
+    </div>
+
+    <!-- Кнопка стандартов GB -->
+    <div class="gb-standards-button">
+        <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#gbStandardsModal">
+            GB Аналоги
+        </button>
+    </div>
+
+    <!-- Кнопка цены металла -->
+    <div class="metal-price-button">
+        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#metalPriceModal">
+            Цена металла
+        </button>
+    </div>
+
+    <!-- Кнопка цены крановых колес -->
+    <div class="crane-wheels-button">
+        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#craneWheelsModal">
+            Крановые колеса
+        </button>
+    </div>
+
+    <!-- Модальное окно логистики -->
+    <div class="modal fade" id="logisticsModal" tabindex="-1" aria-labelledby="logisticsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" >
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="logisticsModalLabel">Стоимость логистики</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Логистика КНР-Москва = 1 100 000р за машину</p>
+                    <p>Логистика КНР-ЕКБ = 1 000 000р за машину</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно пошлины -->
+    <div class="modal fade" id="dutyModal" tabindex="-1" aria-labelledby="dutyModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="dutyModalLabel">Ставки пошлины</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Пошлина на валы всегда 5%</p>
+                    <p>Пошлина на теплообменники и ёмкости 0%</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно стандартов GB -->
+    <div class="modal fade" id="gbStandardsModal" tabindex="-1" aria-labelledby="gbStandardsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="gbStandardsModalLabel">Аналоги по стандарту GB</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Ст.3 = Q235</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно цены металла -->
+    <div class="modal fade" id="metalPriceModal" tabindex="-1" aria-labelledby="metalPriceModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="metalPriceModalLabel">Цена за кг металла</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Поковки Ст.40 = 16 юаней за кг</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно цены крановых колес -->
+    <div class="modal fade" id="craneWheelsModal" tabindex="-1" aria-labelledby="craneWheelsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="craneWheelsModalLabel">Цены для крановых колес</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Колеса весом до 100кг: от 17 юаней за кг</p>
+                    <p>Колеса весом более 100кг: от 15 юаней за кг</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="container mt-4">
         <h1 class="text-center mb-4">Создание коммерческого предложения</h1>
@@ -43,6 +170,11 @@
                     </div>
 
                     <div class="mb-3">
+                        <label for="delivery_address" class="form-label">Адрес доставки:</label>
+                        <textarea class="form-control" id="delivery_address" name="delivery_address" rows="2">{{ form_data.delivery_address if form_data and form_data.delivery_address else '' }}</textarea>
+                    </div>
+
+                    <div class="mb-3">
                         <label for="product" class="form-label">Наименование товара:</label>
                         <input type="text" class="form-control" id="product" name="product" 
                                value="{{ form_data.product if form_data and form_data.product else '' }}" required>
@@ -55,7 +187,10 @@
                                value="{{ form_data.quantity if form_data and form_data.quantity else '' }}" min="1" required>
                         <div class="invalid-feedback">Количество должно быть положительным числом.</div>
                     </div>
+                </div>
 
+                <!-- Правый столбец -->
+                <div class="col-md-6">
                     <div class="mb-3">
                         <label for="drawing_number" class="form-label">Номер чертежа:</label>
                         <input type="text" class="form-control" id="drawing_number" name="drawing_number" 
@@ -67,10 +202,7 @@
                         <input type="text" class="form-control" id="material" name="material" 
                             value="{{ form_data.material if form_data and form_data.material else '' }}">
                     </div>
-                </div>
 
-                <!-- Правый столбец -->
-                <div class="col-md-6">
                     <div class="mb-3">
                         <label for="cost_price" class="form-label">Закупочная стоимость за шт. (руб.):</label>
                         <input type="number" class="form-control" id="cost_price" name="cost_price" 
@@ -96,11 +228,6 @@
                         <input type="number" class="form-control" id="logistics" name="logistics" 
                                value="{{ form_data.logistics if form_data and form_data.logistics else '' }}" step="0.01" min="0" required>
                         <div class="invalid-feedback">Стоимость логистики должна быть неотрицательным числом.</div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="delivery_address" class="form-label">Адрес доставки:</label>
-                        <textarea class="form-control" id="delivery_address" name="delivery_address" rows="3">{{ form_data.delivery_address if form_data and form_data.delivery_address else '' }}</textarea>
                     </div>
                 </div>
             </div>

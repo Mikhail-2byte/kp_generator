@@ -35,7 +35,7 @@ def validate_form_data(form_data):
             errors.append(f'Поле "{field}" является обязательным.')
     
     # Проверка числовых значений
-    numeric_fields = ['quantity', 'cost_price', 'weight', 'logistics', 'duty_percent']
+    numeric_fields = ['quantity', 'cost_price', 'weight', 'logistics', 'duty_percent', 'deal_length_days']
     for field in numeric_fields:
         if form_data.get(field) and form_data[field].strip():
             try:
@@ -46,6 +46,8 @@ def validate_form_data(form_data):
                     errors.append(f'Поле "{field}" не может превышать 100%.')
                 if field == 'quantity' and value == 0:
                     errors.append(f'Поле "{field}" не может быть нулевым.')
+                if field == 'deal_length_days' and value < 30:
+                    errors.append(f'Поле "{field}" не может быть меньше 30 дней.')
             except ValueError:
                 errors.append(f'Поле "{field}" должно быть числом.')
     
@@ -57,21 +59,50 @@ def get_safe_filename(company_name):
     safe_name = re.sub(r'[-\s]+', '_', safe_name)
     return safe_name[:50]
 
-def calculate_prices(quantity, cost_price, logistics, duty_percent, margin_percent):
-    """Выполняет все необходимые расчеты цен"""
-    total_cost = quantity * cost_price
-    duty_amount = total_cost * (duty_percent / 100)
-    total_with_duty = total_cost + duty_amount
-    cost_per_unit = (total_with_duty + logistics) / quantity
-    final_price = cost_per_unit / (1 - margin_percent / 100)
+def calculate_selling_price(quantity, purchase_cost, logistics_rub, duty_percent, weight, deal_length_days=170, margin_percent=30):
+    """Выполняет расчет продажной цены с учетом всех параметров бюджета"""
+    # Константы из бюджета
+    CONVERSION_RATE = 12  # Курс юаня к рублю
+    LOGISTICS_CNR_RATIO = 0.3  # Доля логистики КНР
+    LOGISTICS_RF_RATIO = 0.7  # Доля логистики РФ
+    CONVERSION_FEE_RATE = 0.032  # Комиссия за конвертацию 3.2%
+    CREDIT_RATE = 0.16  # Ставка кредита 16%
     
-    return {
-        'total_cost': total_cost,
-        'duty_amount': duty_amount,
-        'total_with_duty': total_with_duty,
-        'cost_per_unit': cost_per_unit,
-        'final_price': final_price
-    }
+    # Расчет общего веса
+    total_weight = weight * quantity
+    
+    # Перевод логистики в юани и распределение по весу
+    logistics_total_yuan = logistics_rub / CONVERSION_RATE
+    
+    # Расчет логистики на единицу товара (пропорционально весу)
+    logistics_cnr_per_unit = (logistics_total_yuan * LOGISTICS_CNR_RATIO * weight) / total_weight
+    logistics_rf_per_unit = (logistics_total_yuan * LOGISTICS_RF_RATIO * weight) / total_weight
+    
+    # Расчет пошлины на единицу товара
+    duty_per_unit = (purchase_cost + logistics_cnr_per_unit) * (duty_percent / 100)
+    
+    # Расчет стоимости конвертации
+    conversion_fee = purchase_cost * quantity * CONVERSION_FEE_RATE
+    conversion_fee_per_unit = conversion_fee / quantity
+    
+    # Расчет кредитных затрат
+    credit_cost = purchase_cost * quantity * CREDIT_RATE / 365 * deal_length_days
+    credit_cost_per_unit = credit_cost / quantity
+    
+    # Общие затраты на единицу товара
+    total_cost_per_unit = (
+        purchase_cost +
+        logistics_cnr_per_unit +
+        logistics_rf_per_unit +
+        duty_per_unit +
+        conversion_fee_per_unit +
+        credit_cost_per_unit
+    )
+    
+    # Расчет цены для маржи margin_percent%
+    selling_price_per_unit = total_cost_per_unit / (1 - margin_percent / 100)
+    
+    return selling_price_per_unit
 
 @app.route('/')
 def index():
@@ -107,13 +138,31 @@ def generate():
         material = form_data.get('material', '').strip()
         delivery_address = form_data.get('delivery_address', '').strip()
         duty_percent = float(form_data.get('duty_percent', 0))
+        deal_length_days = float(form_data.get('deal_length_days', 170))
         
-        # Настройки
-        margin_percent = 20  # 20% наценка
+        # Расчет сроков поставки и оплаты
+        supply_days = deal_length_days - 30
+        payment_days = 30
         
-        # Выполнение расчетов
-        calculations = calculate_prices(quantity, cost_price, logistics, duty_percent, margin_percent)
-        final_price = calculations['final_price']
+        if supply_days < 0:
+            flash('Общая длина сделки не может быть меньше 30 дней.', 'danger')
+            return render_template('index.html', form_data=form_data)
+        
+        # Формируем текст для ячейки C10
+        product_with_drawing = product
+        if drawing_number:
+            product_with_drawing += f" ч.{drawing_number}"
+        
+        # Выполнение расчетов с учетом всех параметров бюджета
+        final_price = calculate_selling_price(
+            quantity=quantity,
+            purchase_cost=cost_price,
+            logistics_rub=logistics,
+            duty_percent=duty_percent,
+            weight=weight,
+            deal_length_days=deal_length_days,
+            margin_percent=30  # Целевая маржа 30%
+        )
         
         # Проверка существования шаблонов
         excel_template_path = os.path.join('templates_docs', 'template.xlsx')
@@ -139,11 +188,14 @@ def generate():
             
             # Основные данные
             ws['D4'] = company
+            ws['C10'] = product_with_drawing  # Наименование товара с номером чертежа
             ws['G10'] = quantity
             ws['M10'] = cost_price
             ws['P10'] = weight
             ws['U14'] = logistics
             ws['X10'] = duty_percent / 100  # Процент пошлины (доля)
+            ws['I15'] = supply_days  # Срок поставки
+            ws['I16'] = payment_days  # Срок оплаты
             
             # Дополнительные поля
             ws['D2'] = current_date  # Дата формирования
@@ -184,6 +236,9 @@ def generate():
                 '{{ delivery_address }}': delivery_address,
                 '{{ date }}': current_date,
                 '{{ duty_percent }}': f"{duty_percent:.1f}",
+                '{{ deal_length_days }}': str(deal_length_days),
+                '{{ supply_days }}': str(supply_days),
+                '{{ payment_days }}': str(payment_days),
             }
             
             # Замена в параграфах

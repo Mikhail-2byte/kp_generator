@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Просчет логистики - Генератор коммерческих предложений</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .autocomplete {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+        .autocomplete-items {
+            position: absolute;
+            border: 1px solid #d4d4d4;
+            border-bottom: none;
+            border-top: none;
+            z-index: 9999;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: white;
+            max-height: 200px;
+            overflow-y: auto;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .autocomplete-items div {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #d4d4d4;
+        }
+        .autocomplete-items div:hover {
+            background-color: #e9e9e9;
+        }
+        .autocomplete-active {
+            background-color: #0b5ed7 !important;
+            color: #ffffff;
+        }
+        [data-theme="dark"] .autocomplete-items {
+            background-color: #2d3748;
+            border-color: #4a5568;
+            color: white;
+        }
+        [data-theme="dark"] .autocomplete-items div {
+            border-color: #4a5568;
+        }
+        [data-theme="dark"] .autocomplete-items div:hover {
+            background-color: #4a5568;
+        }
+        .transport-badge {
+            font-size: 0.7rem;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Переключатель темы -->
+    <div class="theme-switcher">
+        <div class="theme-toggle" id="themeToggle" title="Переключить тему">
+            <svg class="sun" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0-12a.75.75 0 0 0 .75-.75V2a.75.75 0 0 0-1.5 0v2.25c0 .414.336.75.75.75zm0 15a.75.75 0 0 0-.75.75V22a.75.75 0 0 0 1.5 0v-2.25A.75.75 0 0 0 12 20zM4.222 5.222a.75.75 0 0 0 1.06 0l1.5-1.5a.75.75 0 0 0-1.06-1.06l-1.5 1.5a.75.75 0 0 0 0 1.06zm14.496 14.496a.75.75 0 0 0 1.06 0l1.5-1.5a.75.75 0 1 0-1.06-1.06l-1.5 1.5a.75.75 0 0 0 0 1.06zM2 12a.75.75 0 0 0 .75.75H5a.75.75 0 0 0 0-1.5H2.75A.75.75 0 0 0 2 12zm17 0a.75.75 0 0 0 .75-.75V9a.75.75 0 0 0-1.5 0v2.25c0 .414.336.75.75.75zm-15.722 6.778a.75.75 0 0 0 0-1.06l-1.5-1.5a.75.75 0 0 0-1.06 1.06l1.5 1.5a.75.75 0 0 0 1.06 0zm14.496-14.496a.75.75 0 0 0 0-1.06l-1.5-1.5a.75.75 0 1 0-1.06 1.06l1.5 1.5a.75.75 0 0 0 1.06 0z"/>
+            </svg>
+            <svg class="moon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 22c5.523 0 10-4.477 10-10 0-.463-.694-.54-.933-.143-a6.5 6.5 0 1 1-8.924-8.924C12.54 2.693 12.463 2 12 2 6.477 2 2 6.477 2 12s4.477 10 10 10z"/>
+            </svg>
+        </div>
+    </div>
+
+    <!-- Данные городов -->
+    <div id="cities-data" style="display: none;">{{ cities | tojson }}</div>
+
+    <!-- Кнопка возврата на главную -->
+    <div class="back-button">
+        <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
+            ← Назад к генератору
+        </a>
+    </div>
+
+    <div class="container mt-4">
+        <h1 class="text-center mb-4">Просчет логистики</h1>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Справочная информация</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <p><strong>Фура:</strong> до 20,000 кг</p>
+                            <p><strong>Трал:</strong> до 40,000 кг</p>
+                        </div>
+                        <p><strong>Формула расчета:</strong></p>
+                        <p class="text-muted small">
+                            (Стоимость транспорта до города / Грузоподъемность) × Вес груза
+                        </p>
+                        <hr>
+                        
+                        <!-- Аккордеон для списка городов -->
+                        <div class="accordion" id="citiesAccordion">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="citiesHeading">
+                                    <button class="accordion-button collapsed" type="button" 
+                                            data-bs-toggle="collapse" data-bs-target="#citiesCollapse" 
+                                            aria-expanded="false" aria-controls="citiesCollapse">
+                                        <strong>Показать доступные города</strong>
+                                    </button>
+                                </h2>
+                                <div id="citiesCollapse" class="accordion-collapse collapse" 
+                                    aria-labelledby="citiesHeading" data-bs-parent="#citiesAccordion">
+                                    <div class="accordion-body">
+                                        <div class="row small">
+                                            {% for city in cities %}
+                                            <div class="col-md-6 mb-1">
+                                                <span class="badge bg-secondary">{{ city.name }}</span>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Конец аккордеона -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Калькулятор логистики</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="logisticsForm">
+                            <!-- Выбор типа транспорта -->
+                            <div class="mb-3">
+                                <label class="form-label">Тип транспорта:</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="transportType" id="truckRadio" value="truck" checked>
+                                    <label class="form-check-label" for="truckRadio">
+                                        Фура (до 20,000 кг)
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="transportType" id="trailRadio" value="trail">
+                                    <label class="form-check-label" for="trailRadio">
+                                        Трал (до 40,000 кг)
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="cityInput" class="form-label">Город доставки:</label>
+                                <div class="autocomplete">
+                                    <input type="text" class="form-control" id="cityInput" 
+                                           placeholder="Начните вводить название города..." 
+                                           autocomplete="off" required>
+                                </div>
+                                <input type="hidden" id="selectedCityPrice">
+                                <input type="hidden" id="selectedCityName">
+                            </div>
+                            <div class="mb-3">
+                                <label for="cargoWeight" class="form-label">Вес груза (кг):</label>
+                                <input type="number" class="form-control" id="cargoWeight" 
+                                       placeholder="Введите вес груза" min="1" required>
+                                <div class="form-text" id="weightHelpText">
+                                    Максимальный вес: 20,000 кг (грузоподъемность фуры)
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary w-100" onclick="calculateLogistics()">
+                                Рассчитать стоимость
+                            </button>
+                        </form>
+                        
+                        <div class="mt-4 p-3 bg-light rounded" id="result" style="display: none;">
+                            <h6 class="border-bottom pb-2">Результаты расчета:</h6>
+                            <div class="row mb-2">
+                                <div class="col-12">
+                                    <strong>Направление:</strong> КНР-<span id="resultCityName" class="fw-bold"></span>
+                                    <br>
+                                    <strong>Тип транспорта:</strong> <span id="resultTransportType" class="fw-bold"></span>
+                                    <br>
+                                    <strong>Количество машин:</strong> <span id="truckCount" class="fw-bold"></span>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <strong>Средняя стоимость за кг:</strong>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <span id="pricePerKg" class="fw-bold text-primary"></span> руб/кг
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-6">
+                                    <strong>Итоговая стоимость:</strong>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <span id="totalPrice" class="fw-bold text-success fs-5"></span> руб
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-12">
+                                    <small class="text-muted" id="calculationDetails"></small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-warning mt-3" id="cityNotFound" style="display: none;">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            Город не найден в базе данных. Пожалуйста, выберите город из списка.
+                        </div>
+                        <div class="alert alert-info mt-3" id="lowWeightWarning" style="display: none;">
+                            <i class="bi bi-info-circle"></i>
+                            Для грузов менее 700 кг расчет логистики производится в транспортной компании "Деловые линии".
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- Закрытие row -->
+
+        <!-- Блок с вопросами - на всю ширину -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card mt-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="bi bi-question-circle me-2"></i>
+                            Частые вопросы по логистике
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="accordion accordion-flush" id="faqAccordion">
+                            <!-- Вопрос 1 -->
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="faqHeading1">
+                                    <button class="accordion-button collapsed" type="button" 
+                                            data-bs-toggle="collapse" data-bs-target="#faqCollapse1" 
+                                            aria-expanded="false" aria-controls="faqCollapse1">
+                                        Как рассчитывается стоимость доставки?
+                                    </button>
+                                </h2>
+                                <div id="faqCollapse1" class="accordion-collapse collapse" 
+                                     aria-labelledby="faqHeading1" data-bs-parent="#faqAccordion">
+                                    <div class="accordion-body">
+                                        Стоимость рассчитывается по формуле: <strong>(Стоимость транспорта до города / Грузоподъемность) × Вес груза</strong>. 
+                                        Для грузов больше грузоподъемности одной машины рассчитывается несколько машин.
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Вопрос 2 -->
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="faqHeading2">
+                                    <button class="accordion-button collapsed" type="button" 
+                                            data-bs-toggle="collapse" data-bs-target="#faqCollapse2" 
+                                            aria-expanded="false" aria-controls="faqCollapse2">
+                                        Что делать если моего города нет в списке?
+                                    </button>
+                                </h2>
+                                <div id="faqCollapse2" class="accordion-collapse collapse" 
+                                     aria-labelledby="faqHeading2" data-bs-parent="#faqAccordion">
+                                    <div class="accordion-body">
+                                        Если вашего города нет в списке, необходимо добавить его в список. 
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Вопрос 3 -->
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="faqHeading3">
+                                    <button class="accordion-button collapsed" type="button" 
+                                            data-bs-toggle="collapse" data-bs-target="#faqCollapse3" 
+                                            aria-expanded="false" aria-controls="faqCollapse3">
+                                        Почему для грузов менее 700 кг используется "Деловые линии"?
+                                    </button>
+                                </h2>
+                                <div id="faqCollapse3" class="accordion-collapse collapse" 
+                                     aria-labelledby="faqHeading3" data-bs-parent="#faqAccordion">
+                                    <div class="accordion-body">
+                                        Для малых грузов (менее 700 кг) экономически невыгодно заказывать отдельную машину. 
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Вопрос 4 -->
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="faqHeading4">
+                                    <button class="accordion-button collapsed" type="button" 
+                                            data-bs-toggle="collapse" data-bs-target="#faqCollapse4" 
+                                            aria-expanded="false" aria-controls="faqCollapse4">
+                                        В чем разница между фурой и тралом?
+                                    </button>
+                                </h2>
+                                <div id="faqCollapse4" class="accordion-collapse collapse" 
+                                     aria-labelledby="faqHeading4" data-bs-parent="#faqAccordion">
+                                    <div class="accordion-body">
+                                        <strong>Фура</strong> - до 20 тонн, стандартный тентованный полуприцеп.<br>
+                                        <strong>Трал</strong> - до 40 тонн, низкорамный прицеп для тяжелых и негабаритных грузов.<br>
+                                        Выбор зависит от веса и габаритов вашего груза.
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Вопрос 5 -->
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="faqHeading5">
+                                    <button class="accordion-button collapsed" type="button" 
+                                            data-bs-toggle="collapse" data-bs-target="#faqCollapse5" 
+                                            aria-expanded="false" aria-controls="faqCollapse5">
+                                        Включены ли в стоимость таможенные пошлины?
+                                    </button>
+                                </h2>
+                                <div id="faqCollapse5" class="accordion-collapse collapse" 
+                                     aria-labelledby="faqHeading5" data-bs-parent="#faqAccordion">
+                                    <div class="accordion-body">
+                                        Нет, в расчетную стоимость включена только транспортная составляющая. 
+                                        Таможенные пошлины, страхование и другие сопутствующие услуги рассчитываются отдельно.
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Вопрос 6 -->
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="faqHeading6">
+                                    <button class="accordion-button collapsed" type="button" 
+                                            data-bs-toggle="collapse" data-bs-target="#faqCollapse6" 
+                                            aria-expanded="false" aria-controls="faqCollapse6">
+                                        Какие сроки доставки из Китая?
+                                    </button>
+                                </h2>
+                                <div id="faqCollapse6" class="accordion-collapse collapse" 
+                                     aria-labelledby="faqHeading6" data-bs-parent="#faqAccordion">
+                                    <div class="accordion-body">
+                                        Стандартные сроки доставки:<br>
+                                        - До Москвы: 25-35 дней<br>
+                                        - До других городов: +5-10 дней к сроку до Москвы<br>
+                                        Сроки могут меняться в зависимости от таможенного оформления и погодных условий.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- Закрытие row для вопросов -->
+    </div> <!-- Закрытие container -->
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Получаем данные из скрытого элемента
+        const citiesElement = document.getElementById('cities-data');
+        let cities = [];
+        
+        try {
+            cities = JSON.parse(citiesElement.textContent);
+            console.log('Loaded cities:', cities);
+        } catch (e) {
+            console.error('Error parsing cities data:', e);
+        }
+
+        // Управление темой
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('themeToggle');
+            const html = document.documentElement;
+            
+            const savedTheme = localStorage.getItem('theme');
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            if (savedTheme) {
+                html.setAttribute('data-theme', savedTheme);
+            } else if (systemPrefersDark) {
+                html.setAttribute('data-theme', 'dark');
+            }
+            
+            themeToggle.addEventListener('click', function() {
+                const currentTheme = html.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                
+                html.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+            });
+            
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+                if (!localStorage.getItem('theme')) {
+                    html.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+                }
+            });
+
+            // Обработчик изменения типа транспорта
+            document.querySelectorAll('input[name="transportType"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    updateWeightLimit();
+                    // Сбрасываем выбранный город при смене типа транспорта
+                    document.getElementById('selectedCityPrice').value = '';
+                    document.getElementById('selectedCityName').value = '';
+                    document.getElementById('cityInput').value = '';
+                    document.getElementById('result').style.display = 'none';
+                });
+            });
+
+            // Инициализация автодополнения
+            initAutocomplete();
+            
+            // Автофокус на поле ввода города
+            document.getElementById('cityInput').focus();
+
+            // Скрываем уведомление о малом весе при изменении веса
+            document.getElementById('cargoWeight').addEventListener('input', function() {
+                const weight = parseFloat(this.value);
+                if (weight >= 700) {
+                    document.getElementById('lowWeightWarning').style.display = 'none';
+                }
+            });
+        });
+
+        function updateWeightLimit() {
+            const transportType = document.querySelector('input[name="transportType"]:checked').value;
+            const weightHelpText = document.getElementById('weightHelpText');
+            const cargoWeight = document.getElementById('cargoWeight');
+            
+            if (transportType === 'truck') {
+                weightHelpText.textContent = 'Для веса более 20,000 кг будет рассчитано несколько машин';
+                cargoWeight.removeAttribute('max'); // Убираем ограничение максимального веса
+            } else {
+                weightHelpText.textContent = 'Для веса более 40,000 кг будет рассчитано несколько машин';
+                cargoWeight.removeAttribute('max'); // Убираем ограничение максимального веса
+            }
+        }
+
+        function initAutocomplete() {
+            const cityInput = document.getElementById('cityInput');
+            let currentFocus = -1;
+
+            cityInput.addEventListener('input', function(e) {
+                const value = this.value.toLowerCase();
+                closeAllLists();
+                
+                if (!value) {
+                    currentFocus = -1;
+                    return false;
+                }
+                
+                const matchingCities = cities.filter(city => 
+                    city.name.toLowerCase().includes(value)
+                );
+                
+                if (matchingCities.length > 0) {
+                    const list = document.createElement('div');
+                    list.setAttribute('id', 'autocomplete-list');
+                    list.setAttribute('class', 'autocomplete-items');
+                    this.parentNode.appendChild(list);
+                    
+                    matchingCities.forEach((city, index) => {
+                        const item = document.createElement('div');
+                        const transportType = document.querySelector('input[name="transportType"]:checked').value;
+                        const price = transportType === 'truck' ? city.truck_price : city.trail_price;
+                        
+                        item.innerHTML = `<strong>${city.name}</strong> - ${city.region}`;
+                        item.innerHTML += `<br><small>${price.toLocaleString()} руб <span class="transport-badge badge bg-secondary">${transportType === 'truck' ? 'Фура' : 'Трал'}</span></small>`;
+                        
+                        item.addEventListener('click', function() {
+                            cityInput.value = city.name;
+                            document.getElementById('selectedCityPrice').value = price;
+                            document.getElementById('selectedCityName').value = city.name;
+                            document.getElementById('cityNotFound').style.display = 'none';
+                            closeAllLists();
+                        });
+                        
+                        list.appendChild(item);
+                    });
+                }
+            });
+            
+            // Добавляем навигацию с клавиатуры
+            cityInput.addEventListener('keydown', function(e) {
+                let items = document.getElementById('autocomplete-list');
+                if (items) items = items.getElementsByTagName('div');
+                
+                if (e.key === 'ArrowDown') {
+                    currentFocus++;
+                    addActive(items);
+                } else if (e.key === 'ArrowUp') {
+                    currentFocus--;
+                    addActive(items);
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (currentFocus > -1 && items) {
+                        items[currentFocus].click();
+                    }
+                }
+            });
+            
+            function addActive(items) {
+                if (!items) return false;
+                removeActive(items);
+                if (currentFocus >= items.length) currentFocus = 0;
+                if (currentFocus < 0) currentFocus = (items.length - 1);
+                items[currentFocus].classList.add('autocomplete-active');
+            }
+            
+            function removeActive(items) {
+                for (let i = 0; i < items.length; i++) {
+                    items[i].classList.remove('autocomplete-active');
+                }
+            }
+            
+            function closeAllLists() {
+                const items = document.getElementsByClassName('autocomplete-items');
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].parentNode) {
+                        items[i].parentNode.removeChild(items[i]);
+                    }
+                }
+                currentFocus = -1;
+            }
+            
+            // Закрыть список при клике вне его
+            document.addEventListener('click', function(e) {
+                if (e.target !== cityInput) {
+                    closeAllLists();
+                }
+            });
+        }
+
+        function calculateLogistics() {
+            const logisticsCost = parseInt(document.getElementById('selectedCityPrice').value);
+            const cityName = document.getElementById('selectedCityName').value;
+            const cargoWeight = parseFloat(document.getElementById('cargoWeight').value);
+            const transportType = document.querySelector('input[name="transportType"]:checked').value;
+            
+            // Определяем грузоподъемность в зависимости от типа транспорта
+            const TRUCK_CAPACITY = transportType === 'truck' ? 20000 : 40000;
+            const transportName = transportType === 'truck' ? 'Фура' : 'Трал';
+            
+            // Сначала скрываем все уведомления
+            document.getElementById('cityNotFound').style.display = 'none';
+            document.getElementById('lowWeightWarning').style.display = 'none';
+            document.getElementById('result').style.display = 'none';
+            
+            // Проверка минимального веса (700 кг)
+            if (cargoWeight < 700) {
+                document.getElementById('lowWeightWarning').style.display = 'block';
+                return;
+            }
+            
+            // Валидация города
+            if (!logisticsCost || !cityName) {
+                document.getElementById('cityNotFound').style.display = 'block';
+                return;
+            }
+            
+            // Валидация веса
+            if (!cargoWeight || cargoWeight <= 0) {
+                alert('Пожалуйста, введите корректный вес груза');
+                return;
+            }
+            
+            // Расчет стоимости в зависимости от веса
+            let totalPrice, pricePerKg, calculationDetails;
+            const pricePerKgBase = logisticsCost / TRUCK_CAPACITY;
+            
+            if (cargoWeight <= TRUCK_CAPACITY) {
+                // Обычный расчет для веса до грузоподъемности
+                pricePerKg = pricePerKgBase;
+                totalPrice = pricePerKg * cargoWeight;
+                calculationDetails = 
+                    `Расчет: (${logisticsCost.toLocaleString()} руб / ${TRUCK_CAPACITY.toLocaleString()} кг) × ${cargoWeight.toLocaleString()} кг = ${totalPrice.toLocaleString()} руб`;
+            } else {
+                // Расчет для веса превышающего грузоподъемность
+                const fullTrucks = Math.floor(cargoWeight / TRUCK_CAPACITY);
+                const remainingWeight = cargoWeight % TRUCK_CAPACITY;
+                
+                if (remainingWeight > 0) {
+                    // Полные машины + остаток
+                    totalPrice = (fullTrucks * logisticsCost) + (remainingWeight * pricePerKgBase);
+                    calculationDetails = 
+                        `Расчет: ${fullTrucks} ${getTruckWord(fullTrucks, transportName)} × ${logisticsCost.toLocaleString()} руб + ${remainingWeight.toLocaleString()} кг × ${pricePerKgBase.toFixed(2)} руб/кг = ${totalPrice.toLocaleString()} руб`;
+                } else {
+                    // Только полные машины
+                    totalPrice = fullTrucks * logisticsCost;
+                    calculationDetails = 
+                        `Расчет: ${fullTrucks} ${getTruckWord(fullTrucks, transportName)} × ${logisticsCost.toLocaleString()} руб = ${totalPrice.toLocaleString()} руб`;
+                }
+                
+                pricePerKg = totalPrice / cargoWeight; // Средняя цена за кг
+            }
+            
+            let truckCount = '';
+            if (cargoWeight <= TRUCK_CAPACITY) {
+                truckCount = '1 машина';
+            } else {
+                const fullTrucks = Math.floor(cargoWeight / TRUCK_CAPACITY);
+                const remainingWeight = cargoWeight % TRUCK_CAPACITY;
+                
+                if (remainingWeight > 0) {
+                    truckCount = `${fullTrucks} ${getTruckWord(fullTrucks, transportName)} + частичная загрузка`;
+                } else {
+                    truckCount = `${fullTrucks} ${getTruckWord(fullTrucks, transportName)}`;
+                }
+            }
+
+            // И добавьте отображение:
+            document.getElementById('truckCount').textContent = truckCount;
+
+            // Отображение результатов
+            document.getElementById('resultCityName').textContent = cityName;
+            document.getElementById('resultTransportType').textContent = transportName;
+            document.getElementById('pricePerKg').textContent = pricePerKg.toFixed(2);
+            document.getElementById('totalPrice').textContent = totalPrice.toFixed(0).toLocaleString();
+            document.getElementById('calculationDetails').textContent = calculationDetails;
+            
+            document.getElementById('result').style.display = 'block';
+            
+            // Прокрутка к результатам
+            document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // Вспомогательная функция для правильного склонения слова "машина"
+        function getTruckWord(count, transportName) {
+            if (count === 1) return transportName.toLowerCase();
+            if (count >= 2 && count <= 4) return transportName.toLowerCase() + 'ы';
+            return transportName.toLowerCase() + '';
+        }
+
+        // Обработка нажатия Enter в поле ввода
+        document.getElementById('cargoWeight').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                calculateLogistics();
+            }
+        });
+    </script>
+</body>
+</html>

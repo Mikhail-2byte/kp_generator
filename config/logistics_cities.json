@@ -1,0 +1,46 @@
+{
+  "cities": [
+    {
+      "name": "Москва",
+      "truck_price": 1100000,
+      "trail_price": 1800000,
+      "region": "Центральный"
+    },
+    {
+      "name": "Екатеринбург",
+      "truck_price": 1000000,
+      "trail_price": 1600000,
+      "region": "Уральский"
+    },
+    {
+      "name": "Санкт-Петербург",
+      "truck_price": 1050000,
+      "trail_price": 1700000,
+      "region": "Северо-Западный"
+    },
+    {
+      "name": "Новосибирск",
+      "truck_price": 1200000,
+      "trail_price": 1900000,
+      "region": "Сибирский"
+    },
+    {
+      "name": "Владивосток",
+      "truck_price": 1500000,
+      "trail_price": 2400000,
+      "region": "Дальневосточный"
+    },
+    {
+      "name": "Ростов-на-Дону",
+      "truck_price": 950000,
+      "trail_price": 1500000,
+      "region": "Южный"
+    },
+    {
+      "name": "Казань",
+      "truck_price": 980000,
+      "trail_price": 1550000,
+      "region": "Приволжский"
+    }
+  ]
+}

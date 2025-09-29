@@ -1,0 +1,1262 @@
+:root {
+  /* Light theme (default) */
+  --bg-primary: #f8f9fa;
+  --bg-secondary: #ffffff;
+  --text-primary: #212529;
+  --text-secondary: #6c757d;
+  --border-color: #dee2e6;
+  --shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  --card-bg: #ffffff;
+  --input-bg: #ffffff;
+  --input-border: #ced4da;
+  --input-text: #495057;
+  --btn-primary-bg: #0d6efd;
+  --btn-primary-hover: #0b5ed7;
+  --alert-bg: #f8d7da;
+  --alert-text: #721c24;
+  --alert-border: #f5c6cb;
+}
+
+[data-theme="dark"] {
+  /* Dark theme */
+  --bg-primary: #121212;
+  --bg-secondary: #1e1e1e;
+  --text-primary: #e0e0e0;
+  --text-secondary: #a0a0a0;
+  --border-color: #2d2d2d;
+  --shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.4);
+  --card-bg: #2d2d2d;
+  --input-bg: #2d2d2d;
+  --input-border: #404040;
+  --input-text: #e0e0e0;
+  --btn-primary-bg: #1976d2;
+  --btn-primary-hover: #1565c0;
+  --alert-bg: #422;
+  --alert-text: #ffcdd2;
+  --alert-border: #733;
+}
+
+
+/* ПРЕДОТВРАЩЕНИЕ МОРГАНИЯ КНОПОК ПРИ ЗАГРУЗКЕ */
+.logistics-button .btn,
+.duty-button .btn,
+.gb-standards-button .btn,
+.metal-price-button .btn,
+.crane-wheels-button .btn,
+.history-button .btn,
+.back-button .btn {
+    /* Убираем transition для начальной загрузки */
+    transition: none !important;
+}
+
+/* После загрузки возвращаем transition */
+body.loaded .logistics-button .btn,
+body.loaded .duty-button .btn,
+body.loaded .gb-standards-button .btn,
+body.loaded .metal-price-button .btn,
+body.loaded .crane-wheels-button .btn,
+body.loaded .history-button .btn,
+body.loaded .back-button .btn {
+    transition: all 0.3s ease;
+}
+
+/* Явно задаем начальные цвета для кнопок */
+.logistics-button .btn,
+.duty-button .btn,
+.gb-standards-button .btn,
+.metal-price-button .btn,
+.crane-wheels-button .btn,
+.history-button .btn,
+.back-button .btn {
+    background-color: transparent !important;
+    border-color: #0d6efd !important; /* Фиксированный цвет */
+    color: #000000 !important; /* Фиксированный черный по умолчанию */
+}
+
+/* Для темной темы переопределяем после загрузки */
+[data-theme="dark"] .logistics-button .btn,
+[data-theme="dark"] .duty-button .btn,
+[data-theme="dark"] .gb-standards-button .btn,
+[data-theme="dark"] .metal-price-button .btn,
+[data-theme="dark"] .crane-wheels-button .btn,
+[data-theme="dark"] .history-button .btn,
+[data-theme="dark"] .back-button .btn {
+    color: #ffffff !important;
+}
+
+/* Apply theme variables */
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.container {
+  max-width: 1100px;
+  background: var(--bg-secondary);
+  padding: 2rem;
+  border-radius: 0.5rem;
+  box-shadow: var(--shadow);
+  transition: all 0.3s ease;
+}
+
+h1 {
+  color: var(--btn-primary-bg);
+  margin-bottom: 1.5rem;
+}
+
+.form-control {
+  background-color: var(--input-bg);
+  color: var(--input-text);
+  border-color: var(--input-border);
+  transition: all 0.3s ease;
+}
+
+.form-control:focus {
+  background-color: var(--input-bg);
+  color: var(--input-text);
+  border-color: var(--btn-primary-bg);
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.form-label {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.btn-primary {
+  background-color: var(--btn-primary-bg);
+  border-color: var(--btn-primary-bg);
+  padding: 0.5rem 1rem;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: var(--btn-primary-hover);
+  border-color: var(--btn-primary-hover);
+}
+
+.alert {
+  margin-bottom: 1.5rem;
+  background-color: var(--alert-bg);
+  color: var(--alert-text);
+  border-color: var(--alert-border);
+}
+
+.form-text {
+  color: var(--text-secondary) !important;
+}
+
+.invalid-feedback {
+  color: #dc3545;
+}
+
+/* Theme switcher */
+.theme-switcher {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.theme-toggle {
+  width: 50px;
+  height: 25px;
+  background: var(--border-color);
+  border-radius: 25px;
+  padding: 2px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.theme-toggle::before {
+  content: '';
+  display: block;
+  width: 21px;
+  height: 21px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+}
+
+[data-theme="dark"] .theme-toggle::before {
+  transform: translateX(25px);
+  background: #333;
+}
+
+.theme-toggle svg {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.theme-toggle .sun {
+  left: 5px;
+  opacity: 1;
+}
+
+.theme-toggle .moon {
+  right: 5px;
+  opacity: 0;
+}
+
+[data-theme="dark"] .theme-toggle .sun {
+  opacity: 0;
+}
+
+[data-theme="dark"] .theme-toggle .moon {
+  opacity: 1;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+    margin: 1rem;
+  }
+  
+  .theme-switcher {
+    top: 10px;
+    right: 10px;
+  }
+}
+
+/* Smooth transitions */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Кнопка логистики */
+.logistics-button {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1000;
+}
+
+/* Кнопка пошлины */
+.duty-button {
+    position: fixed;
+    top: 70px; /* Располагаем ниже кнопки логистики */
+    left: 20px;
+    z-index: 1000;
+}
+
+/* Кнопка стандартов GB */
+.gb-standards-button {
+    position: fixed;
+    top: 120px; /* Располагаем ниже кнопки пошлины */
+    left: 20px;
+    z-index: 1000;
+}
+
+/* Кнопка цены металла */
+.metal-price-button {
+    position: fixed;
+    top: 170px; /* Располагаем ниже кнопки стандартов GB */
+    left: 20px;
+    z-index: 1000;
+}
+
+/* Кнопка цены крановых колес */
+.crane-wheels-button {
+    position: fixed;
+    top: 220px; /* Располагаем ниже кнопки цены металла */
+    left: 20px;
+    z-index: 1000;
+}
+
+/* Общий стиль для всех информационных кнопок */
+.logistics-button .btn,
+.duty-button .btn,
+.gb-standards-button .btn,
+.metal-price-button .btn,
+.crane-wheels-button .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    background-color: transparent;
+    border-color: var(--btn-primary-bg); /* Голубая рамка в любой теме */
+}
+
+/* Светлая тема - черный текст */
+[data-theme="light"] .logistics-button .btn,
+[data-theme="light"] .duty-button .btn,
+[data-theme="light"] .gb-standards-button .btn,
+[data-theme="light"] .metal-price-button .btn,
+[data-theme="light"] .crane-wheels-button .btn {
+    color: #000000; /* Черный текст в светлой теме */
+}
+
+/* Темная тема - белый текст */
+[data-theme="dark"] .logistics-button .btn,
+[data-theme="dark"] .duty-button .btn,
+[data-theme="dark"] .gb-standards-button .btn,
+[data-theme="dark"] .metal-price-button .btn,
+[data-theme="dark"] .crane-wheels-button .btn {
+    color: #ffffff; /* Белый текст в темной теме */
+}
+
+/* Стиль при наведении для всех информационных кнопок */
+.logistics-button .btn:hover,
+.duty-button .btn:hover,
+.gb-standards-button .btn:hover,
+.metal-price-button .btn:hover,
+.crane-wheels-button .btn:hover {
+    background-color: var(--btn-primary-bg);
+    color: white;
+    border-color: var(--btn-primary-bg);
+}
+/* Стили для модальных окон - всегда светлая тема */
+.modal-content {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+}
+
+.modal-header,
+.modal-body,
+.modal-footer {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border-color: #dee2e6 !important;
+}
+
+.modal-title {
+    color: #000000 !important;
+}
+
+.modal .btn-close {
+    filter: invert(0) !important;
+}
+
+/* Адаптивность для модальных окон и кнопок */
+@media (max-width: 768px) {
+    .logistics-button {
+        top: 10px;
+        left: 10px;
+    }
+    
+    .duty-button {
+        top: 60px; /* Располагаем ниже кнопки логистики на мобильных */
+        left: 10px;
+    }
+    
+    .gb-standards-button {
+        top: 110px; /* Располагаем ниже кнопки пошлины на мобильных */
+        left: 10px;
+    }
+    
+    .metal-price-button {
+        top: 160px; /* Располагаем ниже кнопки стандартов GB на мобильных */
+        left: 10px;
+    }
+    
+    .crane-wheels-button {
+        top: 210px; /* Располагаем ниже кнопки цены металла на мобильных */
+        left: 10px;
+    }
+    
+    .logistics-button .btn,
+    .duty-button .btn,
+    .gb-standards-button .btn,
+    .metal-price-button .btn,
+    .crane-wheels-button .btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+    }
+}
+
+/* Обновляем стили для маржи в style.css */
+
+/* Уменьшаем размер заголовка маржи */
+.margin-label {
+  color: var(--btn-primary-bg);
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  font-size: 1.3rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.margin-description {
+  font-size: 0.9rem;
+  margin-bottom: 1.2rem;
+  color: var(--text-secondary);
+}
+
+.margin-input-container {
+  max-width: 220px;
+  margin: 0 auto;
+}
+
+.margin-input-group {
+  border-radius: 15px;
+  border: 2px solid var(--btn-primary-bg);
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.margin-input-group:focus-within {
+  border-color: var(--btn-primary-hover);
+  box-shadow: 0 6px 15px rgba(13, 110, 253, 0.2);
+  transform: translateY(-2px);
+}
+
+.margin-input {
+  font-size: 1.6rem;
+  font-weight: bold;
+  text-align: center;
+  padding: 0.8rem;
+  background: var(--input-bg);
+  color: var(--text-primary);
+  border: none;
+  outline: none;
+}
+
+.margin-input:focus {
+  box-shadow: none;
+  background: var(--input-bg);
+}
+
+.margin-input-group .input-group-text {
+  background: linear-gradient(135deg, var(--btn-primary-bg), var(--btn-primary-hover));
+  color: white;
+  font-weight: bold;
+  border: none;
+  padding: 0.8rem 1.2rem;
+  font-size: 1.1rem;
+}
+
+/* Анимация при изменении значения */
+.margin-input {
+  transition: all 0.3s ease;
+}
+
+.margin-input:focus {
+  transform: scale(1.02);
+}
+
+/* Для темной темы - делаем более контрастным */
+[data-theme="dark"] .margin-input-group {
+  border-color: #3a86ff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .margin-input-group:focus-within {
+  border-color: #4f93ff;
+  box-shadow: 0 6px 15px rgba(58, 134, 255, 0.3);
+}
+
+[data-theme="dark"] .margin-input-group .input-group-text {
+  background: linear-gradient(135deg, #3a86ff, #4f93ff);
+}
+
+/* Адаптивность для поля маржи */
+@media (max-width: 768px) {
+  .margin-input-container {
+    max-width: 180px;
+  }
+  
+  .margin-input {
+    font-size: 1.4rem;
+    padding: 0.6rem;
+  }
+  
+  .margin-input-group .input-group-text {
+    padding: 0.6rem 1rem;
+    font-size: 1rem;
+  }
+  
+  .margin-label {
+    font-size: 1.1rem;
+  }
+  
+  .margin-description {
+    font-size: 0.8rem;
+  }
+}
+
+/* Разделитель секций */
+.section-divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.section-divider::before,
+.section-divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.section-divider::before {
+    margin-right: 1rem;
+}
+
+.section-divider::after {
+    margin-left: 1rem;
+}
+
+/* Стиль для кнопки генерации */
+.generate-btn {
+    padding: 0.75rem;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-radius: 0.5rem;
+    background: linear-gradient(135deg, var(--btn-primary-bg), #0043ce);
+    border: none;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+}
+
+.generate-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(135deg, var(--btn-primary-hover), #0039b3);
+}
+
+.generate-icon {
+    margin-right: 0.5rem;
+    font-size: 1.3rem;
+}
+
+/* Адаптивность для поля маржи */
+@media (max-width: 768px) {
+    .margin-input-container {
+        max-width: 100%;
+    }
+    
+    .margin-input {
+        font-size: 1.5rem;
+        padding: 0.75rem;
+    }
+    
+    .margin-input-group .input-group-text {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
+    .margin-label {
+        font-size: 1.3rem;
+    }
+}
+
+/* Добавьте эти стили в конец файла style.css */
+
+/* Уменьшаем размер заголовка */
+h1 {
+  font-size: 2rem; /* Уменьшаем размер шрифта */
+  margin-bottom: 1rem; /* Уменьшаем отступ */
+  text-align: center;
+}
+
+/* Делаем поле адреса доставки компактным */
+#delivery_address {
+  min-height: 38px; /* Высота как у обычных полей ввода */
+  resize: vertical; /* Разрешаем изменение размера только по вертикали */
+  padding: 0.375rem 0.75rem; /* Такой же отступ как у обычных полей */
+  line-height: 1.5; /* Межстрочный интервал как у обычных полей */
+}
+
+/* Адаптивность для заголовка */
+@media (max-width: 768px) {
+  h1 {
+      font-size: 1.5rem; /* Еще меньше на мобильных */
+      margin-bottom: 0.5rem;
+  }
+}
+
+/* Улучшаем внешний вид текстовой области */
+.form-control[type="text"],
+.form-control[type="number"],
+.form-control[type="email"],
+.form-control[type="tel"],
+.form-control textarea {
+  transition: all 0.2s ease;
+}
+
+.form-control:focus {
+  border-color: var(--btn-primary-bg);
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* Улучшаем отступы между полями */
+.mb-3 {
+  margin-bottom: 1rem !important;
+}
+
+/* Компактное расположение элементов */
+.container {
+  padding: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .container {
+      padding: 1rem;
+      margin: 0.5rem;
+  }
+}
+
+/* Кнопка истории */
+.history-button {
+  position: fixed;
+  top: 20px;
+  right: 80px; /* Располагаем слева от переключателя темы */
+  z-index: 1000;
+}
+
+.history-button .btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  background-color: transparent;
+  border-color: var(--btn-primary-bg);
+}
+
+/* Светлая тема - черный текст */
+[data-theme="light"] .history-button .btn {
+  color: #000000;
+}
+
+/* Темная тема - белый текст */
+[data-theme="dark"] .history-button .btn {
+  color: #ffffff;
+}
+
+/* Стиль при наведении для кнопки истории */
+.history-button .btn:hover {
+  background-color: var(--btn-primary-bg);
+  color: #4f93ff;
+  border-color: var(--btn-primary-bg);
+}
+
+/* Адаптивность для кнопки истории */
+@media (max-width: 768px) {
+  .history-button {
+      top: 10px;
+      right: 70px;
+  }
+  
+  .history-button .btn {
+      padding: 0.4rem 0.8rem;
+      font-size: 0.8rem;
+  }
+}
+
+/* Кнопка возврата на главную */
+.back-button {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+}
+
+.back-button .btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  background-color: transparent;
+  border-color: var(--btn-primary-bg);
+}
+
+/* Светлая тема - черный текст */
+[data-theme="light"] .back-button .btn {
+  color: #000000;
+}
+
+/* Темная тема - белый текст */
+[data-theme="dark"] .back-button .btn {
+  color: #ffffff;
+}
+
+/* Стиль при наведении для кнопки возврата */
+.back-button .btn:hover {
+  background-color: var(--btn-primary-bg);
+  color: var(--btn-primary-bg);
+  border-color: var(--btn-primary-bg);
+}
+
+/* Адаптивность для кнопки возврата */
+@media (max-width: 768px) {
+  .back-button {
+      top: 10px;
+      left: 10px;
+  }
+  
+  .back-button .btn {
+      padding: 0.4rem 0.8rem;
+      font-size: 0.8rem;
+  }
+}
+
+/* Стили для таблицы истории */
+/* Стили для таблицы истории - исправление цвета текста */
+.table {
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+}
+
+.table th,
+.table td {
+  color: var(--text-primary) !important;
+  border-color: var(--border-color);
+}
+
+/* Убедимся, что текст в таблице всегда контрастный */
+[data-theme="dark"] .table th,
+[data-theme="dark"] .table td {
+  color: #ffffff !important;
+}
+
+/* Стили для заголовка таблицы */
+.table thead th {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--border-color);
+}
+
+[data-theme="dark"] .table thead th {
+  color: #ffffff;
+  background-color: #2d2d2d;
+}
+
+/* Стили для строк таблицы */
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="dark"] .table-striped tbody tr:nth-of-type(odd) {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(0, 0, 0, 0.075);
+}
+
+[data-theme="dark"] .table-hover tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Стили для кнопок в таблице */
+.table .btn {
+  color: var(--text-primary);
+  border-color: var(--btn-primary-bg);
+  background-color: transparent;
+}
+
+.table .btn:hover {
+  background-color: var(--btn-primary-bg);
+  color: white !important;
+  border-color: var(--btn-primary-bg);
+}
+
+[data-theme="dark"] .table .btn {
+  color: #ffffff;
+}
+
+/* Стили для бейджа с количеством записей */
+.badge {
+  color: white;
+  background-color: var(--btn-primary-bg);
+}
+
+[data-theme="dark"] .badge {
+  background-color: #3a86ff;
+}
+
+/* Стили для поиска и фильтров */
+.search-container {
+  margin-bottom: 1.5rem;
+}
+
+.input-group-text {
+  background-color: var(--bg-secondary);
+  border-color: var(--input-border);
+  color: var(--text-secondary);
+}
+
+.form-control, .form-select {
+  background-color: var(--input-bg);
+  color: var(--input-text);
+  border-color: var(--input-border);
+}
+
+.form-control:focus, .form-select:focus {
+  background-color: var(--input-bg);
+  color: var(--input-text);
+  border-color: var(--btn-primary-bg);
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* Стили для кнопки очистки поиска */
+#clearSearch {
+  transition: all 0.3s ease;
+}
+
+#clearSearch:hover {
+  background-color: var(--btn-primary-bg);
+  color: white;
+  border-color: var(--btn-primary-bg);
+}
+
+/* Адаптивность для поиска */
+@media (max-width: 768px) {
+  .search-container {
+      flex-direction: column;
+  }
+  
+  .search-container .col-md-8,
+  .search-container .col-md-4 {
+      width: 100%;
+      margin-bottom: 1rem;
+  }
+}
+/* Стили для пагинации */
+.pagination {
+    margin: 1rem 0;
+}
+
+.page-item.active .page-link {
+    background-color: var(--btn-primary-bg);
+    border-color: var(--btn-primary-bg);
+}
+
+.page-link {
+    color: var(--btn-primary-bg);
+}
+
+.page-link:hover {
+    color: var(--btn-primary-hover);
+}
+
+/* Индикатор сортировки */
+.sort-indicator {
+    font-weight: bold;
+}
+
+/* Анимация при сортировке */
+.table-hover tbody tr {
+    transition: transform 0.3s ease;
+}
+
+.table-hover tbody tr:hover {
+    transform: translateY(-2px);
+}
+
+/* Адаптивность для пагинации */
+@media (max-width: 768px) {
+    .pagination {
+        flex-wrap: wrap;
+    }
+    
+    .page-item {
+        margin-bottom: 0.5rem;
+    }
+}
+
+
+/* ДОБАВИТЬ В КОНЕЦ ФАЙЛА */
+
+/* === УЛУЧШЕНИЕ ЧИТАЕМОСТИ И ВИДИМОСТИ === */
+
+/* Улучшение контрастности текста */
+/* УДАЛИТЬ всё после этого комментария и ЗАМЕНИТЬ на: */
+
+/* === УЛУЧШЕНИЕ ЧИТАЕМОСТИ И ВИДИМОСТИ === */
+
+/* Улучшение контрастности текста */
+body {
+    line-height: 1.6;
+    font-weight: 400;
+}
+
+/* Улучшение заголовков */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    line-height: 1.3;
+    margin-bottom: 1rem;
+}
+
+h1 {
+    font-size: 2.2rem;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* Улучшение контрастности текста в светлой теме */
+[data-theme="light"] {
+    --text-primary: #1a1a1a; /* Более темный серый для лучшего контраста */
+    --text-secondary: #5a5a5a;
+}
+
+/* Улучшение контрастности в темной теме */
+[data-theme="dark"] {
+    --text-primary: #f0f0f0; /* Более светлый для лучшей читаемости */
+    --text-secondary: #b0b0b0;
+    --border-color: #3a3a3a; /* Более контрастные границы */
+}
+
+/* Улучшение видимости форм */
+.form-control {
+    border-width: 2px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.form-control:focus {
+    border-width: 2px;
+    box-shadow: 0 0 0 0.3rem rgba(13, 110, 253, 0.15);
+    transform: translateY(-1px);
+}
+
+.form-label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-size: 1.05rem;
+}
+
+/* Улучшение видимости кнопок */
+.btn {
+    font-weight: 600;
+    border-width: 2px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+/* Улучшение видимости карточек и контейнеров */
+.container {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    border: 1px solid var(--border-color);
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}
+
+[data-theme="dark"] .container {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+/* Улучшение таблицы истории */
+.table {
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.table th {
+    font-weight: 700;
+    font-size: 1.05rem;
+    padding: 1rem 0.75rem;
+    background-color: var(--bg-secondary);
+    border-bottom: 3px solid var(--border-color);
+}
+
+.table td {
+    padding: 0.85rem 0.75rem;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Улучшение видимости строк таблицы при наведении */
+.table-hover tbody tr:hover {
+    background-color: var(--btn-primary-bg);
+    color: white;
+    transform: scale(1.01);
+    transition: all 0.2s ease;
+}
+
+.table-hover tbody tr:hover td {
+    color: white !important;
+    border-color: var(--btn-primary-bg);
+}
+
+/* Улучшение модальных окон */
+.modal-content {
+    border: 2px solid var(--border-color);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.modal-footer {
+    border-top: 2px solid var(--border-color);
+}
+
+/* Улучшение видимости инпут-групп */
+.input-group-text {
+    font-weight: 600;
+    border-width: 2px;
+}
+
+/* Улучшение видимости баджей */
+.badge {
+    font-size: 0.85em;
+    font-weight: 700;
+    padding: 0.35em 0.65em;
+}
+
+/* Улучшение пагинации */
+.pagination .page-link {
+    font-weight: 600;
+    border-width: 2px;
+    margin: 0 2px;
+}
+
+/* Улучшение видимости индикатора загрузки */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    display: none;
+    z-index: 9999;
+    backdrop-filter: blur(5px);
+}
+
+.loading-overlay.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loading-spinner {
+    width: 60px;
+    height: 60px;
+    border: 5px solid rgba(255,255,255,0.3);
+    border-top: 5px solid var(--btn-primary-bg);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+
+/* ФИКС: Замена несуществующих rgba переменных на прозрачность */
+[data-theme="light"] .logistics-button .btn,
+[data-theme="light"] .duty-button .btn,
+[data-theme="light"] .gb-standards-button .btn,
+[data-theme="light"] .metal-price-button .btn,
+[data-theme="light"] .crane-wheels-button .btn,
+[data-theme="light"] .history-button .btn,
+[data-theme="light"] .back-button .btn {
+    background-color: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="dark"] .logistics-button .btn,
+[data-theme="dark"] .duty-button .btn,
+[data-theme="dark"] .gb-standards-button .btn,
+[data-theme="dark"] .metal-price-button .btn,
+[data-theme="dark"] .crane-wheels-button .btn,
+[data-theme="dark"] .history-button .btn,
+[data-theme="dark"] .back-button .btn {
+    background-color: rgba(30, 30, 30, 0.9);
+}
+
+/* Улучшение видимости переключателя темы */
+.theme-toggle {
+    border: 2px solid var(--border-color);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Улучшение отзывчивости для мобильных */
+@media (max-width: 768px) {
+    .container {
+        margin: 0.5rem;
+        padding: 1.25rem;
+    }
+    
+    h1 {
+        font-size: 1.8rem;
+    }
+    
+    .form-control {
+        font-size: 16px; /* Предотвращает масштабирование в iOS */
+    }
+    
+    /* Улучшение видимости кнопок на мобильных */
+    .logistics-button .btn,
+    .duty-button .btn,
+    .gb-standards-button .btn,
+    .metal-price-button .btn,
+    .crane-wheels-button .btn,
+    .history-button .btn,
+    .back-button .btn {
+        font-size: 0.8rem;
+        padding: 0.5rem 0.8rem;
+    }
+}
+
+/* Улучшение доступности для фокуса */
+.btn:focus,
+.form-control:focus,
+.form-select:focus,
+.page-link:focus {
+    outline: 2px solid var(--btn-primary-bg);
+    outline-offset: 2px;
+}
+
+/* Улучшение видимости невалидных полей */
+.form-control.is-invalid {
+    border-width: 2px;
+    background-image: none;
+    padding-right: 0.75rem;
+}
+
+.form-control.is-invalid:focus {
+    box-shadow: 0 0 0 0.3rem rgba(220, 53, 69, 0.15);
+}
+
+.invalid-feedback {
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+/* Улучшение разделителя секций */
+.section-divider {
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin: 2rem 0;
+}
+
+/* Анимация появления элементов */
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Дополнительные стили для истории */
+.search-highlight {
+    background-color: var(--btn-primary-bg);
+    color: white;
+    padding: 0.1em 0.2em;
+    border-radius: 0.2em;
+}
+
+.table th.sortable {
+    cursor: pointer;
+    position: relative;
+    user-select: none;
+}
+
+.table th.sortable:hover {
+    background-color: var(--bg-primary);
+}
+
+.table th.sortable::after {
+    content: "↕";
+    margin-left: 0.5rem;
+    opacity: 0.5;
+}
+
+.table th.sort-asc::after {
+    content: "↑";
+    opacity: 1;
+}
+
+.table th.sort-desc::after {
+    content: "↓";
+    opacity: 1;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-secondary);
+}
+
+.empty-state .icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+/* Дополнительные стили для главной страницы */
+.card {
+    border: 2px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.form-label.required::after {
+    content: " *";
+    color: #dc3545;
+}
+
+input[type="number"] {
+    font-feature-settings: "tnum";
+    font-variant-numeric: tabular-nums;
+}
+
+textarea.form-control {
+    min-height: 100px;
+    resize: vertical;
+    line-height: 1.5;
+}
+
+.autocomplete-items {
+    position: absolute;
+    border: 1px solid #d4d4d4;
+    border-bottom: none;
+    border-top: none;
+    z-index: 9999; /* Увеличили z-index */
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: white;
+    max-height: 200px;
+    overflow-y: auto;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* Добавили тень */
+}
+.autocomplete-items div {
+    padding: 10px;
+    cursor: pointer;
+    border-bottom: 1px solid #d4d4d4;
+}
+.autocomplete-items div:hover {
+    background-color: #e9e9e9;
+}
+.autocomplete-active {
+    background-color: DodgerBlue !important;
+    color: #ffffff;
+}
+[data-theme="dark"] .autocomplete-items {
+    background-color: #2d3748;
+    border-color: #4a5568;
+    color: white;
+}
+[data-theme="dark"] .autocomplete-items div {
+    border-color: #4a5568;
+}
+[data-theme="dark"] .autocomplete-items div:hover {
+    background-color: #4a5568;
+}
+
+/* Важно: контейнер для автодополнения должен иметь position: relative */
+.autocomplete {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}

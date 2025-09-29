@@ -1,0 +1,12 @@
+{
+  "margin_percent": 20,
+  "default_duty_percent": 0,
+  "max_history_items": 50,
+  "calculation_constants": {
+    "conversion_rate": 12,
+    "logistics_cnr_ratio": 0.3,
+    "logistics_rf_ratio": 0.7,
+    "conversion_fee_rate": 0.032,
+    "credit_rate": 0.16
+  }
+}

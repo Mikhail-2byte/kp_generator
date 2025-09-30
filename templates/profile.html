@@ -1,185 +1,126 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Профиль пользователя</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <div class="theme-switcher">
-        <div class="theme-toggle" id="themeToggle" title="Переключить тему">
-            <svg class="sun" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0-12a.75.75 0 0 0 .75-.75V2a.75.75 0 0 0-1.5 0v2.25c0 .414.336.75.75.75zm0 15a.75.75 0 0 0-.75.75V22a.75.75 0 0 0 1.5 0v-2.25A.75.75 0 0 0 12 20zM4.222 5.222a.75.75 0 0 0 1.06 0l1.5-1.5a.75.75 0 0 0-1.06-1.06l-1.5 1.5a.75.75 0 0 0 0 1.06zm14.496 14.496a.75.75 0 0 0 1.06 0l1.5-1.5a.75.75 0 1 0-1.06-1.06l-1.5 1.5a.75.75 0 0 0 0 1.06zM2 12a.75.75 0 0 0 .75.75H5a.75.75 0 0 0 0-1.5H2.75A.75.75 0 0 0 2 12zm17 0a.75.75 0 0 0 .75-.75V9a.75.75 0 0 0-1.5 0v2.25c0 .414.336.75.75.75zm-15.722 6.778a.75.75 0 0 0 0-1.06l-1.5-1.5a.75.75 0 0 0-1.06 1.06l1.5 1.5a.75.75 0 0 0 1.06 0zm14.496-14.496a.75.75 0 0 0 0-1.06l-1.5-1.5a.75.75 0 1 0-1.06 1.06l1.5 1.5a.75.75 0 0 0 1.06 0z"/>
-            </svg>
-            <svg class="moon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 22c5.523 0 10-4.477 10-10 0-.463-.694-.54-.933-.143a6.5 6.5 0 1 1-8.924-8.924C12.54 2.693 12.463 2 12 2 6.477 2 2 6.477 2 12s4.477 10 10 10z"/>
-            </svg>
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="content-container">
+    {% if current_user.is_authenticated %}
+        <div class="profile-grid">
+            <div class="card">
+                <h2 class="section-title">Добро пожаловать, {{ current_user.username }}</h2>
+                <p class="section-description">Статистика по вашим коммерческим предложениям.</p>
+                <div class="stat-list">
+                    <div class="stat-item">
+                        <span>Всего генераций</span>
+                        <strong>{{ stats.total_generations }}</strong>
+                    </div>
+                    <div class="stat-item">
+                        <span>Последняя генерация</span>
+                        <strong>{{ stats.last_generation_at_formatted or '—' }}</strong>
+                    </div>
+                    <div class="stat-item">
+                        <span>Последний вход</span>
+                        <strong>{{ current_user.last_login or '—' }}</strong>
+                    </div>
+                </div>
+                <a href="{{ url_for('logout') }}" class="btn btn-outline" style="margin-top:24px;">Выйти из аккаунта</a>
+            </div>
+
+            <div class="card">
+                <h3 class="section-title">Последние генерации</h3>
+                {% if stats.recent_generations %}
+                    <div class="history-table-wrapper" style="margin-top:16px;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Дата</th>
+                                    <th>Компания</th>
+                                    <th>Товар</th>
+                                    <th>Маржа, %</th>
+                                    <th>Цена, руб</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in stats.recent_generations %}
+                                <tr>
+                                    <td>{{ item.timestamp }}</td>
+                                    <td>{{ item.company }}</td>
+                                    <td>{{ item.product }}</td>
+                                    <td>{{ item.margin_percent }}</td>
+                                    <td>{{ '%.2f'|format(item.final_price) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="muted-text">У вас пока нет созданных коммерческих предложений.</p>
+                {% endif %}
+            </div>
         </div>
-    </div>
-
-    <div class="profile-button">
-        <a href="{{ url_for('history') }}" class="btn btn-outline-secondary">История</a>
-    </div>
-
-    <div class="back-button">
-        <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
-            ← Назад к генератору
-        </a>
-    </div>
-
-    <div class="container mt-4">
-        {% include '_messages.html' %}
-
-        {% if current_user.is_authenticated %}
-            <h1 class="text-center mb-4">Профиль: {{ current_user.username }}</h1>
-
-            <div class="row g-4">
-                <div class="col-lg-4">
-                    <div class="card shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title">Статистика</h5>
-                            <p class="mb-2"><strong>Всего генераций:</strong> {{ stats.total_generations }}</p>
-                            <p class="mb-2"><strong>Последняя генерация:</strong> {{ stats.last_generation_at_formatted or '—' }}</p>
-                            <p class="mb-0"><strong>Последний вход:</strong> {{ current_user.last_login or '—' }}</p>
-                        </div>
+    {% else %}
+        <div class="profile-grid">
+            <div class="card">
+                <h2 class="section-title">Вход</h2>
+                <p class="section-description">Используйте аккаунт, чтобы сохранять историю и повторять генерации.</p>
+                <form method="post" action="{{ url_for('profile') }}" class="form-grid">
+                    {{ login_form.hidden_tag() }}
+                    <div class="field-group span-3">
+                        {{ login_form.username.label(class_='field-label') }}
+                        {{ login_form.username(class_='') }}
+                        {% for error in login_form.username.errors %}
+                            <div class="field-error">{{ error }}</div>
+                        {% endfor %}
                     </div>
-
-                    <a href="{{ url_for('logout') }}" class="btn btn-outline-danger w-100 mt-3">Выйти</a>
-                </div>
-
-                <div class="col-lg-8">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-body">
-                            <h5 class="card-title">Последние генерации</h5>
-                            {% if stats.recent_generations %}
-                                <div class="table-responsive">
-                                    <table class="table table-striped table-hover mb-0">
-                                        <thead>
-                                            <tr>
-                                                <th>Дата</th>
-                                                <th>Компания</th>
-                                                <th>Товар</th>
-                                                <th>Маржа, %</th>
-                                                <th>Цена, руб</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for item in stats.recent_generations %}
-                                            <tr>
-                                                <td>{{ item.timestamp }}</td>
-                                                <td>{{ item.company }}</td>
-                                                <td>{{ item.product }}</td>
-                                                <td>{{ item.margin_percent }}</td>
-                                                <td>{{ '%.2f'|format(item.final_price) }}</td>
-                                            </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            {% else %}
-                                <p class="text-muted mb-0">У вас пока нет созданных коммерческих предложений.</p>
-                            {% endif %}
-                        </div>
+                    <div class="field-group span-3">
+                        {{ login_form.password.label(class_='field-label') }}
+                        {{ login_form.password(class_='') }}
+                        {% for error in login_form.password.errors %}
+                            <div class="field-error">{{ error }}</div>
+                        {% endfor %}
                     </div>
-                </div>
+                    <div class="field-group span-3" style="display:flex; align-items:center; gap:8px;">
+                        {{ login_form.remember_me(class_='') }}
+                        <label for="{{ login_form.remember_me.id }}" class="muted-text">Запомнить меня</label>
+                    </div>
+                    <div class="controls-row">
+                        <span></span>
+                        {{ login_form.submit_login(class_='btn btn-primary') }}
+                    </div>
+                </form>
             </div>
-        {% else %}
-            <h1 class="text-center mb-4">Вход или регистрация</h1>
-            <div class="row g-4">
-                <div class="col-lg-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-body">
-                            <h5 class="card-title mb-3">Вход</h5>
-                            <form method="post" action="{{ url_for('profile') }}">
-                                {{ login_form.hidden_tag() }}
-                                <div class="mb-3">
-                                    {{ login_form.username.label(class_='form-label') }}
-                                    {{ login_form.username(class_='form-control', placeholder='Логин') }}
-                                    {% for error in login_form.username.errors %}
-                                        <div class="invalid-feedback d-block">{{ error }}</div>
-                                    {% endfor %}
-                                </div>
-                                <div class="mb-3">
-                                    {{ login_form.password.label(class_='form-label') }}
-                                    {{ login_form.password(class_='form-control', placeholder='Пароль') }}
-                                    {% for error in login_form.password.errors %}
-                                        <div class="invalid-feedback d-block">{{ error }}</div>
-                                    {% endfor %}
-                                </div>
-                                <div class="form-check mb-3">
-                                    {{ login_form.remember_me(class_='form-check-input', id='remember_me') }}
-                                    <label class="form-check-label" for="remember_me">Запомнить меня</label>
-                                </div>
-                                {{ login_form.submit_login(class_='btn btn-primary w-100') }}
-                            </form>
-                        </div>
+
+            <div class="card">
+                <h2 class="section-title">Регистрация</h2>
+                <p class="section-description">Создайте аккаунт, чтобы вести историю своих расчётов.</p>
+                <form method="post" action="{{ url_for('profile') }}" class="form-grid">
+                    {{ register_form.hidden_tag() }}
+                    <div class="field-group span-3">
+                        {{ register_form.username.label(class_='field-label') }}
+                        {{ register_form.username(class_='') }}
+                        {% for error in register_form.username.errors %}
+                            <div class="field-error">{{ error }}</div>
+                        {% endfor %}
                     </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-body">
-                            <h5 class="card-title mb-3">Регистрация</h5>
-                            <form method="post" action="{{ url_for('profile') }}">
-                                {{ register_form.hidden_tag() }}
-                                <div class="mb-3">
-                                    {{ register_form.username.label(class_='form-label') }}
-                                    {{ register_form.username(class_='form-control', placeholder='Придумайте логин') }}
-                                    {% for error in register_form.username.errors %}
-                                        <div class="invalid-feedback d-block">{{ error }}</div>
-                                    {% endfor %}
-                                </div>
-                                <div class="mb-3">
-                                    {{ register_form.password.label(class_='form-label') }}
-                                    {{ register_form.password(class_='form-control', placeholder='Пароль (мин. 6 символов)') }}
-                                    {% for error in register_form.password.errors %}
-                                        <div class="invalid-feedback d-block">{{ error }}</div>
-                                    {% endfor %}
-                                </div>
-                                <div class="mb-3">
-                                    {{ register_form.confirm_password.label(class_='form-label') }}
-                                    {{ register_form.confirm_password(class_='form-control', placeholder='Повторите пароль') }}
-                                    {% for error in register_form.confirm_password.errors %}
-                                        <div class="invalid-feedback d-block">{{ error }}</div>
-                                    {% endfor %}
-                                </div>
-                                {{ register_form.submit_register(class_='btn btn-success w-100') }}
-                            </form>
-                        </div>
+                    <div class="field-group span-3">
+                        {{ register_form.password.label(class_='field-label') }}
+                        {{ register_form.password(class_='') }}
+                        {% for error in register_form.password.errors %}
+                            <div class="field-error">{{ error }}</div>
+                        {% endfor %}
                     </div>
-                </div>
+                    <div class="field-group span-3">
+                        {{ register_form.confirm_password.label(class_='field-label') }}
+                        {{ register_form.confirm_password(class_='') }}
+                        {% for error in register_form.confirm_password.errors %}
+                            <div class="field-error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="controls-row">
+                        <span></span>
+                        {{ register_form.submit_register(class_='btn btn-primary') }}
+                    </div>
+                </form>
             </div>
-        {% endif %}
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const themeToggle = document.getElementById('themeToggle');
-            const html = document.documentElement;
-            const savedTheme = localStorage.getItem('theme');
-            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-            if (savedTheme) {
-                html.setAttribute('data-theme', savedTheme);
-            } else if (systemPrefersDark) {
-                html.setAttribute('data-theme', 'dark');
-            }
-
-            themeToggle.addEventListener('click', function() {
-                const currentTheme = html.getAttribute('data-theme');
-                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-                html.setAttribute('data-theme', newTheme);
-                localStorage.setItem('theme', newTheme);
-            });
-
-            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-                if (!localStorage.getItem('theme')) {
-                    html.setAttribute('data-theme', e.matches ? 'dark' : 'light');
-                }
-            });
-        });
-    </script>
-</body>
-</html>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

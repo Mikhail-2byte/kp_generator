@@ -1,167 +1,112 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ставки пошлины</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <div class="theme-switcher">
-        <div class="theme-toggle" id="themeToggle" title="Переключить тему">
-            <svg class="sun" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0-12a.75.75 0 0 0 .75-.75V2a.75.75 0 0 0-1.5 0v2.25c0 .414.336.75.75.75zm0 15a.75.75 0 0 0-.75.75V22a.75.75 0 0 0 1.5 0v-2.25A.75.75 0 0 0 12 20zM4.222 5.222a.75.75 0 0 0 1.06 0l1.5-1.5a.75.75 0 0 0-1.06-1.06l-1.5 1.5a.75.75 0 0 0 0 1.06zm14.496 14.496a.75.75 0 0 0 1.06 0l1.5-1.5a.75.75 0 1 0-1.06-1.06l-1.5 1.5a.75.75 0 0 0 0 1.06zM2 12a.75.75 0 0 0 .75.75H5a.75.75 0 0 0 0-1.5H2.75A.75.75 0 0 0 2 12zm17 0a.75.75 0 0 0 .75-.75V9a.75.75 0 0 0-1.5 0v2.25c0 .414.336.75.75.75zm-15.722 6.778a.75.75 0 0 0 0-1.06l-1.5-1.5a.75.75 0 0 0-1.06 1.06l1.5 1.5a.75.75 0 0 0 1.06 0zm14.496-14.496a.75.75 0 0 0 0-1.06l-1.5-1.5a.75.75 0 1 0-1.06 1.06l1.5 1.5a.75.75 0 0 0 1.06 0z"/>
-            </svg>
-            <svg class="moon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 22c5.523 0 10-4.477 10-10 0-.463-.694-.54-.933-.143a6.5 6.5 0 1 1-8.924-8.924C12.54 2.693 12.463 2 12 2 6.477 2 2 6.477 2 12s4.477 10 10 10z"/>
-            </svg>
-        </div>
-    </div>
+{% extends 'base.html' %}
 
-    <!-- Кнопка профиля -->
-    <div class="profile-button">
-        <a href="{{ url_for('profile') }}" class="btn btn-outline-primary">
-            {{ current_user.username if current_user.is_authenticated else 'Профиль' }}
-        </a>
-    </div>
-
-    <div class="back-button">
-        <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
-            ← Назад к генератору
-        </a>
-    </div>
-
-    <div class="container mt-4">
-        <h1 class="text-center mb-4">Ставки пошлины</h1>
-        <p class="text-muted text-center mb-4">Поиск по изделиям и категориям для определения применяемой ставки пошлины.</p>
-
-        <div class="row g-3 justify-content-center mb-4">
-            <div class="col-lg-3 col-md-6">
-                <label for="productFilter" class="form-label">Изделие</label>
-                <input type="text" id="productFilter" class="form-control" placeholder="Например, Вал">
+{% block content %}
+<div class="content-container">
+    <div class="card">
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">Таможенные ставки</h2>
+                <p class="section-description">Найдите нужную ставку пошлины по изделию, категории или значению.</p>
             </div>
-            <div class="col-lg-3 col-md-6">
-                <label for="categoryFilter" class="form-label">Категория</label>
-                <input type="text" id="categoryFilter" class="form-control" placeholder="Категория изделия">
-            </div>
-            <div class="col-lg-2 col-md-4">
-                <label for="dutyFilter" class="form-label">Ставка (%)</label>
-                <input type="number" id="dutyFilter" class="form-control" placeholder="Например, 5" min="0" step="0.01">
-            </div>
-            <div class="col-lg-2 col-md-4">
-                <label class="form-label">&nbsp;</label>
-                <button class="btn btn-outline-secondary w-100" id="clearFilters">Сбросить</button>
-            </div>
+            <span class="badge">Всего: {{ items|length }}</span>
         </div>
 
-        <div class="table-responsive">
-            <table class="table table-striped table-hover table-bordered" id="dutyTable">
-                <thead class="table-warning">
+        <div class="search-controls">
+            <input type="text" id="productFilter" class="search-input" placeholder="Изделие (например, Вал)">
+            <input type="text" id="categoryFilter" class="search-input" placeholder="Категория">
+            <input type="number" id="dutyFilter" class="search-input" placeholder="Ставка %" min="0" step="0.01">
+            <button class="btn btn-outline" id="clearFilters">Сбросить фильтры</button>
+        </div>
+
+        <div class="history-table-wrapper">
+            <table class="data-table" id="dutyTable">
+                <thead>
                     <tr>
                         <th>Изделие</th>
                         <th>Категория</th>
-                        <th class="text-center">Ставка пошлины, %</th>
+                        <th class="text-center">Ставка, %</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% if items %}
                         {% for item in items %}
                         <tr data-product="{{ item.product_search }}" data-category="{{ item.category_search }}" data-duty="{{ item.duty_search }}">
-                            <td class="fw-semibold">{{ item.product }}</td>
+                            <td><strong>{{ item.product }}</strong></td>
                             <td>{{ item.category or '—' }}</td>
                             <td class="text-center">{{ item.duty_percent }}</td>
                         </tr>
                         {% endfor %}
                     {% else %}
                         <tr id="emptyStateRow">
-                            <td colspan="3" class="text-center text-muted py-4">По вашему запросу ничего не найдено.</td>
+                            <td colspan="3" class="empty-state">
+                                <div class="icon">{{ sidebar_icon('search')|safe }}</div>
+                                <p>Нет данных для отображения. Попробуйте изменить условия поиска.</p>
+                            </td>
                         </tr>
                     {% endif %}
                 </tbody>
             </table>
         </div>
     </div>
+</div>
+{% endblock %}
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const themeToggle = document.getElementById('themeToggle');
-            const html = document.documentElement;
-            const savedTheme = localStorage.getItem('theme');
-            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const tableBody = document.querySelector('#dutyTable tbody');
+        const productFilter = document.getElementById('productFilter');
+        const categoryFilter = document.getElementById('categoryFilter');
+        const dutyFilter = document.getElementById('dutyFilter');
+        const clearFilters = document.getElementById('clearFilters');
+        const rows = Array.from(tableBody.querySelectorAll('tr')).filter(row => row.id !== 'emptyStateRow');
 
-            if (savedTheme) {
-                html.setAttribute('data-theme', savedTheme);
-            } else if (systemPrefersDark) {
-                html.setAttribute('data-theme', 'dark');
+        const updateTable = () => {
+            const productQuery = productFilter.value.trim().toLowerCase();
+            const categoryQuery = categoryFilter.value.trim().toLowerCase();
+            const dutyQuery = dutyFilter.value.trim();
+            let visibleRows = 0;
+
+            rows.forEach(row => {
+                const product = row.getAttribute('data-product') || '';
+                const category = row.getAttribute('data-category') || '';
+                const duty = row.getAttribute('data-duty') || '';
+
+                const matchesProduct = !productQuery || product.includes(productQuery);
+                const matchesCategory = !categoryQuery || category.includes(categoryQuery);
+                const matchesDuty = !dutyQuery || duty.includes(dutyQuery);
+
+                const shouldShow = matchesProduct && matchesCategory && matchesDuty;
+                row.style.display = shouldShow ? '' : 'none';
+                if (shouldShow) visibleRows += 1;
+            });
+
+            const emptyRow = document.getElementById('emptyStateRow');
+            if (emptyRow) {
+                emptyRow.remove();
             }
 
-            themeToggle.addEventListener('click', function() {
-                const currentTheme = html.getAttribute('data-theme');
-                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-                html.setAttribute('data-theme', newTheme);
-                localStorage.setItem('theme', newTheme);
-            });
-
-            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-                if (!localStorage.getItem('theme')) {
-                    html.setAttribute('data-theme', e.matches ? 'dark' : 'light');
-                }
-            });
-
-            const rows = Array.from(document.querySelectorAll('#dutyTable tbody tr')).filter(row => row.id !== 'emptyStateRow');
-            const productFilter = document.getElementById('productFilter');
-            const categoryFilter = document.getElementById('categoryFilter');
-            const dutyFilter = document.getElementById('dutyFilter');
-            const clearFilters = document.getElementById('clearFilters');
-
-            function filterTable() {
-                const productQuery = productFilter.value.trim().toLowerCase();
-                const categoryQuery = categoryFilter.value.trim().toLowerCase();
-                const dutyQuery = dutyFilter.value.trim();
-
-                let visibleRows = 0;
-
-                rows.forEach(row => {
-                    const product = row.getAttribute('data-product') || '';
-                    const category = row.getAttribute('data-category') || '';
-                    const duty = row.getAttribute('data-duty') || '';
-
-                    const matchesProduct = !productQuery || product.includes(productQuery);
-                    const matchesCategory = !categoryQuery || category.includes(categoryQuery);
-                    const matchesDuty = !dutyQuery || duty.includes(dutyQuery);
-
-                    const matches = matchesProduct && matchesCategory && matchesDuty;
-                    row.style.display = matches ? '' : 'none';
-                    if (matches) visibleRows++;
-                });
-
-                document.getElementById('emptyStateRow')?.remove();
-
-                if (visibleRows === 0) {
-                    const tbody = document.querySelector('#dutyTable tbody');
-                    const emptyRow = document.createElement('tr');
-                    emptyRow.id = 'emptyStateRow';
-                    emptyRow.innerHTML = '<td colspan="3" class="text-center text-muted py-4">По вашему запросу ничего не найдено.</td>';
-                    tbody.appendChild(emptyRow);
-                }
+            if (visibleRows === 0) {
+                const tr = document.createElement('tr');
+                tr.id = 'emptyStateRow';
+                tr.innerHTML = '<td colspan="3" class="empty-state"><div class="icon">🔍</div><p>По вашему запросу ничего не найдено.</p></td>';
+                tableBody.appendChild(tr);
             }
+        };
 
-            productFilter.addEventListener('input', filterTable);
-            categoryFilter.addEventListener('input', filterTable);
-            dutyFilter.addEventListener('input', filterTable);
-            clearFilters.addEventListener('click', function(event) {
-                event.preventDefault();
-                productFilter.value = '';
-                categoryFilter.value = '';
-                dutyFilter.value = '';
-                filterTable();
-            });
-
-            filterTable();
+        [productFilter, categoryFilter, dutyFilter].forEach(input => {
+            input.addEventListener('input', updateTable);
         });
-    </script>
-</body>
-</html>
+
+        clearFilters.addEventListener('click', (event) => {
+            event.preventDefault();
+            productFilter.value = '';
+            categoryFilter.value = '';
+            dutyFilter.value = '';
+            updateTable();
+        });
+
+        updateTable();
+    });
+</script>
+{% endblock %}

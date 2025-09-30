@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title or 'КП Система' }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body data-page="{{ active_page or 'index' }}">
+    <div class="app-shell">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">
+                    <span class="brand-accent"></span>
+                    <span class="brand-text">КП Система</span>
+                </div>
+            </div>
+            <nav class="sidebar-nav" aria-label="Основная навигация">
+                <a href="{{ url_for('index') }}" class="sidebar-link" data-nav="index">
+                    <span class="sidebar-icon">{{ sidebar_icon('file-text')|safe }}</span>
+                    <span class="sidebar-label">Создать КП</span>
+                </a>
+                <a href="{{ url_for('logistics') }}" class="sidebar-link" data-nav="logistics">
+                    <span class="sidebar-icon">{{ sidebar_icon('truck')|safe }}</span>
+                    <span class="sidebar-label">Логистика</span>
+                </a>
+                <a href="{{ url_for('duty') }}" class="sidebar-link" data-nav="duty">
+                    <span class="sidebar-icon">{{ sidebar_icon('percent')|safe }}</span>
+                    <span class="sidebar-label">Пошлина</span>
+                </a>
+                <a href="{{ url_for('gb_analogs') }}" class="sidebar-link" data-nav="gb">
+                    <span class="sidebar-icon">{{ sidebar_icon('layers')|safe }}</span>
+                    <span class="sidebar-label">Аналоги GB</span>
+                </a>
+                <button type="button" class="sidebar-link" data-modal-target="metalModal">
+                    <span class="sidebar-icon">{{ sidebar_icon('coins')|safe }}</span>
+                    <span class="sidebar-label">Цена металла</span>
+                </button>
+                <button type="button" class="sidebar-link" data-modal-target="wheelsModal">
+                    <span class="sidebar-icon">{{ sidebar_icon('circle')|safe }}</span>
+                    <span class="sidebar-label">Крановые колёса</span>
+                </button>
+                <a href="{{ url_for('feedback') }}" class="sidebar-link" data-nav="feedback">
+                    <span class="sidebar-icon">{{ sidebar_icon('message-square')|safe }}</span>
+                    <span class="sidebar-label">Обратная связь</span>
+                </a>
+            </nav>
+        </aside>
+
+        <button type="button" class="sidebar-toggle" id="sidebarToggle" aria-label="Свернуть боковую панель" aria-expanded="true">
+            <span class="chevron chevron-left">{{ sidebar_icon('chevron-left')|safe }}</span>
+            <span class="chevron chevron-right">{{ sidebar_icon('chevron-right')|safe }}</span>
+        </button>
+
+        <div class="app-main">
+            <header class="app-header">
+                <div class="app-header-title">
+                    <h1>{{ header_title or '' }}</h1>
+                    {% if header_subtitle %}
+                        <p>{{ header_subtitle }}</p>
+                    {% endif %}
+                </div>
+                <div class="app-header-actions">
+                    <a href="{{ url_for('history') }}" class="header-link" data-header-action="history">
+                        <span class="header-icon">{{ sidebar_icon('history')|safe }}</span>
+                        <span>История</span>
+                    </a>
+                    <a href="{{ url_for('profile') }}" class="header-link" data-header-action="profile">
+                        <span class="header-icon">{{ sidebar_icon('user')|safe }}</span>
+                        <span>{{ current_user.username if current_user.is_authenticated else 'Профиль' }}</span>
+                    </a>
+                </div>
+            </header>
+
+            <main class="app-content">
+                {% include '_messages.html' %}
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    {% block overlays %}{% endblock %}
+
+    <script>
+        (function() {
+            const body = document.body;
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.getElementById('sidebarToggle');
+            const navLinks = document.querySelectorAll('.sidebar-link[data-nav]');
+            const modalButtons = document.querySelectorAll('[data-modal-target]');
+            const activePage = body.dataset.page;
+
+            document.querySelectorAll('[data-close-flash]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    const flash = button.closest('.flash');
+                    if (flash) {
+                        flash.remove();
+                    }
+                });
+            });
+
+            navLinks.forEach((link) => {
+                if (link.dataset.nav === activePage) {
+                    link.classList.add('is-active');
+                    link.setAttribute('aria-current', 'page');
+                } else {
+                    link.classList.remove('is-active');
+                    link.removeAttribute('aria-current');
+                }
+            });
+
+            const sidebarStateKey = 'kp-sidebar-collapsed';
+            const restoreSidebarState = () => {
+                const saved = localStorage.getItem(sidebarStateKey);
+                if (saved === 'true') {
+                    body.classList.add('sidebar-collapsed');
+                    toggle.setAttribute('aria-expanded', 'false');
+                }
+            };
+
+            restoreSidebarState();
+
+            if (toggle) {
+                toggle.addEventListener('click', () => {
+                    const collapsed = body.classList.toggle('sidebar-collapsed');
+                    toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+                    localStorage.setItem(sidebarStateKey, collapsed);
+                });
+            }
+
+            const closeModal = (modal) => {
+                modal.classList.remove('is-open');
+                modal.setAttribute('aria-hidden', 'true');
+            };
+
+            modalButtons.forEach((button) => {
+                button.addEventListener('click', () => {
+                    const targetId = button.getAttribute('data-modal-target');
+                    const modal = document.getElementById(targetId);
+                    if (modal) {
+                        modal.classList.add('is-open');
+                        modal.setAttribute('aria-hidden', 'false');
+                        const closeBtn = modal.querySelector('[data-close-modal]');
+                        if (closeBtn) {
+                            closeBtn.focus();
+                        }
+                    }
+                });
+            });
+
+            document.addEventListener('click', (event) => {
+                const target = event.target;
+                if (target instanceof Element && target.matches('[data-close-modal]')) {
+                    const modal = target.closest('.modal');
+                    if (modal) {
+                        closeModal(modal);
+                    }
+                }
+                if (target instanceof Element && target.classList.contains('modal')) {
+                    closeModal(target);
+                }
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') {
+                    document.querySelectorAll('.modal.is-open').forEach((modal) => closeModal(modal));
+                }
+            });
+
+            const headerHistory = document.querySelector('[data-header-action="history"]');
+            if (headerHistory) {
+                if (activePage === 'history') {
+                    headerHistory.classList.add('is-active');
+                    headerHistory.setAttribute('aria-current', 'page');
+                } else {
+                    headerHistory.classList.remove('is-active');
+                    headerHistory.removeAttribute('aria-current');
+                }
+            }
+
+            const headerProfile = document.querySelector('[data-header-action="profile"]');
+            if (headerProfile && activePage === 'profile') {
+                headerProfile.classList.add('is-active');
+                headerProfile.setAttribute('aria-current', 'page');
+            }
+        })();
+    </script>
+
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

@@ -16,6 +16,7 @@ from datetime import datetime
 from wtforms import StringField, PasswordField, SubmitField, BooleanField
 from wtforms.validators import DataRequired, Length, EqualTo
 from werkzeug.security import generate_password_hash, check_password_hash
+from markupsafe import Markup
 
 # Импорты из наших модулей
 from app.helpers import check_templates_exist, validate_form_data
@@ -108,6 +109,45 @@ def load_duty_rates():
 DUTY_RATES = load_duty_rates()
 
 
+ICON_MAP = {
+    'file-text': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16l4-4h6a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"></path><path d="M10 9h4"></path><path d="M10 13h2"></path></svg>',
+    'truck': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 17h4.67a2 2 0 0 0 1.89-1.37L18 7H6"></path><path d="M18 17h2V9h-5"></path><path d="M6 17H4a2 2 0 0 1-2-2V5a1 1 0 0 1 1-1h11"></path><circle cx="7.5" cy="17.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle></svg>',
+    'percent': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 5 5 19"></path><circle cx="6.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle></svg>',
+    'layers': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 8 4-8 4-8-4 8-4z"></path><path d="m4 10 8 4 8-4"></path><path d="m4 18 8 4 8-4"></path></svg>',
+    'coins': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5v6c0 1.7 4 3 9 3s9-1.3 9-3V5"></path><path d="M3 11v6c0 1.7 4 3 9 3s9-1.3 9-3v-6"></path></svg>',
+    'circle': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="2"></circle><path d="M12 4v1"></path><path d="M12 19v1"></path><path d="M20 12h-1"></path><path d="M5 12H4"></path></svg>',
+    'message-square': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z"></path></svg>',
+    'chevron-left': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>',
+    'chevron-right': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>',
+    'history': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v5h5"></path><path d="M3.05 13A9 9 0 1 0 6 4.6L3 8"></path><path d="M12 7v5l3 3"></path></svg>',
+    'user': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="7" r="4"></circle><path d="M5.5 21a7 7 0 0 1 13 0"></path></svg>',
+    'x': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>',
+    'download': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="M7 10l5 5 5-5"></path><path d="M12 15V3"></path></svg>',
+    'plus': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>',
+    'trash2': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>',
+    'search': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-3.87-3.87"></path></svg>'
+}
+
+
+@app.context_processor
+def inject_ui_helpers():
+    def sidebar_icon(name: str) -> Markup:
+        svg = ICON_MAP.get(name)
+        return Markup(svg) if svg else Markup('')
+
+    return {'sidebar_icon': sidebar_icon}
+
+
+def build_context(active_page: str, header_title: str, **kwargs) -> dict:
+    context = {
+        'active_page': active_page,
+        'header_title': header_title,
+        'title': header_title
+    }
+    context.update(kwargs)
+    return context
+
+
 class User(UserMixin):
     def __init__(self, user_id, username, password_hash, created_at=None, last_login=None):
         self.id = str(user_id)
@@ -163,7 +203,10 @@ def index():
     for field in ['id', 'timestamp', 'final_price', 'user_id']:
         if field in form_data:
             del form_data[field]
-    return render_template('index.html', form_data=form_data)
+    return render_template(
+        'index.html',
+        **build_context('index', 'Создание коммерческого предложения', form_data=form_data)
+    )
 
 @app.route('/history/details/<int:record_id>')
 def history_details(record_id):
@@ -180,7 +223,10 @@ def history_details(record_id):
 @app.route('/history')
 def history():
     history_data = get_generation_history(config)
-    return render_template('history.html', history=history_data)
+    return render_template(
+        'history.html',
+        **build_context('history', 'История генераций КП', history=history_data)
+    )
 
 
 @app.route('/feedback', methods=['GET', 'POST'])
@@ -202,7 +248,10 @@ def feedback():
 
         if not feedback_text and not improvement_text:
             flash('Пожалуйста, поделитесь отзывом или предложением.', 'danger')
-            return render_template('feedback.html', form_data=form_data)
+            return render_template(
+                'feedback.html',
+                **build_context('feedback', 'Обратная связь', form_data=form_data)
+            )
 
         entry = {
             'timestamp': datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
@@ -217,9 +266,14 @@ def feedback():
             return redirect(url_for('feedback'))
         else:
             flash('Не удалось сохранить отзыв. Попробуйте позже.', 'danger')
-            return render_template('feedback.html', form_data=form_data)
-
-    return render_template('feedback.html', form_data=form_data)
+            return render_template(
+                'feedback.html',
+                **build_context('feedback', 'Обратная связь', form_data=form_data)
+            )
+    return render_template(
+        'feedback.html',
+        **build_context('feedback', 'Обратная связь', form_data=form_data)
+    )
 
 @app.route('/gb-analogs')
 def gb_analogs():
@@ -246,7 +300,10 @@ def gb_analogs():
             ):
                 filtered_materials.append(material)
 
-    return render_template('gb_analogs.html', materials=filtered_materials, query=query)
+    return render_template(
+        'gb_analogs.html',
+        **build_context('gb', 'Аналоги по стандарту GB', materials=filtered_materials, query=query)
+    )
 
 
 @app.route('/duty')
@@ -263,7 +320,10 @@ def duty():
             or normalized_query in item.get('duty_search', '')
         ]
 
-    return render_template('duty.html', items=filtered_items, query=query)
+    return render_template(
+        'duty.html',
+        **build_context('duty', 'Ставки пошлин', items=filtered_items, query=query)
+    )
 
 @app.route('/load_generation/<int:gen_id>')
 def load_generation(gen_id):
@@ -289,7 +349,10 @@ def generate():
     if errors:
         for error in errors:
             flash(error, 'danger')
-        return render_template('index.html', form_data=form_data)
+        return render_template(
+            'index.html',
+            **build_context('index', 'Создание коммерческого предложения', form_data=form_data)
+        )
     
     try:
         # Извлечение данных
@@ -328,7 +391,10 @@ def generate():
             for error in template_errors:
                 flash(f'{error}. Обратитесь к администратору.', 'danger')
                 app.logger.error(error)
-            return render_template('index.html', form_data=form_data)
+            return render_template(
+                'index.html',
+                **build_context('index', 'Создание коммерческого предложения', form_data=form_data)
+            )
         
         # Генерация документов
         excel_template_path = os.path.join('templates_docs', 'template.xlsx')
@@ -349,7 +415,10 @@ def generate():
     except Exception as e:
         flash('Произошла непредвиденная ошибка. Попробуйте еще раз.', 'danger')
         app.logger.error(f'Unexpected error: {str(e)}')
-        return render_template('index.html', form_data=form_data)
+        return render_template(
+            'index.html',
+            **build_context('index', 'Создание коммерческого предложения', form_data=form_data)
+        )
     
 
 @app.route('/profile', methods=['GET', 'POST'])
@@ -418,7 +487,10 @@ def profile():
             })
         stats['recent_generations'] = formatted_recent
 
-    return render_template('profile.html', login_form=login_form, register_form=register_form, stats=stats)
+    return render_template(
+        'profile.html',
+        **build_context('profile', 'Профиль', login_form=login_form, register_form=register_form, stats=stats)
+    )
 
 
 @app.route('/logout')
@@ -465,16 +537,25 @@ def logistics():
         # Возвращаем пустой список в случае ошибки
         cities = []
     
-    return render_template('logistics.html', cities=cities)
+    return render_template(
+        'logistics.html',
+        **build_context('logistics', 'Просчёт логистики', cities=cities)
+    )
 
     
 @app.errorhandler(404)
 def not_found_error(error):
-    return render_template('404.html'), 404
+    return render_template(
+        '404.html',
+        **build_context('index', 'Страница не найдена')
+    ), 404
 
 @app.errorhandler(500)
 def internal_error(error):
-    return render_template('500.html'), 500
+    return render_template(
+        '500.html',
+        **build_context('index', 'Внутренняя ошибка')
+    ), 500
 
 if __name__ == '__main__':
     # Создаем необходимые папки

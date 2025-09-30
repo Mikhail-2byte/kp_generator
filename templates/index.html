@@ -1,404 +1,330 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Генератор коммерческих предложений</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="loading-spinner"></div>
-    </div>
-    <!-- Кнопка профиля -->
-    <div class="profile-button">
-        <a href="{{ url_for('profile') }}" class="btn btn-outline-primary">
-            {{ current_user.username if current_user.is_authenticated else 'Профиль' }}
-        </a>
-    </div>
+{% extends 'base.html' %}
 
-    <!-- Кнопка истории (ОСТАВЛЯЕМ ТОЛЬКО ОДНУ) -->
-    <div class="history-button">
-        <a href="{{ url_for('history') }}" class="btn btn-outline-secondary">
-            История
-        </a>
-    </div>
-    <!-- Кнопка логистики -->
-    <div class="logistics-button">
-        <a href="{{ url_for('logistics') }}" class="btn btn-outline-info">
-            Логистика
-        </a>
-    </div>
+{% block content %}
+<div class="content-container">
+    <form action="{{ url_for('generate') }}" method="post" novalidate class="card-stack" id="generateForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-
-    <!-- Кнопка пошлины -->
-    <div class="duty-button">
-        <a href="{{ url_for('duty') }}" class="btn btn-outline-warning">
-            Пошлина
-        </a>
-    </div>
-
-    <!-- Кнопка стандартов GB -->
-    <div class="gb-standards-button">
-        <a href="{{ url_for('gb_analogs') }}" class="btn btn-outline-success">
-            Аналоги по стандарту GB
-        </a>
-    </div>
-
-    <!-- Кнопка цены металла -->
-    <div class="metal-price-button">
-        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#metalPriceModal">
-            Цена металла
-        </button>
-    </div>
-
-    <!-- Кнопка цены крановых колес -->
-    <div class="crane-wheels-button">
-        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#craneWheelsModal">
-            Крановые колеса
-        </button>
-    </div>
-
-    <!-- Кнопка отзывов -->
-    <div class="feedback-button">
-        <a href="{{ url_for('feedback') }}" class="btn btn-outline-primary">
-            Отзывы и предложения
-        </a>
-    </div>
-
-    <!-- Модальное окно цены металла -->
-    <div class="modal fade" id="metalPriceModal" tabindex="-1" aria-labelledby="metalPriceModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="metalPriceModalLabel">Цена за кг металла</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Поковки Ст.40 = 16 юаней за кг</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">Общая информация</h2>
+                <p class="section-description">Заполните ключевые параметры сделки и доставки.</p>
+            </div>
+            <div class="card">
+                <div class="form-grid three-columns">
+                    <div class="field-group">
+                        <label for="company" class="field-label">Название компании</label>
+                        <input type="text" id="company" name="company" required
+                               value="{{ form_data.company if form_data and form_data.company else '' }}">
+                    </div>
+                    <div class="field-group">
+                        <label for="tender_number" class="field-label">Номер тендера</label>
+                        <input type="text" id="tender_number" name="tender_number"
+                               value="{{ form_data.tender_number if form_data and form_data.tender_number else '' }}">
+                    </div>
+                    <div class="field-group">
+                        <label for="delivery_time" class="field-label">Срок поставки (дней)</label>
+                        <input type="number" id="delivery_time" name="delivery_time" min="1" step="1" required
+                               value="{{ form_data.delivery_time if form_data and form_data.delivery_time else '' }}">
+                    </div>
+                    <div class="field-group delivery-address-group">
+                        <label for="delivery_address" class="field-label">Адрес доставки</label>
+                        <textarea id="delivery_address" name="delivery_address" rows="2" placeholder="Страна, город, улица">{{ form_data.delivery_address.strip() if form_data and form_data.delivery_address else '' }}</textarea>
+                    </div>
+                    <div class="field-group">
+                        <label for="nearest_city" class="field-label">Ближайший допустимый город</label>
+                        <input type="text" id="nearest_city" name="nearest_city"
+                               value="{{ form_data.nearest_city if form_data and form_data.nearest_city else '' }}"
+                               placeholder="Например: Москва">
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Оценочный вес</label>
+                        <input type="text" id="totalWeightValue" readonly value="0 кг" class="weight-output" tabindex="-1">
+                    </div>
+                    <div class="field-group">
+                        <label for="logistics" class="field-label">Стоимость логистики (руб.)</label>
+                        <input type="number" id="logistics" name="logistics" min="0" step="0.01" required
+                               value="{{ form_data.logistics if form_data and form_data.logistics else '' }}">
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
+        </section>
 
-    <!-- Модальное окно цены крановых колес -->
-    <div class="modal fade" id="craneWheelsModal" tabindex="-1" aria-labelledby="craneWheelsModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="craneWheelsModalLabel">Цены для крановых колес</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <section class="section">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">Параметры изделия</h2>
                 </div>
-                <div class="modal-body">
-                    <p>Колеса весом до 100кг: от 17 юаней за кг</p>
-                    <p>Колеса весом более 100кг: от 15 юаней за кг</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                <div class="position-actions">
+                    <button type="button" class="btn btn-primary" id="importExcelBtn" disabled>Выгрузить значения из Excel</button>
+                    <button type="button" class="btn btn-primary add-position-btn" id="addPositionBtn" disabled>Добавить позицию</button>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <div class="container mt-4 main-container">
-        <!-- Переключатель темы -->
-        <div class="theme-switcher">
-            <div class="theme-toggle" id="themeToggle" title="Переключить тему">
-                <svg class="sun" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0-12a.75.75 0 0 0 .75-.75V2a.75.75 0 0 0-1.5 0v2.25c0 .414.336.75.75.75zm0 15a.75.75 0 0 0-.75.75V22a.75.75 0 0 0 1.5 0v-2.25A.75.75 0 0 0 12 20zM4.222 5.222a.75.75 0 0 0 1.06 0l1.5-1.5a.75.75 0 0 0-1.06-1.06l-1.5 1.5a.75.75 0 0 0 0 1.06zm14.496 14.496a.75.75 0 0 0 1.06 0l1.5-1.5a.75.75 0 1 0-1.06-1.06l-1.5 1.5a.75.75 0 0 0 0 1.06zM2 12a.75.75 0 0 0 .75.75H5a.75.75 0 0 0 0-1.5H2.75A.75.75 0 0 0 2 12zm17 0a.75.75 0 0 0 .75-.75V9a.75.75 0 0 0-1.5 0v2.25c0 .414.336.75.75.75zm-15.722 6.778a.75.75 0 0 0 0-1.06l-1.5-1.5a.75.75 0 0 0-1.06 1.06l1.5 1.5a.75.75 0 0 0 1.06 0zm14.496-14.496a.75.75 0 0 0 0-1.06l-1.5-1.5a.75.75 0 1 0-1.06 1.06l1.5 1.5a.75.75 0 0 0 1.06 0z"/>
-                </svg>
-                <svg class="moon" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 22c5.523 0 10-4.477 10-10 0-.463-.694-.54-.933-.143a6.5 6.5 0 1 1-8.924-8.924C12.54 2.693 12.463 2 12 2 6.477 2 2 6.477 2 12s4.477 10 10 10z"/>
-                </svg>
-            </div>
-        </div>
-
-        <h1 class="text-center mb-3">Создание коммерческого предложения</h1>
-        
-        {% include '_messages.html' %}
-        
-        <form action="{{ url_for('generate') }}" method="post" novalidate>
-            <!-- ДОБАВЛЯЕМ CSRF ТОКЕН -->
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            
-            <div class="row">
-                <!-- Левый столбец -->
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label for="tender_number" class="form-label">Номер тендера:</label>
-                        <input type="text" class="form-control" id="tender_number" name="tender_number" 
-                                value="{{ form_data.tender_number if form_data and form_data.tender_number else '' }}">
-                    </div>
-    
-                    <div class="mb-3">
-                        <label for="company" class="form-label">Название компании:</label>
-                        <input type="text" class="form-control" id="company" name="company" 
-                               value="{{ form_data.company if form_data and form_data.company else '' }}" required>
-                        <div class="invalid-feedback">Пожалуйста, укажите название компании.</div>
-                    </div>
-    
-                    <div class="mb-3">
-                        <label for="delivery_address" class="form-label">Адрес доставки:</label>
-                        <textarea class="form-control" id="delivery_address" name="delivery_address" 
-                                  rows="1" style="min-height: 38px; resize: vertical;">{{ form_data.delivery_address if form_data and form_data.delivery_address else '' }}</textarea>
-                    </div>                    
-    
-                    <div class="mb-3">
-                        <label for="product" class="form-label">Наименование товара:</label>
-                        <input type="text" class="form-control" id="product" name="product" 
-                               value="{{ form_data.product if form_data and form_data.product else '' }}" required>
-                        <div class="invalid-feedback">Пожалуйста, укажите наименование товара.</div>
-                    </div>
-    
-                    <div class="mb-3">
-                        <label for="quantity" class="form-label">Количество:</label>
-                        <input type="number" class="form-control" id="quantity" name="quantity" 
-                               value="{{ form_data.quantity if form_data and form_data.quantity else '' }}" min="1" required>
-                        <div class="invalid-feedback">Количество должно быть положительным числом.</div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="weight" class="form-label">Вес за шт. (кг):</label>
-                        <input type="number" class="form-control" id="weight" name="weight" 
-                               value="{{ form_data.weight if form_data and form_data.weight else '' }}" step="0.01" min="0.01" required>
-                        <div class="invalid-feedback">Вес должен быть положительным числом.</div>
-                    </div>
-                </div>
-    
-                <!-- Правый столбец -->
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label for="drawing_number" class="form-label">Номер чертежа:</label>
-                        <input type="text" class="form-control" id="drawing_number" name="drawing_number" 
+            <div class="card" id="positionsContainer">
+                <div class="position-block" data-position="1">
+                    <!-- Первая строка: 3 ячейки -->
+                    <div class="form-grid three-columns">
+                        <div class="field-group">
+                            <label for="product" class="field-label">Наименование товара</label>
+                            <input type="text" id="product" name="product" required
+                                value="{{ form_data.product if form_data and form_data.product else '' }}">
+                        </div>
+                        <div class="field-group">
+                            <label for="drawing_number" class="field-label">Номер чертежа</label>
+                            <input type="text" id="drawing_number" name="drawing_number"
                                 value="{{ form_data.drawing_number if form_data and form_data.drawing_number else '' }}">
-                    </div>
-    
-                    <div class="mb-3">
-                        <label for="material" class="form-label">Материал:</label>
-                        <input type="text" class="form-control" id="material" name="material" 
-                            value="{{ form_data.material if form_data and form_data.material else '' }}">
-                    </div>
-    
-                    <div class="mb-3">
-                        <label for="cost_price" class="form-label">Закупочная стоимость за шт. (юани):</label>
-                        <input type="number" class="form-control" id="cost_price" name="cost_price" 
-                               value="{{ form_data.cost_price if form_data and form_data.cost_price else '' }}" step="0.01" min="0.01" required>
-                        <div class="invalid-feedback">Цена должна быть положительным числом.</div>
-                    </div>
-    
-                    <div class="mb-3">
-                        <label for="duty_percent" class="form-label">Процент пошлины (%):</label>
-                        <input type="number" class="form-control" id="duty_percent" name="duty_percent" 
-                            value="{{ form_data.duty_percent if form_data and form_data.duty_percent else '0' }}" step="0.01" min="0" max="100">
-                    </div>
-    
-                    <div class="mb-3">
-                        <label for="logistics" class="form-label">Стоимость логистики (руб.):</label>
-                        <input type="number" class="form-control" id="logistics" name="logistics" 
-                               value="{{ form_data.logistics if form_data and form_data.logistics else '' }}" step="0.01" min="0" required>
-                        <div class="invalid-feedback">Стоимость логистики должна быть неотрицательным числом.</div>
+                        </div>
+                        <div class="field-group">
+                            <label for="material" class="field-label">Материал</label>
+                            <input type="text" id="material" name="material"
+                                value="{{ form_data.material if form_data and form_data.material else '' }}">
+                        </div>
                     </div>
                     
-                    <div class="mb-3">
-                        <label for="delivery_time" class="form-label">Срок поставки (календарных дней):</label>
-                        <input type="number" class="form-control" id="delivery_time" name="delivery_time" 
-                               value="{{ form_data.delivery_time if form_data and form_data.delivery_time else '' }}" step="1" min="1" required>
-                        <div class="invalid-feedback">Срок поставки должен быть положительным числом.</div>
-                    </div>
-                </div>
-            </div>
-    
-            <!-- Остальная часть формы остается без изменений -->
-            <!-- Поле маржи по центру -->
-            <div class="row mt-2">
-                <div class="col-12">
-                    <label for="comment" class="form-label">Комментарий</label>
-                    <textarea class="form-control" id="comment" name="comment" rows="3" placeholder="Дополнительная информация для истории.">{{ form_data.comment if form_data and form_data.comment else '' }}</textarea>
-                </div>
-            </div>
-
-            <div class="row mt-4">
-                <div class="col-12">
-                    <div class="text-center mb-2">
-                        <h5 class="margin-label">Итоговая маржа</h5>
-                        <p class="text-muted margin-description">Желаемый процент прибыли</p>
-                    </div>
-                    <div class="d-flex justify-content-center">
-                        <div class="mb-2 margin-input-container">
-                            <div class="input-group margin-input-group">
-                                <input type="number" class="form-control margin-input" id="margin_percent" name="margin_percent" 
-                                    value="{{ form_data.margin_percent if form_data and form_data.margin_percent else '30' }}" 
-                                    step="0.1" min="0" max="100" required>
-                                <span class="input-group-text">%</span>
-                            </div>
-                            <div class="invalid-feedback text-center">Маржа должна быть от 0 до 100%.</div>
+                    <!-- Вторая строка: 4 ячейки -->
+                    <div class="form-grid three-columns">
+                        <div class="field-group">
+                            <label for="quantity" class="field-label">Количество, шт.</label>
+                            <input type="number" id="quantity" name="quantity" min="1" step="1" required
+                                value="{{ form_data.quantity if form_data and form_data.quantity else '' }}" class="position-quantity">
+                        </div>
+                        <div class="field-group">
+                            <label for="cost_price" class="field-label">Закупочная цена (юани)</label>
+                            <input type="number" id="cost_price" name="cost_price" min="0" step="0.01" required
+                                value="{{ form_data.cost_price if form_data and form_data.cost_price else '' }}">
+                        </div>
+                        <div class="field-group">
+                            <label for="weight" class="field-label">Вес за шт. (кг)</label>
+                            <input type="number" id="weight" name="weight" min="0" step="0.01" required
+                                value="{{ form_data.weight if form_data and form_data.weight else '' }}" class="position-weight">
+                        </div>
+                        <div class="field-group">
+                            <label for="duty_percent" class="field-label">Пошлина (%)</label>
+                            <input type="number" id="duty_percent" name="duty_percent" min="0" max="100" step="0.1"
+                                value="{{ form_data.duty_percent if form_data and form_data.duty_percent else '0' }}" class="position-duty">
                         </div>
                     </div>
                 </div>
             </div>
-    
-            <!-- Кнопка отправки на всю ширину -->
-            <div class="row">
-                <div class="col-12">
-                    <button type="submit" class="btn btn-primary w-100 mt-3 generate-btn" id="generateBtn">
-                        <span class="generate-icon">📄</span> 
-                        <span id="generateText">Сгенерировать КП</span>
-                        <span id="generateSpinner" class="spinner-border spinner-border-sm ms-2" style="display: none;"></span>
-                    </button>
-                    <div class="form-text mt-2 text-center">Будет скачан ZIP-архив, содержащий файлы Excel и Word.</div>
+        </section>
+
+
+        <section class="section">
+            <div class="card">
+                <div class="field-group">
+                    <label for="comment" class="field-label">Комментарий</label>
+                    <textarea id="comment" name="comment" rows="4" placeholder="Дополнительная информация или пожелания для истории.">{{ form_data.comment.strip() if form_data and form_data.comment else '' }}</textarea>
                 </div>
             </div>
-        </form>
-    </div>
-    
+        </section>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+        <section class="section">
+            <div class="card summary-card">
+                <div class="summary-info">
+                    <h3>Итоговые показатели</h3>
+                    <p>Укажите желаемую маржу и контролируйте массу заказа.</p>
+                    <div class="position-pill-row">
+                        <span class="pill">Вес груза: <strong id="pillTotalWeight">0 кг</strong></span>
+                    </div>
+                </div>
+                <div class="summary-value">
+                    <div class="value-box">
+                        <input type="number" id="margin_percent" name="margin_percent" min="0" max="100" step="0.1" required
+                               value="{{ form_data.margin_percent if form_data and form_data.margin_percent else '30' }}">
+                    </div>
+                    <div class="value-unit">%</div>
+                </div>
+            </div>
+        </section>
+
+        <div class="controls-row">
+            <p class="muted-text">После генерации вы получите ZIP‑архив с файлами Excel и Word.</p>
+            <button type="submit" class="btn btn-primary" id="generateBtn">
+                {{ sidebar_icon('download')|safe }}
+                <span id="generateText">Сгенерировать КП</span>
+                <span id="generateSpinner" class="visually-hidden"></span>
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block overlays %}
+<div class="modal" id="metalModal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h3 class="modal-title">Цена за кг металла</h3>
+            <button type="button" class="flash-close" data-close-modal>{{ sidebar_icon('x')|safe }}</button>
+        </div>
+        <div class="modal-body">
+            <p>Поковки Ст.40 — 16 юаней за килограмм.</p>
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-outline" data-close-modal>Закрыть</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="wheelsModal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h3 class="modal-title">Крановые колёса</h3>
+            <button type="button" class="flash-close" data-close-modal>{{ sidebar_icon('x')|safe }}</button>
+        </div>
+        <div class="modal-body">
+            <p>Вес до 100 кг — от 17 юаней за килограмм.</p>
+            <p>Вес свыше 100 кг — от 15 юаней за килограмм.</p>
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-outline" data-close-modal>Закрыть</button>
+        </div>
+    </div>
+</div>
+
+<div class="loading-overlay" id="loadingOverlay" aria-hidden="true">
+    <div class="loading-spinner" role="status"></div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
 <script>
-    // Управление темой
     document.addEventListener('DOMContentLoaded', function() {
-        const themeToggle = document.getElementById('themeToggle');
-        const html = document.documentElement;
+        const form = document.getElementById('generateForm');
+        const requiredInputs = form.querySelectorAll('input[required]');
         const loadingOverlay = document.getElementById('loadingOverlay');
         const generateBtn = document.getElementById('generateBtn');
         const generateText = document.getElementById('generateText');
-        const generateSpinner = document.getElementById('generateSpinner');
-        
-        // Проверяем сохраненную тему
-        const savedTheme = localStorage.getItem('theme');
-        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        
-        if (savedTheme) {
-            html.setAttribute('data-theme', savedTheme);
-        } else if (systemPrefersDark) {
-            html.setAttribute('data-theme', 'dark');
-        }
-        
-        // Обработчик переключения темы
-        themeToggle.addEventListener('click', function() {
-            const currentTheme = html.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            
-            html.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-        });
-        
-        // Валидация формы в реальном времени
-        const form = document.querySelector('form');
-        const inputs = form.querySelectorAll('input[required]');
-        
-        inputs.forEach(input => {
-            input.addEventListener('blur', function() {
-                validateField(this);
+        const marginInput = document.getElementById('margin_percent');
+        const weightOutputField = document.getElementById('totalWeightValue');
+        const pillTotalWeight = document.getElementById('pillTotalWeight');
+
+        const formatWeight = (value) => {
+            return Number.isFinite(value) ? value.toLocaleString('ru-RU', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) : '0';
+        };
+
+        const updateWeight = () => {
+            let total = 0;
+            form.querySelectorAll('.position-block').forEach(block => {
+                const qty = parseFloat(block.querySelector('.position-quantity')?.value) || 0;
+                const weight = parseFloat(block.querySelector('.position-weight')?.value) || 0;
+                total += qty * weight;
             });
-            
-            input.addEventListener('input', function() {
-                clearFieldError(this);
-            });
+            const formatted = formatWeight(total);
+            weightOutputField.value = `${formatted} кг`;
+            pillTotalWeight.textContent = `${formatted} кг`;
+        };
+
+        const positionInputs = Array.from(form.querySelectorAll('.position-quantity, .position-weight'));
+        positionInputs.forEach(input => {
+            input.addEventListener('input', updateWeight);
+            input.addEventListener('blur', () => validateField(input));
         });
-        
+
+        updateWeight();
+
+        requiredInputs.forEach(input => {
+            input.addEventListener('blur', () => validateField(input));
+            input.addEventListener('input', () => clearFieldError(input));
+        });
+
+        const validateNumberBounds = (field, value) => {
+            if (field.id === 'delivery_time' && value < 1) {
+                showFieldError(field, 'Срок поставки не может быть меньше 1 дня');
+                return false;
+            }
+            if (field.id === 'quantity' && value < 1) {
+                showFieldError(field, 'Количество должно быть положительным числом');
+                return false;
+            }
+            if (field.id === 'margin_percent' && (value < 0 || value > 100)) {
+                showFieldError(field, 'Маржа должна быть в диапазоне от 0 до 100%');
+                return false;
+            }
+            if (field.id === 'duty_percent' && value > 100) {
+                showFieldError(field, 'Пошлина не может превышать 100%');
+                return false;
+            }
+            if (field.id === 'weight' && value <= 0) {
+                showFieldError(field, 'Вес должен быть больше нуля');
+                return false;
+            }
+            if (field.id === 'cost_price' && value < 0) {
+                showFieldError(field, 'Стоимость должна быть положительной');
+                return false;
+            }
+            if (field.id === 'logistics' && value < 0) {
+                showFieldError(field, 'Стоимость логистики не может быть отрицательной');
+                return false;
+            }
+            return true;
+        };
+
         function validateField(field) {
             clearFieldError(field);
-            
-            if (!field.value.trim()) {
+            const raw = field.value.trim();
+
+            if (!raw) {
                 showFieldError(field, 'Это поле обязательно для заполнения');
                 return false;
             }
-            
+
             if (field.type === 'number') {
-                const value = parseFloat(field.value);
-                if (isNaN(value) || value < 0) {
+                const value = parseFloat(raw);
+                if (!Number.isFinite(value)) {
                     showFieldError(field, 'Введите корректное число');
                     return false;
                 }
-                
-                if (field.id === 'quantity' && value === 0) {
-                    showFieldError(field, 'Количество не может быть нулевым');
-                    return false;
-                }
-                
-                if (field.id === 'delivery_time' && value < 1) {
-                    showFieldError(field, 'Срок поставки не может быть меньше 1 дня');
-                    return false;
-                }
-                
-                if ((field.id === 'margin_percent' || field.id === 'duty_percent') && value > 100) {
-                    showFieldError(field, 'Значение не может превышать 100%');
-                    return false;
-                }
+                return validateNumberBounds(field, value);
             }
-            
+
             return true;
         }
-        
+
         function showFieldError(field, message) {
             field.classList.add('is-invalid');
-            
             let feedback = field.nextElementSibling;
-            if (!feedback || !feedback.classList.contains('invalid-feedback')) {
+            if (!feedback || !feedback.classList.contains('field-error')) {
                 feedback = document.createElement('div');
-                feedback.className = 'invalid-feedback';
+                feedback.className = 'field-error';
                 field.parentNode.appendChild(feedback);
             }
             feedback.textContent = message;
         }
-        
+
         function clearFieldError(field) {
             field.classList.remove('is-invalid');
             const feedback = field.nextElementSibling;
-            if (feedback && feedback.classList.contains('invalid-feedback')) {
+            if (feedback && feedback.classList.contains('field-error')) {
                 feedback.textContent = '';
             }
         }
-        
-        // Обработчик отправки формы
-        form.addEventListener('submit', function(e) {
+
+        form.addEventListener('submit', function (event) {
             let isValid = true;
-            
-            // Валидация всех полей
-            inputs.forEach(input => {
+            requiredInputs.forEach(input => {
                 if (!validateField(input)) {
                     isValid = false;
                 }
             });
-            
+
             if (!isValid) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                // Прокрутка к первой ошибке
+                event.preventDefault();
                 const firstError = form.querySelector('.is-invalid');
                 if (firstError) {
                     firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
-            } else {
-                // Показываем индикатор загрузки
-                generateText.textContent = 'Генерация...';
-                generateSpinner.style.display = 'inline-block';
-                generateBtn.disabled = true;
-                loadingOverlay.classList.add('active');
+                return;
             }
-            
-            form.classList.add('was-validated');
+
+            generateText.textContent = 'Генерация...';
+            generateBtn.disabled = true;
+            loadingOverlay.classList.add('active');
         });
-        
-        // Следим за изменениями системной темы
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-            if (!localStorage.getItem('theme')) {
-                html.setAttribute('data-theme', e.matches ? 'dark' : 'light');
-            }
-        });
-        
-        // Автофокус на первом поле при загрузке
-        const firstInput = form.querySelector('input:not([type="hidden"])');
-        if (firstInput) {
-            firstInput.focus();
+
+        const firstField = form.querySelector('input:not([type="hidden"])');
+        if (firstField) {
+            firstField.focus();
         }
     });
 </script>
-</body>
-</html>
-
+{% endblock %}

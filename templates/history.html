@@ -1,79 +1,33 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>История генераций - Генератор коммерческих предложений</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <!-- Переключатель темы -->
-    <div class="theme-switcher">
-        <div class="theme-toggle" id="themeToggle" title="Переключить тему">
-            <svg class="sun" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0-12a.75.75 0 0 0 .75-.75V2a.75.75 0 0 0-1.5 0v2.25c0 .414.336.75.75.75zm0 15a.75.75 0 0 0-.75.75V22a.75.75 0 0 0 1.5 0v-2.25A.75.75 0 0 0 12 20zM4.222 5.222a.75.75 0 0 0 1.06 0l1.5-1.5a.75.75 0 0 0-1.06-1.06l-1.5 1.5a.75.75 0 0 0 0 1.06zm14.496 14.496a.75.75 0 0 0 1.06 0l1.5-1.5a.75.75 0 1 0-1.06-1.06l-1.5 1.5a.75.75 0 0 0 0 1.06zM2 12a.75.75 0 0 0 .75.75H5a.75.75 0 0 0 0-1.5H2.75A.75.75 0 0 0 2 12zm17 0a.75.75 0 0 0 .75-.75V9a.75.75 0 0 0-1.5 0v2.25c0 .414.336.75.75.75zm-15.722 6.778a.75.75 0 0 0 0-1.06l-1.5-1.5a.75.75 0 0 0-1.06 1.06l1.5 1.5a.75.75 0 0 0 1.06 0zm14.496-14.496a.75.75 0 0 0 0-1.06l-1.5-1.5a.75.75 0 1 0-1.06 1.06l1.5 1.5a.75.75 0 0 0 1.06 0z"/>
-            </svg>
-            <svg class="moon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 22c5.523 0 10-4.477 10-10 0-.463-.694-.54-.933-.143-a6.5 6.5 0 1 1-8.924-8.924C12.54 2.693 12.463 2 12 2 6.477 2 2 6.477 2 12s4.477 10 10 10z"/>
-            </svg>
-        </div>
-    </div>
+{% extends 'base.html' %}
 
-    <!-- Кнопка профиля -->
-    <div class="profile-button">
-        <a href="{{ url_for('profile') }}" class="btn btn-outline-primary">
-            {{ current_user.username if current_user.is_authenticated else 'Профиль' }}
-        </a>
-    </div>
-
-    <!-- Кнопка возврата на главную -->
-    <div class="back-button">
-        <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
-            ← Назад к генератору
-        </a>
-    </div>
-    
-
-    <div class="container mt-4">
-        <h1 class="text-center mb-4">История генераций КП</h1>
-        
-        <!-- Поиск и фильтры -->
-        <div class="row mb-4">
-            <div class="col-md-8">
-                <div class="input-group">
-                    <span class="input-group-text">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
-                            <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
-                        </svg>
-                    </span>
-                    <input type="text" id="searchInput" class="form-control" placeholder="Поиск по номеру тендера, чертежу, товару или дате...">
-                </div>
+{% block content %}
+<div class="content-container">
+    <div class="card">
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">История генераций</h2>
+                <p class="section-description">Просматривайте и выгружайте ранее созданные коммерческие предложения.</p>
             </div>
-            <div class="col-md-4">
-                <select id="filterSelect" class="form-select">
-                    <option value="all">Все поля</option>
-                    <option value="tender">Номер тендера</option>
-                    <option value="drawing">Номер чертежа</option>
-                    <option value="product">Наименование товара</option>
-                    <option value="date">Дата создания</option>
-                    <option value="user">Автор</option>
-                </select>
-            </div>
+            <span class="badge" id="recordsCount">Всего записей: {{ history|length }}</span>
         </div>
-        
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <span class="badge bg-secondary" id="recordsCount">Всего записей: {{ history|length }}</span>
-            <button id="clearSearch" class="btn btn-outline-secondary btn-sm" style="display: none;">
-                Очистить поиск
-            </button>
+
+        <div class="search-controls">
+            <input type="text" id="searchInput" class="search-input" placeholder="Поиск по номеру тендера, товару, дате...">
+            <select id="filterSelect" class="search-input">
+                <option value="all">Все поля</option>
+                <option value="tender">Номер тендера</option>
+                <option value="drawing">Номер чертежа</option>
+                <option value="product">Наименование товара</option>
+                <option value="date">Дата</option>
+                <option value="user">Автор</option>
+            </select>
+            <button id="clearSearch" class="btn btn-outline" style="display:none;">Очистить поиск</button>
         </div>
-        
+
         {% if history %}
-        <div class="table-responsive">
-            <table class="table table-striped table-hover table-bordered" id="historyTable">
-                <thead class="table-primary">
+        <div class="history-table-wrapper">
+            <table class="data-table" id="historyTable">
+                <thead>
                     <tr>
                         <th>Дата и время</th>
                         <th>Номер тендера</th>
@@ -87,30 +41,25 @@
                 </thead>
                 <tbody>
                     {% for item in history %}
-                    <tr data-tender="{{ item.tender_number }}" data-drawing="{{ item.drawing_number }}" 
-                    data-product="{{ item.product }}" data-date="{{ item.timestamp }}"
-                    data-company="{{ item.company }}" data-margin="{{ item.margin_percent }}" 
-                    data-price="{{ item.final_price }}" data-username="{{ item.username or '' }}">
+                    <tr data-tender="{{ item.tender_number }}" data-drawing="{{ item.drawing_number }}" data-product="{{ item.product }}"
+                        data-date="{{ item.timestamp }}" data-company="{{ item.company }}" data-margin="{{ item.margin_percent }}"
+                        data-price="{{ item.final_price }}" data-username="{{ item.username or '' }}">
                         <td>{{ item.timestamp }}</td>
                         <td>{{ item.tender_number }}</td>
                         <td>{{ item.company }}</td>
                         <td>{{ item.product }}</td>
                         <td class="text-center">
-                            <span class="badge bg-{{ 'success' if item.margin_percent|float > 20 else 'warning' }}">
-                                {{ item.margin_percent }}
-                            </span>
+                            <span class="status-pill {{ 'status-success' if item.margin_percent|float > 20 else 'status-warning' }}">{{ item.margin_percent }}</span>
                         </td>
-                        <td class="fw-bold">{{ "%.2f"|format(item.final_price) }}</td>
+                        <td><strong>{{ '%.2f'|format(item.final_price) }}</strong></td>
                         <td>{{ item.username or '—' }}</td>
-                        <td>
-                            <div class="btn-group" role="group">
-                                <a href="{{ url_for('load_generation', gen_id=item.id) }}" class="btn btn-sm btn-primary" title="Повторить эту генерацию">
-                                    <i class="bi bi-arrow-repeat"></i>
-                                </a>
-                                <button class="btn btn-sm btn-info view-details" data-id="{{ item.id }}" title="Просмотреть детали">
-                                    <i class="bi bi-info-circle"></i>
-                                </button>
-                            </div>
+                        <td class="table-actions">
+                            <a href="{{ url_for('load_generation', gen_id=item.id) }}" class="btn btn-outline" title="Повторить генерацию">
+                                {{ sidebar_icon('history')|safe }}
+                            </a>
+                            <button type="button" class="btn btn-outline view-details" data-id="{{ item.id }}" title="Показать детали">
+                                {{ sidebar_icon('layers')|safe }}
+                            </button>
                         </td>
                     </tr>
                     {% endfor %}
@@ -118,222 +67,183 @@
             </table>
         </div>
         {% else %}
-        <div class="alert alert-info text-center">
-            История генераций пуста. Создайте свое первое коммерческое предложение!
+        <div class="card">
+            <div class="empty-state">
+                <div class="icon">{{ sidebar_icon('search')|safe }}</div>
+                <p>История генераций пуста. Создайте своё первое коммерческое предложение.</p>
+            </div>
         </div>
         {% endif %}
     </div>
+</div>
+{% endblock %}
 
-    <!-- Модальное окно деталей записи -->
-    <div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="detailsModalLabel">Детали коммерческого предложения</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="modalDetailsContent">
-                    <!-- Содержимое будет заполняться через JavaScript -->
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-                </div>
-            </div>
+{% block overlays %}
+<div class="modal" id="detailsModal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h3 class="modal-title" id="detailsModalLabel">Детали коммерческого предложения</h3>
+            <button type="button" class="flash-close" data-close-modal>{{ sidebar_icon('x')|safe }}</button>
+        </div>
+        <div class="modal-body" id="modalDetailsContent"></div>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-outline" data-close-modal>Закрыть</button>
         </div>
     </div>
+</div>
+{% endblock %}
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Управление темой
-        document.addEventListener('DOMContentLoaded', function() {
-            const themeToggle = document.getElementById('themeToggle');
-            const html = document.documentElement;
-            
-            // Проверяем сохраненную тему или системные настройки
-            const savedTheme = localStorage.getItem('theme');
-            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            
-            if (savedTheme) {
-                html.setAttribute('data-theme', savedTheme);
-            } else if (systemPrefersDark) {
-                html.setAttribute('data-theme', 'dark');
-            }
-            
-            // Обработчик переключения темы
-            themeToggle.addEventListener('click', function() {
-                const currentTheme = html.getAttribute('data-theme');
-                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-                
-                html.setAttribute('data-theme', newTheme);
-                localStorage.setItem('theme', newTheme);
-            });
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const table = document.getElementById('historyTable');
+        const searchInput = document.getElementById('searchInput');
+        const filterSelect = document.getElementById('filterSelect');
+        const clearSearch = document.getElementById('clearSearch');
+        const recordsCount = document.getElementById('recordsCount');
+        const rows = table ? Array.from(table.querySelectorAll('tbody tr')) : [];
+        const modal = document.getElementById('detailsModal');
+        const modalContent = document.getElementById('modalDetailsContent');
 
-            // Обработчик для кнопок просмотра деталей
-            document.querySelectorAll('.view-details').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const recordId = this.getAttribute('data-id');
-                    
-                    // Показываем индикатор загрузки
-                    document.getElementById('modalDetailsContent').innerHTML = `
-                        <div class="text-center">
-                            <div class="spinner-border" role="status">
-                                <span class="visually-hidden">Загрузка...</span>
-                            </div>
-                        </div>
-                    `;
-                    
-                    // Запрашиваем данные с сервера
-                    fetch(`/history/details/${recordId}`)
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error('Ошибка загрузки данных');
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            // Форматируем данные для отображения
-                            document.getElementById('modalDetailsContent').innerHTML = `
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <h6>Основная информация</h6>
-                                        <p><strong>Компания:</strong> ${data.company}</p>
-                                        <p><strong>Товар:</strong> ${data.product}</p>
-                                        <p><strong>Количество:</strong> ${data.quantity} шт.</p>
-                                        <p><strong>Вес единицы:</strong> ${data.weight} кг</p>
-                                        <p><strong>Срок поставки:</strong> ${data.delivery_time} дней</p>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <h6>Финансовые данные</h6>
-                                        <p><strong>Закупочная цена:</strong> ${data.cost_price} руб.</p>
-                                        <p><strong>Логистика:</strong> ${data.logistics} руб.</p>
-                                        <p><strong>Пошлина:</strong> ${data.duty_percent}%</p>
-                                        <p><strong>Маржа:</strong> ${data.margin_percent}%</p>
-                                        <p><strong>Итоговая цена:</strong> <span class="text-success fw-bold">${data.final_price.toFixed(2)} руб.</span></p>
-                                    </div>
-                                </div>
-                                <div class="row mt-3">
-                                    <div class="col-12">
-                                        <h6>Дополнительно</h6>
-                                        <p><strong>Номер тендера:</strong> ${data.tender_number || 'Не указан'}</p>
-                                        <p><strong>Номер чертежа:</strong> ${data.drawing_number || 'Не указан'}</p>
-                                        <p><strong>Материал:</strong> ${data.material || 'Не указан'}</p>
-                                        <p><strong>Адрес доставки:</strong> ${data.delivery_address || 'Не указан'}</p>
-                                        <p><strong>Дата создания:</strong> ${new Date(data.timestamp).toLocaleString('ru-RU')}</p>
-                                        <p><strong>Комментарий:</strong> ${data.comment ? data.comment.replace(/\n/g, '<br>') : 'Комментарий не указан'}</p>
-                                    </div>
-                                </div>
-                            `;
-                            const detailsContainer = document.querySelector('#modalDetailsContent .col-12');
-                            if (detailsContainer) {
-                                const commentNode = detailsContainer.querySelector('p:last-child');
-                                const authorLine = `<p><strong>Автор:</strong> ${data.username || 'Не указан'}</p>`;
-                                if (commentNode) {
-                                    commentNode.insertAdjacentHTML('beforebegin', authorLine);
-                                } else {
-                                    detailsContainer.insertAdjacentHTML('beforeend', authorLine);
-                                }
-                            }
-                        })
-                        .catch(error => {
-                            document.getElementById('modalDetailsContent').innerHTML = `
-                                <div class="alert alert-danger">
-                                    Ошибка при загрузке деталей: ${error.message}
-                                </div>
-                            `;
-                        })
-                        .finally(() => {
-                            // Показываем модальное окно
-                            const detailsModal = new bootstrap.Modal(document.getElementById('detailsModal'));
-                            detailsModal.show();
-                        });
-                });
-            });
-            
-            // Следим за изменениями системной темы
-            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-                if (!localStorage.getItem('theme')) {
-                    html.setAttribute('data-theme', e.matches ? 'dark' : 'light');
-                }
-            });
-            
-            // Функционал поиска
-            const searchInput = document.getElementById('searchInput');
-            const filterSelect = document.getElementById('filterSelect');
-            const clearSearch = document.getElementById('clearSearch');
-            const historyTable = document.getElementById('historyTable');
-            const recordsCount = document.getElementById('recordsCount');
-            const allRows = historyTable ? Array.from(historyTable.querySelectorAll('tbody tr')) : [];
-            
-            function filterHistory() {
-                const searchText = searchInput.value.toLowerCase();
-                const filterType = filterSelect.value;
-                let visibleCount = 0;
-                
-                if (!searchText) {
-                    // Показываем все строки, если поисковый запрос пуст
-                    allRows.forEach(row => {
-                        row.style.display = '';
-                        visibleCount++;
-                    });
-                    clearSearch.style.display = 'none';
-                    recordsCount.textContent = `Всего записей: ${visibleCount}`;
-                    return;
-                }
-                
-                // Фильтруем строки
-                allRows.forEach(row => {
-                    let shouldShow = false;
-                    const usernameAttr = (row.getAttribute('data-username') || '').toLowerCase();
-                    
-                    switch(filterType) {
-                        case 'tender':
-                            shouldShow = row.getAttribute('data-tender').toLowerCase().includes(searchText);
-                            break;
-                        case 'drawing':
-                            shouldShow = row.getAttribute('data-drawing').toLowerCase().includes(searchText);
-                            break;
-                        case 'product':
-                            shouldShow = row.getAttribute('data-product').toLowerCase().includes(searchText);
-                            break;
-                        case 'date':
-                            shouldShow = row.getAttribute('data-date').toLowerCase().includes(searchText) || usernameAttr.includes(searchText);
-                            shouldShow = row.getAttribute('data-date').toLowerCase().includes(searchText);
-                            break;
-                            shouldShow = usernameAttr.includes(searchText);
-                            break;
-                        default: // 'all'
-                            shouldShow = 
-                                row.getAttribute('data-tender').toLowerCase().includes(searchText) ||
-                                row.getAttribute('data-drawing').toLowerCase().includes(searchText) ||
-                                row.getAttribute('data-product').toLowerCase().includes(searchText) ||
-                                row.getAttribute('data-date').toLowerCase().includes(searchText);
-                                row.getAttribute('data-date').toLowerCase().includes(searchText) ||
-                                usernameAttr.includes(searchText);
-                    row.style.display = shouldShow ? '' : 'none';
-                    if (shouldShow) visibleCount++;
-                });
-                
-                clearSearch.style.display = 'block';
-                recordsCount.textContent = `Найдено записей: ${visibleCount}`;
-            }
-            
-            // Обработчики событий
-            if (searchInput) {
-                searchInput.addEventListener('input', filterHistory);
-            }
-            
-            if (filterSelect) {
-                filterSelect.addEventListener('change', filterHistory);
-            }
-            
-            if (clearSearch) {
-                clearSearch.addEventListener('click', function() {
-                    searchInput.value = '';
-                    filterHistory();
-                });
+        const openModal = () => {
+            modal.classList.add('is-open');
+            modal.setAttribute('aria-hidden', 'false');
+        };
+
+        const closeModal = () => {
+            modal.classList.remove('is-open');
+            modal.setAttribute('aria-hidden', 'true');
+        };
+
+        document.addEventListener('click', (event) => {
+            if (event.target.hasAttribute('data-close-modal')) {
+                closeModal();
             }
         });
-    </script>
-</body>
-</html>
 
+        const renderDetails = (data) => {
+            const format = (value, empty = 'Не указан') => value ? value : empty;
+            const formatCurrency = (value) => Number(value || 0).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            modalContent.innerHTML = `
+                <div class="grid-two">
+                    <div>
+                        <h4 class="section-title">Основная информация</h4>
+                        <p><strong>Компания:</strong> ${format(data.company)}</p>
+                        <p><strong>Товар:</strong> ${format(data.product)}</p>
+                        <p><strong>Количество:</strong> ${format(data.quantity)} шт.</p>
+                        <p><strong>Вес единицы:</strong> ${format(data.weight)} кг</p>
+                        <p><strong>Срок поставки:</strong> ${format(data.delivery_time)} дней</p>
+                    </div>
+                    <div>
+                        <h4 class="section-title">Финансовые показатели</h4>
+                        <p><strong>Закупочная цена:</strong> ${formatCurrency(data.cost_price)} руб.</p>
+                        <p><strong>Логистика:</strong> ${formatCurrency(data.logistics)} руб.</p>
+                        <p><strong>Пошлина:</strong> ${format(data.duty_percent, '0')}%</p>
+                        <p><strong>Маржа:</strong> ${format(data.margin_percent, '0')}%</p>
+                        <p><strong>Итоговая цена:</strong> <strong>${formatCurrency(data.final_price)} руб.</strong></p>
+                    </div>
+                </div>
+                <div class="section-divider">Дополнительные данные</div>
+                <div class="grid-two">
+                    <div>
+                        <p><strong>Номер тендера:</strong> ${format(data.tender_number)}</p>
+                        <p><strong>Номер чертежа:</strong> ${format(data.drawing_number)}</p>
+                        <p><strong>Материал:</strong> ${format(data.material)}</p>
+                        <p><strong>Адрес доставки:</strong> ${format(data.delivery_address)}</p>
+                    </div>
+                    <div>
+                        <p><strong>Дата создания:</strong> ${new Date(data.timestamp).toLocaleString('ru-RU')}</p>
+                        <p><strong>Комментарий:</strong><br>${data.comment ? data.comment.replace(/\n/g, '<br>') : 'Комментарий не указан'}</p>
+                        <p><strong>Автор:</strong> ${format(data.username)}</p>
+                    </div>
+                </div>
+            `;
+        };
+
+        document.querySelectorAll('.view-details').forEach(button => {
+            button.addEventListener('click', () => {
+                const recordId = button.getAttribute('data-id');
+                modalContent.innerHTML = '<p class="muted-text">Загрузка данных...</p>';
+                openModal();
+
+                fetch(`/history/details/${recordId}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Ошибка загрузки данных');
+                        }
+                        return response.json();
+                    })
+                    .then(data => renderDetails(data))
+                    .catch(error => {
+                        modalContent.innerHTML = `<p class="flash flash-error">${error.message}</p>`;
+                    });
+            });
+        });
+
+        const filterHistory = () => {
+            const searchText = (searchInput.value || '').toLowerCase();
+            const filterType = filterSelect.value;
+            let visible = 0;
+
+            rows.forEach(row => {
+                const usernameAttr = (row.getAttribute('data-username') || '').toLowerCase();
+                let matches = false;
+
+                switch (filterType) {
+                    case 'tender':
+                        matches = (row.getAttribute('data-tender') || '').toLowerCase().includes(searchText);
+                        break;
+                    case 'drawing':
+                        matches = (row.getAttribute('data-drawing') || '').toLowerCase().includes(searchText);
+                        break;
+                    case 'product':
+                        matches = (row.getAttribute('data-product') || '').toLowerCase().includes(searchText);
+                        break;
+                    case 'date':
+                        matches = (row.getAttribute('data-date') || '').toLowerCase().includes(searchText);
+                        break;
+                    case 'user':
+                        matches = usernameAttr.includes(searchText);
+                        break;
+                    default:
+                        matches =
+                            (row.getAttribute('data-tender') || '').toLowerCase().includes(searchText) ||
+                            (row.getAttribute('data-drawing') || '').toLowerCase().includes(searchText) ||
+                            (row.getAttribute('data-product') || '').toLowerCase().includes(searchText) ||
+                            (row.getAttribute('data-date') || '').toLowerCase().includes(searchText) ||
+                            usernameAttr.includes(searchText);
+                }
+
+                row.style.display = matches ? '' : 'none';
+                if (matches) {
+                    visible += 1;
+                }
+            });
+
+            if (searchText) {
+                clearSearch.style.display = 'inline-flex';
+                recordsCount.textContent = `Найдено записей: ${visible}`;
+            } else {
+                clearSearch.style.display = 'none';
+                recordsCount.textContent = `Всего записей: ${rows.length}`;
+            }
+        };
+
+        if (searchInput) {
+            searchInput.addEventListener('input', filterHistory);
+        }
+
+        if (filterSelect) {
+            filterSelect.addEventListener('change', filterHistory);
+        }
+
+        if (clearSearch) {
+            clearSearch.addEventListener('click', () => {
+                searchInput.value = '';
+                filterHistory();
+            });
+        }
+    });
+</script>
+{% endblock %}

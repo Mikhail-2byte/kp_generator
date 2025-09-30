@@ -1,3 +1,6 @@
+.logistics-panel .autocomplete {
+  z-index: 20;
+}
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import url('https://fonts.cdnfonts.com/css/geist');
 
@@ -404,6 +407,83 @@ h1 {
 
 .form-grid .delivery-address-group {
   grid-column: span 2;
+}
+
+.logistics-panel {
+  grid-column: span 3;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  background: rgba(17, 24, 39, 0.06);
+}
+
+.logistics-panel .field-label {
+  margin-bottom: 4px;
+}
+
+.logistics-inline-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.logistics-inline-fields .field-group.inline {
+  flex: 1 1 220px;
+}
+
+.logistics-inline-fields .field-group.inline input {
+  height: 44px;
+}
+
+.logistics-toggle-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.toggle-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.toggle-group {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--card);
+  overflow: hidden;
+}
+
+.toggle-group input[type='radio'] {
+  display: none;
+}
+
+.toggle-group label {
+  padding: 6px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  border-right: 1px solid var(--border);
+  color: var(--muted-foreground);
+  transition: background var(--transition), color var(--transition);
+}
+
+.toggle-group label:last-child {
+  border-right: none;
+}
+
+.toggle-group input[type='radio']:checked + label {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.logistics-panel .btn-sm {
+  align-self: flex-start;
+  padding: 6px 12px;
+  font-size: 13px;
 }
 
 @media (min-width: 720px) {

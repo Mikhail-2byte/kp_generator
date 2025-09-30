@@ -2,6 +2,7 @@
 
 {% block content %}
 <div class="content-container">
+    <div id="cities-data" class="hidden">{{ cities | tojson }}</div>
     <form action="{{ url_for('generate') }}" method="post" novalidate class="card-stack" id="generateForm">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
@@ -29,22 +30,46 @@
                     </div>
                     <div class="field-group delivery-address-group">
                         <label for="delivery_address" class="field-label">Адрес доставки</label>
-                        <textarea id="delivery_address" name="delivery_address" rows="2" placeholder="Страна, город, улица">{{ form_data.delivery_address.strip() if form_data and form_data.delivery_address else '' }}</textarea>
+                        <textarea id="delivery_address" name="delivery_address" rows="2" placeholder="111418, г.Москва, ул.Цюрупы, д 8к. 1">{{ form_data.delivery_address.strip() if form_data and form_data.delivery_address else '' }}</textarea>
                     </div>
-                    <div class="field-group">
-                        <label for="nearest_city" class="field-label">Ближайший допустимый город</label>
-                        <input type="text" id="nearest_city" name="nearest_city"
-                               value="{{ form_data.nearest_city if form_data and form_data.nearest_city else '' }}"
-                               placeholder="Например: Москва">
-                    </div>
-                    <div class="field-group">
-                        <label class="field-label">Оценочный вес</label>
-                        <input type="text" id="totalWeightValue" readonly value="0 кг" class="weight-output" tabindex="-1">
-                    </div>
-                    <div class="field-group">
-                        <label for="logistics" class="field-label">Стоимость логистики (руб.)</label>
-                        <input type="number" id="logistics" name="logistics" min="0" step="0.01" required
-                               value="{{ form_data.logistics if form_data and form_data.logistics else '' }}">
+                    <div class="field-group logistics-panel">
+                        <div class="logistics-toggle-group">
+                            <label class="field-label">Расчет логистики</label>
+                            <div class="toggle-row">
+                                <div class="toggle-group" role="group" aria-label="Тип транспорта">
+                                    <input type="radio" id="mainTruck" name="mainTransport" value="truck" checked>
+                                    <label for="mainTruck">Фура</label>
+                                    <input type="radio" id="mainTrail" name="mainTransport" value="trail">
+                                    <label for="mainTrail">Трал</label>
+                                </div>
+                                <div class="toggle-group" role="group" aria-label="Тип расчета">
+                                    <input type="radio" id="mainWeight" name="mainCalcType" value="weight" checked>
+                                    <label for="mainWeight">Вес</label>
+                                    <input type="radio" id="mainDim" name="mainCalcType" value="dimension">
+                                    <label for="mainDim">Габарит</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="logistics-inline-fields">
+                            <div class="field-group inline">
+                                <label class="field-label">Оценочный вес</label>
+                                <input type="text" id="totalWeightValue" readonly value="0 кг" class="weight-output" tabindex="-1">
+                            </div>
+                            <div class="field-group inline">
+                                <label for="logistics_city" class="field-label">Город доставки</label>
+                                <div class="autocomplete">
+                                    <input type="text" id="logistics_city" autocomplete="off" placeholder="Начните вводить город">
+                                </div>
+                                <input type="hidden" id="mainSelectedCityPrice">
+                                <input type="hidden" id="mainSelectedCityName">
+                            </div>
+                            <div class="field-group inline">
+                                <label for="logistics" class="field-label">Стоимость логистики (руб.)</label>
+                                <input type="number" id="logistics" name="logistics" min="0" step="0.01" required
+                                       value="{{ form_data.logistics if form_data and form_data.logistics else '' }}" readonly>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-ghost btn-sm" id="calculateMainLogistics">Пересчитать логистику</button>
                     </div>
                 </div>
             </div>
@@ -84,14 +109,14 @@
                     <!-- Вторая строка: 4 ячейки -->
                     <div class="form-grid three-columns">
                         <div class="field-group">
+                            <label for="cost_price" class="field-label">Закупочная цена (юани за шт)</label>
+                            <input type="number" id="cost_price" name="cost_price" min="0" step="0.01" required
+                                value="{{ form_data.cost_price if form_data and form_data.cost_price else '' }}">
+                        </div>
+                        <div class="field-group">
                             <label for="quantity" class="field-label">Количество, шт.</label>
                             <input type="number" id="quantity" name="quantity" min="1" step="1" required
                                 value="{{ form_data.quantity if form_data and form_data.quantity else '' }}" class="position-quantity">
-                        </div>
-                        <div class="field-group">
-                            <label for="cost_price" class="field-label">Закупочная цена (юани)</label>
-                            <input type="number" id="cost_price" name="cost_price" min="0" step="0.01" required
-                                value="{{ form_data.cost_price if form_data and form_data.cost_price else '' }}">
                         </div>
                         <div class="field-group">
                             <label for="weight" class="field-label">Вес за шт. (кг)</label>
@@ -188,6 +213,14 @@
 
 {% block extra_scripts %}
 <script>
+    const citiesElement = document.getElementById('cities-data');
+    let cities = [];
+    try {
+        cities = JSON.parse(citiesElement?.textContent || '[]');
+    } catch (error) {
+        console.error('Cannot parse cities data', error);
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         const form = document.getElementById('generateForm');
         const requiredInputs = form.querySelectorAll('input[required]');
@@ -197,6 +230,14 @@
         const marginInput = document.getElementById('margin_percent');
         const weightOutputField = document.getElementById('totalWeightValue');
         const pillTotalWeight = document.getElementById('pillTotalWeight');
+        const logisticsInput = document.getElementById('logistics');
+        const mainTransportRadios = document.querySelectorAll('input[name="mainTransport"]');
+        const mainCalcTypeRadios = document.querySelectorAll('input[name="mainCalcType"]');
+        const mainLogisticsBtn = document.getElementById('calculateMainLogistics');
+        const mainCityInput = document.getElementById('logistics_city');
+        const deliveryAddressInput = document.getElementById('delivery_address');
+        const mainSelectedCityPrice = document.getElementById('mainSelectedCityPrice');
+        const mainSelectedCityName = document.getElementById('mainSelectedCityName');
 
         const formatWeight = (value) => {
             return Number.isFinite(value) ? value.toLocaleString('ru-RU', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) : '0';
@@ -216,11 +257,202 @@
 
         const positionInputs = Array.from(form.querySelectorAll('.position-quantity, .position-weight'));
         positionInputs.forEach(input => {
-            input.addEventListener('input', updateWeight);
+            input.addEventListener('input', () => {
+                updateWeight();
+                refreshLogisticsValue();
+            });
             input.addEventListener('blur', () => validateField(input));
         });
 
         updateWeight();
+
+        function getCurrentTransportType() {
+            const selected = document.querySelector('input[name="mainTransport"]:checked');
+            return selected ? selected.value : 'truck';
+        }
+
+        function calculateLogistics(price, transportType, calcType, totalWeight) {
+            if (!Number.isFinite(price) || price <= 0) {
+                return 0;
+            }
+
+            const capacity = transportType === 'trail' ? 40000 : 20000;
+            if (calcType === 'dimension') {
+                return price;
+            }
+
+            if (!Number.isFinite(totalWeight) || totalWeight <= 0) {
+                return price;
+            }
+
+            const pricePerKg = price / capacity;
+
+            if (totalWeight <= capacity) {
+                return pricePerKg * totalWeight;
+            }
+
+            const fullTrucks = Math.floor(totalWeight / capacity);
+            const remaining = totalWeight % capacity;
+            let total = fullTrucks * price;
+            if (remaining > 0) {
+                total += remaining * pricePerKg;
+            }
+            return total;
+        }
+
+        function refreshLogisticsValue() {
+            const selectedCityName = (mainSelectedCityName.value || '').toLowerCase();
+            if (!selectedCityName) {
+                logisticsInput.value = '';
+                return;
+            }
+
+            const transportType = getCurrentTransportType();
+            const totalWeightRaw = weightOutputField.value.replace(/[^0-9.,]/g, '').replace(',', '.');
+            const totalWeight = parseFloat(totalWeightRaw) || 0;
+            const calcType = document.querySelector('input[name="mainCalcType"]:checked')?.value || 'weight';
+
+            const matchedCity = cities.find(city => city.name.toLowerCase() === selectedCityName);
+            if (!matchedCity) {
+                logisticsInput.value = '';
+                return;
+            }
+
+            const price = transportType === 'trail' ? matchedCity.trail_price : matchedCity.truck_price;
+            mainSelectedCityPrice.value = price;
+
+            const totalLogistics = calculateLogistics(price, transportType, calcType, totalWeight);
+            logisticsInput.value = Number.isFinite(totalLogistics) ? Math.round(totalLogistics).toString() : '';
+        }
+
+        mainTransportRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                refreshLogisticsValue();
+            });
+        });
+
+        mainCalcTypeRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                refreshLogisticsValue();
+            });
+        });
+
+        if (mainLogisticsBtn) {
+            mainLogisticsBtn.addEventListener('click', () => {
+                refreshLogisticsValue();
+            });
+        }
+
+        if (mainCityInput) {
+            initMainCityAutocomplete(mainCityInput, 'main-autocomplete-list');
+        }
+
+        if (deliveryAddressInput) {
+            const autoDetectCity = () => {
+                const addressValue = (deliveryAddressInput.value || '').toLowerCase();
+                if (!addressValue) {
+                    return;
+                }
+                const matchedCity = cities.find(city => addressValue.includes(city.name.toLowerCase()));
+                if (matchedCity) {
+                    if (mainCityInput) {
+                        mainCityInput.value = matchedCity.name;
+                    }
+                    mainSelectedCityName.value = matchedCity.name;
+                    refreshLogisticsValue();
+                }
+            };
+
+            deliveryAddressInput.addEventListener('input', autoDetectCity);
+            deliveryAddressInput.addEventListener('blur', autoDetectCity);
+            autoDetectCity();
+        }
+
+        function initMainCityAutocomplete(inputElement, listId) {
+            let currentFocus = -1;
+
+            inputElement.addEventListener('input', function() {
+                const value = this.value.toLowerCase();
+                closeAllLists();
+
+                if (!value) {
+                    currentFocus = -1;
+                    return;
+                }
+
+                const matchingCities = cities.filter(city => city.name.toLowerCase().includes(value));
+                if (!matchingCities.length) {
+                    return;
+                }
+
+                const list = document.createElement('div');
+                list.setAttribute('id', listId);
+                list.setAttribute('class', 'autocomplete-items');
+                this.parentNode.appendChild(list);
+                const transportType = getCurrentTransportType();
+
+                matchingCities.forEach(city => {
+                    const price = transportType === 'trail' ? city.trail_price : city.truck_price;
+                    const item = document.createElement('div');
+                    item.innerHTML = `<strong>${city.name}</strong> — ${city.region}<br><small>${price.toLocaleString('ru-RU')} руб</small>`;
+                    item.addEventListener('click', () => {
+                        inputElement.value = city.name;
+                        mainSelectedCityName.value = city.name;
+                        refreshLogisticsValue();
+                        closeAllLists();
+                    });
+                    list.appendChild(item);
+                });
+            });
+
+            inputElement.addEventListener('keydown', function(event) {
+                const list = document.getElementById(listId);
+                const options = list ? list.getElementsByTagName('div') : [];
+
+                if (event.key === 'ArrowDown') {
+                    currentFocus++;
+                    addActive(options);
+                } else if (event.key === 'ArrowUp') {
+                    currentFocus--;
+                    addActive(options);
+                } else if (event.key === 'Enter') {
+                    event.preventDefault();
+                    if (currentFocus > -1 && options[currentFocus]) {
+                        options[currentFocus].click();
+                    }
+                }
+            });
+
+            document.addEventListener('click', function(event) {
+                if (event.target !== inputElement) {
+                    closeAllLists();
+                }
+            });
+
+            function addActive(options) {
+                if (!options.length) {
+                    return;
+                }
+                removeActive(options);
+                if (currentFocus >= options.length) currentFocus = 0;
+                if (currentFocus < 0) currentFocus = options.length - 1;
+                options[currentFocus].classList.add('autocomplete-active');
+            }
+
+            function removeActive(options) {
+                Array.from(options).forEach(option => option.classList.remove('autocomplete-active'));
+            }
+
+            function closeAllLists() {
+                document.querySelectorAll(`#${listId}`).forEach(list => list.remove());
+            }
+        }
+
+        if (mainCityInput && mainCityInput.value) {
+            mainSelectedCityName.value = mainCityInput.value;
+        }
+
+        refreshLogisticsValue();
 
         requiredInputs.forEach(input => {
             input.addEventListener('blur', () => validateField(input));
@@ -250,10 +482,6 @@
             }
             if (field.id === 'cost_price' && value < 0) {
                 showFieldError(field, 'Стоимость должна быть положительной');
-                return false;
-            }
-            if (field.id === 'logistics' && value < 0) {
-                showFieldError(field, 'Стоимость логистики не может быть отрицательной');
                 return false;
             }
             return true;

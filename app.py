@@ -203,9 +203,25 @@ def index():
     for field in ['id', 'timestamp', 'final_price', 'user_id']:
         if field in form_data:
             del form_data[field]
+    # Load logistics cities for inline calculator
+    try:
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = current_dir
+        logistics_path = os.path.join(project_root, 'config', 'logistics_cities.json')
+
+        if not os.path.exists(logistics_path):
+            cities = []
+        else:
+            with open(logistics_path, 'r', encoding='utf-8') as f:
+                logistics_data = json.load(f)
+            cities = logistics_data.get('cities', [])
+    except Exception as exc:
+        app.logger.error(f'Error loading logistics data for index: {exc}')
+        cities = []
+
     return render_template(
         'index.html',
-        **build_context('index', 'Создание коммерческого предложения', form_data=form_data)
+        **build_context('index', 'Создание коммерческого предложения', form_data=form_data, cities=cities)
     )
 
 @app.route('/history/details/<int:record_id>')

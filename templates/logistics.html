@@ -69,6 +69,13 @@
         </div>
     </div>
 
+    <!-- Кнопка профиля -->
+    <div class="profile-button">
+        <a href="{{ url_for('profile') }}" class="btn btn-outline-primary">
+            {{ current_user.username if current_user.is_authenticated else 'Профиль' }}
+        </a>
+    </div>
+
     <!-- Данные городов -->
     <div id="cities-data" style="display: none;">{{ cities | tojson }}</div>
 

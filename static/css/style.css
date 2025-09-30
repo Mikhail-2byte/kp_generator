@@ -44,7 +44,8 @@
 .metal-price-button .btn,
 .crane-wheels-button .btn,
 .history-button .btn,
-.back-button .btn {
+.back-button .btn,
+.feedback-button .btn {
     /* Убираем transition для начальной загрузки */
     transition: none !important;
 }
@@ -56,7 +57,9 @@ body.loaded .gb-standards-button .btn,
 body.loaded .metal-price-button .btn,
 body.loaded .crane-wheels-button .btn,
 body.loaded .history-button .btn,
-body.loaded .back-button .btn {
+body.loaded .back-button .btn,
+body.loaded .feedback-button .btn,
+body.loaded .profile-button .btn {
     transition: all 0.3s ease;
 }
 
@@ -67,7 +70,8 @@ body.loaded .back-button .btn {
 .metal-price-button .btn,
 .crane-wheels-button .btn,
 .history-button .btn,
-.back-button .btn {
+.back-button .btn,
+.feedback-button .btn {
     background-color: transparent !important;
     border-color: #0d6efd !important; /* Фиксированный цвет */
     color: #000000 !important; /* Фиксированный черный по умолчанию */
@@ -80,7 +84,8 @@ body.loaded .back-button .btn {
 [data-theme="dark"] .metal-price-button .btn,
 [data-theme="dark"] .crane-wheels-button .btn,
 [data-theme="dark"] .history-button .btn,
-[data-theme="dark"] .back-button .btn {
+[data-theme="dark"] .back-button .btn,
+[data-theme="dark"] .feedback-button .btn {
     color: #ffffff !important;
 }
 
@@ -98,6 +103,17 @@ body {
   border-radius: 0.5rem;
   box-shadow: var(--shadow);
   transition: all 0.3s ease;
+}
+
+.main-container {
+  position: relative;
+}
+
+.main-container .theme-switcher {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 10;
 }
 
 h1 {
@@ -222,6 +238,11 @@ h1 {
     top: 10px;
     right: 10px;
   }
+
+  .main-container .theme-switcher {
+    top: 0.5rem;
+    right: 0.5rem;
+  }
 }
 
 /* Smooth transitions */
@@ -269,16 +290,36 @@ h1 {
     z-index: 1000;
 }
 
+/* Кнопка профиля */
+.profile-button {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+
+/* Кнопка отзывов и предложений */
+.feedback-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+
 /* Общий стиль для всех информационных кнопок */
 .logistics-button .btn,
 .duty-button .btn,
 .gb-standards-button .btn,
 .metal-price-button .btn,
-.crane-wheels-button .btn {
+.crane-wheels-button .btn,
+.feedback-button .btn,
+.profile-button .btn {
     padding: 0.5rem 1rem;
     font-size: 0.9rem;
-    background-color: transparent;
-    border-color: var(--btn-primary-bg); /* Голубая рамка в любой теме */
+    background-color: transparent !important;
+    border: 1px solid var(--btn-primary-bg) !important;
+    border-radius: 0.5rem;
+    box-shadow: none;
 }
 
 /* Светлая тема - черный текст */
@@ -286,7 +327,9 @@ h1 {
 [data-theme="light"] .duty-button .btn,
 [data-theme="light"] .gb-standards-button .btn,
 [data-theme="light"] .metal-price-button .btn,
-[data-theme="light"] .crane-wheels-button .btn {
+[data-theme="light"] .crane-wheels-button .btn,
+[data-theme="light"] .feedback-button .btn,
+[data-theme="light"] .profile-button .btn {
     color: #000000; /* Черный текст в светлой теме */
 }
 
@@ -295,7 +338,9 @@ h1 {
 [data-theme="dark"] .duty-button .btn,
 [data-theme="dark"] .gb-standards-button .btn,
 [data-theme="dark"] .metal-price-button .btn,
-[data-theme="dark"] .crane-wheels-button .btn {
+[data-theme="dark"] .crane-wheels-button .btn,
+[data-theme="dark"] .feedback-button .btn,
+[data-theme="dark"] .profile-button .btn {
     color: #ffffff; /* Белый текст в темной теме */
 }
 
@@ -304,7 +349,9 @@ h1 {
 .duty-button .btn:hover,
 .gb-standards-button .btn:hover,
 .metal-price-button .btn:hover,
-.crane-wheels-button .btn:hover {
+.crane-wheels-button .btn:hover,
+.feedback-button .btn:hover,
+.profile-button .btn:hover {
     background-color: var(--btn-primary-bg);
     color: white;
     border-color: var(--btn-primary-bg);
@@ -337,6 +384,11 @@ h1 {
         top: 10px;
         left: 10px;
     }
+
+    .profile-button {
+        top: 10px;
+        right: 10px;
+    }
     
     .duty-button {
         top: 60px; /* Располагаем ниже кнопки логистики на мобильных */
@@ -357,12 +409,18 @@ h1 {
         top: 210px; /* Располагаем ниже кнопки цены металла на мобильных */
         left: 10px;
     }
+
+    .feedback-button {
+        bottom: 10px;
+        right: 10px;
+    }
     
     .logistics-button .btn,
     .duty-button .btn,
     .gb-standards-button .btn,
     .metal-price-button .btn,
-    .crane-wheels-button .btn {
+    .crane-wheels-button .btn,
+    .feedback-button .btn {
         padding: 0.4rem 0.8rem;
         font-size: 0.8rem;
     }
@@ -606,8 +664,8 @@ h1 {
 /* Кнопка истории */
 .history-button {
   position: fixed;
-  top: 20px;
-  right: 80px; /* Располагаем слева от переключателя темы */
+  top: 70px;
+  right: 20px;
   z-index: 1000;
 }
 
@@ -638,8 +696,8 @@ h1 {
 /* Адаптивность для кнопки истории */
 @media (max-width: 768px) {
   .history-button {
-      top: 10px;
-      right: 70px;
+      top: 55px;
+      right: 10px;
   }
   
   .history-button .btn {
@@ -772,7 +830,12 @@ h1 {
 .search-container {
   margin-bottom: 1.5rem;
 }
-
+    .profile-button {
+        top: 20px;
+    .history-button {
+      top: 55px;
+      right: 10px;
+  }
 .input-group-text {
   background-color: var(--bg-secondary);
   border-color: var(--input-border);
@@ -1053,7 +1116,8 @@ h1 {
 [data-theme="light"] .metal-price-button .btn,
 [data-theme="light"] .crane-wheels-button .btn,
 [data-theme="light"] .history-button .btn,
-[data-theme="light"] .back-button .btn {
+[data-theme="light"] .back-button .btn,
+[data-theme="light"] .feedback-button .btn {
     background-color: rgba(255, 255, 255, 0.9);
 }
 
@@ -1063,7 +1127,8 @@ h1 {
 [data-theme="dark"] .metal-price-button .btn,
 [data-theme="dark"] .crane-wheels-button .btn,
 [data-theme="dark"] .history-button .btn,
-[data-theme="dark"] .back-button .btn {
+[data-theme="dark"] .back-button .btn,
+[data-theme="dark"] .feedback-button .btn {
     background-color: rgba(30, 30, 30, 0.9);
 }
 
@@ -1095,7 +1160,8 @@ h1 {
     .metal-price-button .btn,
     .crane-wheels-button .btn,
     .history-button .btn,
-    .back-button .btn {
+    .back-button .btn,
+    .feedback-button .btn {
         font-size: 0.8rem;
         padding: 0.5rem 0.8rem;
     }

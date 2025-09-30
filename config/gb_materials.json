@@ -1,0 +1,55 @@
+{
+  "materials": [
+    {
+      "russian": "Сталь 3",
+      "gb": "Q235",
+      "notes": "Углеродистая конструкционная сталь общего назначения",
+      "composition": [
+        {"element": "C", "content": "0.14 – 0.22"},
+        {"element": "Si", "content": "0.15 – 0.30"},
+        {"element": "Mn", "content": "0.40 – 0.65"},
+        {"element": "Ni", "content": "до 0.30"},
+        {"element": "S", "content": "до 0.05"},
+        {"element": "P", "content": "до 0.04"},
+        {"element": "Cr", "content": "до 0.30"},
+        {"element": "N", "content": "до 0.008"},
+        {"element": "Cu", "content": "до 0.30"},
+        {"element": "As", "content": "до 0.08"}
+      ]
+    },
+    {
+      "russian": "Сталь 45",
+      "gb": "45",
+      "notes": "Углеродистая конструкционная сталь общего назначения",
+      "composition": [
+        {"element": "C", "content": " до 0.24"},
+        {"element": "Si", "content": "0.15 – 0.30"},
+        {"element": "Mn", "content": "0.40 – 0.65"},
+        {"element": "Ni", "content": "до 0.30"},
+        {"element": "S", "content": "до 0.07"},
+        {"element": "P", "content": "до 0.04"},
+        {"element": "Cr", "content": "до 0.30"},
+        {"element": "N", "content": "до 0.008"},
+        {"element": "Cu", "content": "до 0.30"},
+        {"element": "As", "content": "до 0.08"}
+      ]
+    },
+    {
+      "russian": "Сталь 40",
+      "gb": "40",
+      "notes": "Углеродистая конструкционная сталь общего назначения",
+      "composition": [
+        {"element": "C", "content": " до 0.24"},
+        {"element": "Si", "content": "0.15 – 0.30"},
+        {"element": "Mn", "content": "0.40 – 0.65"},
+        {"element": "Ni", "content": "до 0.30"},
+        {"element": "S", "content": "до 0.07"},
+        {"element": "P", "content": "до 0.04"},
+        {"element": "Cr", "content": "до 0.30"},
+        {"element": "N", "content": "до 0.008"},
+        {"element": "Cu", "content": "до 0.30"},
+        {"element": "As", "content": "до 0.08"}
+      ]
+    }
+  ]
+}

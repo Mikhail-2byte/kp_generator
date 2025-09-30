@@ -21,6 +21,13 @@
         </div>
     </div>
 
+    <!-- Кнопка профиля -->
+    <div class="profile-button">
+        <a href="{{ url_for('profile') }}" class="btn btn-outline-primary">
+            {{ current_user.username if current_user.is_authenticated else 'Профиль' }}
+        </a>
+    </div>
+
     <!-- Кнопка возврата на главную -->
     <div class="back-button">
         <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
@@ -51,6 +58,7 @@
                     <option value="drawing">Номер чертежа</option>
                     <option value="product">Наименование товара</option>
                     <option value="date">Дата создания</option>
+                    <option value="user">Автор</option>
                 </select>
             </div>
         </div>
@@ -73,6 +81,7 @@
                         <th>Товар</th>
                         <th>Маржа, %</th>
                         <th>Цена за ед., руб</th>
+                        <th>Автор</th>
                         <th>Действия</th>
                     </tr>
                 </thead>
@@ -81,7 +90,7 @@
                     <tr data-tender="{{ item.tender_number }}" data-drawing="{{ item.drawing_number }}" 
                     data-product="{{ item.product }}" data-date="{{ item.timestamp }}"
                     data-company="{{ item.company }}" data-margin="{{ item.margin_percent }}" 
-                    data-price="{{ item.final_price }}">
+                    data-price="{{ item.final_price }}" data-username="{{ item.username or '' }}">
                         <td>{{ item.timestamp }}</td>
                         <td>{{ item.tender_number }}</td>
                         <td>{{ item.company }}</td>
@@ -92,6 +101,7 @@
                             </span>
                         </td>
                         <td class="fw-bold">{{ "%.2f"|format(item.final_price) }}</td>
+                        <td>{{ item.username or '—' }}</td>
                         <td>
                             <div class="btn-group" role="group">
                                 <a href="{{ url_for('load_generation', gen_id=item.id) }}" class="btn btn-sm btn-primary" title="Повторить эту генерацию">
@@ -209,9 +219,20 @@
                                         <p><strong>Материал:</strong> ${data.material || 'Не указан'}</p>
                                         <p><strong>Адрес доставки:</strong> ${data.delivery_address || 'Не указан'}</p>
                                         <p><strong>Дата создания:</strong> ${new Date(data.timestamp).toLocaleString('ru-RU')}</p>
+                                        <p><strong>Комментарий:</strong> ${data.comment ? data.comment.replace(/\n/g, '<br>') : 'Комментарий не указан'}</p>
                                     </div>
                                 </div>
                             `;
+                            const detailsContainer = document.querySelector('#modalDetailsContent .col-12');
+                            if (detailsContainer) {
+                                const commentNode = detailsContainer.querySelector('p:last-child');
+                                const authorLine = `<p><strong>Автор:</strong> ${data.username || 'Не указан'}</p>`;
+                                if (commentNode) {
+                                    commentNode.insertAdjacentHTML('beforebegin', authorLine);
+                                } else {
+                                    detailsContainer.insertAdjacentHTML('beforeend', authorLine);
+                                }
+                            }
                         })
                         .catch(error => {
                             document.getElementById('modalDetailsContent').innerHTML = `
@@ -262,6 +283,7 @@
                 // Фильтруем строки
                 allRows.forEach(row => {
                     let shouldShow = false;
+                    const usernameAttr = (row.getAttribute('data-username') || '').toLowerCase();
                     
                     switch(filterType) {
                         case 'tender':
@@ -274,7 +296,10 @@
                             shouldShow = row.getAttribute('data-product').toLowerCase().includes(searchText);
                             break;
                         case 'date':
+                            shouldShow = row.getAttribute('data-date').toLowerCase().includes(searchText) || usernameAttr.includes(searchText);
                             shouldShow = row.getAttribute('data-date').toLowerCase().includes(searchText);
+                            break;
+                            shouldShow = usernameAttr.includes(searchText);
                             break;
                         default: // 'all'
                             shouldShow = 
@@ -282,8 +307,8 @@
                                 row.getAttribute('data-drawing').toLowerCase().includes(searchText) ||
                                 row.getAttribute('data-product').toLowerCase().includes(searchText) ||
                                 row.getAttribute('data-date').toLowerCase().includes(searchText);
-                    }
-                    
+                                row.getAttribute('data-date').toLowerCase().includes(searchText) ||
+                                usernameAttr.includes(searchText);
                     row.style.display = shouldShow ? '' : 'none';
                     if (shouldShow) visibleCount++;
                 });

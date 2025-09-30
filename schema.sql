@@ -1,4 +1,12 @@
 
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    last_login DATETIME
+);
+
 CREATE TABLE IF NOT EXISTS generation_history (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -15,8 +23,12 @@ CREATE TABLE IF NOT EXISTS generation_history (
     material TEXT,
     delivery_address TEXT,
     duty_percent REAL DEFAULT 0,
-    delivery_time INTEGER DEFAULT 0
+    delivery_time INTEGER DEFAULT 0,
+    comment TEXT,
+    user_id INTEGER,
+    FOREIGN KEY(user_id) REFERENCES users(id)
 );
 
 CREATE INDEX IF NOT EXISTS idx_generation_history_timestamp ON generation_history(timestamp);
 CREATE INDEX IF NOT EXISTS idx_generation_history_company ON generation_history(company);
+CREATE INDEX IF NOT EXISTS idx_generation_history_user ON generation_history(user_id);

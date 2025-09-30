@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отзывы и предложения - Генератор коммерческих предложений</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="theme-switcher">
+        <div class="theme-toggle" id="themeToggle" title="Переключить тему">
+            <svg class="sun" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0-12a.75.75 0 0 0 .75-.75V2a.75.75 0 0 0-1.5 0v2.25c0 .414.336.75.75.75zm0 15a.75.75 0 0 0-.75.75V22a.75.75 0 0 0 1.5 0v-2.25A.75.75 0 0 0 12 20zM4.222 5.222a.75.75 0 0 0 1.06 0l1.5-1.5a.75.75 0 0 0-1.06-1.06l-1.5 1.5a.75.75 0 0 0 0 1.06zm14.496 14.496a.75.75 0 0 0 1.06 0l1.5-1.5a.75.75 0 1 0-1.06-1.06l-1.5 1.5a.75.75 0 0 0 0 1.06zM2 12a.75.75 0 0 0 .75.75H5a.75.75 0 0 0 0-1.5H2.75A.75.75 0 0 0 2 12zm17 0a.75.75 0 0 0 .75-.75V9a.75.75 0 0 0-1.5 0v2.25c0 .414.336.75.75.75zm-15.722 6.778a.75.75 0 0 0 0-1.06l-1.5-1.5a.75.75 0 0 0-1.06 1.06l1.5 1.5a.75.75 0 0 0 1.06 0zm14.496-14.496a.75.75 0 0 0 0-1.06l-1.5-1.5a.75.75 0 1 0-1.06 1.06l1.5 1.5a.75.75 0 0 0 1.06 0z"/>
+            </svg>
+            <svg class="moon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 22c5.523 0 10-4.477 10-10 0-.463-.694-.54-.933-.143a6.5 6.5 0 1 1-8.924-8.924C12.54 2.693 12.463 2 12 2 6.477 2 2 6.477 2 12s4.477 10 10 10z"/>
+            </svg>
+        </div>
+    </div>
+
+    <!-- Кнопка профиля -->
+    <div class="profile-button">
+        <a href="{{ url_for('profile') }}" class="btn btn-outline-primary">
+            {{ current_user.username if current_user.is_authenticated else 'Профиль' }}
+        </a>
+    </div>
+
+    <div class="back-button">
+        <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
+            ← Назад к генератору
+        </a>
+    </div>
+
+    <div class="container mt-4">
+        <h1 class="text-center mb-4">Отзывы и предложения</h1>
+        <p class="text-muted text-center mb-4">Нам важно ваше мнение. Поделитесь впечатлениями о работе сервиса или предложите улучшения.</p>
+
+        {% include '_messages.html' %}
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form method="post" novalidate>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="name" class="form-label">Ваше имя</label>
+                            <input type="text" class="form-control" id="name" name="name" value="{{ form_data.name if form_data else '' }}" placeholder="Аноним">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="contact" class="form-label">Контакты для обратной связи</label>
+                            <input type="text" class="form-control" id="contact" name="contact" value="{{ form_data.contact if form_data else '' }}" placeholder="Email или телефон">
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <label for="feedback_text" class="form-label">Что вам нравится</label>
+                        <textarea class="form-control" id="feedback_text" name="feedback_text" rows="4" placeholder="Расскажите, что работает хорошо и что стоит сохранить.">{{ form_data.feedback_text if form_data else '' }}</textarea>
+                    </div>
+
+                    <div class="mt-3">
+                        <label for="improvement_text" class="form-label">Что можно улучшить</label>
+                        <textarea class="form-control" id="improvement_text" name="improvement_text" rows="4" placeholder="Поделитесь идеями, которые сделают сервис удобнее.">{{ form_data.improvement_text if form_data else '' }}</textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-end mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            Отправить отзыв
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('themeToggle');
+            const html = document.documentElement;
+            const savedTheme = localStorage.getItem('theme');
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            if (savedTheme) {
+                html.setAttribute('data-theme', savedTheme);
+            } else if (systemPrefersDark) {
+                html.setAttribute('data-theme', 'dark');
+            }
+
+            themeToggle.addEventListener('click', function() {
+                const currentTheme = html.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                html.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+            });
+
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+                if (!localStorage.getItem('theme')) {
+                    html.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

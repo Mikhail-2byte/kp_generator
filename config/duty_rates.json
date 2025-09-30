@@ -1,0 +1,14 @@
+{
+  "items": [
+    {
+      "product": "Вал",
+      "category": "Механические изделия",
+      "duty_percent": 5
+    },
+    {
+      "product": "Теплообменник",
+      "category": "Оборудование",
+      "duty_percent": 0
+    }
+  ]
+}

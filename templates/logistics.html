@@ -112,6 +112,12 @@
     const hideElement = (element) => { if (element) element.classList.add('hidden'); };
     const showElement = (element) => { if (element) element.classList.remove('hidden'); };
 
+    const formatNumber = (value, fractionDigits = 0) => Number(value || 0).toLocaleString('ru-RU', {
+        minimumFractionDigits: fractionDigits,
+        maximumFractionDigits: fractionDigits,
+    });
+    const formatMoney = (value) => formatNumber(value, 2);
+
     document.addEventListener('DOMContentLoaded', () => {
         const transportRadios = document.querySelectorAll('input[name="transportType"]');
         const cityInput = document.getElementById('cityInput');
@@ -204,7 +210,7 @@
             matchingCities.forEach(city => {
                 const price = transportType === 'trail' ? city.trail_price : city.truck_price;
                 const item = document.createElement('div');
-                item.innerHTML = `<strong>${city.name}</strong> — ${city.region}<br><small>${price.toLocaleString('ru-RU')} руб</small>`;
+                item.innerHTML = `<strong>${city.name}</strong> — ${city.region}<br><small>${formatMoney(price)} руб</small>`;
                 item.addEventListener('click', () => {
                     cityInput.value = city.name;
                     document.getElementById('selectedCityPrice').value = price;
@@ -305,7 +311,7 @@
 
         if (cargoWeight <= capacity) {
             totalPrice = pricePerKgBase * cargoWeight;
-            calculationDetails = `(${logisticsCost.toLocaleString('ru-RU')} руб / ${capacity.toLocaleString('ru-RU')} кг) × ${cargoWeight.toLocaleString('ru-RU')} кг = ${totalPrice.toLocaleString('ru-RU')} руб`;
+            calculationDetails = `(${formatMoney(logisticsCost)} руб / ${formatNumber(capacity)} кг) × ${formatNumber(cargoWeight)} кг = ${formatMoney(totalPrice)} руб`;
             truckCountText = '1 машина';
         } else {
             const fullTrucks = Math.floor(cargoWeight / capacity);
@@ -314,19 +320,19 @@
                 const partialPrice = remainingWeight * pricePerKgBase;
                 totalPrice = (fullTrucks * logisticsCost) + partialPrice;
                 truckCountText = `${fullTrucks} ${getTruckWord(fullTrucks, transportName)} + частичная загрузка`;
-                calculationDetails = `${fullTrucks} × ${logisticsCost.toLocaleString('ru-RU')} руб + ${remainingWeight.toLocaleString('ru-RU')} кг × ${pricePerKgBase.toFixed(2)} руб = ${totalPrice.toLocaleString('ru-RU')} руб`;
+                calculationDetails = `${fullTrucks} × ${formatMoney(logisticsCost)} руб + ${formatNumber(remainingWeight)} кг × ${formatMoney(pricePerKgBase)} руб = ${formatMoney(totalPrice)} руб`;
             } else {
                 totalPrice = fullTrucks * logisticsCost;
                 truckCountText = `${fullTrucks} ${getTruckWord(fullTrucks, transportName)}`;
-                calculationDetails = `${fullTrucks} × ${logisticsCost.toLocaleString('ru-RU')} руб = ${totalPrice.toLocaleString('ru-RU')} руб`;
+                calculationDetails = `${fullTrucks} × ${formatMoney(logisticsCost)} руб = ${formatMoney(totalPrice)} руб`;
             }
         }
 
         document.getElementById('resultCityName').textContent = cityName;
         document.getElementById('resultTransportType').textContent = transportName;
         document.getElementById('truckCount').textContent = truckCountText;
-        document.getElementById('pricePerKg').textContent = pricePerKgBase.toFixed(2);
-        document.getElementById('totalPrice').textContent = totalPrice.toLocaleString('ru-RU');
+        document.getElementById('pricePerKg').textContent = formatMoney(pricePerKgBase);
+        document.getElementById('totalPrice').textContent = formatMoney(totalPrice);
         document.getElementById('calculationDetails').textContent = calculationDetails;
 
         showElement(resultBlock);

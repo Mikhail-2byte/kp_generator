@@ -5,3 +5,7 @@
 2025-09-29 13:50:11,562 ERROR: Error loading logistics data: [Errno 2] No such file or directory: 'C:\\Users\\vlasov\\Desktop\\Äåëà\\kp_generator-main\\..\\config\\logistics_cities.json' [in C:\Users\vlasov\Desktop\Äåëà\kp_generator-main\app.py:146]
 2025-09-30 15:31:00,027 ERROR: GB materials file not found at C:\Users\vlasov\Desktop\Äåëà\config\gb_materials.json [in C:\Users\vlasov\Desktop\Äåëà\kp_generator-main\app.py:48]
 2025-09-30 15:32:27,143 ERROR: GB materials file not found at C:\Users\vlasov\Desktop\Äåëà\config\gb_materials.json [in C:\Users\vlasov\Desktop\Äåëà\kp_generator-main\app.py:47]
+2025-10-01 13:33:24,433 ERROR: Error loading logistics data for index: Expecting ',' delimiter: line 5 column 24 (char 69) [in C:\Users\vlasov\Desktop\Äåëà\kp_generator-main\app.py:438]
+2025-10-01 13:33:25,611 ERROR: Error loading logistics data: Expecting ',' delimiter: line 5 column 24 (char 69) [in C:\Users\vlasov\Desktop\Äåëà\kp_generator-main\app.py:1002]
+2025-10-01 13:33:36,945 ERROR: Error loading logistics data: Expecting ',' delimiter: line 5 column 24 (char 69) [in C:\Users\vlasov\Desktop\Äåëà\kp_generator-main\app.py:1002]
+2025-10-01 13:33:38,922 ERROR: Failed to parse logistics file: Expecting ',' delimiter: line 5 column 24 (char 69) [in C:\Users\vlasov\Desktop\Äåëà\kp_generator-main\app.py:187]

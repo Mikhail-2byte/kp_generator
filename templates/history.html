@@ -54,8 +54,8 @@
                         <td class="text-center">
                             <span class="status-pill {{ 'status-success' if item.margin_percent|float > 20 else 'status-warning' }}">{{ item.margin_percent }}</span>
                         </td>
-                        <td><strong>{{ '%.2f'|format(item.final_price) }}</strong></td>
-                        <td>{{ '%.2f'|format(item.duty_percent if item.duty_percent is not none else 0) }}</td>
+                        <td><strong>{{ item.final_price|format_number(2) }}</strong></td>
+                        <td>{{ (item.duty_percent if item.duty_percent is not none else 0)|format_number(2) }}</td>
                         <td>{{ author_display or '—' }}</td>
                         <td class="table-actions">
                             <a href="{{ url_for('load_generation', gen_id=item.id) }}" class="btn btn-outline" title="Повторить генерацию">

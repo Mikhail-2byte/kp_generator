@@ -33,7 +33,7 @@
                         <tr data-product="{{ item.product_search }}" data-category="{{ item.category_search }}" data-duty="{{ item.duty_search }}">
                             <td><strong>{{ item.product }}</strong></td>
                             <td>{{ item.category or '—' }}</td>
-                            <td class="text-center">{{ item.duty_percent }}</td>
+                            <td class="text-center">{{ item.duty_percent|format_number(2) }}</td>
                         </tr>
                         {% endfor %}
                     {% else %}

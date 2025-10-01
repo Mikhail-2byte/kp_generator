@@ -45,7 +45,7 @@
                                     <td>{{ item.company }}</td>
                                     <td>{{ item.product }}</td>
                                     <td>{{ item.margin_percent }}</td>
-                                    <td>{{ '%.2f'|format(item.final_price) }}</td>
+                                    <td>{{ item.final_price|format_number(2) }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>

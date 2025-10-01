@@ -6,7 +6,8 @@ CREATE TABLE IF NOT EXISTS users (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     last_login DATETIME,
     last_name TEXT,
-    first_name TEXT
+    first_name TEXT,
+    role TEXT NOT NULL DEFAULT 'user'
 );
 
 CREATE TABLE IF NOT EXISTS generation_history (

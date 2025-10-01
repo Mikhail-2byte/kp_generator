@@ -400,6 +400,16 @@ h1 {
   grid-template-columns: repeat(1, minmax(0, 1fr));
 }
 
+@media (min-width: 960px) {
+  .form-grid.three-columns {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .form-grid.three-columns .span-3 {
+    grid-column: span 3;
+  }
+}
+
 .form-grid .span-2,
 .form-grid .span-3 {
   grid-column: span 1;
@@ -739,6 +749,7 @@ input::-webkit-inner-spin-button {
   gap: 16px;
   padding-top: 24px;
   border-top: 1px solid var(--border);
+  grid-column: 1 / -1;
 }
 
 .muted-text {
@@ -1149,6 +1160,18 @@ button[disabled] {
 
 .collapsible {
   margin-top: 20px;
+}
+
+.inline-form {
+  display: inline-flex;
+}
+
+.inline-form .btn {
+  margin: 0;
+}
+
+.inline-form + .inline-form {
+  margin-left: 8px;
 }
 
 .stat-list {

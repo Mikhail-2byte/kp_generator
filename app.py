@@ -13,8 +13,9 @@ from flask_login import (
 import os
 import json
 from datetime import datetime
-from wtforms import StringField, PasswordField, SubmitField, BooleanField
-from wtforms.validators import DataRequired, Length, EqualTo, Optional
+from functools import wraps
+from wtforms import StringField, PasswordField, SubmitField, BooleanField, HiddenField, TextAreaField, DecimalField
+from wtforms.validators import DataRequired, Length, EqualTo, Optional, NumberRange
 from werkzeug.security import generate_password_hash, check_password_hash
 from markupsafe import Markup
 
@@ -86,6 +87,36 @@ def load_gb_materials():
 GB_ANALOGS = load_gb_materials()
 
 
+def save_gb_materials(materials):
+    project_root = os.path.dirname(os.path.abspath(__file__))
+    materials_path = os.path.join(project_root, 'config', 'gb_materials.json')
+    os.makedirs(os.path.dirname(materials_path), exist_ok=True)
+    payload = {
+        'materials': [
+            {
+                'russian': material.get('russian', ''),
+                'gb': material.get('gb', ''),
+                'notes': material.get('notes', ''),
+                'composition': [
+                    {
+                        'element': component.get('element', ''),
+                        'content': component.get('content', '')
+                    }
+                    for component in material.get('composition', [])
+                ]
+            }
+            for material in materials
+        ]
+    }
+    with open(materials_path, 'w', encoding='utf-8') as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2)
+
+
+def refresh_gb_analogs():
+    global GB_ANALOGS
+    GB_ANALOGS = load_gb_materials()
+
+
 def load_duty_rates():
     project_root = os.path.dirname(os.path.abspath(__file__))
     duty_path = os.path.join(project_root, 'config', 'duty_rates.json')
@@ -111,6 +142,100 @@ def load_duty_rates():
 DUTY_RATES = load_duty_rates()
 
 
+def save_duty_rates(items):
+    project_root = os.path.dirname(os.path.abspath(__file__))
+    duty_path = os.path.join(project_root, 'config', 'duty_rates.json')
+    os.makedirs(os.path.dirname(duty_path), exist_ok=True)
+
+    def _coerce_float(value):
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return 0.0
+
+    payload = {
+        'items': [
+            {
+                'product': item.get('product', ''),
+                'category': item.get('category', ''),
+                'duty_percent': _coerce_float(item.get('duty_percent', 0))
+            }
+            for item in items
+        ]
+    }
+
+    with open(duty_path, 'w', encoding='utf-8') as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2)
+
+
+def refresh_duty_rates():
+    global DUTY_RATES
+    DUTY_RATES = load_duty_rates()
+
+
+def load_logistics_cities():
+    project_root = os.path.dirname(os.path.abspath(__file__))
+    logistics_path = os.path.join(project_root, 'config', 'logistics_cities.json')
+    try:
+        with open(logistics_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        return data.get('cities', [])
+    except FileNotFoundError:
+        app.logger.error('Logistics file not found at %s', logistics_path)
+        return []
+    except json.JSONDecodeError as exc:
+        app.logger.error('Failed to parse logistics file: %s', exc)
+        return []
+
+
+def save_logistics_cities(cities):
+    project_root = os.path.dirname(os.path.abspath(__file__))
+    logistics_path = os.path.join(project_root, 'config', 'logistics_cities.json')
+    os.makedirs(os.path.dirname(logistics_path), exist_ok=True)
+
+    def _coerce_float(value):
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return 0.0
+
+    payload = {
+        'cities': [
+            {
+                'name': city.get('name', ''),
+                'region': city.get('region', ''),
+                'truck_price': _coerce_float(city.get('truck_price', 0)),
+                'trail_price': _coerce_float(city.get('trail_price', 0))
+            }
+            for city in cities
+        ]
+    }
+
+    with open(logistics_path, 'w', encoding='utf-8') as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2)
+
+
+def parse_composition_input(raw_text: str):
+    if not raw_text:
+        return []
+
+    composition = []
+    for line in raw_text.splitlines():
+        cleaned = line.strip()
+        if not cleaned:
+            continue
+        if ':' in cleaned:
+            element, content = cleaned.split(':', 1)
+        elif '=' in cleaned:
+            element, content = cleaned.split('=', 1)
+        else:
+            parts = cleaned.split(maxsplit=1)
+            element = parts[0]
+            content = parts[1] if len(parts) > 1 else ''
+        composition.append({'element': element.strip(), 'content': content.strip()})
+
+    return composition
+
 ICON_MAP = {
     'file-text': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16l4-4h6a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"></path><path d="M10 9h4"></path><path d="M10 13h2"></path></svg>',
     'truck': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 17h4.67a2 2 0 0 0 1.89-1.37L18 7H6"></path><path d="M18 17h2V9h-5"></path><path d="M6 17H4a2 2 0 0 1-2-2V5a1 1 0 0 1 1-1h11"></path><circle cx="7.5" cy="17.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle></svg>',
@@ -127,8 +252,22 @@ ICON_MAP = {
     'download': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="M7 10l5 5 5-5"></path><path d="M12 15V3"></path></svg>',
     'plus': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>',
     'trash2': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>',
-    'search': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-3.87-3.87"></path></svg>'
+    'search': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-3.87-3.87"></path></svg>',
+    'settings': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>'
 }
+
+
+def format_number(value, decimals=2):
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return value
+
+    decimals = max(int(decimals), 0)
+    formatted = f"{number:,.{decimals}f}".replace(",", " ")
+    if decimals == 0:
+        return formatted.split(".")[0]
+    return formatted.replace(".", ",")
 
 
 @app.context_processor
@@ -138,6 +277,9 @@ def inject_ui_helpers():
         return Markup(svg) if svg else Markup('')
 
     return {'sidebar_icon': sidebar_icon}
+
+
+app.jinja_env.filters['format_number'] = format_number
 
 
 def build_context(active_page: str, header_title: str, **kwargs) -> dict:
@@ -151,7 +293,7 @@ def build_context(active_page: str, header_title: str, **kwargs) -> dict:
 
 
 class User(UserMixin):
-    def __init__(self, user_id, username, password_hash, created_at=None, last_login=None, last_name=None, first_name=None):
+    def __init__(self, user_id, username, password_hash, created_at=None, last_login=None, last_name=None, first_name=None, role='user'):
         self.id = str(user_id)
         self.username = username
         self.password_hash = password_hash
@@ -159,6 +301,7 @@ class User(UserMixin):
         self.last_login = last_login
         self.last_name = last_name
         self.first_name = first_name
+        self.role = (role or 'user').lower()
 
     @classmethod
     def from_row(cls, row):
@@ -166,6 +309,7 @@ class User(UserMixin):
             return None
         last_name = row[5] if len(row) > 5 else None
         first_name = row[6] if len(row) > 6 else None
+        role = row[7] if len(row) > 7 else 'user'
         return cls(
             user_id=row[0],
             username=row[1],
@@ -173,8 +317,13 @@ class User(UserMixin):
             created_at=row[3],
             last_login=row[4],
             last_name=last_name,
-            first_name=first_name
+            first_name=first_name,
+            role=role
         )
+
+    @property
+    def is_admin(self) -> bool:
+        return self.role == 'admin'
 
 
 class LoginForm(FlaskForm):
@@ -205,6 +354,62 @@ class ProfileUpdateForm(FlaskForm):
 class DeleteAccountForm(FlaskForm):
     confirm_delete = BooleanField('Я понимаю, что удаление аккаунта необратимо', validators=[DataRequired()])
     submit_delete = SubmitField('Удалить аккаунт')
+
+
+class DutyItemForm(FlaskForm):
+    product = StringField('Наименование товара', validators=[DataRequired(), Length(min=1, max=200)])
+    category = StringField('Категория', validators=[DataRequired(), Length(min=1, max=200)])
+    duty_percent = DecimalField('Пошлина, %', places=2, rounding=None, validators=[DataRequired(), NumberRange(min=0)])
+    action = HiddenField(default='add_duty')
+    submit = SubmitField('Добавить позицию')
+
+
+class DutyDeleteForm(FlaskForm):
+    action = HiddenField(default='delete_duty', validators=[DataRequired()])
+    index = HiddenField(validators=[DataRequired()])
+    submit = SubmitField('Удалить')
+
+
+class GBMaterialForm(FlaskForm):
+    russian = StringField('Наименование (RU)', validators=[DataRequired(), Length(min=1, max=200)])
+    gb = StringField('Наименование (GB)', validators=[DataRequired(), Length(min=1, max=200)])
+    notes = StringField('Описание', validators=[Optional(), Length(max=500)])
+    composition = TextAreaField('Состав (формат: элемент: значение, каждое с новой строки)', validators=[Optional()])
+    action = HiddenField(default='add_gb')
+    submit = SubmitField('Добавить аналог')
+
+
+class GBMaterialDeleteForm(FlaskForm):
+    action = HiddenField(default='delete_gb', validators=[DataRequired()])
+    index = HiddenField(validators=[DataRequired()])
+    submit = SubmitField('Удалить')
+
+
+class LogisticsCityForm(FlaskForm):
+    name = StringField('Город', validators=[DataRequired(), Length(min=1, max=200)])
+    region = StringField('Регион', validators=[Optional(), Length(max=200)])
+    truck_price = DecimalField('Цена фуры, руб', places=2, rounding=None, validators=[DataRequired(), NumberRange(min=0)])
+    trail_price = DecimalField('Цена трала, руб', places=2, rounding=None, validators=[DataRequired(), NumberRange(min=0)])
+    action = HiddenField(default='add_city')
+    submit = SubmitField('Добавить город')
+
+
+class LogisticsCityDeleteForm(FlaskForm):
+    action = HiddenField(default='delete_city', validators=[DataRequired()])
+    index = HiddenField(validators=[DataRequired()])
+    submit = SubmitField('Удалить')
+
+
+def admin_required(view_func):
+    @wraps(view_func)
+    @login_required
+    def wrapped_view(*args, **kwargs):
+        if not current_user.is_admin:
+            flash('Недостаточно прав для доступа к этой странице.', 'danger')
+            return redirect(url_for('profile'))
+        return view_func(*args, **kwargs)
+
+    return wrapped_view
 
 
 @login_manager.user_loader
@@ -369,6 +574,164 @@ def duty():
     return render_template(
         'duty.html',
         **build_context('duty', 'Ставки пошлин', items=filtered_items, query=query)
+    )
+
+
+@app.route('/admin', methods=['GET', 'POST'])
+@admin_required
+def admin_panel():
+    duty_items = load_duty_rates()
+    gb_materials = load_gb_materials()
+    logistics_cities = load_logistics_cities()
+
+    duty_form = DutyItemForm(prefix='duty')
+    gb_form = GBMaterialForm(prefix='gb')
+    logistics_form = LogisticsCityForm(prefix='logistics')
+
+    duty_form.action.data = 'add_duty'
+    gb_form.action.data = 'add_gb'
+    logistics_form.action.data = 'add_city'
+
+    if request.method == 'POST':
+        action = request.form.get('action', '')
+
+        if action == 'add_duty':
+            if duty_form.validate():
+                product = duty_form.product.data.strip()
+                category = duty_form.category.data.strip()
+                duty_percent_value = duty_form.duty_percent.data
+                duty_percent = float(duty_percent_value) if duty_percent_value is not None else 0.0
+
+                new_item = {
+                    'product': product,
+                    'category': category,
+                    'duty_percent': duty_percent,
+                    'product_search': product.lower(),
+                    'category_search': category.lower(),
+                    'duty_search': str(duty_percent).lower()
+                }
+                duty_items.append(new_item)
+                save_duty_rates(duty_items)
+                refresh_duty_rates()
+                flash('Позиция пошлины добавлена.', 'success')
+                return redirect(url_for('admin_panel'))
+            else:
+                flash('Исправьте ошибки в разделе пошлин.', 'danger')
+
+        elif action == 'delete_duty':
+            delete_form = DutyDeleteForm(formdata=request.form)
+            if delete_form.validate():
+                try:
+                    index = int(delete_form.index.data)
+                except (TypeError, ValueError):
+                    index = -1
+                if 0 <= index < len(duty_items):
+                    duty_items.pop(index)
+                    save_duty_rates(duty_items)
+                    refresh_duty_rates()
+                    flash('Позиция пошлины удалена.', 'info')
+                else:
+                    flash('Не удалось найти позицию для удаления.', 'danger')
+            else:
+                flash('Не удалось подтвердить удаление.', 'danger')
+            return redirect(url_for('admin_panel'))
+
+        elif action == 'add_gb':
+            if gb_form.validate():
+                russian_name = gb_form.russian.data.strip()
+                gb_name = gb_form.gb.data.strip()
+                notes_text = (gb_form.notes.data or '').strip()
+                composition_list = parse_composition_input(gb_form.composition.data)
+                composition_search = ' '.join(
+                    f"{comp.get('element', '')} {comp.get('content', '')}" for comp in composition_list
+                ).lower()
+
+                new_material = {
+                    'russian': russian_name,
+                    'gb': gb_name,
+                    'notes': notes_text,
+                    'composition': composition_list,
+                    'composition_search': composition_search
+                }
+                gb_materials.append(new_material)
+                save_gb_materials(gb_materials)
+                refresh_gb_analogs()
+                flash('Материал добавлен.', 'success')
+                return redirect(url_for('admin_panel'))
+            else:
+                flash('Исправьте ошибки в разделе аналогов.', 'danger')
+
+        elif action == 'delete_gb':
+            delete_form = GBMaterialDeleteForm(formdata=request.form)
+            if delete_form.validate():
+                try:
+                    index = int(delete_form.index.data)
+                except (TypeError, ValueError):
+                    index = -1
+                if 0 <= index < len(gb_materials):
+                    gb_materials.pop(index)
+                    save_gb_materials(gb_materials)
+                    refresh_gb_analogs()
+                    flash('Материал удалён.', 'info')
+                else:
+                    flash('Не удалось найти материал для удаления.', 'danger')
+            else:
+                flash('Не удалось подтвердить удаление.', 'danger')
+            return redirect(url_for('admin_panel'))
+
+        elif action == 'add_city':
+            if logistics_form.validate():
+                name = logistics_form.name.data.strip()
+                region = (logistics_form.region.data or '').strip()
+                truck_price_value = logistics_form.truck_price.data
+                trail_price_value = logistics_form.trail_price.data
+                truck_price = float(truck_price_value) if truck_price_value is not None else 0.0
+                trail_price = float(trail_price_value) if trail_price_value is not None else 0.0
+
+                logistics_cities.append({
+                    'name': name,
+                    'region': region,
+                    'truck_price': truck_price,
+                    'trail_price': trail_price
+                })
+                save_logistics_cities(logistics_cities)
+                flash('Город добавлен.', 'success')
+                return redirect(url_for('admin_panel'))
+            else:
+                flash('Исправьте ошибки в разделе логистики.', 'danger')
+
+        elif action == 'delete_city':
+            delete_form = LogisticsCityDeleteForm(formdata=request.form)
+            if delete_form.validate():
+                try:
+                    index = int(delete_form.index.data)
+                except (TypeError, ValueError):
+                    index = -1
+                if 0 <= index < len(logistics_cities):
+                    logistics_cities.pop(index)
+                    save_logistics_cities(logistics_cities)
+                    flash('Город удалён.', 'info')
+                else:
+                    flash('Не удалось найти город для удаления.', 'danger')
+            else:
+                flash('Не удалось подтвердить удаление.', 'danger')
+            return redirect(url_for('admin_panel'))
+        else:
+            flash('Неизвестное действие.', 'danger')
+            return redirect(url_for('admin_panel'))
+
+    return render_template(
+        'admin.html',
+        **build_context(
+            'admin',
+            'Администрирование',
+            duty_items=duty_items,
+            gb_materials=gb_materials,
+            logistics_cities=logistics_cities,
+            duty_form=duty_form,
+            gb_form=gb_form,
+            logistics_form=logistics_form
+        )
     )
 
 @app.route('/load_generation/<int:gen_id>')

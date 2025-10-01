@@ -18,7 +18,8 @@ def init_db():
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         last_login DATETIME,
         last_name TEXT,
-        first_name TEXT
+        first_name TEXT,
+        role TEXT NOT NULL DEFAULT 'user'
     );
 
     CREATE TABLE IF NOT EXISTS generation_history (
@@ -67,6 +68,8 @@ def init_db():
             cursor.execute('ALTER TABLE users ADD COLUMN last_name TEXT')
         if 'first_name' not in user_columns:
             cursor.execute('ALTER TABLE users ADD COLUMN first_name TEXT')
+        if 'role' not in user_columns:
+            cursor.execute("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'user'")
 
         db.commit()
 
@@ -197,13 +200,13 @@ def load_generation_data(gen_id):
         return None
 
 
-def create_user(username, password_hash, last_name='', first_name=''):
+def create_user(username, password_hash, last_name='', first_name='', role='user'):
     try:
         with closing(connect_db()) as db:
             cursor = db.cursor()
             cursor.execute(
-                'INSERT INTO users (username, password_hash, last_name, first_name) VALUES (?, ?, ?, ?)',
-                (username, password_hash, last_name, first_name)
+                'INSERT INTO users (username, password_hash, last_name, first_name, role) VALUES (?, ?, ?, ?, ?)',
+                (username, password_hash, last_name, first_name, role)
             )
             db.commit()
             return cursor.lastrowid
@@ -220,7 +223,7 @@ def get_user_by_username(username):
         with closing(connect_db()) as db:
             cursor = db.cursor()
             cursor.execute(
-                'SELECT id, username, password_hash, created_at, last_login, last_name, first_name FROM users WHERE username = ?',
+                'SELECT id, username, password_hash, created_at, last_login, last_name, first_name, role FROM users WHERE username = ?',
                 (username,)
             )
             return cursor.fetchone()
@@ -234,7 +237,7 @@ def get_user_by_id(user_id):
         with closing(connect_db()) as db:
             cursor = db.cursor()
             cursor.execute(
-                'SELECT id, username, password_hash, created_at, last_login, last_name, first_name FROM users WHERE id = ?',
+                'SELECT id, username, password_hash, created_at, last_login, last_name, first_name, role FROM users WHERE id = ?',
                 (user_id,)
             )
             return cursor.fetchone()

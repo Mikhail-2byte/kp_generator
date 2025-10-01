@@ -61,6 +61,12 @@
                     {% endif %}
                 </div>
                 <div class="app-header-actions">
+                    {% if current_user.is_authenticated and current_user.is_admin %}
+                    <a href="{{ url_for('admin_panel') }}" class="header-link" data-header-action="admin">
+                        <span class="header-icon">{{ sidebar_icon('settings')|safe }}</span>
+                        <span>Админка</span>
+                    </a>
+                    {% endif %}
                     <a href="{{ url_for('history') }}" class="header-link" data-header-action="history">
                         <span class="header-icon">{{ sidebar_icon('history')|safe }}</span>
                         <span>История</span>
@@ -188,6 +194,17 @@
             if (headerProfile && activePage === 'profile') {
                 headerProfile.classList.add('is-active');
                 headerProfile.setAttribute('aria-current', 'page');
+            }
+
+            const headerAdmin = document.querySelector('[data-header-action="admin"]');
+            if (headerAdmin) {
+                if (activePage === 'admin') {
+                    headerAdmin.classList.add('is-active');
+                    headerAdmin.setAttribute('aria-current', 'page');
+                } else {
+                    headerAdmin.classList.remove('is-active');
+                    headerAdmin.removeAttribute('aria-current');
+                }
             }
         })();
     </script>

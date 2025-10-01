@@ -67,7 +67,13 @@
                     </a>
                     <a href="{{ url_for('profile') }}" class="header-link" data-header-action="profile">
                         <span class="header-icon">{{ sidebar_icon('user')|safe }}</span>
-                        <span>{{ current_user.username if current_user.is_authenticated else 'Профиль' }}</span>
+                        <span>
+                            {% if current_user.is_authenticated %}
+                                {{ ((current_user.last_name or '') ~ ' ' ~ (current_user.first_name or '')).strip() or current_user.username }}
+                            {% else %}
+                                Профиль
+                            {% endif %}
+                        </span>
                     </a>
                 </div>
             </header>

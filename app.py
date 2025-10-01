@@ -14,7 +14,7 @@ import os
 import json
 from datetime import datetime
 from wtforms import StringField, PasswordField, SubmitField, BooleanField
-from wtforms.validators import DataRequired, Length, EqualTo
+from wtforms.validators import DataRequired, Length, EqualTo, Optional
 from werkzeug.security import generate_password_hash, check_password_hash
 from markupsafe import Markup
 
@@ -31,7 +31,9 @@ from app.database import (
     get_user_by_username,
     get_user_by_id,
     update_last_login,
-    get_user_statistics
+    get_user_statistics,
+    update_user_profile,
+    delete_user
 )
 from app.document_generator import generate_excel_document, generate_word_document, create_zip_archive
 from app.config import load_config, setup_app_security, setup_logging
@@ -149,18 +151,30 @@ def build_context(active_page: str, header_title: str, **kwargs) -> dict:
 
 
 class User(UserMixin):
-    def __init__(self, user_id, username, password_hash, created_at=None, last_login=None):
+    def __init__(self, user_id, username, password_hash, created_at=None, last_login=None, last_name=None, first_name=None):
         self.id = str(user_id)
         self.username = username
         self.password_hash = password_hash
         self.created_at = created_at
         self.last_login = last_login
+        self.last_name = last_name
+        self.first_name = first_name
 
     @classmethod
     def from_row(cls, row):
         if not row:
             return None
-        return cls(user_id=row[0], username=row[1], password_hash=row[2], created_at=row[3], last_login=row[4])
+        last_name = row[5] if len(row) > 5 else None
+        first_name = row[6] if len(row) > 6 else None
+        return cls(
+            user_id=row[0],
+            username=row[1],
+            password_hash=row[2],
+            created_at=row[3],
+            last_login=row[4],
+            last_name=last_name,
+            first_name=first_name
+        )
 
 
 class LoginForm(FlaskForm):
@@ -172,9 +186,25 @@ class LoginForm(FlaskForm):
 
 class RegistrationForm(FlaskForm):
     username = StringField('Логин', validators=[DataRequired(), Length(min=3, max=50)])
+    last_name = StringField('Фамилия', validators=[DataRequired(), Length(min=2, max=100)])
+    first_name = StringField('Имя', validators=[DataRequired(), Length(min=2, max=100)])
     password = PasswordField('Пароль', validators=[DataRequired(), Length(min=6, max=128)])
     confirm_password = PasswordField('Подтвердите пароль', validators=[DataRequired(), EqualTo('password', message='Пароли должны совпадать')])
     submit_register = SubmitField('Зарегистрироваться')
+
+
+class ProfileUpdateForm(FlaskForm):
+    username = StringField('Логин', validators=[DataRequired(), Length(min=3, max=50)])
+    last_name = StringField('Фамилия', validators=[DataRequired(), Length(min=2, max=100)])
+    first_name = StringField('Имя', validators=[DataRequired(), Length(min=2, max=100)])
+    new_password = PasswordField('Новый пароль', validators=[Optional(), Length(min=6, max=128)])
+    confirm_new_password = PasswordField('Подтвердите новый пароль', validators=[Optional(), EqualTo('new_password', message='Пароли должны совпадать')])
+    submit_update = SubmitField('Сохранить изменения')
+
+
+class DeleteAccountForm(FlaskForm):
+    confirm_delete = BooleanField('Я понимаю, что удаление аккаунта необратимо', validators=[DataRequired()])
+    submit_delete = SubmitField('Удалить аккаунт')
 
 
 @login_manager.user_loader
@@ -441,38 +471,93 @@ def generate():
 def profile():
     login_form = LoginForm(prefix='login')
     register_form = RegistrationForm(prefix='register')
+    update_form = ProfileUpdateForm(prefix='update') if current_user.is_authenticated else None
+    delete_form = DeleteAccountForm(prefix='delete') if current_user.is_authenticated else None
+    show_registration_modal = False
+    show_update_form = bool(update_form and update_form.submit_update.data)
 
     if request.method == 'POST':
-        if login_form.submit_login.data and login_form.validate():
-            username = login_form.username.data.strip()
-            login_form.username.data = username
-            user_row = get_user_by_username(username)
-            if user_row and check_password_hash(user_row[2], login_form.password.data):
-                user = User.from_row(user_row)
-                login_user(user, remember=login_form.remember_me.data)
-                update_last_login(int(user.id))
-                user.last_login = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
-                flash('Вы успешно вошли в систему.', 'success')
-                return redirect(url_for('profile'))
-            else:
-                flash('Неверный логин или пароль.', 'danger')
-        elif register_form.submit_register.data and register_form.validate():
-            username = register_form.username.data.strip()
-            register_form.username.data = username
-            if get_user_by_username(username):
-                register_form.username.errors.append('Пользователь с таким логином уже существует.')
-            else:
-                password_hash = generate_password_hash(register_form.password.data.strip())
-                new_user_id = create_user(username, password_hash)
-                if new_user_id:
-                    user = User.from_row(get_user_by_id(new_user_id))
-                    login_user(user)
+        if login_form.submit_login.data:
+            if login_form.validate():
+                username = (login_form.username.data or '').strip()
+                login_form.username.data = username
+                user_row = get_user_by_username(username)
+                if user_row and check_password_hash(user_row[2], login_form.password.data):
+                    user = User.from_row(user_row)
+                    login_user(user, remember=login_form.remember_me.data)
                     update_last_login(int(user.id))
                     user.last_login = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
-                    flash('Аккаунт успешно создан.', 'success')
+                    flash('Вы успешно вошли в систему.', 'success')
                     return redirect(url_for('profile'))
                 else:
-                    flash('Не удалось создать пользователя. Попробуйте позже.', 'danger')
+                    flash('Неверный логин или пароль.', 'danger')
+            # no else needed, WTForms will show errors
+        elif register_form.submit_register.data:
+            if register_form.validate():
+                username = (register_form.username.data or '').strip()
+                last_name = (register_form.last_name.data or '').strip()
+                first_name = (register_form.first_name.data or '').strip()
+                register_form.username.data = username
+                register_form.last_name.data = last_name
+                register_form.first_name.data = first_name
+                if get_user_by_username(username):
+                    register_form.username.errors.append('Пользователь с таким логином уже существует.')
+                    show_registration_modal = True
+                else:
+                    password_hash = generate_password_hash((register_form.password.data or '').strip())
+                    new_user_id = create_user(username, password_hash, last_name, first_name)
+                    if new_user_id:
+                        user = User.from_row(get_user_by_id(new_user_id))
+                        login_user(user)
+                        update_last_login(int(user.id))
+                        user.last_login = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+                        flash('Аккаунт успешно создан.', 'success')
+                        return redirect(url_for('profile'))
+                    else:
+                        flash('Не удалось создать пользователя. Попробуйте позже.', 'danger')
+                        show_registration_modal = True
+            else:
+                show_registration_modal = True
+        elif current_user.is_authenticated and update_form and update_form.submit_update.data:
+            if update_form.validate():
+                username = (update_form.username.data or '').strip()
+                last_name = (update_form.last_name.data or '').strip()
+                first_name = (update_form.first_name.data or '').strip()
+                new_password = (update_form.new_password.data or '').strip()
+                update_form.username.data = username
+                update_form.last_name.data = last_name
+                update_form.first_name.data = first_name
+
+                existing_user = get_user_by_username(username)
+                if existing_user and str(existing_user[0]) != str(current_user.id):
+                    update_form.username.errors.append('Пользователь с таким логином уже существует.')
+                else:
+                    password_hash = generate_password_hash(new_password) if new_password else None
+                    updated = update_user_profile(
+                        int(current_user.id),
+                        username,
+                        last_name,
+                        first_name,
+                        password_hash
+                    )
+                    if updated:
+                        current_user.username = username
+                        current_user.last_name = last_name
+                        current_user.first_name = first_name
+                        flash('Профиль успешно обновлён.', 'success')
+                        return redirect(url_for('profile'))
+                    else:
+                        flash('Не удалось обновить профиль. Попробуйте позже.', 'danger')
+                        show_update_form = True
+            # form errors will be displayed automatically
+        elif current_user.is_authenticated and delete_form and delete_form.submit_delete.data:
+            if delete_form.validate():
+                if delete_user(int(current_user.id)):
+                    logout_user()
+                    flash('Аккаунт и связанные данные удалены.', 'info')
+                    return redirect(url_for('profile'))
+                else:
+                    flash('Не удалось удалить аккаунт. Попробуйте позже.', 'danger')
 
     stats = None
     if current_user.is_authenticated:
@@ -503,9 +588,27 @@ def profile():
             })
         stats['recent_generations'] = formatted_recent
 
+        if request.method != 'POST' and update_form:
+            update_form.username.data = current_user.username
+            update_form.last_name.data = current_user.last_name or ''
+            update_form.first_name.data = current_user.first_name or ''
+
+    if update_form and update_form.errors:
+        show_update_form = True
+
     return render_template(
         'profile.html',
-        **build_context('profile', 'Профиль', login_form=login_form, register_form=register_form, stats=stats)
+        **build_context(
+            'profile',
+            'Профиль',
+            login_form=login_form,
+            register_form=register_form,
+            stats=stats,
+            show_registration_modal=show_registration_modal,
+            update_form=update_form,
+            delete_form=delete_form,
+            show_update_form=show_update_form
+        )
     )
 
 

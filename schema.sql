@@ -4,7 +4,9 @@ CREATE TABLE IF NOT EXISTS users (
     username TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    last_login DATETIME
+    last_login DATETIME,
+    last_name TEXT,
+    first_name TEXT
 );
 
 CREATE TABLE IF NOT EXISTS generation_history (

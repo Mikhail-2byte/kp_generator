@@ -35,15 +35,18 @@
                         <th>Товар</th>
                         <th>Маржа, %</th>
                         <th>Цена за ед., руб</th>
+                        <th>Пошлина, %</th>
                         <th>Автор</th>
                         <th>Действия</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in history %}
+                    {% set author_full = ((item.last_name or '') + ' ' + (item.first_name or '')).strip() %}
+                    {% set author_display = author_full if author_full else item.username %}
                     <tr data-tender="{{ item.tender_number }}" data-drawing="{{ item.drawing_number }}" data-product="{{ item.product }}"
                         data-date="{{ item.timestamp }}" data-company="{{ item.company }}" data-margin="{{ item.margin_percent }}"
-                        data-price="{{ item.final_price }}" data-username="{{ item.username or '' }}">
+                        data-price="{{ item.final_price }}" data-duty="{{ item.duty_percent if item.duty_percent is not none else 0 }}" data-username="{{ ((author_display or '') ~ ' ' ~ (item.username or ''))|lower|trim }}">
                         <td>{{ item.timestamp }}</td>
                         <td>{{ item.tender_number }}</td>
                         <td>{{ item.company }}</td>
@@ -52,7 +55,8 @@
                             <span class="status-pill {{ 'status-success' if item.margin_percent|float > 20 else 'status-warning' }}">{{ item.margin_percent }}</span>
                         </td>
                         <td><strong>{{ '%.2f'|format(item.final_price) }}</strong></td>
-                        <td>{{ item.username or '—' }}</td>
+                        <td>{{ '%.2f'|format(item.duty_percent if item.duty_percent is not none else 0) }}</td>
+                        <td>{{ author_display or '—' }}</td>
                         <td class="table-actions">
                             <a href="{{ url_for('load_generation', gen_id=item.id) }}" class="btn btn-outline" title="Повторить генерацию">
                                 {{ sidebar_icon('history')|safe }}
@@ -124,6 +128,8 @@
         const renderDetails = (data) => {
             const format = (value, empty = 'Не указан') => value ? value : empty;
             const formatCurrency = (value) => Number(value || 0).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const authorName = [data.last_name, data.first_name].filter(Boolean).join(' ').trim();
+            const authorDisplay = authorName || data.username || 'Не указан';
 
             modalContent.innerHTML = `
                 <div class="grid-two">
@@ -155,7 +161,7 @@
                     <div>
                         <p><strong>Дата создания:</strong> ${new Date(data.timestamp).toLocaleString('ru-RU')}</p>
                         <p><strong>Комментарий:</strong><br>${data.comment ? data.comment.replace(/\n/g, '<br>') : 'Комментарий не указан'}</p>
-                        <p><strong>Автор:</strong> ${format(data.username)}</p>
+                        <p><strong>Автор:</strong> ${authorDisplay}</p>
                     </div>
                 </div>
             `;
@@ -212,6 +218,7 @@
                             (row.getAttribute('data-drawing') || '').toLowerCase().includes(searchText) ||
                             (row.getAttribute('data-product') || '').toLowerCase().includes(searchText) ||
                             (row.getAttribute('data-date') || '').toLowerCase().includes(searchText) ||
+                            (row.getAttribute('data-duty') || '').toString().toLowerCase().includes(searchText) ||
                             usernameAttr.includes(searchText);
                 }
 

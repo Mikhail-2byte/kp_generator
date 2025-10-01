@@ -824,6 +824,18 @@ input::-webkit-inner-spin-button {
   background: rgba(17, 24, 39, 0.06);
 }
 
+.btn-danger {
+  background: var(--destructive);
+  color: var(--destructive-foreground);
+  border-color: transparent;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-danger:hover {
+  background: oklch(0.54 0.22 27.325);
+  transform: translateY(-1px);
+}
+
 .btn-ghost {
   color: var(--muted-foreground);
 }
@@ -1105,10 +1117,38 @@ button[disabled] {
   gap: 24px;
 }
 
+.profile-grid .span-full {
+  grid-column: 1 / -1;
+}
+
 @media (min-width: 960px) {
   .profile-grid {
     grid-template-columns: 320px minmax(0, 1fr);
   }
+}
+
+.auth-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: min(520px, calc(100vh - 260px));
+  padding: 40px 0;
+}
+
+.auth-card {
+  width: min(420px, 100%);
+}
+
+.auth-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.collapsible {
+  margin-top: 20px;
 }
 
 .stat-list {

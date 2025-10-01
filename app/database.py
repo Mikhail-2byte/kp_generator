@@ -16,7 +16,9 @@ def init_db():
         username TEXT NOT NULL UNIQUE,
         password_hash TEXT NOT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        last_login DATETIME
+        last_login DATETIME,
+        last_name TEXT,
+        first_name TEXT
     );
 
     CREATE TABLE IF NOT EXISTS generation_history (
@@ -61,6 +63,10 @@ def init_db():
         user_columns = [row[1] for row in cursor.fetchall()]
         if 'last_login' not in user_columns:
             cursor.execute('ALTER TABLE users ADD COLUMN last_login DATETIME')
+        if 'last_name' not in user_columns:
+            cursor.execute('ALTER TABLE users ADD COLUMN last_name TEXT')
+        if 'first_name' not in user_columns:
+            cursor.execute('ALTER TABLE users ADD COLUMN first_name TEXT')
 
         db.commit()
 
@@ -72,7 +78,8 @@ def get_generation_history(config):
             
             cursor.execute('''
                 SELECT gh.id, gh.timestamp, gh.tender_number, gh.company, gh.product,
-                       gh.margin_percent, gh.final_price, gh.drawing_number, u.username
+                       gh.margin_percent, gh.final_price, gh.drawing_number, gh.duty_percent,
+                       u.username, u.last_name, u.first_name
                 FROM generation_history gh
                 LEFT JOIN users u ON gh.user_id = u.id
                 ORDER BY gh.timestamp DESC
@@ -101,7 +108,10 @@ def get_generation_history(config):
                     'margin_percent': item[5],
                     'final_price': item[6],
                     'drawing_number': item[7] or 'Не указан',
-                    'username': item[8]
+                    'duty_percent': item[8],
+                    'username': item[9],
+                    'last_name': item[10],
+                    'first_name': item[11]
                 })
             
             return result
@@ -151,7 +161,7 @@ def get_generation_details(record_id):
         with closing(connect_db()) as db:
             cursor = db.cursor()
             cursor.execute('''
-                SELECT gh.*, u.username
+                SELECT gh.*, u.username, u.last_name, u.first_name
                 FROM generation_history gh
                 LEFT JOIN users u ON gh.user_id = u.id
                 WHERE gh.id = ?
@@ -161,7 +171,7 @@ def get_generation_details(record_id):
             if record:
                 columns = ['id', 'timestamp', 'tender_number', 'company', 'product', 'quantity', 
                           'cost_price', 'weight', 'logistics', 'margin_percent', 'final_price',
-                          'drawing_number', 'material', 'delivery_address', 'duty_percent', 'delivery_time', 'comment', 'user_id', 'username']
+                          'drawing_number', 'material', 'delivery_address', 'duty_percent', 'delivery_time', 'comment', 'user_id', 'username', 'last_name', 'first_name']
                 return dict(zip(columns, record))
             return None
     except Exception as e:
@@ -187,11 +197,14 @@ def load_generation_data(gen_id):
         return None
 
 
-def create_user(username, password_hash):
+def create_user(username, password_hash, last_name='', first_name=''):
     try:
         with closing(connect_db()) as db:
             cursor = db.cursor()
-            cursor.execute('INSERT INTO users (username, password_hash) VALUES (?, ?)', (username, password_hash))
+            cursor.execute(
+                'INSERT INTO users (username, password_hash, last_name, first_name) VALUES (?, ?, ?, ?)',
+                (username, password_hash, last_name, first_name)
+            )
             db.commit()
             return cursor.lastrowid
     except sqlite3.IntegrityError:
@@ -206,7 +219,10 @@ def get_user_by_username(username):
     try:
         with closing(connect_db()) as db:
             cursor = db.cursor()
-            cursor.execute('SELECT id, username, password_hash, created_at, last_login FROM users WHERE username = ?', (username,))
+            cursor.execute(
+                'SELECT id, username, password_hash, created_at, last_login, last_name, first_name FROM users WHERE username = ?',
+                (username,)
+            )
             return cursor.fetchone()
     except Exception as e:
         logging.error(f'Error fetching user by username: {str(e)}')
@@ -217,7 +233,10 @@ def get_user_by_id(user_id):
     try:
         with closing(connect_db()) as db:
             cursor = db.cursor()
-            cursor.execute('SELECT id, username, password_hash, created_at, last_login FROM users WHERE id = ?', (user_id,))
+            cursor.execute(
+                'SELECT id, username, password_hash, created_at, last_login, last_name, first_name FROM users WHERE id = ?',
+                (user_id,)
+            )
             return cursor.fetchone()
     except Exception as e:
         logging.error(f'Error fetching user by id: {str(e)}')
@@ -268,3 +287,46 @@ def get_user_statistics(user_id):
             'last_generation_at': None,
             'recent_generations': []
         }
+
+
+def update_user_profile(user_id, username, last_name, first_name, password_hash=None):
+    try:
+        with closing(connect_db()) as db:
+            cursor = db.cursor()
+            if password_hash:
+                cursor.execute(
+                    '''
+                    UPDATE users
+                    SET username = ?, last_name = ?, first_name = ?, password_hash = ?
+                    WHERE id = ?
+                    ''',
+                    (username, last_name, first_name, password_hash, user_id)
+                )
+            else:
+                cursor.execute(
+                    '''
+                    UPDATE users
+                    SET username = ?, last_name = ?, first_name = ?
+                    WHERE id = ?
+                    ''',
+                    (username, last_name, first_name, user_id)
+                )
+            db.commit()
+            return cursor.rowcount > 0
+    except Exception as e:
+        logging.error(f'Error updating user profile: {str(e)}')
+        return False
+
+
+def delete_user(user_id):
+    try:
+        with closing(connect_db()) as db:
+            cursor = db.cursor()
+            cursor.execute('UPDATE generation_history SET user_id = NULL WHERE user_id = ?', (user_id,))
+            cursor.execute('DELETE FROM users WHERE id = ?', (user_id,))
+            deleted = cursor.rowcount
+            db.commit()
+            return deleted > 0
+    except Exception as e:
+        logging.error(f'Error deleting user: {str(e)}')
+        return False

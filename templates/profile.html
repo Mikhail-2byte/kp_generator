@@ -55,10 +55,88 @@
                     <p class="muted-text">У вас пока нет созданных коммерческих предложений.</p>
                 {% endif %}
             </div>
+            {% if update_form %}
+            <div class="card span-full">
+                <div class="card-header">
+                    <div>
+                        <h3 class="section-title">Настройки профиля</h3>
+                        <p class="section-description">Обновите личные данные или смените пароль. Оставьте поля пароля пустыми, чтобы сохранить текущий.</p>
+                    </div>
+                    <button type="button" class="btn btn-outline" data-toggle="profile-settings">
+                        {{ 'Скрыть' if show_update_form else 'Редактировать' }}
+                    </button>
+                </div>
+                <div id="profileSettings" class="collapsible" {% if not show_update_form %}hidden{% endif %}>
+                    <form method="post" action="{{ url_for('profile') }}" class="form-grid">
+                        {{ update_form.hidden_tag() }}
+                        <div class="field-group span-3">
+                            {{ update_form.last_name.label(class_='field-label') }}
+                            {{ update_form.last_name(class_='') }}
+                            {% for error in update_form.last_name.errors %}
+                                <div class="field-error">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="field-group span-3">
+                            {{ update_form.first_name.label(class_='field-label') }}
+                            {{ update_form.first_name(class_='') }}
+                            {% for error in update_form.first_name.errors %}
+                                <div class="field-error">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="field-group span-3">
+                            {{ update_form.username.label(class_='field-label') }}
+                            {{ update_form.username(class_='') }}
+                            {% for error in update_form.username.errors %}
+                                <div class="field-error">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="field-group span-3">
+                            {{ update_form.new_password.label(class_='field-label') }}
+                            {{ update_form.new_password(class_='') }}
+                            {% for error in update_form.new_password.errors %}
+                                <div class="field-error">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="field-group span-3">
+                            {{ update_form.confirm_new_password.label(class_='field-label') }}
+                            {{ update_form.confirm_new_password(class_='') }}
+                            {% for error in update_form.confirm_new_password.errors %}
+                                <div class="field-error">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="controls-row">
+                            <span></span>
+                            {{ update_form.submit_update(class_='btn btn-primary') }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if delete_form %}
+            <div class="card span-full" style="border: 1px solid rgba(240, 68, 56, 0.28);">
+                <h3 class="section-title" style="color: var(--destructive);">Удаление аккаунта</h3>
+                <p class="section-description">Удаление приведёт к безвозвратному удалению истории генераций и самого профиля.</p>
+                <form method="post" action="{{ url_for('profile') }}" class="form-grid">
+                    {{ delete_form.hidden_tag() }}
+                    <div class="field-group span-3" style="display:flex; align-items:center; gap:12px;">
+                        {{ delete_form.confirm_delete(class_='') }}
+                        <label for="{{ delete_form.confirm_delete.id }}" class="muted-text">{{ delete_form.confirm_delete.label.text }}</label>
+                        {% for error in delete_form.confirm_delete.errors %}
+                            <div class="field-error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="controls-row">
+                        <span></span>
+                        {{ delete_form.submit_delete(class_='btn btn-danger') }}
+                    </div>
+                </form>
+            </div>
+            {% endif %}
         </div>
     {% else %}
-        <div class="profile-grid">
-            <div class="card">
+        <div class="auth-wrapper">
+            <div class="card auth-card">
                 <h2 class="section-title">Вход</h2>
                 <p class="section-description">Используйте аккаунт, чтобы сохранять историю и повторять генерации.</p>
                 <form method="post" action="{{ url_for('profile') }}" class="form-grid">
@@ -83,16 +161,73 @@
                     </div>
                     <div class="controls-row">
                         <span></span>
-                        {{ login_form.submit_login(class_='btn btn-primary') }}
+                        <div class="auth-actions">
+                            {{ login_form.submit_login(class_='btn btn-primary') }}
+                            <button type="button" class="btn btn-outline" data-modal-target="registerModal">Зарегистрироваться</button>
+                        </div>
                     </div>
                 </form>
             </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
 
-            <div class="card">
-                <h2 class="section-title">Регистрация</h2>
-                <p class="section-description">Создайте аккаунт, чтобы вести историю своих расчётов.</p>
+{% block extra_scripts %}
+    {{ super() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggleButton = document.querySelector('[data-toggle="profile-settings"]');
+            const settingsBlock = document.getElementById('profileSettings');
+
+            if (toggleButton && settingsBlock) {
+                const updateButtonState = () => {
+                    const isHidden = settingsBlock.hasAttribute('hidden');
+                    toggleButton.textContent = isHidden ? 'Редактировать' : 'Скрыть';
+                    toggleButton.setAttribute('aria-expanded', String(!isHidden));
+                };
+
+                updateButtonState();
+
+                toggleButton.addEventListener('click', () => {
+                    if (settingsBlock.hasAttribute('hidden')) {
+                        settingsBlock.removeAttribute('hidden');
+                    } else {
+                        settingsBlock.setAttribute('hidden', '');
+                    }
+                    updateButtonState();
+                });
+            }
+        });
+    </script>
+{% endblock %}
+
+{% block overlays %}
+    {{ super() }}
+    <div class="modal {% if show_registration_modal %}is-open{% endif %}" id="registerModal" aria-hidden="{{ 'false' if show_registration_modal else 'true' }}">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h2 class="modal-title">Регистрация</h2>
+                <button type="button" class="btn btn-outline" data-close-modal>Закрыть</button>
+            </div>
+            <div class="modal-body">
+                <p class="muted-text">Создайте аккаунт, чтобы вести историю своих расчётов.</p>
                 <form method="post" action="{{ url_for('profile') }}" class="form-grid">
                     {{ register_form.hidden_tag() }}
+                    <div class="field-group span-3">
+                        {{ register_form.last_name.label(class_='field-label') }}
+                        {{ register_form.last_name(class_='') }}
+                        {% for error in register_form.last_name.errors %}
+                            <div class="field-error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="field-group span-3">
+                        {{ register_form.first_name.label(class_='field-label') }}
+                        {{ register_form.first_name(class_='') }}
+                        {% for error in register_form.first_name.errors %}
+                            <div class="field-error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
                     <div class="field-group span-3">
                         {{ register_form.username.label(class_='field-label') }}
                         {{ register_form.username(class_='') }}
@@ -114,13 +249,11 @@
                             <div class="field-error">{{ error }}</div>
                         {% endfor %}
                     </div>
-                    <div class="controls-row">
-                        <span></span>
+                    <div class="modal-actions">
                         {{ register_form.submit_register(class_='btn btn-primary') }}
                     </div>
                 </form>
             </div>
         </div>
-    {% endif %}
-</div>
+    </div>
 {% endblock %}

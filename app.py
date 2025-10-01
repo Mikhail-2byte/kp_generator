@@ -557,6 +557,30 @@ def gb_analogs():
     )
 
 
+@app.route('/orders')
+def orders_page():
+    return render_template(
+        'orders.html',
+        **build_context('orders', 'Распоряжения')
+    )
+
+
+@app.route('/templates-library')
+def templates_page():
+    return render_template(
+        'templates_page.html',
+        **build_context('templates', 'Шаблоны')
+    )
+
+
+@app.route('/instructions')
+def instructions_page():
+    return render_template(
+        'instructions.html',
+        **build_context('instructions', 'Инструкция')
+    )
+
+
 @app.route('/duty')
 def duty():
     query = request.args.get('q', '').strip()

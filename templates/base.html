@@ -32,15 +32,19 @@
                     <span class="sidebar-icon">{{ sidebar_icon('layers')|safe }}</span>
                     <span class="sidebar-label">Аналоги GB</span>
                 </a>
-                <button type="button" class="sidebar-link" data-modal-target="metalModal">
-                    <span class="sidebar-icon">{{ sidebar_icon('coins')|safe }}</span>
-                    <span class="sidebar-label">Цена металла</span>
-                </button>
-                <button type="button" class="sidebar-link" data-modal-target="wheelsModal">
-                    <span class="sidebar-icon">{{ sidebar_icon('circle')|safe }}</span>
-                    <span class="sidebar-label">Крановые колёса</span>
-                </button>
-                <a href="{{ url_for('feedback') }}" class="sidebar-link" data-nav="feedback">
+                <a href="{{ url_for('orders_page') }}" class="sidebar-link" data-nav="orders">
+                    <span class="sidebar-icon">{{ sidebar_icon('file-text')|safe }}</span>
+                    <span class="sidebar-label">Распоряжения</span>
+                </a>
+                <a href="{{ url_for('templates_page') }}" class="sidebar-link" data-nav="templates">
+                    <span class="sidebar-icon">{{ sidebar_icon('file-text')|safe }}</span>
+                    <span class="sidebar-label">Шаблоны</span>
+                </a>
+                <a href="{{ url_for('instructions_page') }}" class="sidebar-link" data-nav="instructions">
+                    <span class="sidebar-icon">{{ sidebar_icon('file-text')|safe }}</span>
+                    <span class="sidebar-label">Инструкция</span>
+                </a>
+                <a href="{{ url_for('feedback') }}" class="sidebar-link sidebar-link-feedback" data-nav="feedback">
                     <span class="sidebar-icon">{{ sidebar_icon('message-square')|safe }}</span>
                     <span class="sidebar-label">Обратная связь</span>
                 </a>

@@ -58,7 +58,7 @@
                         <td>{{ (item.duty_percent if item.duty_percent is not none else 0)|format_number(2) }}</td>
                         <td>{{ author_display or '—' }}</td>
                         <td class="table-actions">
-                            <a href="{{ url_for('load_generation', gen_id=item.id) }}" class="btn btn-outline" title="Повторить генерацию">
+                            <a href="{{ url_for('main.load_generation', gen_id=item.id) }}" class="btn btn-outline" title="Повторить генерацию">
                                 {{ sidebar_icon('history')|safe }}
                             </a>
                             <button type="button" class="btn btn-outline view-details" data-id="{{ item.id }}" title="Показать детали">

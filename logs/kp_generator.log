@@ -55,3 +55,8 @@
 2025-10-01 15:05:43,340 INFO: KP Generator started successfully [in C:\Users\vlasov\Desktop\Äåëà\kp_generator-main\app.py:1075]
 2025-10-01 15:12:24,579 INFO: Looking for logistics data at: C:\Users\vlasov\Desktop\Äåëà\kp_generator-main\config\logistics_cities.json [in C:\Users\vlasov\Desktop\Äåëà\kp_generator-main\app.py:1019]
 2025-10-01 15:12:24,580 INFO: Loaded 7 cities from logistics data [in C:\Users\vlasov\Desktop\Äåëà\kp_generator-main\app.py:1039]
+2025-10-01 15:19:53,724 INFO: KP Generator started successfully [in C:\Users\vlasov\Desktop\Äåëà\kp_generator-main\app.py:1075]
+2025-10-01 15:19:54,108 INFO: KP Generator started successfully [in C:\Users\vlasov\Desktop\Äåëà\kp_generator-main\app.py:1075]
+2025-10-01 15:42:33,147 INFO: Looking for logistics data at: C:\Users\vlasov\Desktop\Äåëà\kp_generator-main\config\logistics_cities.json [in C:\Users\vlasov\Desktop\Äåëà\kp_generator-main\app.py:1019]
+2025-10-01 15:42:33,148 INFO: Loaded 7 cities from logistics data [in C:\Users\vlasov\Desktop\Äåëà\kp_generator-main\app.py:1039]
+2025-10-01 16:30:32,560 INFO: KP Generator started successfully [in C:\Users\vlasov\Desktop\Äåëà\kp_generator-main\app.py:1075]

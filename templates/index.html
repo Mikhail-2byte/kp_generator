@@ -3,7 +3,7 @@
 {% block content %}
 <div class="content-container">
     <div id="cities-data" class="hidden">{{ cities | tojson }}</div>
-    <form action="{{ url_for('generate') }}" method="post" novalidate class="card-stack" id="generateForm">
+    <form action="{{ url_for('main.generate') }}" method="post" novalidate class="card-stack" id="generateForm">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
         <section class="section">

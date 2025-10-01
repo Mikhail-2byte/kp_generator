@@ -21,7 +21,7 @@
                         <strong>{{ current_user.last_login or '—' }}</strong>
                     </div>
                 </div>
-                <a href="{{ url_for('logout') }}" class="btn btn-outline" style="margin-top:24px;">Выйти из аккаунта</a>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-outline" style="margin-top:24px;">Выйти из аккаунта</a>
             </div>
 
             <div class="card">
@@ -67,7 +67,7 @@
                     </button>
                 </div>
                 <div id="profileSettings" class="collapsible" {% if not show_update_form %}hidden{% endif %}>
-                    <form method="post" action="{{ url_for('profile') }}" class="form-grid">
+                    <form method="post" action="{{ url_for('auth.profile') }}" class="form-grid">
                         {{ update_form.hidden_tag() }}
                         <div class="field-group span-3">
                             {{ update_form.last_name.label(class_='field-label') }}
@@ -117,7 +117,7 @@
             <div class="card span-full" style="border: 1px solid rgba(240, 68, 56, 0.28);">
                 <h3 class="section-title" style="color: var(--destructive);">Удаление аккаунта</h3>
                 <p class="section-description">Удаление приведёт к безвозвратному удалению истории генераций и самого профиля.</p>
-                <form method="post" action="{{ url_for('profile') }}" class="form-grid">
+                <form method="post" action="{{ url_for('auth.profile') }}" class="form-grid">
                     {{ delete_form.hidden_tag() }}
                     <div class="field-group span-3" style="display:flex; align-items:center; gap:12px;">
                         {{ delete_form.confirm_delete(class_='') }}
@@ -139,7 +139,7 @@
             <div class="card auth-card">
                 <h2 class="section-title">Вход</h2>
                 <p class="section-description">Используйте аккаунт, чтобы сохранять историю и повторять генерации.</p>
-                <form method="post" action="{{ url_for('profile') }}" class="form-grid">
+                <form method="post" action="{{ url_for('auth.profile') }}" class="form-grid">
                     {{ login_form.hidden_tag() }}
                     <div class="field-group span-3">
                         {{ login_form.username.label(class_='field-label') }}
@@ -212,7 +212,7 @@
             </div>
             <div class="modal-body">
                 <p class="muted-text">Создайте аккаунт, чтобы вести историю своих расчётов.</p>
-                <form method="post" action="{{ url_for('profile') }}" class="form-grid">
+                <form method="post" action="{{ url_for('auth.profile') }}" class="form-grid">
                     {{ register_form.hidden_tag() }}
                     <div class="field-group span-3">
                         {{ register_form.last_name.label(class_='field-label') }}

@@ -1,0 +1,196 @@
+from __future__ import annotations
+
+import json
+import os
+from pathlib import Path
+from typing import Any, Dict, List
+
+from flask import current_app
+
+
+BASE_DIR = Path(__file__).resolve().parents[2]
+CONFIG_DIR = BASE_DIR / 'config'
+
+GB_ANALOGS: List[Dict[str, Any]] = []
+DUTY_RATES: List[Dict[str, Any]] = []
+
+
+def _log_error(message: str):
+    logger = getattr(current_app, 'logger', None)
+    if logger:
+        logger.error(message)
+
+
+def load_gb_materials() -> List[Dict[str, Any]]:
+    materials_path = CONFIG_DIR / 'gb_materials.json'
+    try:
+        with materials_path.open('r', encoding='utf-8') as file:
+            data = json.load(file)
+        materials = data.get('materials', [])
+
+        for material in materials:
+            composition = material.get('composition', [])
+            material['composition_search'] = ' '.join(
+                f"{item.get('element', '')} {item.get('content', '')}"
+                for item in composition
+            )
+
+        return materials
+    except FileNotFoundError:
+        _log_error(f'GB materials file not found at {materials_path.as_posix()}')
+    except json.JSONDecodeError as exc:
+        _log_error(f'Failed to parse GB materials file: {exc}')
+    return []
+
+
+def save_gb_materials(materials: List[Dict[str, Any]]):
+    materials_path = CONFIG_DIR / 'gb_materials.json'
+    materials_path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        'materials': [
+            {
+                'russian': material.get('russian', ''),
+                'gb': material.get('gb', ''),
+                'notes': material.get('notes', ''),
+                'composition': [
+                    {
+                        'element': component.get('element', ''),
+                        'content': component.get('content', '')
+                    }
+                    for component in material.get('composition', [])
+                ]
+            }
+            for material in materials
+        ]
+    }
+    with materials_path.open('w', encoding='utf-8') as file:
+        json.dump(payload, file, ensure_ascii=False, indent=2)
+
+
+def refresh_gb_analogs():
+    global GB_ANALOGS
+    GB_ANALOGS = load_gb_materials()
+
+
+def get_gb_materials() -> List[Dict[str, Any]]:
+    return list(GB_ANALOGS)
+
+
+def load_duty_rates() -> List[Dict[str, Any]]:
+    duty_path = CONFIG_DIR / 'duty_rates.json'
+    try:
+        with duty_path.open('r', encoding='utf-8') as file:
+            data = json.load(file)
+        items = data.get('items', [])
+
+        for item in items:
+            item['product_search'] = str(item.get('product', '')).lower()
+            item['category_search'] = str(item.get('category', '')).lower()
+            item['duty_search'] = str(item.get('duty_percent', '')).lower()
+
+        return items
+    except FileNotFoundError:
+        _log_error(f'Duty rates file not found at {duty_path.as_posix()}')
+    except json.JSONDecodeError as exc:
+        _log_error(f'Failed to parse duty rates file: {exc}')
+    return []
+
+
+def save_duty_rates(items: List[Dict[str, Any]]):
+    duty_path = CONFIG_DIR / 'duty_rates.json'
+    duty_path.parent.mkdir(parents=True, exist_ok=True)
+
+    def _coerce_float(value):
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return 0.0
+
+    payload = {
+        'items': [
+            {
+                'product': item.get('product', ''),
+                'category': item.get('category', ''),
+                'duty_percent': _coerce_float(item.get('duty_percent', 0))
+            }
+            for item in items
+        ]
+    }
+
+    with duty_path.open('w', encoding='utf-8') as file:
+        json.dump(payload, file, ensure_ascii=False, indent=2)
+
+
+def refresh_duty_rates():
+    global DUTY_RATES
+    DUTY_RATES = load_duty_rates()
+
+
+def get_duty_rates() -> List[Dict[str, Any]]:
+    return list(DUTY_RATES)
+
+
+def load_logistics_cities() -> List[Dict[str, Any]]:
+    logistics_path = CONFIG_DIR / 'logistics_cities.json'
+    try:
+        with logistics_path.open('r', encoding='utf-8') as file:
+            data = json.load(file)
+        return data.get('cities', [])
+    except FileNotFoundError:
+        _log_error(f'Logistics file not found at {logistics_path.as_posix()}')
+    except json.JSONDecodeError as exc:
+        _log_error(f'Failed to parse logistics file: {exc}')
+    return []
+
+
+def save_logistics_cities(cities: List[Dict[str, Any]]):
+    logistics_path = CONFIG_DIR / 'logistics_cities.json'
+    logistics_path.parent.mkdir(parents=True, exist_ok=True)
+
+    def _coerce_float(value):
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return 0.0
+
+    payload = {
+        'cities': [
+            {
+                'name': city.get('name', ''),
+                'region': city.get('region', ''),
+                'truck_price': _coerce_float(city.get('truck_price', 0)),
+                'trail_price': _coerce_float(city.get('trail_price', 0))
+            }
+            for city in cities
+        ]
+    }
+
+    with logistics_path.open('w', encoding='utf-8') as file:
+        json.dump(payload, file, ensure_ascii=False, indent=2)
+
+
+def parse_composition_input(raw_text: str):
+    if not raw_text:
+        return []
+
+    composition = []
+    for line in raw_text.splitlines():
+        cleaned = line.strip()
+        if not cleaned:
+            continue
+        if ':' in cleaned:
+            element, content = cleaned.split(':', 1)
+        elif '=' in cleaned:
+            element, content = cleaned.split('=', 1)
+        else:
+            parts = cleaned.split(maxsplit=1)
+            element = parts[0]
+            content = parts[1] if len(parts) > 1 else ''
+        composition.append({'element': element.strip(), 'content': content.strip()})
+
+    return composition
+
+
+def init_app(_app):
+    refresh_gb_analogs()
+    refresh_duty_rates()

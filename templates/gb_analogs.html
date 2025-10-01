@@ -27,7 +27,7 @@
                     {% if materials %}
                         {% for material in materials %}
                         <tr data-composition-text="{{ (material.composition_search or '') | lower }}">
-                            <td><strong>{{ material.russian }}</strong></td>
+                            <td>{{ material.russian }}</td>
                             <td>{{ material.gb }}</td>
                             <td>{{ material.notes or '—' }}</td>
                             <td class="text-center">

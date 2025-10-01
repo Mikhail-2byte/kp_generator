@@ -16,35 +16,35 @@
                 </div>
             </div>
             <nav class="sidebar-nav" aria-label="Основная навигация">
-                <a href="{{ url_for('index') }}" class="sidebar-link" data-nav="index">
+                <a href="{{ url_for('main.index') }}" class="sidebar-link" data-nav="index">
                     <span class="sidebar-icon">{{ sidebar_icon('file-text')|safe }}</span>
                     <span class="sidebar-label">Создать КП</span>
                 </a>
-                <a href="{{ url_for('logistics') }}" class="sidebar-link" data-nav="logistics">
+                <a href="{{ url_for('main.logistics') }}" class="sidebar-link" data-nav="logistics">
                     <span class="sidebar-icon">{{ sidebar_icon('truck')|safe }}</span>
                     <span class="sidebar-label">Логистика</span>
                 </a>
-                <a href="{{ url_for('duty') }}" class="sidebar-link" data-nav="duty">
+                <a href="{{ url_for('main.duty') }}" class="sidebar-link" data-nav="duty">
                     <span class="sidebar-icon">{{ sidebar_icon('percent')|safe }}</span>
                     <span class="sidebar-label">Пошлина</span>
                 </a>
-                <a href="{{ url_for('gb_analogs') }}" class="sidebar-link" data-nav="gb">
+                <a href="{{ url_for('main.gb_analogs') }}" class="sidebar-link" data-nav="gb">
                     <span class="sidebar-icon">{{ sidebar_icon('layers')|safe }}</span>
                     <span class="sidebar-label">Аналоги GB</span>
                 </a>
-                <a href="{{ url_for('orders_page') }}" class="sidebar-link" data-nav="orders">
+                <a href="{{ url_for('main.orders_page') }}" class="sidebar-link" data-nav="orders">
                     <span class="sidebar-icon">{{ sidebar_icon('file-text')|safe }}</span>
                     <span class="sidebar-label">Распоряжения</span>
                 </a>
-                <a href="{{ url_for('templates_page') }}" class="sidebar-link" data-nav="templates">
+                <a href="{{ url_for('main.templates_page') }}" class="sidebar-link" data-nav="templates">
                     <span class="sidebar-icon">{{ sidebar_icon('file-text')|safe }}</span>
                     <span class="sidebar-label">Шаблоны</span>
                 </a>
-                <a href="{{ url_for('instructions_page') }}" class="sidebar-link" data-nav="instructions">
+                <a href="{{ url_for('main.instructions_page') }}" class="sidebar-link" data-nav="instructions">
                     <span class="sidebar-icon">{{ sidebar_icon('file-text')|safe }}</span>
-                    <span class="sidebar-label">Инструкция</span>
+                    <span class="sidebar-label">Инструкции</span>
                 </a>
-                <a href="{{ url_for('feedback') }}" class="sidebar-link sidebar-link-feedback" data-nav="feedback">
+                <a href="{{ url_for('main.feedback') }}" class="sidebar-link sidebar-link-feedback" data-nav="feedback">
                     <span class="sidebar-icon">{{ sidebar_icon('message-square')|safe }}</span>
                     <span class="sidebar-label">Обратная связь</span>
                 </a>
@@ -66,16 +66,16 @@
                 </div>
                 <div class="app-header-actions">
                     {% if current_user.is_authenticated and current_user.is_admin %}
-                    <a href="{{ url_for('admin_panel') }}" class="header-link" data-header-action="admin">
+                    <a href="{{ url_for('admin.admin_panel') }}" class="header-link" data-header-action="admin">
                         <span class="header-icon">{{ sidebar_icon('settings')|safe }}</span>
                         <span>Админка</span>
                     </a>
                     {% endif %}
-                    <a href="{{ url_for('history') }}" class="header-link" data-header-action="history">
+                    <a href="{{ url_for('main.history') }}" class="header-link" data-header-action="history">
                         <span class="header-icon">{{ sidebar_icon('history')|safe }}</span>
                         <span>История</span>
                     </a>
-                    <a href="{{ url_for('profile') }}" class="header-link" data-header-action="profile">
+                    <a href="{{ url_for('auth.profile') }}" class="header-link" data-header-action="profile">
                         <span class="header-icon">{{ sidebar_icon('user')|safe }}</span>
                         <span>
                             {% if current_user.is_authenticated %}

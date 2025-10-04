@@ -4,8 +4,10 @@ from app.ui import build_context
 
 
 def register_error_handlers(app):
+    """Подключает шаблоны отображения для стандартных ошибок HTTP."""
     @app.errorhandler(404)
     def not_found_error(_error):
+        """Возвращает страницу 404 с дружественным описанием."""
         return render_template(
             '404.html',
             **build_context('index', 'Страница не найдена')
@@ -13,6 +15,7 @@ def register_error_handlers(app):
 
     @app.errorhandler(500)
     def internal_error(_error):
+        """Отображает страницу 500 при непредвиденных исключениях."""
         return render_template(
             '500.html',
             **build_context('index', 'Внутренняя ошибка')

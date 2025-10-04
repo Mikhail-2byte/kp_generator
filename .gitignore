@@ -1,0 +1,23 @@
+venv/
+__pycache__/
+*/__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Environment & secrets
+.env
+.env.*
+
+# Local databases & backups
+*.db
+*.sqlite3
+*.db-journal
+
+# Runtime generated data
+logs/
+data/
+
+# OS files
+Thumbs.db
+Desktop.ini

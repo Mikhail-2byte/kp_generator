@@ -12,6 +12,7 @@ from wtforms.validators import DataRequired, Length, EqualTo, Optional, NumberRa
 
 
 class LoginForm(FlaskForm):
+    """Форма авторизации пользователей на сайте."""
     username = StringField('Логин', validators=[DataRequired(), Length(min=3, max=50)])
     password = PasswordField('Пароль', validators=[DataRequired(), Length(min=6, max=128)])
     remember_me = BooleanField('Запомнить меня')
@@ -19,6 +20,7 @@ class LoginForm(FlaskForm):
 
 
 class RegistrationForm(FlaskForm):
+    """Форма регистрации с обязательным вводом профиля и пароля."""
     username = StringField('Логин', validators=[DataRequired(), Length(min=3, max=50)])
     last_name = StringField('Фамилия', validators=[DataRequired(), Length(min=2, max=100)])
     first_name = StringField('Имя', validators=[DataRequired(), Length(min=2, max=100)])
@@ -31,6 +33,7 @@ class RegistrationForm(FlaskForm):
 
 
 class ProfileUpdateForm(FlaskForm):
+    """Форма редактирования данных профиля и смены пароля."""
     username = StringField('Логин', validators=[DataRequired(), Length(min=3, max=50)])
     last_name = StringField('Фамилия', validators=[DataRequired(), Length(min=2, max=100)])
     first_name = StringField('Имя', validators=[DataRequired(), Length(min=2, max=100)])
@@ -43,6 +46,7 @@ class ProfileUpdateForm(FlaskForm):
 
 
 class DeleteAccountForm(FlaskForm):
+    """Подтверждение удаления аккаунта со всеми данными."""
     confirm_delete = BooleanField(
         'Я понимаю, что удаление аккаунта необратимо',
         validators=[DataRequired()]
@@ -51,6 +55,7 @@ class DeleteAccountForm(FlaskForm):
 
 
 class DutyItemForm(FlaskForm):
+    """Добавление новой ставки пошлины в справочник."""
     product = StringField('Наименование товара', validators=[DataRequired(), Length(min=1, max=200)])
     category = StringField('Категория', validators=[DataRequired(), Length(min=1, max=200)])
     duty_percent = DecimalField(
@@ -61,12 +66,14 @@ class DutyItemForm(FlaskForm):
 
 
 class DutyDeleteForm(FlaskForm):
+    """Удаление существующей записи о пошлине."""
     action = HiddenField(default='delete_duty', validators=[DataRequired()])
     index = HiddenField(validators=[DataRequired()])
     submit = SubmitField('Удалить')
 
 
 class GBMaterialForm(FlaskForm):
+    """Добавление аналога материала по стандарту GB."""
     russian = StringField('Наименование (RU)', validators=[DataRequired(), Length(min=1, max=200)])
     gb = StringField('Наименование (GB)', validators=[DataRequired(), Length(min=1, max=200)])
     notes = StringField('Описание', validators=[Optional(), Length(max=500)])
@@ -76,12 +83,14 @@ class GBMaterialForm(FlaskForm):
 
 
 class GBMaterialDeleteForm(FlaskForm):
+    """Удаление аналога материала из справочника."""
     action = HiddenField(default='delete_gb', validators=[DataRequired()])
     index = HiddenField(validators=[DataRequired()])
     submit = SubmitField('Удалить')
 
 
 class LogisticsCityForm(FlaskForm):
+    """Добавление города с тарифами перевозки."""
     name = StringField('Город', validators=[DataRequired(), Length(min=1, max=200)])
     region = StringField('Регион', validators=[Optional(), Length(max=200)])
     truck_price = DecimalField(
@@ -95,6 +104,7 @@ class LogisticsCityForm(FlaskForm):
 
 
 class LogisticsCityDeleteForm(FlaskForm):
+    """Удаление города из справочника логистики."""
     action = HiddenField(default='delete_city', validators=[DataRequired()])
     index = HiddenField(validators=[DataRequired()])
     submit = SubmitField('Удалить')

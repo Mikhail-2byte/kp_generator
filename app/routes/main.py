@@ -15,24 +15,20 @@ from flask import (
 from flask_login import current_user
 
 from app.calculate import calculate_selling_price
-from app.database import (
-    get_generation_details,
-    get_generation_history,
-    load_generation_data,
-    save_generation_history
-)
 from app.document_generator import create_zip_archive, generate_excel_document, generate_word_document
 from app.helpers import check_templates_exist, validate_form_data
 from app.services import datasets
+from app.services.repositories import generation_repository
 from app.services.feedback import save_feedback_entry
 from app.ui import build_context
 
 
-main_bp = Blueprint('main', __name__)
+main_bp = Blueprint('main', __name__)  # Основные страницы и бизнес-логика генератора КП
 
 
 @main_bp.route('/')
 def index():
+    """Показывает форму расчёта коммерческого предложения и заполняет справочники."""
     form_data = session.pop('form_data', {})
     for field in ['id', 'timestamp', 'final_price', 'user_id']:
         form_data.pop(field, None)
@@ -51,8 +47,9 @@ def index():
 
 @main_bp.route('/history/details/<int:record_id>')
 def history_details(record_id):
+    """Возвращает детальную информацию о сохранённой генерации в формате JSON."""
     try:
-        record = get_generation_details(record_id)
+        record = generation_repository.get_details(record_id)
         if record:
             return jsonify(record)
         return jsonify({'error': 'Record not found'}), 404
@@ -63,8 +60,9 @@ def history_details(record_id):
 
 @main_bp.route('/history')
 def history():
+    """Отображает список последних генераций пользователя."""
     app_config = current_app.config['APP_SETTINGS']
-    history_data = get_generation_history(app_config)
+    history_data = generation_repository.get_history(app_config)
     return render_template(
         'history.html',
         **build_context('history', 'История генераций КП', history=history_data)
@@ -73,6 +71,7 @@ def history():
 
 @main_bp.route('/feedback', methods=['GET', 'POST'])
 def feedback():
+    """Принимает обратную связь от пользователей и сохраняет её локально."""
     form_data = {}
 
     if request.method == 'POST':
@@ -120,6 +119,7 @@ def feedback():
 
 @main_bp.route('/gb-analogs')
 def gb_analogs():
+    """Показывает таблицу аналогов материалов по китайскому стандарту GB."""
     query = request.args.get('q', '').strip()
     normalized_query = query.lower()
     filtered_materials = datasets.get_gb_materials()
@@ -152,6 +152,7 @@ def gb_analogs():
 
 @main_bp.route('/orders')
 def orders_page():
+    """Отображает раздел с распоряжениями и внутренними документами."""
     return render_template(
         'orders.html',
         **build_context('orders', 'Распоряжения')
@@ -160,6 +161,7 @@ def orders_page():
 
 @main_bp.route('/templates-library')
 def templates_page():
+    """Выводит список шаблонов документов."""
     return render_template(
         'templates_page.html',
         **build_context('templates', 'Шаблоны')
@@ -168,6 +170,7 @@ def templates_page():
 
 @main_bp.route('/instructions')
 def instructions_page():
+    """Содержит краткие инструкции по бизнес-процессам."""
     return render_template(
         'instructions.html',
         **build_context('instructions', 'Инструкция')
@@ -176,6 +179,7 @@ def instructions_page():
 
 @main_bp.route('/duty')
 def duty():
+    """Предоставляет поиск по ставкам пошлин и категориям товаров."""
     query = request.args.get('q', '').strip()
     normalized_query = query.lower()
     filtered_items = datasets.get_duty_rates()
@@ -196,8 +200,9 @@ def duty():
 
 @main_bp.route('/load_generation/<int:gen_id>')
 def load_generation(gen_id):
+    """Загружает ранее рассчитанную генерацию в форму для повторного использования."""
     try:
-        generation_dict = load_generation_data(gen_id)
+        generation_dict = generation_repository.load_generation(gen_id)
         if generation_dict:
             session['form_data'] = generation_dict
             return redirect(url_for('main.index'))
@@ -211,6 +216,7 @@ def load_generation(gen_id):
 
 @main_bp.route('/generate', methods=['POST'])
 def generate():
+    """Выполняет расчёт КП, сохраняет историю и формирует пакет документов."""
     form_data = request.form.to_dict()
     form_data['comment'] = form_data.get('comment', '').strip()
     errors = validate_form_data(form_data)
@@ -250,7 +256,7 @@ def generate():
         final_price_nds = general_price * 1.2
 
         user_id = int(current_user.id) if current_user.is_authenticated else None
-        if not save_generation_history(form_data, final_price, app_config, user_id):
+        if not generation_repository.save_history(form_data, final_price, app_config, user_id):
             current_app.logger.warning('Failed to save generation history')
 
         template_errors = check_templates_exist()
@@ -288,6 +294,7 @@ def generate():
 
 @main_bp.route('/logistics')
 def logistics():
+    """Отображает справочную информацию по логистическим тарифам."""
     try:
         cities = datasets.load_logistics_cities()
         if not cities:

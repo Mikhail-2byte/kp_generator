@@ -1,0 +1,27 @@
+# Установка и запуск
+
+1. Создайте виртуальное окружение и активируйте его:
+   ```powershell
+   python -m venv venv
+   .\venv\Scripts\Activate.ps1
+   ```
+2. Установите зависимости:
+   ```powershell
+   pip install -r requirements.txt
+   ```
+3. Скопируйте `.env.example` в `.env` и задайте необходимые значения.
+   ```powershell
+   copy .env.example .env
+   ```
+4. Примените миграции:
+   ```powershell
+   alembic upgrade head
+   ```
+5. Запустите приложение:
+   ```powershell
+   python app.py
+   ```
+6. Запустите тесты при необходимости:
+   ```powershell
+   pytest
+   ```

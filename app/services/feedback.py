@@ -9,6 +9,7 @@ FEEDBACK_FILE_PATH = BASE_DIR / 'data' / 'feedback_entries.jsonl'
 
 
 def save_feedback_entry(entry: Dict[str, Any]) -> bool:
+    """Добавляет отзыв пользователя в локальный JSONL-файл."""
     try:
         FEEDBACK_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
         with FEEDBACK_FILE_PATH.open('a', encoding='utf-8') as feedback_file:

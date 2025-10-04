@@ -1,8 +1,58 @@
 from datetime import datetime
+from typing import Any, Mapping, Sequence
+
 from flask_login import UserMixin
+from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, Text, func
+from sqlalchemy.orm import declarative_base, relationship
+
+
+Base = declarative_base()
+
+
+class UserRecord(Base):
+    """ORM-модель пользователя, хранящего учётные данные и профиль."""
+    __tablename__ = 'users'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    username = Column(Text, nullable=False, unique=True)
+    password_hash = Column(Text, nullable=False)
+    created_at = Column(DateTime, server_default=func.current_timestamp())
+    last_login = Column(DateTime)
+    last_name = Column(Text)
+    first_name = Column(Text)
+    role = Column(Text, nullable=False, server_default='user')
+
+    generations = relationship('GenerationHistoryRecord', back_populates='user')
+
+
+class GenerationHistoryRecord(Base):
+    """ORM-модель сохранённой генерации коммерческого предложения."""
+    __tablename__ = 'generation_history'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    timestamp = Column(DateTime, server_default=func.current_timestamp())
+    tender_number = Column(Text)
+    company = Column(Text, nullable=False)
+    product = Column(Text, nullable=False)
+    quantity = Column(Integer, nullable=False)
+    cost_price = Column(Float, nullable=False)
+    weight = Column(Float, nullable=False)
+    logistics = Column(Float, nullable=False)
+    margin_percent = Column(Float, nullable=False)
+    final_price = Column(Float, nullable=False)
+    drawing_number = Column(Text)
+    material = Column(Text)
+    delivery_address = Column(Text)
+    duty_percent = Column(Float, server_default='0')
+    delivery_time = Column(Integer, server_default='0')
+    comment = Column(Text)
+    user_id = Column(Integer, ForeignKey('users.id'))
+
+    user = relationship('UserRecord', back_populates='generations')
 
 
 class User(UserMixin):
+    """Адаптер пользователей к требованиям Flask-Login."""
     def __init__(
         self,
         user_id,
@@ -14,6 +64,7 @@ class User(UserMixin):
         first_name=None,
         role='user'
     ):
+        """Инициализирует объект пользователя для хранения в сессии."""
         self.id = str(user_id)
         self.username = username
         self.password_hash = password_hash
@@ -24,26 +75,58 @@ class User(UserMixin):
         self.role = (role or 'user').lower()
 
     @classmethod
-    def from_row(cls, row):
+    def from_row(cls, row: Any):
+        """Создаёт пользователя из ORM-объекта, Row или кортежа старого формата."""
         if not row:
             return None
-        last_name = row[5] if len(row) > 5 else None
-        first_name = row[6] if len(row) > 6 else None
-        role = row[7] if len(row) > 7 else 'user'
-        return cls(
-            user_id=row[0],
-            username=row[1],
-            password_hash=row[2],
-            created_at=row[3],
-            last_login=row[4],
-            last_name=last_name,
-            first_name=first_name,
-            role=role
-        )
+
+        if hasattr(row, 'username'):
+            return cls(
+                user_id=getattr(row, 'id'),
+                username=getattr(row, 'username'),
+                password_hash=getattr(row, 'password_hash'),
+                created_at=getattr(row, 'created_at', None),
+                last_login=getattr(row, 'last_login', None),
+                last_name=getattr(row, 'last_name', None),
+                first_name=getattr(row, 'first_name', None),
+                role=getattr(row, 'role', 'user')
+            )
+
+        if hasattr(row, '_mapping'):
+            mapping: Mapping[str, Any] = row._mapping
+            return cls(
+                user_id=mapping.get('id'),
+                username=mapping.get('username'),
+                password_hash=mapping.get('password_hash'),
+                created_at=mapping.get('created_at'),
+                last_login=mapping.get('last_login'),
+                last_name=mapping.get('last_name'),
+                first_name=mapping.get('first_name'),
+                role=mapping.get('role', 'user')
+            )
+
+        if isinstance(row, Sequence):
+            last_name = row[5] if len(row) > 5 else None
+            first_name = row[6] if len(row) > 6 else None
+            role = row[7] if len(row) > 7 else 'user'
+            return cls(
+                user_id=row[0],
+                username=row[1],
+                password_hash=row[2],
+                created_at=row[3],
+                last_login=row[4],
+                last_name=last_name,
+                first_name=first_name,
+                role=role
+            )
+
+        raise TypeError(f'Unsupported row type: {type(row)}')
 
     @property
     def is_admin(self) -> bool:
+        """Проверяет, имеет ли пользователь административные привилегии."""
         return self.role == 'admin'
 
     def set_last_login_now(self):
+        """Проставляет текущее время последнего входа (используется в UI)."""
         self.last_login = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')

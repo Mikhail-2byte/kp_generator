@@ -1,33 +1,25 @@
 from datetime import datetime
 
-from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
+from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from app.database import (
-    create_user,
-    delete_user,
-    get_user_by_id,
-    get_user_by_username,
-    get_user_statistics,
-    update_last_login,
-    update_user_profile
-)
 from app.forms import (
     DeleteAccountForm,
     LoginForm,
     ProfileUpdateForm,
     RegistrationForm
 )
-from app.models import User
 from app.ui import build_context
+from app.services.repositories import user_repository
 
 
-auth_bp = Blueprint('auth', __name__)
+auth_bp = Blueprint('auth', __name__)  # Блюпринт для операций авторизации и профиля
 
 
 @auth_bp.route('/profile', methods=['GET', 'POST'])
 def profile():
+    """Обрабатывает авторизацию, регистрацию и управление профилем пользователя."""
     login_form = LoginForm(prefix='login')
     register_form = RegistrationForm(prefix='register')
     update_form = ProfileUpdateForm(prefix='update') if current_user.is_authenticated else None
@@ -40,11 +32,10 @@ def profile():
             if login_form.validate():
                 username = (login_form.username.data or '').strip()
                 login_form.username.data = username
-                user_row = get_user_by_username(username)
-                if user_row and check_password_hash(user_row[2], login_form.password.data):
-                    user = User.from_row(user_row)
+                user = user_repository.get_by_username(username)
+                if user and check_password_hash(user.password_hash, login_form.password.data):
                     login_user(user, remember=login_form.remember_me.data)
-                    update_last_login(int(user.id))
+                    user_repository.record_login(user.id)
                     user.set_last_login_now()
                     flash('Вы успешно вошли в систему.', 'success')
                     return redirect(url_for('auth.profile'))
@@ -57,16 +48,15 @@ def profile():
                 register_form.username.data = username
                 register_form.last_name.data = last_name
                 register_form.first_name.data = first_name
-                if get_user_by_username(username):
+                if user_repository.get_by_username(username):
                     register_form.username.errors.append('Пользователь с таким логином уже существует.')
                     show_registration_modal = True
                 else:
                     password_hash = generate_password_hash((register_form.password.data or '').strip())
-                    new_user_id = create_user(username, password_hash, last_name, first_name)
-                    if new_user_id:
-                        user = User.from_row(get_user_by_id(new_user_id))
+                    user = user_repository.create_user(username, password_hash, last_name, first_name)
+                    if user:
                         login_user(user)
-                        update_last_login(int(user.id))
+                        user_repository.record_login(user.id)
                         user.set_last_login_now()
                         flash('Аккаунт успешно создан.', 'success')
                         return redirect(url_for('auth.profile'))
@@ -84,13 +74,13 @@ def profile():
                 update_form.last_name.data = last_name
                 update_form.first_name.data = first_name
 
-                existing_user = get_user_by_username(username)
-                if existing_user and str(existing_user[0]) != str(current_user.id):
+                existing_user = user_repository.get_by_username(username)
+                if existing_user and str(existing_user.id) != str(current_user.id):
                     update_form.username.errors.append('Пользователь с таким логином уже существует.')
                 else:
                     password_hash = generate_password_hash(new_password) if new_password else None
-                    updated = update_user_profile(
-                        int(current_user.id),
+                    updated = user_repository.update_profile(
+                        current_user.id,
                         username,
                         last_name,
                         first_name,
@@ -106,7 +96,7 @@ def profile():
                     show_update_form = True
         elif current_user.is_authenticated and delete_form and delete_form.submit_delete.data:
             if delete_form.validate():
-                if delete_user(int(current_user.id)):
+                if user_repository.delete(current_user.id):
                     logout_user()
                     flash('Аккаунт и связанные данные удалены.', 'info')
                     return redirect(url_for('auth.profile'))
@@ -114,7 +104,7 @@ def profile():
 
     stats = None
     if current_user.is_authenticated:
-        stats = get_user_statistics(int(current_user.id))
+        stats = user_repository.get_statistics(current_user.id)
         last_gen = stats.get('last_generation_at')
         if last_gen:
             try:
@@ -172,6 +162,7 @@ def profile():
 @auth_bp.route('/logout')
 @login_required
 def logout():
+    """Завершает пользовательскую сессию и возвращает на страницу профиля."""
     logout_user()
     flash('Вы вышли из системы.', 'info')
     return redirect(url_for('auth.profile'))

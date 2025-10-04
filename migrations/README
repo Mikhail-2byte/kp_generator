@@ -1,0 +1,1 @@
+Revisions are stored in the versions/ directory. Use Alembic commands to manage schema changes.

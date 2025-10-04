@@ -16,12 +16,14 @@ DUTY_RATES: List[Dict[str, Any]] = []
 
 
 def _log_error(message: str):
+    """Пишет сообщение об ошибке в лог приложения, если он доступен."""
     logger = getattr(current_app, 'logger', None)
     if logger:
         logger.error(message)
 
 
 def load_gb_materials() -> List[Dict[str, Any]]:
+    """Читает аналоги материалов из конфигурационного JSON."""
     materials_path = CONFIG_DIR / 'gb_materials.json'
     try:
         with materials_path.open('r', encoding='utf-8') as file:
@@ -44,6 +46,7 @@ def load_gb_materials() -> List[Dict[str, Any]]:
 
 
 def save_gb_materials(materials: List[Dict[str, Any]]):
+    """Сохраняет список аналогов материалов обратно в файл."""
     materials_path = CONFIG_DIR / 'gb_materials.json'
     materials_path.parent.mkdir(parents=True, exist_ok=True)
     payload = {
@@ -68,15 +71,18 @@ def save_gb_materials(materials: List[Dict[str, Any]]):
 
 
 def refresh_gb_analogs():
+    """Перечитывает аналоги материалов в память для быстрого доступа."""
     global GB_ANALOGS
     GB_ANALOGS = load_gb_materials()
 
 
 def get_gb_materials() -> List[Dict[str, Any]]:
+    """Возвращает копию кэшированного списка аналогов материалов."""
     return list(GB_ANALOGS)
 
 
 def load_duty_rates() -> List[Dict[str, Any]]:
+    """Загружает ставки пошлин из JSON и готовит поля для поиска."""
     duty_path = CONFIG_DIR / 'duty_rates.json'
     try:
         with duty_path.open('r', encoding='utf-8') as file:
@@ -97,6 +103,7 @@ def load_duty_rates() -> List[Dict[str, Any]]:
 
 
 def save_duty_rates(items: List[Dict[str, Any]]):
+    """Сохраняет изменённый список ставок пошлин в конфигурационный файл."""
     duty_path = CONFIG_DIR / 'duty_rates.json'
     duty_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -122,15 +129,18 @@ def save_duty_rates(items: List[Dict[str, Any]]):
 
 
 def refresh_duty_rates():
+    """Обновляет кэш ставок пошлин после изменения файлов."""
     global DUTY_RATES
     DUTY_RATES = load_duty_rates()
 
 
 def get_duty_rates() -> List[Dict[str, Any]]:
+    """Возвращает копию кэшированного списка ставок пошлин."""
     return list(DUTY_RATES)
 
 
 def load_logistics_cities() -> List[Dict[str, Any]]:
+    """Загружает справочник городов и тарифов логистики."""
     logistics_path = CONFIG_DIR / 'logistics_cities.json'
     try:
         with logistics_path.open('r', encoding='utf-8') as file:
@@ -144,6 +154,7 @@ def load_logistics_cities() -> List[Dict[str, Any]]:
 
 
 def save_logistics_cities(cities: List[Dict[str, Any]]):
+    """Сохраняет обновлённый список тарифов логистики в JSON."""
     logistics_path = CONFIG_DIR / 'logistics_cities.json'
     logistics_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -170,6 +181,7 @@ def save_logistics_cities(cities: List[Dict[str, Any]]):
 
 
 def parse_composition_input(raw_text: str):
+    """Преобразует текстовое описание состава материала в структуру данных."""
     if not raw_text:
         return []
 
@@ -192,5 +204,6 @@ def parse_composition_input(raw_text: str):
 
 
 def init_app(_app):
+    """Инициализирует кэшированные данные при старте приложения."""
     refresh_gb_analogs()
     refresh_duty_rates()

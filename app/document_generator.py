@@ -8,7 +8,7 @@ import zipfile
 from app.helpers import get_safe_filename
 
 def generate_excel_document(template_path, form_data, final_price, general_prise):
-    """Генерирует Excel документ"""
+    """Заполняет Excel-шаблон значениями расчёта и возвращает файл в памяти."""
     wb = load_workbook(template_path)
     ws = wb.active
     
@@ -51,7 +51,7 @@ def generate_excel_document(template_path, form_data, final_price, general_prise
     return excel_file
 
 def generate_word_document(template_path, form_data, final_price, general_prise, final_price_NDS):
-    """Генерирует Word документ"""
+    """Формирует коммерческое предложение в формате Word на основе шаблона."""
     doc = Document(template_path)
     
     current_date = datetime.now().strftime('%d.%m.%Yг.')
@@ -105,7 +105,7 @@ def generate_word_document(template_path, form_data, final_price, general_prise,
     return word_file
 
 def create_zip_archive(excel_file, word_file, company_name):
-    """Создает ZIP архив с документами"""
+    """Упаковывает подготовленные документы в ZIP с читаемым именем."""
     file_prefix = f"КП_{get_safe_filename(company_name)}_{datetime.now().strftime('%Y%m%d_%H%M')}"
     
     zip_buffer = BytesIO()

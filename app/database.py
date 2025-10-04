@@ -1,335 +1,423 @@
 # app/database.py
-import sqlite3
 import logging
+import sqlite3
+from contextlib import contextmanager
 from datetime import datetime
-from contextlib import closing
+from pathlib import Path
+from typing import Dict, List, Optional
+
+from alembic import command
+from alembic.config import Config
+from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import joinedload
+
+from app.extensions import SessionLocal, get_database_url
+from app.models import GenerationHistoryRecord, UserRecord
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _resolve_sqlite_path(database_url: str) -> str:
+    """Определяет фактический путь к файлу SQLite по строке подключения."""
+    if database_url == 'sqlite:///:memory:':
+        return ':memory:'
+
+    if database_url.startswith('sqlite:////'):
+        return database_url.replace('sqlite:////', '/', 1)
+
+    if database_url.startswith('sqlite:///'):
+        relative_path = database_url.replace('sqlite:///', '', 1)
+        resolved = PROJECT_ROOT / relative_path
+        return str(resolved)
+
+    if database_url.startswith('sqlite://'):
+        return database_url.replace('sqlite://', '', 1)
+
+    raise ValueError(f'Unsupported database URL: {database_url}')
+
 
 def connect_db():
-    """Устанавливает соединение с базой данных"""
-    return sqlite3.connect('kp_generator.db', detect_types=sqlite3.PARSE_DECLTYPES)
+    """Устанавливает соединение с базой данных через sqlite3 (наследие)."""
+    database_url = get_database_url()
+    path = _resolve_sqlite_path(database_url)
+    return sqlite3.connect(path, detect_types=sqlite3.PARSE_DECLTYPES)
+
 
 def init_db():
-    """Инициализирует базу данных"""
-    schema_sql_content = """
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT NOT NULL UNIQUE,
-        password_hash TEXT NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        last_login DATETIME,
-        last_name TEXT,
-        first_name TEXT,
-        role TEXT NOT NULL DEFAULT 'user'
-    );
+    """Запускает миграции Alembic и приводит схему к актуальному состоянию."""
+    alembic_cfg = PROJECT_ROOT / 'alembic.ini'
+    if not alembic_cfg.exists():
+        logging.warning('Alembic configuration not found at %s', alembic_cfg)
+        return
 
-    CREATE TABLE IF NOT EXISTS generation_history (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-        tender_number TEXT,
-        company TEXT NOT NULL,
-        product TEXT NOT NULL,
-        quantity INTEGER NOT NULL,
-        cost_price REAL NOT NULL,
-        weight REAL NOT NULL,
-        logistics REAL NOT NULL,
-        margin_percent REAL NOT NULL,
-        final_price REAL NOT NULL,
-        drawing_number TEXT,
-        material TEXT,
-        delivery_address TEXT,
-        duty_percent REAL DEFAULT 0,
-        delivery_time INTEGER DEFAULT 0,
-        comment TEXT,
-        user_id INTEGER,
-        FOREIGN KEY(user_id) REFERENCES users(id)
-    );
+    config = Config(str(alembic_cfg))
+    config.set_main_option('sqlalchemy.url', get_database_url())
 
-    CREATE INDEX IF NOT EXISTS idx_generation_history_timestamp ON generation_history(timestamp);
-    CREATE INDEX IF NOT EXISTS idx_generation_history_company ON generation_history(company);
-    """
-
-    with closing(connect_db()) as db:
-        cursor = db.cursor()
-        cursor.executescript(schema_sql_content)
-
-        cursor.execute("PRAGMA table_info(generation_history)")
-        columns = [row[1] for row in cursor.fetchall()]
-        if 'comment' not in columns:
-            cursor.execute('ALTER TABLE generation_history ADD COLUMN comment TEXT')
-        if 'user_id' not in columns:
-            cursor.execute('ALTER TABLE generation_history ADD COLUMN user_id INTEGER')
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_generation_history_user ON generation_history(user_id)')
-
-        cursor.execute("PRAGMA table_info(users)")
-        user_columns = [row[1] for row in cursor.fetchall()]
-        if 'last_login' not in user_columns:
-            cursor.execute('ALTER TABLE users ADD COLUMN last_login DATETIME')
-        if 'last_name' not in user_columns:
-            cursor.execute('ALTER TABLE users ADD COLUMN last_name TEXT')
-        if 'first_name' not in user_columns:
-            cursor.execute('ALTER TABLE users ADD COLUMN first_name TEXT')
-        if 'role' not in user_columns:
-            cursor.execute("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'user'")
-
-        db.commit()
-
-def get_generation_history(config):
-    """Получает историю генераций из базы данных"""
     try:
-        with closing(connect_db()) as db:
-            cursor = db.cursor()
-            
-            cursor.execute('''
-                SELECT gh.id, gh.timestamp, gh.tender_number, gh.company, gh.product,
-                       gh.margin_percent, gh.final_price, gh.drawing_number, gh.duty_percent,
-                       u.username, u.last_name, u.first_name
-                FROM generation_history gh
-                LEFT JOIN users u ON gh.user_id = u.id
-                ORDER BY gh.timestamp DESC
-                LIMIT ?
-            ''', (config.get('max_history_items', 50),))
-            
-            history = cursor.fetchall()
-            
-            result = []
-            for item in history:
-                timestamp_value = item[1]
-                if isinstance(timestamp_value, str):
-                    try:
-                        formatted_ts = datetime.strptime(timestamp_value, '%Y-%m-%d %H:%M:%S').strftime('%d.%m.%Y %H:%M')
-                    except ValueError:
-                        formatted_ts = timestamp_value
-                else:
-                    formatted_ts = timestamp_value.strftime('%d.%m.%Y %H:%M')
+        command.upgrade(config, 'head')
+    except Exception as exc:
+        logging.exception('Failed to apply database migrations: %s', exc)
+        raise
 
+
+@contextmanager
+def _session_scope():
+    """Гарантирует корректное создание, коммит и закрытие ORM-сессии."""
+    session = SessionLocal()
+    try:
+        yield session
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        SessionLocal.remove()
+
+
+def _format_timestamp(value: Optional[datetime]) -> Optional[str]:
+    """Конвертирует отметку времени в строку для отображения."""
+    if value is None:
+        return None
+    if isinstance(value, str):
+        return value
+    return value.strftime('%Y-%m-%d %H:%M:%S')
+
+
+def _format_history_timestamp(value: Optional[datetime]) -> str:
+    """Преобразует дату истории в пользовательский формат dd.mm.yyyy HH:MM."""
+    if value is None:
+        return ''
+    if isinstance(value, str):
+        try:
+            parsed = datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
+            return parsed.strftime('%d.%m.%Y %H:%M')
+        except ValueError:
+            return value
+    return value.strftime('%d.%m.%Y %H:%M')
+
+
+def _user_to_tuple(user: Optional[UserRecord]):
+    """Поддерживает совместимость с устаревшим интерфейсом кортежей пользователя."""
+    if user is None:
+        return None
+    return (
+        user.id,
+        user.username,
+        user.password_hash,
+        user.created_at,
+        user.last_login,
+        user.last_name,
+        user.first_name,
+        user.role,
+    )
+
+
+def get_generation_history(config) -> List[Dict[str, object]]:
+    """Возвращает историю генераций с учётом ограничений конфигурации."""
+    limit = config.get('max_history_items', 50)
+    try:
+        with _session_scope() as session:
+            records = (
+                session.query(GenerationHistoryRecord)
+                .options(joinedload(GenerationHistoryRecord.user))
+                .order_by(GenerationHistoryRecord.timestamp.desc())
+                .limit(limit)
+                .all()
+            )
+
+            result: List[Dict[str, object]] = []
+            for record in records:
                 result.append({
-                    'id': item[0],
-                    'timestamp': formatted_ts,
-                    'tender_number': item[2] or 'Не указан',
-                    'company': item[3],
-                    'product': item[4],
-                    'margin_percent': item[5],
-                    'final_price': item[6],
-                    'drawing_number': item[7] or 'Не указан',
-                    'duty_percent': item[8],
-                    'username': item[9],
-                    'last_name': item[10],
-                    'first_name': item[11]
+                    'id': record.id,
+                    'timestamp': _format_history_timestamp(record.timestamp),
+                    'tender_number': record.tender_number or 'Не указан',
+                    'company': record.company,
+                    'product': record.product,
+                    'margin_percent': record.margin_percent,
+                    'final_price': record.final_price,
+                    'drawing_number': record.drawing_number or 'Не указан',
+                    'duty_percent': record.duty_percent,
+                    'username': record.user.username if record.user else None,
+                    'last_name': record.user.last_name if record.user else None,
+                    'first_name': record.user.first_name if record.user else None,
                 })
-            
             return result
-    except Exception as e:
-        logging.error(f'Error getting generation history: {str(e)}')
+    except Exception as exc:
+        logging.error('Error getting generation history: %s', exc)
         return []
 
-def save_generation_history(form_data, final_price, config, user_id=None):
-    """Сохраняет данные о генерации в базу данных"""
+
+def save_generation_history(form_data, final_price, config, user_id=None) -> bool:
+    """Сохраняет расчёт генерации вместе с расчётными параметрами пользователя."""
     try:
-        with closing(connect_db()) as db:
-            cursor = db.cursor()
-            
-            cursor.execute('''
-                INSERT INTO generation_history 
-                (tender_number, company, product, quantity, cost_price, weight, logistics, margin_percent, final_price,
-                 drawing_number, material, delivery_address, duty_percent, delivery_time, comment, user_id)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (
-                form_data.get('tender_number', ''),
-                form_data.get('company', ''),
-                form_data.get('product', ''),
-                int(form_data.get('quantity', 0)),
-                float(form_data.get('cost_price', 0)),
-                float(form_data.get('weight', 0)),
-                float(form_data.get('logistics', 0)),
-                float(form_data.get('margin_percent', config.get('margin_percent', 30))),
-                final_price,
-                form_data.get('drawing_number', ''),
-                form_data.get('material', ''),
-                form_data.get('delivery_address', ''),
-                float(form_data.get('duty_percent', config.get('default_duty_percent', 0))),
-                int(form_data.get('delivery_time', 0)),
-                form_data.get('comment', ''),
-                user_id
-            ))
-            
-            db.commit()
+        quantity = int(form_data.get('quantity', 0))
+        cost_price = float(form_data.get('cost_price', 0))
+        weight = float(form_data.get('weight', 0))
+        logistics = float(form_data.get('logistics', 0))
+        margin_percent = float(form_data.get('margin_percent', config.get('margin_percent', 30)))
+        duty_percent = float(form_data.get('duty_percent', config.get('default_duty_percent', 0)))
+        delivery_time = int(form_data.get('delivery_time', 0))
+
+        with _session_scope() as session:
+            record = GenerationHistoryRecord(
+                tender_number=form_data.get('tender_number', ''),
+                company=form_data.get('company', ''),
+                product=form_data.get('product', ''),
+                quantity=quantity,
+                cost_price=cost_price,
+                weight=weight,
+                logistics=logistics,
+                margin_percent=margin_percent,
+                final_price=final_price,
+                drawing_number=form_data.get('drawing_number', ''),
+                material=form_data.get('material', ''),
+                delivery_address=form_data.get('delivery_address', ''),
+                duty_percent=duty_percent,
+                delivery_time=delivery_time,
+                comment=form_data.get('comment', ''),
+                user_id=user_id,
+            )
+            session.add(record)
         return True
-    except Exception as e:
-        logging.error(f'Error saving generation history: {str(e)}')
+    except Exception as exc:
+        logging.error('Error saving generation history: %s', exc)
         return False
 
-def get_generation_details(record_id):
-    """Получает детальную информацию о конкретной записи"""
-    try:
-        with closing(connect_db()) as db:
-            cursor = db.cursor()
-            cursor.execute('''
-                SELECT gh.*, u.username, u.last_name, u.first_name
-                FROM generation_history gh
-                LEFT JOIN users u ON gh.user_id = u.id
-                WHERE gh.id = ?
-            ''', (record_id,))
-            record = cursor.fetchone()
-            
-            if record:
-                columns = ['id', 'timestamp', 'tender_number', 'company', 'product', 'quantity', 
-                          'cost_price', 'weight', 'logistics', 'margin_percent', 'final_price',
-                          'drawing_number', 'material', 'delivery_address', 'duty_percent', 'delivery_time', 'comment', 'user_id', 'username', 'last_name', 'first_name']
-                return dict(zip(columns, record))
-            return None
-    except Exception as e:
-        logging.error(f'Error getting generation details: {str(e)}')
-        return None
 
-def load_generation_data(gen_id):
-    """Загружает данные конкретной генерации для повторного использования"""
+def get_generation_details(record_id: int) -> Optional[Dict[str, object]]:
+    """Возвращает детальную информацию о генерации по идентификатору."""
     try:
-        with closing(connect_db()) as db:
-            cursor = db.cursor()
-            cursor.execute('SELECT * FROM generation_history WHERE id = ?', (gen_id,))
-            generation = cursor.fetchone()
-        
-        if generation:
-            columns = ['id', 'timestamp', 'tender_number', 'company', 'product', 'quantity', 
-                      'cost_price', 'weight', 'logistics', 'margin_percent', 'final_price',
-                      'drawing_number', 'material', 'delivery_address', 'duty_percent', 'delivery_time', 'comment', 'user_id']
-            return dict(zip(columns, generation))
-        return None
-    except Exception as e:
-        logging.error(f'Error loading generation data: {str(e)}')
-        return None
-
-
-def create_user(username, password_hash, last_name='', first_name='', role='user'):
-    try:
-        with closing(connect_db()) as db:
-            cursor = db.cursor()
-            cursor.execute(
-                'INSERT INTO users (username, password_hash, last_name, first_name, role) VALUES (?, ?, ?, ?, ?)',
-                (username, password_hash, last_name, first_name, role)
+        with _session_scope() as session:
+            record = (
+                session.query(GenerationHistoryRecord)
+                .options(joinedload(GenerationHistoryRecord.user))
+                .filter(GenerationHistoryRecord.id == record_id)
+                .one_or_none()
             )
-            db.commit()
-            return cursor.lastrowid
-    except sqlite3.IntegrityError:
-        logging.error(f'User with username {username} already exists')
+
+            if record is None:
+                return None
+
+            return {
+                'id': record.id,
+                'timestamp': _format_timestamp(record.timestamp),
+                'tender_number': record.tender_number,
+                'company': record.company,
+                'product': record.product,
+                'quantity': record.quantity,
+                'cost_price': record.cost_price,
+                'weight': record.weight,
+                'logistics': record.logistics,
+                'margin_percent': record.margin_percent,
+                'final_price': record.final_price,
+                'drawing_number': record.drawing_number,
+                'material': record.material,
+                'delivery_address': record.delivery_address,
+                'duty_percent': record.duty_percent,
+                'delivery_time': record.delivery_time,
+                'comment': record.comment,
+                'user_id': record.user_id,
+                'username': record.user.username if record.user else None,
+                'last_name': record.user.last_name if record.user else None,
+                'first_name': record.user.first_name if record.user else None,
+            }
+    except Exception as exc:
+        logging.error('Error getting generation details: %s', exc)
         return None
-    except Exception as e:
-        logging.error(f'Error creating user: {str(e)}')
+
+
+def load_generation_data(gen_id: int) -> Optional[Dict[str, object]]:
+    """Загружает сохранённую генерацию для повторного редактирования."""
+    try:
+        with _session_scope() as session:
+            record = session.query(GenerationHistoryRecord).filter(GenerationHistoryRecord.id == gen_id).one_or_none()
+            if record is None:
+                return None
+
+            return {
+                'id': record.id,
+                'timestamp': _format_timestamp(record.timestamp),
+                'tender_number': record.tender_number,
+                'company': record.company,
+                'product': record.product,
+                'quantity': record.quantity,
+                'cost_price': record.cost_price,
+                'weight': record.weight,
+                'logistics': record.logistics,
+                'margin_percent': record.margin_percent,
+                'final_price': record.final_price,
+                'drawing_number': record.drawing_number,
+                'material': record.material,
+                'delivery_address': record.delivery_address,
+                'duty_percent': record.duty_percent,
+                'delivery_time': record.delivery_time,
+                'comment': record.comment,
+                'user_id': record.user_id,
+            }
+    except Exception as exc:
+        logging.error('Error loading generation data: %s', exc)
+        return None
+
+
+def create_user(username, password_hash, last_name='', first_name='', role='user') -> Optional[int]:
+    """Создаёт нового пользователя и возвращает его идентификатор."""
+    try:
+        with _session_scope() as session:
+            user = UserRecord(
+                username=username,
+                password_hash=password_hash,
+                last_name=last_name or None,
+                first_name=first_name or None,
+                role=(role or 'user').lower(),
+            )
+            session.add(user)
+            session.flush()
+            return user.id
+    except IntegrityError:
+        logging.error('User with username %s already exists', username)
+        return None
+    except Exception as exc:
+        logging.error('Error creating user: %s', exc)
         return None
 
 
 def get_user_by_username(username):
+    """Возвращает пользователя по логину для авторизации."""
     try:
-        with closing(connect_db()) as db:
-            cursor = db.cursor()
-            cursor.execute(
-                'SELECT id, username, password_hash, created_at, last_login, last_name, first_name, role FROM users WHERE username = ?',
-                (username,)
-            )
-            return cursor.fetchone()
-    except Exception as e:
-        logging.error(f'Error fetching user by username: {str(e)}')
+        user = None
+        with _session_scope() as session:
+            user = session.query(UserRecord).filter(UserRecord.username == username).one_or_none()
+            if user is not None:
+                session.expunge(user)
+        return _user_to_tuple(user)
+    except Exception as exc:
+        logging.error('Error fetching user by username: %s', exc)
         return None
 
 
 def get_user_by_id(user_id):
+    """Находит пользователя по идентификатору (используется Flask-Login)."""
     try:
-        with closing(connect_db()) as db:
-            cursor = db.cursor()
-            cursor.execute(
-                'SELECT id, username, password_hash, created_at, last_login, last_name, first_name, role FROM users WHERE id = ?',
-                (user_id,)
-            )
-            return cursor.fetchone()
-    except Exception as e:
-        logging.error(f'Error fetching user by id: {str(e)}')
+        user = None
+        with _session_scope() as session:
+            user = session.query(UserRecord).filter(UserRecord.id == user_id).one_or_none()
+            if user is not None:
+                session.expunge(user)
+        return _user_to_tuple(user)
+    except Exception as exc:
+        logging.error('Error fetching user by id: %s', exc)
         return None
 
 
-def update_last_login(user_id, last_login=None):
+def update_last_login(user_id, last_login=None) -> bool:
+    """Обновляет отметку времени последнего входа пользователя."""
     try:
-        with closing(connect_db()) as db:
-            cursor = db.cursor()
-            cursor.execute('UPDATE users SET last_login = COALESCE(?, CURRENT_TIMESTAMP) WHERE id = ?', (last_login, user_id))
-            db.commit()
-            return cursor.rowcount > 0
-    except Exception as e:
-        logging.error(f'Error updating last login: {str(e)}')
+        with _session_scope() as session:
+            user = session.query(UserRecord).filter(UserRecord.id == user_id).one_or_none()
+            if user is None:
+                return False
+            if last_login is None:
+                user.last_login = datetime.utcnow()
+            else:
+                user.last_login = last_login
+        return True
+    except Exception as exc:
+        logging.error('Error updating last login: %s', exc)
         return False
 
 
-def get_user_statistics(user_id):
+def get_user_statistics(user_id) -> Dict[str, object]:
+    """Собирает агрегированную статистику активности пользователя."""
     try:
-        with closing(connect_db()) as db:
-            cursor = db.cursor()
-            cursor.execute('''
-                SELECT COUNT(*), COALESCE(MAX(timestamp), '')
-                FROM generation_history
-                WHERE user_id = ?
-            ''', (user_id,))
-            count, last_timestamp = cursor.fetchone()
+        with _session_scope() as session:
+            total, last_timestamp = (
+                session.query(
+                    func.count(GenerationHistoryRecord.id),
+                    func.max(GenerationHistoryRecord.timestamp),
+                )
+                .filter(GenerationHistoryRecord.user_id == user_id)
+                .one()
+            )
 
-            cursor.execute('''
-                SELECT id, company, product, margin_percent, final_price, timestamp
-                FROM generation_history
-                WHERE user_id = ?
-                ORDER BY timestamp DESC
-                LIMIT 5
-            ''', (user_id,))
-            recent = cursor.fetchall()
+            recent_records = (
+                session.query(
+                    GenerationHistoryRecord.id,
+                    GenerationHistoryRecord.company,
+                    GenerationHistoryRecord.product,
+                    GenerationHistoryRecord.margin_percent,
+                    GenerationHistoryRecord.final_price,
+                    GenerationHistoryRecord.timestamp,
+                )
+                .filter(GenerationHistoryRecord.user_id == user_id)
+                .order_by(GenerationHistoryRecord.timestamp.desc())
+                .limit(5)
+                .all()
+            )
+
+            formatted_recent = [
+                (
+                    rec.id,
+                    rec.company,
+                    rec.product,
+                    rec.margin_percent,
+                    rec.final_price,
+                    _format_timestamp(rec.timestamp),
+                )
+                for rec in recent_records
+            ]
 
             return {
-                'total_generations': count or 0,
-                'last_generation_at': last_timestamp,
-                'recent_generations': recent
+                'total_generations': total or 0,
+                'last_generation_at': _format_timestamp(last_timestamp) if last_timestamp else None,
+                'recent_generations': formatted_recent,
             }
-    except Exception as e:
-        logging.error(f'Error getting user statistics: {str(e)}')
+    except Exception as exc:
+        logging.error('Error getting user statistics: %s', exc)
         return {
             'total_generations': 0,
             'last_generation_at': None,
-            'recent_generations': []
+            'recent_generations': [],
         }
 
 
-def update_user_profile(user_id, username, last_name, first_name, password_hash=None):
+def update_user_profile(user_id, username, last_name, first_name, password_hash=None) -> bool:
+    """Обновляет данные профиля и при необходимости пароль пользователя."""
     try:
-        with closing(connect_db()) as db:
-            cursor = db.cursor()
+        with _session_scope() as session:
+            user = session.query(UserRecord).filter(UserRecord.id == user_id).one_or_none()
+            if user is None:
+                return False
+
+            user.username = username
+            user.last_name = last_name or None
+            user.first_name = first_name or None
             if password_hash:
-                cursor.execute(
-                    '''
-                    UPDATE users
-                    SET username = ?, last_name = ?, first_name = ?, password_hash = ?
-                    WHERE id = ?
-                    ''',
-                    (username, last_name, first_name, password_hash, user_id)
-                )
-            else:
-                cursor.execute(
-                    '''
-                    UPDATE users
-                    SET username = ?, last_name = ?, first_name = ?
-                    WHERE id = ?
-                    ''',
-                    (username, last_name, first_name, user_id)
-                )
-            db.commit()
-            return cursor.rowcount > 0
-    except Exception as e:
-        logging.error(f'Error updating user profile: {str(e)}')
+                user.password_hash = password_hash
+        return True
+    except Exception as exc:
+        logging.error('Error updating user profile: %s', exc)
         return False
 
 
-def delete_user(user_id):
+def delete_user(user_id) -> bool:
+    """Удаляет пользователя и отвязывает его историю генераций."""
     try:
-        with closing(connect_db()) as db:
-            cursor = db.cursor()
-            cursor.execute('UPDATE generation_history SET user_id = NULL WHERE user_id = ?', (user_id,))
-            cursor.execute('DELETE FROM users WHERE id = ?', (user_id,))
-            deleted = cursor.rowcount
-            db.commit()
-            return deleted > 0
-    except Exception as e:
-        logging.error(f'Error deleting user: {str(e)}')
+        with _session_scope() as session:
+            histories = (
+                session.query(GenerationHistoryRecord)
+                .filter(GenerationHistoryRecord.user_id == user_id)
+                .all()
+            )
+            for record in histories:
+                record.user_id = None
+
+            user = session.query(UserRecord).filter(UserRecord.id == user_id).one_or_none()
+            if user is None:
+                return False
+            session.delete(user)
+        return True
+    except Exception as exc:
+        logging.error('Error deleting user: %s', exc)
         return False

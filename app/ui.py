@@ -23,6 +23,7 @@ ICON_MAP = {
 
 
 def format_number(value, decimals=2):
+    """Форматирует числа в удобный для отображения вид с пробелами и запятой."""
     try:
         number = float(value)
     except (TypeError, ValueError):
@@ -36,6 +37,7 @@ def format_number(value, decimals=2):
 
 
 def build_context(active_page: str, header_title: str, **kwargs):
+    """Формирует базовый контекст для шаблонов, добавляя служебные поля."""
     context = {
         'active_page': active_page,
         'header_title': header_title,
@@ -46,8 +48,10 @@ def build_context(active_page: str, header_title: str, **kwargs):
 
 
 def register_ui(app):
+    """Регистрирует вспомогательные функции и фильтры для шаблонов Jinja."""
     @app.context_processor
     def inject_ui_helpers():
+        """Делает доступными иконки сайдбара в любых шаблонах."""
         def sidebar_icon(name: str) -> Markup:
             svg = ICON_MAP.get(name)
             return Markup(svg) if svg else Markup('')

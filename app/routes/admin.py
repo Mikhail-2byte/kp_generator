@@ -13,12 +13,13 @@ from app.services import datasets
 from app.ui import build_context
 
 
-admin_bp = Blueprint('admin', __name__)
+admin_bp = Blueprint('admin', __name__)  # Управление справочниками через административный интерфейс
 
 
 @admin_bp.route('/admin', methods=['GET', 'POST'])
 @admin_required
 def admin_panel():
+    """Позволяет администраторам редактировать справочные данные приложения."""
     duty_items = datasets.load_duty_rates()
     gb_materials = datasets.load_gb_materials()
     logistics_cities = datasets.load_logistics_cities()

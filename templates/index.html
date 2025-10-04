@@ -81,55 +81,99 @@
                     <h2 class="section-title">Параметры изделия</h2>
                 </div>
                 <div class="position-actions">
-                    <button type="button" class="btn btn-primary" id="importExcelBtn" disabled>Выгрузить значения из Excel</button>
-                    <button type="button" class="btn btn-primary add-position-btn" id="addPositionBtn" disabled>Добавить позицию</button>
+                    <input type="file" id="importExcelInput" class="visually-hidden" accept=".xlsx,.xlsm">
+                    <button type="button" class="btn btn-primary" id="importExcelBtn">Выгрузить значения из Excel</button>
+                    <button type="button" class="btn btn-primary add-position-btn" id="addPositionBtn">Добавить позицию</button>
                 </div>
             </div>
             <div class="card" id="positionsContainer">
                 <div class="position-block" data-position="1">
-                    <!-- Первая строка: 3 ячейки -->
-                    <div class="form-grid three-columns">
-                        <div class="field-group">
-                            <label for="product" class="field-label">Наименование товара</label>
-                            <input type="text" id="product" name="product" required
+                    <div class="position-header">
+                        <div class="position-label">Позиция <span data-role="position-number">1</span></div>
+                        <button type="button" class="btn btn-ghost btn-xs remove-position-btn" data-role="remove-position" title="Удалить позицию" disabled>
+                            {{ sidebar_icon('trash2')|safe }}
+                            <span class="visually-hidden">Удалить позицию</span>
+                        </button>
+                    </div>
+                    <div class="parameters-row">
+                        <div class="field-group parameter-wide">
+                            <label for="product" class="field-label" data-label-for="product">Наименование товара</label>
+                            <input type="text" id="product" name="product" data-field="product" required
                                 value="{{ form_data.product if form_data and form_data.product else '' }}">
                         </div>
-                        <div class="field-group">
-                            <label for="drawing_number" class="field-label">Номер чертежа</label>
-                            <input type="text" id="drawing_number" name="drawing_number"
+                        <div class="field-group parameter-wide">
+                            <label for="drawing_number" class="field-label" data-label-for="drawing_number">Номер чертежа</label>
+                            <input type="text" id="drawing_number" name="drawing_number" data-field="drawing_number"
                                 value="{{ form_data.drawing_number if form_data and form_data.drawing_number else '' }}">
                         </div>
-                        <div class="field-group">
-                            <label for="material" class="field-label">Материал</label>
-                            <input type="text" id="material" name="material"
+                        <div class="field-group parameter-wide">
+                            <label for="material" class="field-label" data-label-for="material">Материал</label>
+                            <input type="text" id="material" name="material" data-field="material"
                                 value="{{ form_data.material if form_data and form_data.material else '' }}">
                         </div>
-                    </div>
-                    
-                    <!-- Вторая строка: 4 ячейки -->
-                    <div class="form-grid three-columns">
-                        <div class="field-group">
-                            <label for="cost_price" class="field-label">Закупочная цена (юани за шт)</label>
-                            <input type="number" id="cost_price" name="cost_price" min="0" step="0.01" required
+                        <div class="field-group slim-field">
+                            <label for="cost_price" class="field-label" data-label-for="cost_price">Цена закупа</label>
+                            <input type="number" id="cost_price" name="cost_price" data-field="cost_price" min="0" step="0.01" required
                                 value="{{ form_data.cost_price if form_data and form_data.cost_price else '' }}">
                         </div>
-                        <div class="field-group">
-                            <label for="quantity" class="field-label">Количество, шт.</label>
-                            <input type="number" id="quantity" name="quantity" min="1" step="1" required
+                        <div class="field-group slim-field">
+                            <label for="quantity" class="field-label" data-label-for="quantity">Количество, шт.</label>
+                            <input type="number" id="quantity" name="quantity" data-field="quantity" min="1" step="1" required
                                 value="{{ form_data.quantity if form_data and form_data.quantity else '' }}" class="position-quantity">
                         </div>
-                        <div class="field-group">
-                            <label for="weight" class="field-label">Вес за шт. (кг)</label>
-                            <input type="number" id="weight" name="weight" min="0" step="0.01" required
+                        <div class="field-group slim-field">
+                            <label for="weight" class="field-label" data-label-for="weight">Вес за шт. (кг)</label>
+                            <input type="number" id="weight" name="weight" data-field="weight" min="0" step="0.01" required
                                 value="{{ form_data.weight if form_data and form_data.weight else '' }}" class="position-weight">
                         </div>
-                        <div class="field-group">
-                            <label for="duty_percent" class="field-label">Пошлина (%)</label>
-                            <input type="number" id="duty_percent" name="duty_percent" min="0" max="100" step="0.1"
+                        <div class="field-group slim-field">
+                            <label for="duty_percent" class="field-label" data-label-for="duty_percent">Пошлина (%)</label>
+                            <input type="number" id="duty_percent" name="duty_percent" data-field="duty_percent" min="0" max="100" step="0.1"
                                 value="{{ form_data.duty_percent if form_data and form_data.duty_percent else '0' }}" class="position-duty">
                         </div>
                     </div>
                 </div>
+                <template id="positionTemplate">
+                    <div class="position-block" data-position>
+                        <div class="position-header">
+                            <div class="position-label">Позиция <span data-role="position-number"></span></div>
+                            <button type="button" class="btn btn-ghost btn-xs remove-position-btn" data-role="remove-position" title="Удалить позицию">
+                                {{ sidebar_icon('trash2')|safe }}
+                                <span class="visually-hidden">Удалить позицию</span>
+                            </button>
+                        </div>
+                        <div class="parameters-row">
+                            <div class="field-group parameter-wide">
+                                <label class="field-label" data-label-for="product">Наименование товара</label>
+                                <input type="text" data-field="product" required>
+                            </div>
+                            <div class="field-group parameter-wide">
+                                <label class="field-label" data-label-for="drawing_number">Номер чертежа</label>
+                                <input type="text" data-field="drawing_number">
+                            </div>
+                            <div class="field-group parameter-wide">
+                                <label class="field-label" data-label-for="material">Материал</label>
+                                <input type="text" data-field="material">
+                            </div>
+                            <div class="field-group slim-field">
+                                <label class="field-label" data-label-for="cost_price">Цена закупа</label>
+                                <input type="number" data-field="cost_price" min="0" step="0.01" required>
+                            </div>
+                            <div class="field-group slim-field">
+                                <label class="field-label" data-label-for="quantity">Количество, шт.</label>
+                                <input type="number" data-field="quantity" min="1" step="1" required class="position-quantity">
+                            </div>
+                            <div class="field-group slim-field">
+                                <label class="field-label" data-label-for="weight">Вес за шт. (кг)</label>
+                                <input type="number" data-field="weight" min="0" step="0.01" required class="position-weight">
+                            </div>
+                            <div class="field-group slim-field">
+                                <label class="field-label" data-label-for="duty_percent">Пошлина (%)</label>
+                                <input type="number" data-field="duty_percent" min="0" max="100" step="0.1" class="position-duty">
+                            </div>
+                        </div>
+                    </div>
+                </template>
             </div>
         </section>
 
@@ -223,11 +267,13 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         const form = document.getElementById('generateForm');
-        const requiredInputs = form.querySelectorAll('input[required]');
+        if (!form) {
+            return;
+        }
+        const requiredSelector = 'input[required], textarea[required], select[required]';
         const loadingOverlay = document.getElementById('loadingOverlay');
         const generateBtn = document.getElementById('generateBtn');
         const generateText = document.getElementById('generateText');
-        const marginInput = document.getElementById('margin_percent');
         const weightOutputField = document.getElementById('totalWeightValue');
         const pillTotalWeight = document.getElementById('pillTotalWeight');
         const logisticsInput = document.getElementById('logistics');
@@ -238,6 +284,14 @@
         const deliveryAddressInput = document.getElementById('delivery_address');
         const mainSelectedCityPrice = document.getElementById('mainSelectedCityPrice');
         const mainSelectedCityName = document.getElementById('mainSelectedCityName');
+        const addPositionBtn = document.getElementById('addPositionBtn');
+        const importExcelBtn = document.getElementById('importExcelBtn');
+        const importExcelInput = document.getElementById('importExcelInput');
+        const positionsContainer = document.getElementById('positionsContainer');
+        const positionTemplate = document.getElementById('positionTemplate');
+        const importEndpoint = "{{ url_for('main.import_positions') }}";
+        const csrfToken = form.querySelector('input[name="csrf_token"]').value;
+        const positionFieldKeys = ['product', 'drawing_number', 'material', 'cost_price', 'quantity', 'weight', 'duty_percent'];
 
         const formatWeight = (value) => {
             return Number.isFinite(value) ? value.toLocaleString('ru-RU', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) : '0';
@@ -254,17 +308,238 @@
             weightOutputField.value = `${formatted} кг`;
             pillTotalWeight.textContent = `${formatted} кг`;
         };
+        const attachValidation = (field) => {
+            field.addEventListener('blur', () => validateField(field));
+            field.addEventListener('input', () => clearFieldError(field));
+        };
 
-        const positionInputs = Array.from(form.querySelectorAll('.position-quantity, .position-weight'));
-        positionInputs.forEach(input => {
-            input.addEventListener('input', () => {
+        const registerPositionBlock = (block, attachRequiredHandlers = false) => {
+            const quantityInput = block.querySelector('.position-quantity');
+            const weightInput = block.querySelector('.position-weight');
+
+            if (quantityInput) {
+                quantityInput.addEventListener('input', () => {
+                    updateWeight();
+                    refreshLogisticsValue();
+                });
+            }
+
+            if (weightInput) {
+                weightInput.addEventListener('input', () => {
+                    updateWeight();
+                    refreshLogisticsValue();
+                });
+            }
+
+            block.querySelectorAll('input[type="number"]').forEach(input => attachValidation(input));
+
+            if (attachRequiredHandlers) {
+                block.querySelectorAll(requiredSelector).forEach(input => attachValidation(input));
+            }
+        };
+
+        const populatePositionBlock = (block, position = {}) => {
+            positionFieldKeys.forEach(field => {
+                const input = block.querySelector(`[data-field="${field}"]`);
+                if (input) {
+                    input.value = position[field] ?? '';
+                    clearFieldError(input);
+                }
+            });
+        };
+
+        const updateRemoveButtons = () => {
+            if (!positionsContainer) {
+                return;
+            }
+            const blocks = positionsContainer.querySelectorAll('.position-block');
+            const total = blocks.length;
+            blocks.forEach(block => {
+                const removeBtn = block.querySelector('[data-role="remove-position"]');
+                if (removeBtn) {
+                    removeBtn.disabled = total <= 1;
+                }
+            });
+        };
+
+        const reindexPositions = () => {
+            if (!positionsContainer) {
+                return;
+            }
+            const blocks = positionsContainer.querySelectorAll('.position-block');
+            blocks.forEach((block, idx) => {
+                const positionNumber = idx + 1;
+                block.dataset.position = positionNumber;
+                const indexLabel = block.querySelector('[data-role="position-number"]');
+                if (indexLabel) {
+                    indexLabel.textContent = positionNumber;
+                }
+
+                block.querySelectorAll('[data-field]').forEach(input => {
+                    const fieldKey = input.dataset.field;
+                    if (!fieldKey) {
+                        return;
+                    }
+                    const inputId = `${fieldKey}_${positionNumber}`;
+                    input.id = inputId;
+                    input.name = positionNumber === 1 ? fieldKey : `${fieldKey}_${positionNumber}`;
+
+                    const fieldGroup = input.closest('.field-group');
+                    const label = fieldGroup ? fieldGroup.querySelector(`[data-label-for="${fieldKey}"]`) : null;
+                    if (label) {
+                        label.setAttribute('for', inputId);
+                    }
+
+                    if (!input.classList.contains('position-quantity') && fieldKey === 'quantity') {
+                        input.classList.add('position-quantity');
+                    }
+                    if (!input.classList.contains('position-weight') && fieldKey === 'weight') {
+                        input.classList.add('position-weight');
+                    }
+                    if (!input.classList.contains('position-duty') && fieldKey === 'duty_percent') {
+                        input.classList.add('position-duty');
+                    }
+                });
+            });
+            updateRemoveButtons();
+        };
+
+        if (addPositionBtn && positionTemplate && positionsContainer) {
+            addPositionBtn.disabled = false;
+            addPositionBtn.addEventListener('click', () => {
+                const fragment = positionTemplate.content.cloneNode(true);
+                const newBlock = fragment.querySelector('.position-block');
+                if (!newBlock) {
+                    return;
+                }
+
+                newBlock.querySelectorAll('input').forEach(input => {
+                    input.value = '';
+                });
+
+                positionsContainer.appendChild(newBlock);
+                reindexPositions();
+                registerPositionBlock(newBlock, true);
                 updateWeight();
                 refreshLogisticsValue();
             });
-            input.addEventListener('blur', () => validateField(input));
-        });
+        }
+
+        if (positionsContainer) {
+            positionsContainer.addEventListener('click', (event) => {
+                const removeButton = event.target.closest('[data-role="remove-position"]');
+                if (!removeButton) {
+                    return;
+                }
+                const block = removeButton.closest('.position-block');
+                if (!block) {
+                    return;
+                }
+                const allBlocks = positionsContainer.querySelectorAll('.position-block');
+                if (allBlocks.length <= 1) {
+                    return;
+                }
+                block.remove();
+                reindexPositions();
+                updateWeight();
+                refreshLogisticsValue();
+            });
+
+            const initialBlocks = positionsContainer.querySelectorAll('.position-block');
+            initialBlocks.forEach(block => registerPositionBlock(block, false));
+            reindexPositions();
+        }
+
+        form.querySelectorAll(requiredSelector).forEach(field => attachValidation(field));
 
         updateWeight();
+
+        const applyImportedPositions = (positions) => {
+            if (!positionsContainer || !Array.isArray(positions) || !positions.length) {
+                return;
+            }
+
+            const existingBlocks = positionsContainer.querySelectorAll('.position-block');
+            let primaryBlock = existingBlocks[0];
+
+            if (!primaryBlock) {
+                const fragment = positionTemplate.content.cloneNode(true);
+                primaryBlock = fragment.querySelector('.position-block');
+                if (!primaryBlock) {
+                    return;
+                }
+                positionsContainer.appendChild(primaryBlock);
+            }
+
+            populatePositionBlock(primaryBlock, positions[0]);
+            registerPositionBlock(primaryBlock, true);
+
+            Array.from(existingBlocks).slice(1).forEach(block => block.remove());
+
+            positions.slice(1).forEach(position => {
+                const fragment = positionTemplate.content.cloneNode(true);
+                const newBlock = fragment.querySelector('.position-block');
+                if (!newBlock) {
+                    return;
+                }
+                populatePositionBlock(newBlock, position);
+                positionsContainer.appendChild(newBlock);
+                registerPositionBlock(newBlock, true);
+            });
+
+            reindexPositions();
+            updateWeight();
+            refreshLogisticsValue();
+        };
+
+        
+        if (importExcelBtn && importExcelInput) {
+            importExcelBtn.disabled = false;
+            importExcelBtn.addEventListener('click', () => {
+                importExcelInput.click();
+            });
+
+            importExcelInput.addEventListener('change', async (event) => {
+                const file = event.target.files ? event.target.files[0] : null;
+                if (!file) {
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('positions_file', file);
+
+                importExcelBtn.disabled = true;
+                const originalText = importExcelBtn.textContent;
+                importExcelBtn.textContent = 'Загрузка...';
+
+                try {
+                    const response = await fetch(importEndpoint, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRFToken': csrfToken
+                        },
+                        credentials: 'same-origin'
+                    });
+
+                    const payload = await response.json();
+                    if (!response.ok) {
+                        const errorMessage = payload?.error || 'Не удалось импортировать файл.';
+                        window.alert(errorMessage);
+                        return;
+                    }
+
+                    applyImportedPositions(payload.positions || []);
+                } catch (error) {
+                    console.error('Excel import failed', error);
+                    window.alert('Не удалось загрузить файл. Попробуйте еще раз.');
+                } finally {
+                    importExcelBtn.disabled = false;
+                    importExcelBtn.textContent = originalText;
+                    importExcelInput.value = '';
+                }
+            });
+        }
 
         function getCurrentTransportType() {
             const selected = document.querySelector('input[name="mainTransport"]:checked');
@@ -454,33 +729,29 @@
 
         refreshLogisticsValue();
 
-        requiredInputs.forEach(input => {
-            input.addEventListener('blur', () => validateField(input));
-            input.addEventListener('input', () => clearFieldError(input));
-        });
-
         const validateNumberBounds = (field, value) => {
-            if (field.id === 'delivery_time' && value < 1) {
+            const fieldKey = field.dataset.field || field.id;
+            if (fieldKey === 'delivery_time' && value < 1) {
                 showFieldError(field, 'Срок поставки не может быть меньше 1 дня');
                 return false;
             }
-            if (field.id === 'quantity' && value < 1) {
+            if (fieldKey === 'quantity' && value < 1) {
                 showFieldError(field, 'Количество должно быть положительным числом');
                 return false;
             }
-            if (field.id === 'margin_percent' && (value < 0 || value > 100)) {
+            if (fieldKey === 'margin_percent' && (value < 0 || value > 100)) {
                 showFieldError(field, 'Маржа должна быть в диапазоне от 0 до 100%');
                 return false;
             }
-            if (field.id === 'duty_percent' && value > 100) {
+            if (fieldKey === 'duty_percent' && value > 100) {
                 showFieldError(field, 'Пошлина не может превышать 100%');
                 return false;
             }
-            if (field.id === 'weight' && value <= 0) {
+            if (fieldKey === 'weight' && value <= 0) {
                 showFieldError(field, 'Вес должен быть больше нуля');
                 return false;
             }
-            if (field.id === 'cost_price' && value < 0) {
+            if (fieldKey === 'cost_price' && value < 0) {
                 showFieldError(field, 'Стоимость должна быть положительной');
                 return false;
             }
@@ -529,7 +800,7 @@
 
         form.addEventListener('submit', function (event) {
             let isValid = true;
-            requiredInputs.forEach(input => {
+            Array.from(form.querySelectorAll(requiredSelector)).forEach(input => {
                 if (!validateField(input)) {
                     isValid = false;
                 }

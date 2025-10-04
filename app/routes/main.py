@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 
 from flask import (
@@ -20,6 +21,7 @@ from app.helpers import check_templates_exist, validate_form_data
 from app.services import datasets
 from app.services.repositories import generation_repository
 from app.services.feedback import save_feedback_entry
+from app.services.excel_importer import ExcelImportError, parse_positions_from_excel
 from app.ui import build_context
 
 
@@ -32,6 +34,14 @@ def index():
     form_data = session.pop('form_data', {})
     for field in ['id', 'timestamp', 'final_price', 'user_id']:
         form_data.pop(field, None)
+
+    imported_positions = session.pop('imported_positions', None)
+    if imported_positions:
+        form_data.setdefault('positions_payload', json.dumps(imported_positions, ensure_ascii=False))
+        first_position = imported_positions[0]
+        for key in ['product', 'drawing_number', 'material', 'cost_price', 'quantity', 'weight', 'duty_percent']:
+            if first_position.get(key):
+                form_data.setdefault(key, first_position[key])
 
     try:
         cities = datasets.load_logistics_cities()
@@ -290,6 +300,30 @@ def generate():
             'index.html',
             **build_context('index', 'Создание коммерческого предложения', form_data=form_data)
         )
+
+
+@main_bp.route('/import-positions', methods=['POST'])
+def import_positions():
+    """Импортирует позиции из Excel шаблона и возвращает их в формате JSON."""
+
+    uploaded_file = request.files.get('positions_file')
+    if not uploaded_file or not uploaded_file.filename:
+        return jsonify({'error': 'Выберите файл шаблона в формате Excel.'}), 400
+
+    filename = uploaded_file.filename.lower()
+    if not filename.endswith(('.xlsx', '.xlsm')):
+        return jsonify({'error': 'Поддерживается только формат .xlsx.'}), 400
+
+    try:
+        positions = parse_positions_from_excel(uploaded_file.stream)
+    except ExcelImportError as exc:
+        return jsonify({'error': str(exc)}), 400
+    except Exception as exc:  # pragma: no cover - defensive logging
+        current_app.logger.error('Ошибка импорта Excel: %s', exc)
+        return jsonify({'error': 'Не удалось импортировать файл. Попробуйте позже.'}), 500
+
+    session['imported_positions'] = positions
+    return jsonify({'positions': positions})
 
 
 @main_bp.route('/logistics')

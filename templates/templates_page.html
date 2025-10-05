@@ -2,9 +2,41 @@
 
 {% block content %}
 <div class="content-container">
-    <div class="card">
-        <h2 class="card-title">Страница находится в разработке</h2>
-        <p class="section-description">Раздел «Шаблоны» будет заполнен позже.</p>
+    <div class="card templates-card">
+        <h2 class="section-title">Шаблоны документов</h2>
+        <p class="section-description templates-description">Выберите шаблон, чтобы скачать актуальную версию и ознакомиться с кратким пояснением.</p>
+
+        {% if templates %}
+            <div class="templates-accordion mt-lg">
+                {% for template in templates %}
+                    <details class="templates-item" {% if loop.first %}open{% endif %}>
+                        <summary class="section-description templates-summary">{{ template.title }}</summary>
+                        <div class="templates-body">
+                            {% if template.updated_at %}
+                                <p class="muted-text">Обновлено: {{ template.updated_at }}</p>
+                            {% endif %}
+                            {% if template.summary %}
+                                <p class="templates-text">{{ template.summary }}</p>
+                            {% endif %}
+
+                            {% if template.files %}
+                                <div class="templates-files">
+                                    {% for file in template.files %}
+                                        <a class="btn btn-secondary" href="{{ url_for('static', filename='task_templates/' ~ file.filename) }}" download>
+                                            {{ file.label }}
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="muted-text">Файлы будут добавлены позже.</p>
+                            {% endif %}
+                        </div>
+                    </details>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="section-description mt-md">Пока нет доступных шаблонов. Добавьте файлы в папку <code>static/task_templates</code> и обновите <code>config/task_templates.json</code>.</p>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

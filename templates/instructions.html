@@ -2,9 +2,41 @@
 
 {% block content %}
 <div class="content-container">
-    <div class="card">
-        <h2 class="card-title">Страница находится в разработке</h2>
-        <p class="section-description">Раздел «Инструкция» будет доступен позже.</p>
+    <div class="card instructions-card">
+        <h2 class="section-title">Инструкции по задачам</h2>
+        <p class="section-description instructions-description">Ознакомьтесь с инструкциями и скачайте файл с подробным описанием выполнения задачи.</p>
+
+        {% if instructions %}
+            <div class="instructions-accordion mt-lg">
+                {% for instruction in instructions %}
+                    <details class="instructions-item" {% if loop.first %}open{% endif %}>
+                        <summary class="section-description instructions-summary">{{ instruction.title }}</summary>
+                        <div class="instructions-body">
+                            {% if instruction.updated_at %}
+                                <p class="muted-text">Обновлено: {{ instruction.updated_at }}</p>
+                            {% endif %}
+                            {% if instruction.summary %}
+                                <p class="instructions-text">{{ instruction.summary }}</p>
+                            {% endif %}
+
+                            {% if instruction.files %}
+                                <div class="instructions-files">
+                                    {% for file in instruction.files %}
+                                        <a class="btn btn-secondary" href="{{ url_for('static', filename='instructions/' ~ file.filename) }}" download>
+                                            {{ file.label }}
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="muted-text">Файлы будут добавлены позже.</p>
+                            {% endif %}
+                        </div>
+                    </details>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="section-description mt-md">Пока нет загруженных инструкций. Добавьте файлы в папку <code>static/instructions</code> и обновите <code>config/instructions_tasks.json</code>.</p>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

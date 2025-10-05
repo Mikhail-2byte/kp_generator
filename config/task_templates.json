@@ -1,0 +1,16 @@
+{
+  "templates": [
+    {
+      "id": "template-1",
+      "title": "Шаблон №1",
+      "summary": "Описание будет добавлено позже.",
+      "files": [
+        {
+          "label": "DOCX",
+          "filename": "Шаблон №1.docx"
+        }
+      ],
+      "updated_at": ""
+    }
+  ]
+}

@@ -13,6 +13,9 @@ CONFIG_DIR = BASE_DIR / 'config'
 
 GB_ANALOGS: List[Dict[str, Any]] = []
 DUTY_RATES: List[Dict[str, Any]] = []
+ORDERS_REGISTRY: List[Dict[str, Any]] = []
+TASK_TEMPLATES: List[Dict[str, Any]] = []
+TASK_INSTRUCTIONS: List[Dict[str, Any]] = []
 
 
 def _log_error(message: str):
@@ -180,6 +183,165 @@ def save_logistics_cities(cities: List[Dict[str, Any]]):
         json.dump(payload, file, ensure_ascii=False, indent=2)
 
 
+def load_orders_documents() -> List[Dict[str, Any]]:
+    """Читает список распоряжений и нормализует структуру файлов."""
+    orders_path = CONFIG_DIR / 'orders_documents.json'
+    try:
+        with orders_path.open('r', encoding='utf-8') as file:
+            data = json.load(file)
+    except FileNotFoundError:
+        _log_error(f'Orders registry file not found at {orders_path.as_posix()}')
+        return []
+    except json.JSONDecodeError as exc:
+        _log_error(f'Failed to parse orders registry file: {exc}')
+        return []
+
+    normalized_orders: List[Dict[str, Any]] = []
+    for entry in data.get('orders', []):
+        files: List[Dict[str, str]] = []
+        for file_entry in entry.get('files', []):
+            filename = str(file_entry.get('filename', '')).strip()
+            if not filename:
+                continue
+            label = str(
+                file_entry.get('label')
+                or file_entry.get('format')
+                or file_entry.get('name')
+                or Path(filename).suffix.replace('.', '').upper()
+            ).strip()
+            files.append({
+                'label': label or 'Скачать',
+                'filename': filename
+            })
+
+        normalized_orders.append({
+            'id': entry.get('id') or entry.get('identifier'),
+            'title': entry.get('title') or entry.get('name') or 'Распоряжение',
+            'summary': str(entry.get('summary', '')).strip(),
+            'files': files,
+            'updated_at': entry.get('updated_at') or entry.get('date')
+        })
+
+    return normalized_orders
+
+
+def refresh_orders_documents():
+    """Обновляет кэш распоряжений из конфигурационного файла."""
+    global ORDERS_REGISTRY
+    ORDERS_REGISTRY = load_orders_documents()
+
+
+def get_orders_documents() -> List[Dict[str, Any]]:
+    """Возвращает копию списка распоряжений."""
+    return list(ORDERS_REGISTRY)
+
+
+def load_task_templates() -> List[Dict[str, Any]]:
+    """Читает список шаблонов задач из конфигурационного файла."""
+    templates_path = CONFIG_DIR / 'task_templates.json'
+    try:
+        with templates_path.open('r', encoding='utf-8') as file:
+            data = json.load(file)
+    except FileNotFoundError:
+        _log_error(f'Task templates file not found at {templates_path.as_posix()}')
+        return []
+    except json.JSONDecodeError as exc:
+        _log_error(f'Failed to parse task templates file: {exc}')
+        return []
+
+    normalized_templates: List[Dict[str, Any]] = []
+    for entry in data.get('templates', []):
+        files: List[Dict[str, str]] = []
+        for file_entry in entry.get('files', []):
+            filename = str(file_entry.get('filename', '')).strip()
+            if not filename:
+                continue
+            label = str(
+                file_entry.get('label')
+                or file_entry.get('format')
+                or file_entry.get('name')
+                or Path(filename).suffix.replace('.', '').upper()
+            ).strip()
+            files.append({
+                'label': label or 'Скачать',
+                'filename': filename
+            })
+
+        normalized_templates.append({
+            'id': entry.get('id') or entry.get('identifier'),
+            'title': entry.get('title') or entry.get('name') or 'Шаблон',
+            'summary': str(entry.get('summary', '')).strip(),
+            'files': files,
+            'updated_at': entry.get('updated_at') or entry.get('date')
+        })
+
+    return normalized_templates
+
+
+def refresh_task_templates():
+    """Обновляет кэш шаблонов задач."""
+    global TASK_TEMPLATES
+    TASK_TEMPLATES = load_task_templates()
+
+
+def get_task_templates() -> List[Dict[str, Any]]:
+    """Возвращает копию списка шаблонов задач."""
+    return list(TASK_TEMPLATES)
+
+
+def load_task_instructions() -> List[Dict[str, Any]]:
+    """Читает список инструкций из конфигурационного файла."""
+    instructions_path = CONFIG_DIR / 'instructions_tasks.json'
+    try:
+        with instructions_path.open('r', encoding='utf-8') as file:
+            data = json.load(file)
+    except FileNotFoundError:
+        _log_error(f'Instructions file not found at {instructions_path.as_posix()}')
+        return []
+    except json.JSONDecodeError as exc:
+        _log_error(f'Failed to parse instructions file: {exc}')
+        return []
+
+    normalized_instructions: List[Dict[str, Any]] = []
+    for entry in data.get('instructions', []):
+        files: List[Dict[str, str]] = []
+        for file_entry in entry.get('files', []):
+            filename = str(file_entry.get('filename', '')).strip()
+            if not filename:
+                continue
+            label = str(
+                file_entry.get('label')
+                or file_entry.get('format')
+                or file_entry.get('name')
+                or Path(filename).suffix.replace('.', '').upper()
+            ).strip()
+            files.append({
+                'label': label or 'Скачать',
+                'filename': filename
+            })
+
+        normalized_instructions.append({
+            'id': entry.get('id') or entry.get('identifier'),
+            'title': entry.get('title') or entry.get('name') or 'Инструкция',
+            'summary': str(entry.get('summary', '')).strip(),
+            'files': files,
+            'updated_at': entry.get('updated_at') or entry.get('date')
+        })
+
+    return normalized_instructions
+
+
+def refresh_task_instructions():
+    """Обновляет кэш инструкций."""
+    global TASK_INSTRUCTIONS
+    TASK_INSTRUCTIONS = load_task_instructions()
+
+
+def get_task_instructions() -> List[Dict[str, Any]]:
+    """Возвращает копию списка инструкций."""
+    return list(TASK_INSTRUCTIONS)
+
+
 def parse_composition_input(raw_text: str):
     """Преобразует текстовое описание состава материала в структуру данных."""
     if not raw_text:
@@ -207,3 +369,6 @@ def init_app(_app):
     """Инициализирует кэшированные данные при старте приложения."""
     refresh_gb_analogs()
     refresh_duty_rates()
+    refresh_orders_documents()
+    refresh_task_templates()
+    refresh_task_instructions()

@@ -2,9 +2,41 @@
 
 {% block content %}
 <div class="content-container">
-    <div class="card">
-        <h2 class="card-title">Страница находится в разработке</h2>
-        <p class="section-description">Раздел «Распоряжения» появится здесь позже.</p>
+    <div class="card orders-card">
+        <h2 class="section-title">Распоряжения</h2>
+        <p class="section-description orders-description">Выберите документ, чтобы скачать актуальное распоряжение в удобном формате и кратко ознакомиться с его содержанием.</p>
+
+        {% if orders %}
+            <div class="orders-accordion mt-lg">
+                {% for order in orders %}
+                    <details class="orders-item" {% if loop.first %}open{% endif %}>
+                        <summary class="section-description orders-summary">{{ order.title }}</summary>
+                        <div class="orders-body">
+                            {% if order.updated_at %}
+                                <p class="muted-text">Обновлено: {{ order.updated_at }}</p>
+                            {% endif %}
+                            {% if order.summary %}
+                                <p class="orders-text">{{ order.summary }}</p>
+                            {% endif %}
+
+                            {% if order.files %}
+                                <div class="orders-files">
+                                    {% for file in order.files %}
+                                        <a class="btn btn-secondary" href="{{ url_for('static', filename='orders/' ~ file.filename) }}" download>
+                                            {{ file.label }}
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="muted-text">Файлы для этого распоряжения будут добавлены позже.</p>
+                            {% endif %}
+                        </div>
+                    </details>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="section-description mt-md">Пока нет опубликованных распоряжений. Загрузите файлы в папку <code>static/orders</code> и добавьте их описание в <code>config/orders_documents.json</code>.</p>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

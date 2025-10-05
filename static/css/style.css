@@ -374,7 +374,7 @@ h1 {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-}
+}Выберите документ, чтобы скачать актуальное распоряжение в удобном формате и кратко ознакомиться с его содержанием
 
 .section-title {
   margin: 0;
@@ -387,6 +387,113 @@ h1 {
   margin: 4px 0 0;
   color: var(--muted-foreground);
   font-size: 14px;
+}
+
+.orders-description,
+.templates-description,
+.instructions-description {
+  max-width: 940px;
+}
+
+.card.orders-card,
+.card.templates-card,
+.card.instructions-card {
+  padding: clamp(20px, 2.5vw, 32px);
+  padding-top: clamp(12px, 1.8vw, 20px);
+}
+
+.orders-accordion,
+.templates-accordion,
+.instructions-accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.orders-item,
+.templates-item,
+.instructions-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--card);
+  padding: 0;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition), border-color var(--transition);
+}
+.orders-item:hover,
+.templates-item:hover,
+.instructions-item:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
+}
+.orders-item > summary,
+.templates-item > summary,
+.instructions-item > summary {
+  padding: 16px 20px;
+  margin: 0;
+  color: var(--foreground);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.orders-item > summary::-webkit-details-marker,
+.templates-item > summary::-webkit-details-marker,
+.instructions-item > summary::-webkit-details-marker {
+  display: none;
+}
+.orders-item > summary::after,
+.templates-item > summary::after,
+.instructions-item > summary::after {
+  content: '';
+  margin-left: auto;
+  width: 12px;
+  height: 12px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform var(--transition);
+}
+.orders-item[open] > summary::after,
+.templates-item[open] > summary::after,
+.instructions-item[open] > summary::after {
+  transform: rotate(225deg);
+}
+.orders-item[open],
+.templates-item[open],
+.instructions-item[open] {
+  padding: 0;
+  background: var(--card);
+}
+.orders-item[open] > summary,
+.templates-item[open] > summary,
+.instructions-item[open] > summary {
+  border-bottom: 1px solid var(--border);
+}
+.orders-body,
+.templates-body,
+.instructions-body {
+  padding: 16px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: var(--foreground);
+}
+.orders-text,
+.templates-text,
+.instructions-text {
+  margin: 0;
+  color: var(--foreground);
+}
+.orders-files,
+.templates-files,
+.instructions-files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .card {
@@ -407,7 +514,7 @@ h1 {
 
 .card-title {
   margin: 0;
-  font-size: 16px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--foreground);
 }

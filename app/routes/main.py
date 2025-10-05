@@ -163,27 +163,30 @@ def gb_analogs():
 @main_bp.route('/orders')
 def orders_page():
     """Отображает раздел с распоряжениями и внутренними документами."""
+    orders = datasets.get_orders_documents()
     return render_template(
         'orders.html',
-        **build_context('orders', 'Распоряжения')
+        **build_context('orders', 'Распоряжения', orders=orders)
     )
 
 
 @main_bp.route('/templates-library')
 def templates_page():
     """Выводит список шаблонов документов."""
+    templates_list = datasets.get_task_templates()
     return render_template(
         'templates_page.html',
-        **build_context('templates', 'Шаблоны')
+        **build_context('templates', 'Шаблоны', templates=templates_list)
     )
 
 
 @main_bp.route('/instructions')
 def instructions_page():
     """Содержит краткие инструкции по бизнес-процессам."""
+    instructions_list = datasets.get_task_instructions()
     return render_template(
         'instructions.html',
-        **build_context('instructions', 'Инструкция')
+        **build_context('instructions', 'Инструкции', instructions=instructions_list)
     )
 
 

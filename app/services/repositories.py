@@ -91,6 +91,10 @@ class GenerationRepository:
         """Возвращает данные генерации для повторного использования в форме."""
         return database.load_generation_data(record_id)
 
+    def get_by_drawing(self, drawing_number: str):
+        """Возвращает список генераций, созданных с указанным номером чертежа."""
+        return database.get_generations_by_drawing(drawing_number)
+
 
 user_repository = UserRepository()
 generation_repository = GenerationRepository()

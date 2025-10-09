@@ -542,7 +542,7 @@ h1 {
 .parameters-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
+  gap: 16px;
 }
 
 .position-header {
@@ -561,20 +561,50 @@ h1 {
 }
 
 .parameters-row .field-group {
-  flex: 1 1 220px;
+  flex: 1 1 200px;
 }
 
 .parameters-row .parameter-wide {
-  flex: 2 1 260px;
-  min-width: 240px;
+  flex: 1.8 1 200px;
+  min-width: 200px;
 }
 
 .parameters-row .slim-field {
-  flex: 0 0 140px;
-  max-width: 160px;
+  flex: 0 0 120px;
+  max-width: 140px;
 }
 
-@media (min-width: 1400px) {
+.drawing-field {
+  position: relative;
+}
+
+.drawing-alert {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-top: 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(240, 68, 56, 0.36);
+  background: rgba(240, 68, 56, 0.12);
+  color: var(--destructive);
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  transition: transform var(--transition), background var(--transition), color var(--transition);
+}
+
+.drawing-alert:hover {
+  background: rgba(240, 68, 56, 0.22);
+  transform: translateY(-1px);
+}
+
+.drawing-alert[hidden] {
+  display: none !important;
+}
+
+@media (min-width: 1360px) {
   .parameters-row {
     flex-wrap: nowrap;
   }
@@ -1174,6 +1204,65 @@ button[disabled] {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+}
+
+.drawing-match-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: rgba(17, 24, 39, 0.03);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.drawing-match-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.drawing-match-header h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.drawing-match-subtitle {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 14px;
+}
+
+.drawing-match-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  color: var(--muted-foreground);
+  font-size: 13px;
+}
+
+.drawing-match-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.drawing-match-body p {
+  margin: 4px 0;
+}
+
+.drawing-match-extra {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--muted-foreground);
+}
+
+.drawing-match-footer {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .loading-overlay {

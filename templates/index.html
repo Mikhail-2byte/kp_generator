@@ -101,10 +101,14 @@
                             <input type="text" id="product" name="product" data-field="product" required
                                 value="{{ form_data.product if form_data and form_data.product else '' }}">
                         </div>
-                        <div class="field-group parameter-wide">
+                        <div class="field-group parameter-wide drawing-field">
                             <label for="drawing_number" class="field-label" data-label-for="drawing_number">Номер чертежа</label>
                             <input type="text" id="drawing_number" name="drawing_number" data-field="drawing_number"
                                 value="{{ form_data.drawing_number if form_data and form_data.drawing_number else '' }}">
+                            <button type="button" class="drawing-alert" data-role="drawing-alert" hidden title="Показать найденные бюджеты">
+                                <span aria-hidden="true">!</span>
+                                <span class="visually-hidden">Найдены ранее созданные бюджеты с этим номером чертежа</span>
+                            </button>
                         </div>
                         <div class="field-group parameter-wide">
                             <label for="material" class="field-label" data-label-for="material">Материал</label>
@@ -112,9 +116,14 @@
                                 value="{{ form_data.material if form_data and form_data.material else '' }}">
                         </div>
                         <div class="field-group slim-field">
-                            <label for="cost_price" class="field-label" data-label-for="cost_price">Цена закупа</label>
+                            <label for="cost_price" class="field-label" data-label-for="cost_price">Сумма закупа</label>
                             <input type="number" id="cost_price" name="cost_price" data-field="cost_price" min="0" step="0.01" required
                                 value="{{ form_data.cost_price if form_data and form_data.cost_price else '' }}">
+                        </div>
+                        <div class="field-group slim-field">
+                            <label for="cost_price_per_kg" class="field-label" data-label-for="cost_price_per_kg">Цена за кг</label>
+                            <input type="number" id="cost_price_per_kg" name="cost_price_per_kg" data-field="cost_price_per_kg" min="0" step="0.01"
+                                value="{{ form_data.cost_price_per_kg if form_data and form_data.cost_price_per_kg else '' }}">
                         </div>
                         <div class="field-group slim-field">
                             <label for="quantity" class="field-label" data-label-for="quantity">Количество, шт.</label>
@@ -147,17 +156,25 @@
                                 <label class="field-label" data-label-for="product">Наименование товара</label>
                                 <input type="text" data-field="product" required>
                             </div>
-                            <div class="field-group parameter-wide">
+                            <div class="field-group parameter-wide drawing-field">
                                 <label class="field-label" data-label-for="drawing_number">Номер чертежа</label>
                                 <input type="text" data-field="drawing_number">
+                                <button type="button" class="drawing-alert" data-role="drawing-alert" hidden title="Показать найденные бюджеты">
+                                    <span aria-hidden="true">!</span>
+                                    <span class="visually-hidden">Найдены ранее созданные бюджеты с этим номером чертежа</span>
+                                </button>
                             </div>
                             <div class="field-group parameter-wide">
                                 <label class="field-label" data-label-for="material">Материал</label>
                                 <input type="text" data-field="material">
                             </div>
                             <div class="field-group slim-field">
-                                <label class="field-label" data-label-for="cost_price">Цена закупа</label>
+                                <label class="field-label" data-label-for="cost_price">Сумма закупа</label>
                                 <input type="number" data-field="cost_price" min="0" step="0.01" required>
+                            </div>
+                            <div class="field-group slim-field">
+                                <label class="field-label" data-label-for="cost_price_per_kg">Цена за кг</label>
+                                <input type="number" data-field="cost_price_per_kg" min="0" step="0.01">
                             </div>
                             <div class="field-group slim-field">
                                 <label class="field-label" data-label-for="quantity">Количество, шт.</label>
@@ -250,6 +267,21 @@
     </div>
 </div>
 
+<div class="modal" id="drawingMatchesModal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h3 class="modal-title" id="drawingMatchesTitle">Найдены бюджеты</h3>
+            <button type="button" class="flash-close" data-close-modal>{{ sidebar_icon('x')|safe }}</button>
+        </div>
+        <div class="modal-body" id="drawingMatchesContent">
+            <p class="muted-text">Данных пока нет.</p>
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-outline" data-close-modal>Закрыть</button>
+        </div>
+    </div>
+</div>
+
 <div class="loading-overlay" id="loadingOverlay" aria-hidden="true">
     <div class="loading-spinner" role="status"></div>
 </div>
@@ -291,7 +323,185 @@
         const positionTemplate = document.getElementById('positionTemplate');
         const importEndpoint = "{{ url_for('main.import_positions') }}";
         const csrfToken = form.querySelector('input[name="csrf_token"]').value;
-        const positionFieldKeys = ['product', 'drawing_number', 'material', 'cost_price', 'quantity', 'weight', 'duty_percent'];
+        const positionFieldKeys = ['product', 'drawing_number', 'material', 'cost_price', 'cost_price_per_kg', 'quantity', 'weight', 'duty_percent'];
+        const drawingLookupEndpoint = "{{ url_for('main.history_by_drawing') }}";
+        const drawingMatchesModal = document.getElementById('drawingMatchesModal');
+        const drawingMatchesTitle = document.getElementById('drawingMatchesTitle');
+        const drawingMatchesContent = document.getElementById('drawingMatchesContent');
+        const drawingLookupCache = new Map();
+        const drawingLookupPending = new Map();
+
+        const openModal = (modal) => {
+            if (!modal) {
+                return;
+            }
+            modal.classList.add('is-open');
+            modal.setAttribute('aria-hidden', 'false');
+        };
+
+        const escapeHtml = (value) => {
+            if (value === null || value === undefined) {
+                return '';
+            }
+            return String(value).replace(/[&<>"']/g, (char) => {
+                switch (char) {
+                    case '&':
+                        return '&amp;';
+                    case '<':
+                        return '&lt;';
+                    case '>':
+                        return '&gt;';
+                    case '"':
+                        return '&quot;';
+                    case "'":
+                        return '&#39;';
+                    default:
+                        return char;
+                }
+            });
+        };
+
+        const formatValue = (value, placeholder = '—') => {
+            return value === null || value === undefined || value === '' ? placeholder : value;
+        };
+
+        const formatCurrency = (value) => {
+            return Number(value || 0).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        };
+
+        const formatDateTime = (value) => {
+            if (!value) {
+                return 'Дата не указана';
+            }
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) {
+                return value;
+            }
+            return date.toLocaleString('ru-RU');
+        };
+
+        const debounce = (fn, delay = 300) => {
+            let timerId;
+            return (...args) => {
+                if (timerId) {
+                    clearTimeout(timerId);
+                }
+                timerId = setTimeout(() => fn(...args), delay);
+            };
+        };
+
+        const fetchDrawingMatches = async (drawingNumber) => {
+            const normalized = drawingNumber.toLowerCase();
+
+            if (drawingLookupCache.has(normalized)) {
+                return drawingLookupCache.get(normalized);
+            }
+
+            if (drawingLookupPending.has(normalized)) {
+                return drawingLookupPending.get(normalized);
+            }
+
+            const params = new URLSearchParams({ number: drawingNumber });
+            const fetchPromise = fetch(`${drawingLookupEndpoint}?${params.toString()}`, {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            })
+                .then(async (response) => {
+                    if (!response.ok) {
+                        if (response.status === 404) {
+                            return [];
+                        }
+                        throw new Error('Не удалось получить данные по чертежу');
+                    }
+                    const payload = await response.json();
+                    const matches = Array.isArray(payload?.matches) ? payload.matches : [];
+                    drawingLookupCache.set(normalized, matches);
+                    return matches;
+                })
+                .catch((error) => {
+                    console.error('Drawing lookup failed', error);
+                    drawingLookupCache.set(normalized, []);
+                    return [];
+                })
+                .finally(() => {
+                    drawingLookupPending.delete(normalized);
+                });
+
+            drawingLookupPending.set(normalized, fetchPromise);
+            return fetchPromise;
+        };
+
+        const renderDrawingMatch = (record) => {
+            const author = [record.last_name, record.first_name].filter(Boolean).join(' ').trim() || record.username || '—';
+            const commentHtml = record.comment ? escapeHtml(record.comment).replace(/\n/g, '<br>') : 'Комментарий не указан';
+            const deliveryAddress = formatValue(record.delivery_address);
+
+            return `
+                <article class="drawing-match-card">
+                    <header class="drawing-match-header">
+                        <div>
+                            <h4>${escapeHtml(formatValue(record.company))}</h4>
+                            <p class="drawing-match-subtitle">${escapeHtml(formatValue(record.product))}</p>
+                        </div>
+                        <div class="drawing-match-meta">
+                            <span>${escapeHtml(formatDateTime(record.timestamp))}</span>
+                            <span>Количество: ${escapeHtml(formatValue(record.quantity, '—'))} шт.</span>
+                            <span>Маржа: ${escapeHtml(formatValue(record.margin_percent, '0'))}%</span>
+                        </div>
+                    </header>
+                    <div class="drawing-match-body">
+                        <div class="grid-two">
+                            <div>
+                                <p><strong>Цена закупа:</strong> ${formatCurrency(record.cost_price)} руб.</p>
+                                <p><strong>Логистика:</strong> ${formatCurrency(record.logistics)} руб.</p>
+                                <p><strong>Пошлина:</strong> ${escapeHtml(formatValue(record.duty_percent, '0'))}%</p>
+                                <p><strong>Вес единицы:</strong> ${escapeHtml(formatValue(record.weight, '—'))} кг</p>
+                            </div>
+                            <div>
+                                <p><strong>Цена за ед.:</strong> ${formatCurrency(record.final_price)} руб.</p>
+                                <p><strong>Срок поставки:</strong> ${escapeHtml(formatValue(record.delivery_time, '—'))} дн.</p>
+                                <p><strong>Материал:</strong> ${escapeHtml(formatValue(record.material))}</p>
+                                <p><strong>Автор:</strong> ${escapeHtml(author)}</p>
+                            </div>
+                        </div>
+                        <div class="drawing-match-extra">
+                            <p><strong>Номер тендера:</strong> ${escapeHtml(formatValue(record.tender_number))}</p>
+                            <p><strong>Номер чертежа:</strong> ${escapeHtml(formatValue(record.drawing_number))}</p>
+                            <p><strong>Адрес доставки:</strong> ${escapeHtml(deliveryAddress)}</p>
+                            <p><strong>Комментарий:</strong> ${commentHtml}</p>
+                        </div>
+                    </div>
+                    <div class="drawing-match-footer">
+                        <a class="btn btn-outline btn-sm" href="/load_generation/${record.id}">Загрузить в форму</a>
+                    </div>
+                </article>
+            `;
+        };
+
+        const showDrawingMatchesModal = (drawingNumber, matches) => {
+            if (!drawingMatchesModal) {
+                return;
+            }
+
+            if (drawingMatchesTitle) {
+                drawingMatchesTitle.textContent = `Номер чертежа ${drawingNumber}`;
+            }
+
+            if (drawingMatchesContent) {
+                if (!Array.isArray(matches) || !matches.length) {
+                    drawingMatchesContent.innerHTML = '<p class="muted-text">Не найдено ранее созданных бюджетов.</p>';
+                } else {
+                    drawingMatchesContent.innerHTML = matches.map(renderDrawingMatch).join('');
+                }
+            }
+
+            openModal(drawingMatchesModal);
+            const closeBtn = drawingMatchesModal.querySelector('[data-close-modal]');
+            if (closeBtn) {
+                closeBtn.focus();
+            }
+        };
 
         const formatWeight = (value) => {
             return Number.isFinite(value) ? value.toLocaleString('ru-RU', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) : '0';
@@ -313,6 +523,150 @@
             field.addEventListener('input', () => clearFieldError(field));
         };
 
+        const attachPurchaseSync = (block) => {
+            const costInput = block.querySelector('[data-field="cost_price"]');
+            const perKgInput = block.querySelector('[data-field="cost_price_per_kg"]');
+            const weightInput = block.querySelector('.position-weight');
+
+            if (!costInput || !perKgInput) {
+                return;
+            }
+
+            const parseInputValue = (input) => {
+                if (!input) {
+                    return NaN;
+                }
+                const raw = (input.value || '').replace(',', '.').trim();
+                if (!raw) {
+                    return NaN;
+                }
+                const parsed = Number.parseFloat(raw);
+                return Number.isFinite(parsed) ? parsed : NaN;
+            };
+
+            const roundTwo = (value) => Math.round(value * 100) / 100;
+
+            let manualSource = 'cost';
+            if (!costInput.value.trim() && perKgInput.value.trim()) {
+                manualSource = 'perKg';
+            }
+
+            const recalcFromCost = () => {
+                const weight = parseInputValue(weightInput);
+                const cost = parseInputValue(costInput);
+                if (!Number.isFinite(cost) || !Number.isFinite(weight) || weight <= 0) {
+                    if (!perKgInput.matches(':focus')) {
+                        perKgInput.value = '';
+                    }
+                    return;
+                }
+                const perKg = roundTwo(cost / weight);
+                if (Number.isFinite(perKg)) {
+                    perKgInput.value = perKg.toString();
+                }
+            };
+
+            const recalcFromPerKg = () => {
+                const weight = parseInputValue(weightInput);
+                const perKg = parseInputValue(perKgInput);
+                if (!Number.isFinite(perKg) || !Number.isFinite(weight) || weight <= 0) {
+                    return;
+                }
+                const cost = roundTwo(perKg * weight);
+                if (Number.isFinite(cost)) {
+                    costInput.value = cost.toString();
+                }
+            };
+
+            costInput.addEventListener('input', () => {
+                manualSource = 'cost';
+                recalcFromCost();
+            });
+
+            perKgInput.addEventListener('input', () => {
+                manualSource = 'perKg';
+                recalcFromPerKg();
+            });
+
+            if (weightInput) {
+                weightInput.addEventListener('input', () => {
+                    if (manualSource === 'perKg') {
+                        recalcFromPerKg();
+                    } else {
+                        recalcFromCost();
+                    }
+                });
+            }
+
+            if (manualSource === 'perKg') {
+                recalcFromPerKg();
+            } else {
+                recalcFromCost();
+            }
+        };
+
+        const attachDrawingLookup = (block) => {
+            const drawingInput = block.querySelector('[data-field="drawing_number"]');
+            const alertButton = block.querySelector('[data-role="drawing-alert"]');
+
+            if (!drawingInput || !alertButton) {
+                return;
+            }
+
+            const hideAlert = () => {
+                alertButton.hidden = true;
+                alertButton.removeAttribute('data-drawing-number');
+                alertButton.removeAttribute('aria-label');
+            };
+
+            const applyAlert = (matches, drawingNumber) => {
+                if (Array.isArray(matches) && matches.length > 0) {
+                    alertButton.hidden = false;
+                    alertButton.dataset.drawingNumber = drawingNumber;
+                    alertButton.setAttribute('aria-label', `Найдены ранее созданные бюджеты по чертежу ${drawingNumber}`);
+                } else {
+                    hideAlert();
+                }
+            };
+
+            const performLookup = async () => {
+                const rawValue = (drawingInput.value || '').trim();
+                if (!rawValue) {
+                    hideAlert();
+                    return;
+                }
+
+                const normalized = rawValue.toLowerCase();
+                drawingInput.dataset.lookupValue = normalized;
+                hideAlert();
+
+                const matches = await fetchDrawingMatches(rawValue);
+                if (drawingInput.dataset.lookupValue !== normalized) {
+                    return;
+                }
+
+                applyAlert(matches, rawValue);
+            };
+
+            const debouncedLookup = debounce(performLookup, 400);
+            drawingInput.addEventListener('input', debouncedLookup);
+            drawingInput.addEventListener('blur', performLookup);
+
+            alertButton.addEventListener('click', () => {
+                const drawingNumber = alertButton.dataset.drawingNumber;
+                if (!drawingNumber) {
+                    return;
+                }
+                const matches = drawingLookupCache.get(drawingNumber.toLowerCase()) || [];
+                if (!matches.length) {
+                    return;
+                }
+                showDrawingMatchesModal(drawingNumber, matches);
+            });
+
+            performLookup();
+        };
+
         const registerPositionBlock = (block, attachRequiredHandlers = false) => {
             const quantityInput = block.querySelector('.position-quantity');
             const weightInput = block.querySelector('.position-weight');
@@ -331,11 +685,20 @@
                 });
             }
 
-            block.querySelectorAll('input[type="number"]').forEach(input => attachValidation(input));
+            block.querySelectorAll('input[type="number"]').forEach(input => {
+                if (input.hasAttribute('required')) {
+                    attachValidation(input);
+                } else {
+                    input.addEventListener('input', () => clearFieldError(input));
+                }
+            });
 
             if (attachRequiredHandlers) {
                 block.querySelectorAll(requiredSelector).forEach(input => attachValidation(input));
             }
+
+            attachPurchaseSync(block);
+            attachDrawingLookup(block);
         };
 
         const populatePositionBlock = (block, position = {}) => {
@@ -755,6 +1118,10 @@
                 showFieldError(field, 'Стоимость должна быть положительной');
                 return false;
             }
+            if (fieldKey === 'cost_price_per_kg' && value < 0) {
+                showFieldError(field, 'Цена за кг должна быть положительной');
+                return false;
+            }
             return true;
         };
 
@@ -762,7 +1129,13 @@
             clearFieldError(field);
             const raw = field.value.trim();
 
+            const isRequired = field.hasAttribute('required');
+
             if (!raw) {
+                if (!isRequired) {
+                    clearFieldError(field);
+                    return true;
+                }
                 showFieldError(field, 'Это поле обязательно для заполнения');
                 return false;
             }

@@ -34,7 +34,7 @@ def validate_form_data(form_data):
             errors.append(f'Поле "{field}" является обязательным.')
     
     # Проверка числовых значений
-    numeric_fields = ['quantity', 'cost_price', 'weight', 'logistics', 'duty_percent', 'delivery_time', 'margin_percent']
+    numeric_fields = ['quantity', 'cost_price', 'cost_price_per_kg', 'weight', 'logistics', 'duty_percent', 'delivery_time', 'margin_percent']
     for field in numeric_fields:
         if form_data.get(field) and form_data[field].strip():
             try:

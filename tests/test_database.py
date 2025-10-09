@@ -92,6 +92,15 @@ def test_generation_history_flow(orm_environment):
     loaded = database.load_generation_data(history[0]['id'])
     assert loaded['quantity'] == 10
 
+    matches = database.get_generations_by_drawing('DR-1')
+    assert len(matches) == 1
+    assert matches[0]['company'] == 'Acme'
+    assert matches[0]['drawing_number'] == 'DR-1'
+
+    matches_case = database.get_generations_by_drawing('dr-1')
+    assert matches_case
+    assert matches_case[0]['id'] == matches[0]['id']
+
 
 def test_delete_user_detaches_history(orm_environment):
     database, extensions, models = orm_environment

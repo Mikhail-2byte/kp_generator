@@ -68,6 +68,21 @@ def history_details(record_id):
         return jsonify({'error': 'Internal server error'}), 500
 
 
+@main_bp.route('/history/drawing')
+def history_by_drawing():
+    """Возвращает генерации с указанным номером чертежа."""
+    drawing_number = request.args.get('number', '').strip()
+    if not drawing_number:
+        return jsonify({'matches': []})
+
+    try:
+        matches = generation_repository.get_by_drawing(drawing_number)
+        return jsonify({'matches': matches})
+    except Exception as exc:  # pragma: no cover - defensive logging
+        current_app.logger.error('Error fetching drawing matches: %s', exc)
+        return jsonify({'matches': []}), 500
+
+
 @main_bp.route('/history')
 def history():
     """Отображает список последних генераций пользователя."""
@@ -232,6 +247,20 @@ def generate():
     """Выполняет расчёт КП, сохраняет историю и формирует пакет документов."""
     form_data = request.form.to_dict()
     form_data['comment'] = form_data.get('comment', '').strip()
+
+    if not form_data.get('cost_price', '').strip():
+        raw_per_kg = (form_data.get('cost_price_per_kg') or '').replace(',', '.').strip()
+        raw_weight = (form_data.get('weight') or '').replace(',', '.').strip()
+        try:
+            per_kg_value = float(raw_per_kg) if raw_per_kg else None
+            weight_value = float(raw_weight) if raw_weight else None
+        except ValueError:
+            per_kg_value = None
+            weight_value = None
+
+        if per_kg_value is not None and weight_value is not None and weight_value > 0:
+            form_data['cost_price'] = str(per_kg_value * weight_value)
+
     errors = validate_form_data(form_data)
 
     if errors:

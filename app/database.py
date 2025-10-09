@@ -98,6 +98,36 @@ def _format_history_timestamp(value: Optional[datetime]) -> str:
     return value.strftime('%d.%m.%Y %H:%M')
 
 
+def _build_generation_detail(record: Optional[GenerationHistoryRecord]):
+    """Формирует подробный словарь по записи генерации."""
+    if record is None:
+        return None
+
+    return {
+        'id': record.id,
+        'timestamp': _format_timestamp(record.timestamp),
+        'tender_number': record.tender_number,
+        'company': record.company,
+        'product': record.product,
+        'quantity': record.quantity,
+        'cost_price': record.cost_price,
+        'weight': record.weight,
+        'logistics': record.logistics,
+        'margin_percent': record.margin_percent,
+        'final_price': record.final_price,
+        'drawing_number': record.drawing_number,
+        'material': record.material,
+        'delivery_address': record.delivery_address,
+        'duty_percent': record.duty_percent,
+        'delivery_time': record.delivery_time,
+        'comment': record.comment,
+        'user_id': record.user_id,
+        'username': record.user.username if record.user else None,
+        'last_name': record.user.last_name if record.user else None,
+        'first_name': record.user.first_name if record.user else None,
+    }
+
+
 def _user_to_tuple(user: Optional[UserRecord]):
     """Поддерживает совместимость с устаревшим интерфейсом кортежей пользователя."""
     if user is None:
@@ -201,29 +231,7 @@ def get_generation_details(record_id: int) -> Optional[Dict[str, object]]:
             if record is None:
                 return None
 
-            return {
-                'id': record.id,
-                'timestamp': _format_timestamp(record.timestamp),
-                'tender_number': record.tender_number,
-                'company': record.company,
-                'product': record.product,
-                'quantity': record.quantity,
-                'cost_price': record.cost_price,
-                'weight': record.weight,
-                'logistics': record.logistics,
-                'margin_percent': record.margin_percent,
-                'final_price': record.final_price,
-                'drawing_number': record.drawing_number,
-                'material': record.material,
-                'delivery_address': record.delivery_address,
-                'duty_percent': record.duty_percent,
-                'delivery_time': record.delivery_time,
-                'comment': record.comment,
-                'user_id': record.user_id,
-                'username': record.user.username if record.user else None,
-                'last_name': record.user.last_name if record.user else None,
-                'first_name': record.user.first_name if record.user else None,
-            }
+            return _build_generation_detail(record)
     except Exception as exc:
         logging.error('Error getting generation details: %s', exc)
         return None
@@ -438,3 +446,25 @@ def delete_user(user_id) -> bool:
     except Exception as exc:
         logging.error('Error deleting user: %s', exc)
         return False
+
+
+def get_generations_by_drawing(drawing_number: str, limit: int = 5) -> List[Dict[str, object]]:
+    """Возвращает последние генерации, созданные с указанным номером чертежа."""
+    if not drawing_number:
+        return []
+
+    try:
+        with _session_scope() as session:
+            records = (
+                session.query(GenerationHistoryRecord)
+                .options(joinedload(GenerationHistoryRecord.user))
+                .filter(func.lower(GenerationHistoryRecord.drawing_number) == drawing_number.lower())
+                .order_by(GenerationHistoryRecord.timestamp.desc())
+                .limit(limit)
+                .all()
+            )
+
+            return [detail for record in records if (detail := _build_generation_detail(record))]
+    except Exception as exc:
+        logging.error('Error fetching generations by drawing: %s', exc)
+        return []

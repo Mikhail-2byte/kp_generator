@@ -70,9 +70,11 @@ def profile():
                 last_name = (update_form.last_name.data or '').strip()
                 first_name = (update_form.first_name.data or '').strip()
                 new_password = (update_form.new_password.data or '').strip()
+                contact_info = (update_form.contact_info.data or '').strip()
                 update_form.username.data = username
                 update_form.last_name.data = last_name
                 update_form.first_name.data = first_name
+                update_form.contact_info.data = contact_info
 
                 existing_user = user_repository.get_by_username(username)
                 if existing_user and str(existing_user.id) != str(current_user.id):
@@ -84,12 +86,14 @@ def profile():
                         username,
                         last_name,
                         first_name,
+                        contact_info,
                         password_hash
                     )
                     if updated:
                         current_user.username = username
                         current_user.last_name = last_name
                         current_user.first_name = first_name
+                        current_user.contact_info = contact_info
                         flash('Профиль успешно обновлён.', 'success')
                         return redirect(url_for('auth.profile'))
                     flash('Не удалось обновить профиль. Попробуйте позже.', 'danger')
@@ -139,6 +143,7 @@ def profile():
             update_form.username.data = current_user.username
             update_form.last_name.data = current_user.last_name or ''
             update_form.first_name.data = current_user.first_name or ''
+            update_form.contact_info.data = current_user.contact_info or ''
 
     if update_form and update_form.errors:
         show_update_form = True

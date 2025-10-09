@@ -36,7 +36,8 @@ def test_create_and_fetch_user(orm_environment):
 
     by_id = database.get_user_by_id(user_id)
     assert by_id[1] == 'tester'
-    assert by_id[7] == 'admin'
+    assert by_id[7] is None
+    assert by_id[8] == 'admin'
 
     by_username = database.get_user_by_username('tester')
     assert by_username[0] == user_id
@@ -45,6 +46,12 @@ def test_create_and_fetch_user(orm_environment):
 
     updated = database.get_user_by_id(user_id)
     assert updated[4] is not None
+
+    contact_line = 'John Doe | +7 999 111-22-33 | john@example.com'
+    assert database.update_user_profile(user_id, 'tester', 'Doe', 'John', contact_line)
+
+    refreshed = database.get_user_by_id(user_id)
+    assert refreshed[7] == contact_line
 
 
 def test_generation_history_flow(orm_environment):

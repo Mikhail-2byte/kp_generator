@@ -110,6 +110,7 @@ def _user_to_tuple(user: Optional[UserRecord]):
         user.last_login,
         user.last_name,
         user.first_name,
+        user.contact_info,
         user.role,
     )
 
@@ -261,7 +262,14 @@ def load_generation_data(gen_id: int) -> Optional[Dict[str, object]]:
         return None
 
 
-def create_user(username, password_hash, last_name='', first_name='', role='user') -> Optional[int]:
+def create_user(
+    username,
+    password_hash,
+    last_name='',
+    first_name='',
+    role='user',
+    contact_info=None,
+) -> Optional[int]:
     """Создаёт нового пользователя и возвращает его идентификатор."""
     try:
         with _session_scope() as session:
@@ -270,6 +278,7 @@ def create_user(username, password_hash, last_name='', first_name='', role='user
                 password_hash=password_hash,
                 last_name=last_name or None,
                 first_name=first_name or None,
+                contact_info=contact_info or None,
                 role=(role or 'user').lower(),
             )
             session.add(user)
@@ -382,7 +391,14 @@ def get_user_statistics(user_id) -> Dict[str, object]:
         }
 
 
-def update_user_profile(user_id, username, last_name, first_name, password_hash=None) -> bool:
+def update_user_profile(
+    user_id,
+    username,
+    last_name,
+    first_name,
+    contact_info,
+    password_hash=None
+) -> bool:
     """Обновляет данные профиля и при необходимости пароль пользователя."""
     try:
         with _session_scope() as session:
@@ -393,6 +409,7 @@ def update_user_profile(user_id, username, last_name, first_name, password_hash=
             user.username = username
             user.last_name = last_name or None
             user.first_name = first_name or None
+            user.contact_info = contact_info or None
             if password_hash:
                 user.password_hash = password_hash
         return True

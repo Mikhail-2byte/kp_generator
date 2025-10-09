@@ -20,6 +20,7 @@ class UserRecord(Base):
     last_login = Column(DateTime)
     last_name = Column(Text)
     first_name = Column(Text)
+    contact_info = Column(Text)
     role = Column(Text, nullable=False, server_default='user')
 
     generations = relationship('GenerationHistoryRecord', back_populates='user')
@@ -62,7 +63,8 @@ class User(UserMixin):
         last_login=None,
         last_name=None,
         first_name=None,
-        role='user'
+        role='user',
+        contact_info=None
     ):
         """Инициализирует объект пользователя для хранения в сессии."""
         self.id = str(user_id)
@@ -72,6 +74,7 @@ class User(UserMixin):
         self.last_login = last_login
         self.last_name = last_name
         self.first_name = first_name
+        self.contact_info = contact_info
         self.role = (role or 'user').lower()
 
     @classmethod
@@ -89,7 +92,8 @@ class User(UserMixin):
                 last_login=getattr(row, 'last_login', None),
                 last_name=getattr(row, 'last_name', None),
                 first_name=getattr(row, 'first_name', None),
-                role=getattr(row, 'role', 'user')
+                role=getattr(row, 'role', 'user'),
+                contact_info=getattr(row, 'contact_info', None)
             )
 
         if hasattr(row, '_mapping'):
@@ -102,13 +106,15 @@ class User(UserMixin):
                 last_login=mapping.get('last_login'),
                 last_name=mapping.get('last_name'),
                 first_name=mapping.get('first_name'),
-                role=mapping.get('role', 'user')
+                role=mapping.get('role', 'user'),
+                contact_info=mapping.get('contact_info')
             )
 
         if isinstance(row, Sequence):
             last_name = row[5] if len(row) > 5 else None
             first_name = row[6] if len(row) > 6 else None
-            role = row[7] if len(row) > 7 else 'user'
+            contact_info = row[7] if len(row) > 7 else None
+            role = row[8] if len(row) > 8 else 'user'
             return cls(
                 user_id=row[0],
                 username=row[1],
@@ -117,6 +123,7 @@ class User(UserMixin):
                 last_login=row[4],
                 last_name=last_name,
                 first_name=first_name,
+                contact_info=contact_info,
                 role=role
             )
 

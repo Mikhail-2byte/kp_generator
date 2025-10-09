@@ -55,6 +55,15 @@
                     <p class="muted-text">У вас пока нет созданных коммерческих предложений.</p>
                 {% endif %}
             </div>
+            <div class="card span-full">
+                <h3 class="section-title">Контактная информация</h3>
+                <p class="section-description">Эти данные будут подставляться в коммерческое предложение.</p>
+                {% if current_user.contact_info %}
+                    <div style="margin-top:16px; white-space: pre-line;">{{ current_user.contact_info }}</div>
+                {% else %}
+                    <p class="muted-text" style="margin-top:16px;">Контактные данные не заполнены.</p>
+                {% endif %}
+            </div>
             {% if update_form %}
             <div class="card span-full">
                 <div class="card-header">
@@ -87,6 +96,13 @@
                             {{ update_form.username.label(class_='field-label') }}
                             {{ update_form.username(class_='') }}
                             {% for error in update_form.username.errors %}
+                                <div class="field-error">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="field-group span-3">
+                            {{ update_form.contact_info.label(class_='field-label') }}
+                            {{ update_form.contact_info(rows=4, placeholder='ФИО, телефон, email') }}
+                            {% for error in update_form.contact_info.errors %}
                                 <div class="field-error">{{ error }}</div>
                             {% endfor %}
                         </div>

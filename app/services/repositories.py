@@ -14,10 +14,11 @@ class UserRepository:
         password_hash: str,
         last_name: Optional[str] = None,
         first_name: Optional[str] = None,
-        role: str = 'user'
+        role: str = 'user',
+        contact_info: Optional[str] = None
     ) -> Optional[User]:
         """Создаёт пользователя и возвращает готовый объект для работы в приложении."""
-        user_id = database.create_user(username, password_hash, last_name, first_name, role)
+        user_id = database.create_user(username, password_hash, last_name, first_name, role, contact_info)
         return self.get_by_id(user_id) if user_id else None
 
     def get_by_username(self, username: str) -> Optional[User]:
@@ -44,6 +45,7 @@ class UserRepository:
         username: str,
         last_name: Optional[str] = None,
         first_name: Optional[str] = None,
+        contact_info: Optional[str] = None,
         password_hash: Optional[str] = None
     ) -> bool:
         """Обновляет логин, имя и пароль пользователя."""
@@ -54,6 +56,7 @@ class UserRepository:
             username,
             last_name,
             first_name,
+            contact_info,
             password_hash
         )
 

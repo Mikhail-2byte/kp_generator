@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
     last_login DATETIME,
     last_name TEXT,
     first_name TEXT,
+    contact_info TEXT,
     role TEXT NOT NULL DEFAULT 'user'
 );
 

@@ -153,6 +153,10 @@ def admin_panel():
             else:
                 flash('Не удалось подтвердить удаление.', 'danger')
             return redirect(url_for('admin.admin_panel'))
+        elif action == 'refresh_templates':
+            datasets.refresh_task_templates()
+            flash('Кэш шаблонов обновлён.', 'info')
+            return redirect(url_for('admin.admin_panel'))
         else:
             flash('Неизвестное действие.', 'danger')
             return redirect(url_for('admin.admin_panel'))

@@ -232,5 +232,18 @@
             </table>
         </div>
     </div>
+    
+    <div class="card">
+        <h2 class="section-title">Обновление кэша</h2>
+        <p class="section-description">Обновите кэш шаблонов, если вы внесли изменения в файлы шаблонов.</p>
+        <form method="post" class="form-grid">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="refresh_templates">
+            <div class="controls-row">
+                <span></span>
+                <button type="submit" class="btn btn-primary">Обновить кэш шаблонов</button>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}

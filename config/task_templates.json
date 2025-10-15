@@ -2,12 +2,12 @@
   "templates": [
     {
       "id": "template-1",
-      "title": "Шаблон №1",
-      "summary": "Описание будет добавлено позже.",
+      "title": "Шаблон для внесения позиций",
+      "summary": "Это шаблон в который можно внести позиции.",
       "files": [
         {
-          "label": "DOCX",
-          "filename": "Шаблон №1.docx"
+          "label": "XLSX",
+          "filename": "Шаблон для внесения позиций.xlsx"
         }
       ],
       "updated_at": ""

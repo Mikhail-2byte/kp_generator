@@ -18,7 +18,11 @@ from flask_login import current_user
 from app.calculate import calculate_selling_price
 from app.document_generator import create_zip_archive, generate_excel_document, generate_word_document
 from app.helpers import check_templates_exist, validate_form_data
-from app.services import datasets
+from app.services import (
+    AnalyticsProcessingError,
+    analyze_excel,
+    datasets
+)
 from app.services.repositories import generation_repository
 from app.services.feedback import save_feedback_entry
 from app.services.excel_importer import ExcelImportError, parse_positions_from_excel
@@ -205,12 +209,28 @@ def instructions_page():
     )
 
 
-@main_bp.route('/analytics')
+@main_bp.route('/analytics', methods=['GET', 'POST'])
 def analytics_page():
-    """Отображает раздел аналитики."""
+    """Отображает раздел аналитики и обрабатывает загрузку файлов."""
+    analysis_result = None
+    error_message = None
+
+    if request.method == 'POST':
+        uploaded_file = request.files.get('analytics_file')
+        if not uploaded_file or not uploaded_file.filename:
+            error_message = 'Выберите файл Excel для анализа.'
+        else:
+            try:
+                analysis_result = analyze_excel(uploaded_file)
+            except AnalyticsProcessingError as exc:
+                error_message = str(exc)
+            except Exception as exc:  # pragma: no cover - логирование неожиданных ошибок
+                current_app.logger.exception('Ошибка обработки аналитики: ')  # noqa: TRY401
+                error_message = 'Не удалось обработать файл. Попробуйте позже.'
+
     return render_template(
         'analytics.html',
-        **build_context('analytics', 'Аналитика')
+        **build_context('analytics', 'Аналитика', analysis=analysis_result, error_message=error_message)
     )
 
 

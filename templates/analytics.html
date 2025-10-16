@@ -1,10 +1,146 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="content-container">
-    <div class="card">
-        <h2 class="section-title">Аналитика</h2>
-        <p class="section-description">Раздел в разработке.</p>
+<div class="content-container analytics-page">
+    <div class="card upload-card">
+        <h2 class="section-title">Аналитика Excel файлов</h2>
+        <p class="section-description">
+            Загрузите файл в формате <strong>.xls</strong> или <strong>.xlsx</strong>, чтобы получить автоматическую обработку
+            и визуализацию данных. Формат <strong>.xls</strong> будет конвертирован автоматически.
+        </p>
+        <form class="upload-form" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-row">
+                <label for="analytics-file" class="upload-label">
+                    <input id="analytics-file" type="file" name="analytics_file" accept=".xls,.xlsx" required>
+                    <span class="upload-button">Выбрать файл Excel</span>
+                    <span class="upload-hint">Поддерживаются файлы до 20 МБ</span>
+                </label>
+                <button type="submit" class="primary-btn">Запустить анализ</button>
+            </div>
+        </form>
+        {% if error_message %}
+            <div class="alert alert-danger">{{ error_message }}</div>
+        {% endif %}
     </div>
+
+    {% if analysis %}
+        <div class="card analysis-summary">
+            <h3 class="section-subtitle">{{ analysis.analysis_label }}</h3>
+            <div class="metrics-grid">
+                {% for metric in analysis.metrics %}
+                    <div class="metric-item">
+                        <span class="metric-label">{{ metric.label }}</span>
+                        <span class="metric-value">{{ metric.value }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="preview-header">
+                <h3 class="section-subtitle">Предпросмотр данных</h3>
+                <button class="toggle-btn" type="button" data-toggle="preview">Показать</button>
+            </div>
+            <div class="table-wrapper" data-section="preview" hidden>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            {% for column in analysis.preview.columns %}
+                                <th>{{ column }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in analysis.preview.rows %}
+                            <tr>
+                                {% for column in analysis.preview.columns %}
+                                    <td>{{ row[column] }}</td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {% if analysis.stats %}
+            <div class="card">
+                <h3 class="section-subtitle">Статистические показатели</h3>
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                {% for column in analysis.stats.columns %}
+                                    <th>{{ column }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in analysis.stats.rows %}
+                                <tr>
+                                    {% for column in analysis.stats.columns %}
+                                        <td>{{ row[column] }}</td>
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if analysis.charts %}
+            <div class="card">
+                <h3 class="section-subtitle">Визуализация данных</h3>
+                <div class="charts-grid">
+                    {% for chart in analysis.charts %}
+                        <div class="chart-item">
+                            <h4 class="chart-title">{{ chart.title }}</h4>
+                            <img src="data:image/png;base64,{{ chart.image }}" alt="{{ chart.title }}">
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        <div class="card download-card">
+            <h3 class="section-subtitle">Экспорт результатов</h3>
+            <div class="download-actions">
+                <a
+                    class="primary-btn"
+                    href="data:text/csv;base64,{{ analysis.download.csv }}"
+                    download="{{ analysis.download.csv_name }}"
+                >Скачать CSV</a>
+                <a
+                    class="secondary-btn"
+                    href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{{ analysis.download.excel }}"
+                    download="{{ analysis.download.excel_name }}"
+                >Скачать Excel</a>
+            </div>
+        </div>
+    {% endif %}
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    (function() {
+        const button = document.querySelector('[data-toggle="preview"]');
+        const section = document.querySelector('[data-section="preview"]');
+        if (!button || !section) {
+            return;
+        }
+        button.addEventListener('click', () => {
+            const isHidden = section.hasAttribute('hidden');
+            if (isHidden) {
+                section.removeAttribute('hidden');
+                button.textContent = 'Скрыть';
+            } else {
+                section.setAttribute('hidden', '');
+                button.textContent = 'Показать';
+            }
+        });
+    })();
+</script>
 {% endblock %}

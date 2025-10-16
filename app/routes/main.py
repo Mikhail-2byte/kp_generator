@@ -205,6 +205,15 @@ def instructions_page():
     )
 
 
+@main_bp.route('/analytics')
+def analytics_page():
+    """Отображает раздел аналитики."""
+    return render_template(
+        'analytics.html',
+        **build_context('analytics', 'Аналитика')
+    )
+
+
 @main_bp.route('/duty')
 def duty():
     """Предоставляет поиск по ставкам пошлин и категориям товаров."""

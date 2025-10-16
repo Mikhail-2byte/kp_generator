@@ -44,6 +44,10 @@
                     <span class="sidebar-icon">{{ sidebar_icon('file-text')|safe }}</span>
                     <span class="sidebar-label">Инструкции</span>
                 </a>
+                <a href="{{ url_for('main.analytics_page') }}" class="sidebar-link" data-nav="analytics">
+                    <span class="sidebar-icon">{{ sidebar_icon('chart')|safe }}</span>
+                    <span class="sidebar-label">Аналитика</span>
+                </a>
                 <a href="{{ url_for('main.feedback') }}" class="sidebar-link sidebar-link-feedback" data-nav="feedback">
                     <span class="sidebar-icon">{{ sidebar_icon('message-square')|safe }}</span>
                     <span class="sidebar-label">Обратная связь</span>

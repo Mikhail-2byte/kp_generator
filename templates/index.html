@@ -287,7 +287,7 @@
 </div>
 {% endblock %}
 
-{% block extra_scripts %}
+{% block scripts %}
 <script>
     const citiesElement = document.getElementById('cities-data');
     let cities = [];
@@ -295,6 +295,9 @@
         cities = JSON.parse(citiesElement?.textContent || '[]');
     } catch (error) {
         console.error('Cannot parse cities data', error);
+    }
+    if (!Array.isArray(cities)) {
+        cities = [];
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -938,26 +941,50 @@
             return total;
         }
 
+        const clearSelectedCity = () => {
+            if (mainSelectedCityName) {
+                mainSelectedCityName.value = '';
+            }
+            if (mainSelectedCityPrice) {
+                mainSelectedCityPrice.value = '';
+            }
+            if (logisticsInput) {
+                logisticsInput.value = '';
+            }
+        };
+
         function refreshLogisticsValue() {
-            const selectedCityName = (mainSelectedCityName.value || '').toLowerCase();
+            if (!logisticsInput) {
+                return;
+            }
+
+            const selectedCityName = (mainSelectedCityName?.value || '').toLowerCase();
             if (!selectedCityName) {
                 logisticsInput.value = '';
+                if (mainSelectedCityPrice) {
+                    mainSelectedCityPrice.value = '';
+                }
                 return;
             }
 
             const transportType = getCurrentTransportType();
-            const totalWeightRaw = weightOutputField.value.replace(/[^0-9.,]/g, '').replace(',', '.');
+            const totalWeightRaw = (weightOutputField?.value || '').replace(/[^0-9.,]/g, '').replace(',', '.');
             const totalWeight = parseFloat(totalWeightRaw) || 0;
             const calcType = document.querySelector('input[name="mainCalcType"]:checked')?.value || 'weight';
 
-            const matchedCity = cities.find(city => city.name.toLowerCase() === selectedCityName);
+            const matchedCity = cities.find(city => (city.name || '').toLowerCase() === selectedCityName);
             if (!matchedCity) {
                 logisticsInput.value = '';
+                if (mainSelectedCityPrice) {
+                    mainSelectedCityPrice.value = '';
+                }
                 return;
             }
 
             const price = transportType === 'trail' ? matchedCity.trail_price : matchedCity.truck_price;
-            mainSelectedCityPrice.value = price;
+            if (mainSelectedCityPrice) {
+                mainSelectedCityPrice.value = price;
+            }
 
             const totalLogistics = calculateLogistics(price, transportType, calcType, totalWeight);
             logisticsInput.value = Number.isFinite(totalLogistics) ? Math.round(totalLogistics).toString() : '';
@@ -989,15 +1016,26 @@
             const autoDetectCity = () => {
                 const addressValue = (deliveryAddressInput.value || '').toLowerCase();
                 if (!addressValue) {
+                    clearSelectedCity();
+                    if (mainCityInput) {
+                        mainCityInput.value = '';
+                    }
                     return;
                 }
-                const matchedCity = cities.find(city => addressValue.includes(city.name.toLowerCase()));
+                const matchedCity = cities.find(city => addressValue.includes((city.name || '').toLowerCase()));
                 if (matchedCity) {
                     if (mainCityInput) {
                         mainCityInput.value = matchedCity.name;
                     }
-                    mainSelectedCityName.value = matchedCity.name;
+                    if (mainSelectedCityName) {
+                        mainSelectedCityName.value = matchedCity.name;
+                    }
                     refreshLogisticsValue();
+                } else {
+                    if (mainCityInput) {
+                        mainCityInput.value = '';
+                    }
+                    clearSelectedCity();
                 }
             };
 
@@ -1010,15 +1048,17 @@
             let currentFocus = -1;
 
             inputElement.addEventListener('input', function() {
-                const value = this.value.toLowerCase();
+                const value = (this.value || '').toLowerCase();
                 closeAllLists();
+
+                clearSelectedCity();
 
                 if (!value) {
                     currentFocus = -1;
                     return;
                 }
 
-                const matchingCities = cities.filter(city => city.name.toLowerCase().includes(value));
+                const matchingCities = cities.filter(city => (city.name || '').toLowerCase().includes(value));
                 if (!matchingCities.length) {
                     return;
                 }
@@ -1035,7 +1075,9 @@
                     item.innerHTML = `<strong>${city.name}</strong> — ${city.region}<br><small>${price.toLocaleString('ru-RU')} руб</small>`;
                     item.addEventListener('click', () => {
                         inputElement.value = city.name;
-                        mainSelectedCityName.value = city.name;
+                        if (mainSelectedCityName) {
+                            mainSelectedCityName.value = city.name;
+                        }
                         refreshLogisticsValue();
                         closeAllLists();
                     });
@@ -1067,6 +1109,30 @@
                 }
             });
 
+            inputElement.addEventListener('blur', function() {
+                const rawValue = (this.value || '').trim();
+                if (!rawValue) {
+                    if (mainCityInput) {
+                        mainCityInput.value = '';
+                    }
+                    clearSelectedCity();
+                    return;
+                }
+
+                const matchedCity = cities.find(city => (city.name || '').toLowerCase() === rawValue.toLowerCase());
+                if (matchedCity) {
+                    if (mainSelectedCityName) {
+                        mainSelectedCityName.value = matchedCity.name;
+                    }
+                    refreshLogisticsValue();
+                } else {
+                    if (mainCityInput) {
+                        mainCityInput.value = '';
+                    }
+                    clearSelectedCity();
+                }
+            });
+
             function addActive(options) {
                 if (!options.length) {
                     return;
@@ -1087,10 +1153,13 @@
         }
 
         if (mainCityInput && mainCityInput.value) {
-            mainSelectedCityName.value = mainCityInput.value;
+            if (mainSelectedCityName) {
+                mainSelectedCityName.value = mainCityInput.value;
+            }
+            refreshLogisticsValue();
+        } else {
+            clearSelectedCity();
         }
-
-        refreshLogisticsValue();
 
         const validateNumberBounds = (field, value) => {
             const fieldKey = field.dataset.field || field.id;

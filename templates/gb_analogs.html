@@ -32,13 +32,11 @@
                             <td>{{ material.notes or '—' }}</td>
                             <td class="text-center">
                                 {% if material.composition %}
-                                    <button type="button" class="btn btn-outline composition-btn"
-                                            data-composition='{{ material.composition | tojson }}'
-                                            data-material="{{ material.russian }}"
-                                            data-gb="{{ material.gb }}">
-                                        {{ sidebar_icon('layers')|safe }}
-                                        <span>Показать</span>
-                                    </button>
+                                    <div class="composition-inline">
+                                        {% for component in material.composition %}
+                                            <span>{{ component.element }} — {{ component.content }}{% if not loop.last %}; {% endif %}</span>
+                                        {% endfor %}
+                                    </div>
                                 {% else %}
                                     <span class="muted-text">Нет данных</span>
                                 {% endif %}
@@ -60,83 +58,11 @@
 </div>
 {% endblock %}
 
-{% block overlays %}
-<div class="modal" id="compositionModal" aria-hidden="true" role="dialog" aria-modal="true">
-    <div class="modal-dialog">
-        <div class="modal-header">
-            <h3 class="modal-title" id="compositionModalTitle">Химический состав</h3>
-            <button type="button" class="flash-close" data-close-modal>{{ sidebar_icon('x')|safe }}</button>
-        </div>
-        <div class="modal-body">
-            <p class="muted-text">Диапазоны содержания элементов указаны в процентах от массы.</p>
-            <div class="table-responsive">
-                <table class="data-table" id="compositionTable">
-                    <thead>
-                        <tr>
-                            <th>Элемент</th>
-                            <th>Содержание</th>
-                        </tr>
-                    </thead>
-                    <tbody id="compositionTableBody">
-                        <tr><td colspan="2" class="text-center muted-text">Выберите материал, чтобы увидеть состав.</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <div class="modal-actions">
-            <button type="button" class="btn btn-outline" data-close-modal>Закрыть</button>
-        </div>
-    </div>
-</div>
-{% endblock %}
-
-{% block extra_scripts %}
+{% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const searchInput = document.getElementById('searchInput');
         const tableBody = document.querySelector('#materialsTable tbody');
-        const modal = document.getElementById('compositionModal');
-        const modalTitle = document.getElementById('compositionModalTitle');
-        const compositionTableBody = document.getElementById('compositionTableBody');
-
-        const openModal = () => {
-            if (modal) {
-                modal.classList.add('is-open');
-                modal.setAttribute('aria-hidden', 'false');
-            }
-        };
-
-        const updateCompositionTable = (composition) => {
-            if (!Array.isArray(composition) || composition.length === 0) {
-                compositionTableBody.innerHTML = '<tr><td colspan="2" class="text-center muted-text">Данные состава отсутствуют.</td></tr>';
-                return;
-            }
-
-            compositionTableBody.innerHTML = composition.map(item => `
-                <tr>
-                    <td><strong>${item.element || ''}</strong></td>
-                    <td>${item.content || ''}</td>
-                </tr>
-            `).join('');
-        };
-
-        tableBody.querySelectorAll('.composition-btn').forEach(button => {
-            button.addEventListener('click', () => {
-                const materialName = button.getAttribute('data-material');
-                const gbName = button.getAttribute('data-gb');
-                const raw = button.getAttribute('data-composition');
-
-                try {
-                    const parsed = JSON.parse(raw);
-                    modalTitle.textContent = `Химический состав (${materialName} / ${gbName})`;
-                    updateCompositionTable(parsed);
-                    openModal();
-                } catch (error) {
-                    compositionTableBody.innerHTML = '<tr><td colspan="2" class="text-center text-danger">Не удалось загрузить состав.</td></tr>';
-                    openModal();
-                }
-            });
-        });
 
         const filterTable = () => {
             const query = searchInput.value.trim().toLowerCase();

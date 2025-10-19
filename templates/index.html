@@ -66,8 +66,13 @@
                             <div class="field-group inline">
                                 <label for="logistics" class="field-label">Стоимость логистики (руб.)</label>
                                 <input type="number" id="logistics" name="logistics" min="0" step="0.01" required
-                                       value="{{ form_data.logistics if form_data and form_data.logistics else '' }}" readonly>
+                                       value="{{ form_data.logistics if form_data and form_data.logistics else '' }}"
+                                       placeholder="Введите вручную или используйте подсказку">
                             </div>
+                        </div>
+                        <div class="logistics-helper" id="logisticsHelper" hidden>
+                            <span class="muted-text">Подсказка: <strong id="logisticsHelperValue"></strong></span>
+                            <button type="button" class="btn btn-ghost btn-xs" id="applyLogisticsSuggestion">Использовать подсказку</button>
                         </div>
                         <button type="button" class="btn btn-ghost btn-sm" id="calculateMainLogistics">Пересчитать логистику</button>
                     </div>
@@ -312,6 +317,9 @@
         const weightOutputField = document.getElementById('totalWeightValue');
         const pillTotalWeight = document.getElementById('pillTotalWeight');
         const logisticsInput = document.getElementById('logistics');
+        const logisticsHelper = document.getElementById('logisticsHelper');
+        const logisticsHelperValue = document.getElementById('logisticsHelperValue');
+        const applyLogisticsSuggestionBtn = document.getElementById('applyLogisticsSuggestion');
         const mainTransportRadios = document.querySelectorAll('input[name="mainTransport"]');
         const mainCalcTypeRadios = document.querySelectorAll('input[name="mainCalcType"]');
         const mainLogisticsBtn = document.getElementById('calculateMainLogistics');
@@ -941,6 +949,15 @@
             return total;
         }
 
+        const clearLogisticsSuggestion = () => {
+            if (logisticsHelper) {
+                logisticsHelper.hidden = true;
+            }
+            if (logisticsHelperValue) {
+                logisticsHelperValue.textContent = '';
+            }
+        };
+
         const clearSelectedCity = () => {
             if (mainSelectedCityName) {
                 mainSelectedCityName.value = '';
@@ -948,9 +965,7 @@
             if (mainSelectedCityPrice) {
                 mainSelectedCityPrice.value = '';
             }
-            if (logisticsInput) {
-                logisticsInput.value = '';
-            }
+            clearLogisticsSuggestion();
         };
 
         function refreshLogisticsValue() {
@@ -960,7 +975,7 @@
 
             const selectedCityName = (mainSelectedCityName?.value || '').toLowerCase();
             if (!selectedCityName) {
-                logisticsInput.value = '';
+                clearLogisticsSuggestion();
                 if (mainSelectedCityPrice) {
                     mainSelectedCityPrice.value = '';
                 }
@@ -974,7 +989,7 @@
 
             const matchedCity = cities.find(city => (city.name || '').toLowerCase() === selectedCityName);
             if (!matchedCity) {
-                logisticsInput.value = '';
+                clearLogisticsSuggestion();
                 if (mainSelectedCityPrice) {
                     mainSelectedCityPrice.value = '';
                 }
@@ -987,7 +1002,16 @@
             }
 
             const totalLogistics = calculateLogistics(price, transportType, calcType, totalWeight);
-            logisticsInput.value = Number.isFinite(totalLogistics) ? Math.round(totalLogistics).toString() : '';
+            if (Number.isFinite(totalLogistics)) {
+                if (logisticsHelper) {
+                    logisticsHelper.hidden = false;
+                }
+                if (logisticsHelperValue) {
+                    logisticsHelperValue.textContent = `${Math.round(totalLogistics).toLocaleString('ru-RU')} руб.`;
+                }
+            } else {
+                clearLogisticsSuggestion();
+            }
         }
 
         mainTransportRadios.forEach(radio => {
@@ -1159,6 +1183,27 @@
             refreshLogisticsValue();
         } else {
             clearSelectedCity();
+        }
+
+        if (applyLogisticsSuggestionBtn && logisticsInput) {
+            applyLogisticsSuggestionBtn.addEventListener('click', () => {
+                const suggestion = logisticsHelperValue?.textContent || '';
+                if (!suggestion) {
+                    return;
+                }
+                const numeric = suggestion.replace(/[^0-9.,]/g, '').replace(',', '.');
+                const parsed = Number.parseFloat(numeric);
+                if (Number.isFinite(parsed)) {
+                    logisticsInput.value = Math.round(parsed).toString();
+                    clearLogisticsSuggestion();
+                }
+            });
+        }
+
+        if (logisticsInput) {
+            logisticsInput.addEventListener('input', () => {
+                clearLogisticsSuggestion();
+            });
         }
 
         const validateNumberBounds = (field, value) => {

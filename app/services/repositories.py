@@ -96,7 +96,23 @@ class GenerationRepository:
         return database.get_generations_by_drawing(drawing_number)
 
 
+class AdminStatsRepository:
+    """Предоставляет агрегированные данные для административной панели."""
+
+    def get_user_activity(self, limit: int = 10):
+        """Возвращает статистику пользовательской активности."""
+        return database.get_admin_user_activity(limit)
+
+
 user_repository = UserRepository()
 generation_repository = GenerationRepository()
+admin_stats_repository = AdminStatsRepository()
 
-__all__ = ['user_repository', 'generation_repository', 'UserRepository', 'GenerationRepository']
+__all__ = [
+    'user_repository',
+    'generation_repository',
+    'admin_stats_repository',
+    'UserRepository',
+    'GenerationRepository',
+    'AdminStatsRepository',
+]

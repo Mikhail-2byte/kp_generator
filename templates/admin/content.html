@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="content-container">
+    <div class="card page-actions">
+        <a href="{{ url_for('admin.admin_panel') }}" class="btn btn-outline">← Назад к админке</a>
+    </div>
+
+    <div class="card">
+        {% include 'admin/partials/table.html' %}
+    </div>
+</div>
+{% endblock %}
+
+{% block overlays %}
+{{ super() }}
+{% include 'admin/partials/modals.html' %}
+{% endblock %}
+
+{% block extra_scripts %}
+{{ super() }}
+<script>
+    (function() {
+        const fillModal = (modal, data) => {
+            if (!modal) {
+                return;
+            }
+            modal.querySelectorAll('[data-field]').forEach((element) => {
+                const key = element.dataset.field;
+                if (!key) {
+                    return;
+                }
+                if (key === 'files') {
+                    const filesValue = (data.files || [])
+                        .map((file) => `${file.label || ''} | ${file.filename || ''}`.trim())
+                        .join('\n');
+                    element.value = filesValue;
+                } else if (key === 'id') {
+                    element.value = data.id || '';
+                } else {
+                    element.value = data[key] || '';
+                }
+            });
+        };
+
+        document.querySelectorAll('[data-modal-target][data-entry]').forEach((button) => {
+            button.addEventListener('click', () => {
+                const targetId = button.dataset.modalTarget;
+                const modal = document.getElementById(targetId);
+                if (!modal) {
+                    return;
+                }
+                try {
+                    const payload = JSON.parse(button.dataset.entry);
+                    fillModal(modal, payload);
+                } catch (error) {
+                    console.error('Failed to parse entry payload', error);
+                }
+            });
+        });
+    })();
+</script>
+{% endblock %}

@@ -110,9 +110,6 @@ def update_all_formulas(sheet, deleted_row, original_row_31_height=None):
     # Обновляем ячейку I39 (теперь она должна быть на позиции total_row_position + 8)
     update_i39_formula(sheet, total_row_position)
     
-    # Обновляем ячейки во второй таблице
-    update_second_table_formulas(sheet, total_row_position)
-    
     # Обновляем ячейку K35 (теперь она должна быть на позиции total_row_position + 4)
     update_k35_formula(sheet, total_row_position)
     
@@ -144,47 +141,6 @@ def update_i39_formula(sheet, total_row_position):
     except Exception as e:
         print(f"Ошибка при обновлении ячейки I39: {str(e)}")
 
-def update_second_table_formulas(sheet, total_row_position):
-    """
-    Обновляет формулы во второй таблице (Итого по бюджету сделки)
-    """
-    try:
-        # Находим начало второй таблицы по заголовку
-        second_table_start = None
-        for row in range(total_row_position + 10, min(total_row_position + 20, sheet.max_row + 1)):
-            if sheet[f'B{row}'].value and "Итого по бюджету сделки" in str(sheet[f'B{row}'].value):
-                second_table_start = row
-                break
-        
-        if not second_table_start:
-            print("Вторая таблица не найдена")
-            return
-            
-        print(f"Начало второй таблицы: строка {second_table_start}")
-        
-        # Находим строки с "Прогноз выручки по контракту" и "Сумма НДС"
-        revenue_row = None
-        vat_row = None
-        
-        for row in range(second_table_start + 1, min(second_table_start + 10, sheet.max_row + 1)):
-            cell_value = sheet[f'B{row}'].value
-            if cell_value:
-                if "Прогноз выручки по контракту" in str(cell_value):
-                    revenue_row = row
-                elif "Сумма НДС" in str(cell_value):
-                    vat_row = row
-        
-        # Обновляем формулы
-        if revenue_row:
-            sheet[f'I{revenue_row}'] = f"=I{total_row_position}"
-            print(f"Обновлена формула в I{revenue_row} (Прогноз выручки): =I{total_row_position}")
-        
-        if vat_row:
-            sheet[f'I{vat_row}'] = f"=I{revenue_row}/120*20" if revenue_row else f"=I{total_row_position}/120*20"
-            print(f"Обновлена формула в I{vat_row} (Сумма НДС): {sheet[f'I{vat_row}'].value}")
-            
-    except Exception as e:
-        print(f"Ошибка при обновлении второй таблицы: {str(e)}")
 
 def update_k35_formula(sheet, total_row_position):
     """
@@ -213,13 +169,10 @@ def update_k35_formula(sheet, total_row_position):
             sheet[f'K{new_k35_row}'] = new_formula
             print(f"Обновлена формула в K{new_k35_row}: {new_formula}")
         else:
-            # Если не нашли, ищем по относительному положению
-            delivery_row = total_row_position + 1
-            payment_row = total_row_position + 3
-            if delivery_row <= sheet.max_row and payment_row <= sheet.max_row:
-                new_formula = f"=I{delivery_row}+I{payment_row}"
-                sheet[f'K{new_k35_row}'] = new_formula
-                print(f"Обновлена формула в K{new_k35_row} (относительное): {new_formula}")
+            # Если не нашли, используем стандартное смещение
+            new_formula = f"=I{new_k35_row-1}+I{new_k35_row}"
+            sheet[f'K{new_k35_row}'] = new_formula
+            print(f"Обновлена формула в K{new_k35_row} (стандартное смещение): {new_formula}")
             
     except Exception as e:
         print(f"Ошибка при обновлении ячейки K35: {str(e)}")
@@ -290,7 +243,7 @@ def update_total_row_formulas(sheet, last_data_row, total_row_position):
         'Q': f'=SUM(Q10:Q{last_data_row})',  # Итого вес, кг
         'S': f'=SUM(S10:S{last_data_row})',  # ИТОГО Логистики КНР
         'U': f'=SUM(U10:U{last_data_row})',  # ИТОГО Логистика РФ
-        'Y': f'=SUM(Y10:Y{last_data_row})',  # Пошлина (сумма),
+        'Y': f'=SUM(Y10:Y{last_data_row})',  # Пошлина (сумма)
     }
     
     for col, formula in total_formulas.items():
@@ -376,38 +329,143 @@ def show_detailed_preview():
             print(f"Текущая позиция ячейки I39: строка {i39_position}")
             print(f"Формула в I{i39_position}: {sheet[f'I{i39_position}'].value}")
         
-        # Находим вторую таблицу
-        second_table_start = None
-        revenue_row = None
-        vat_row = None
+        # Находим текущую позицию ячейки K35
+        k35_position = total_row_position + 4
+        if k35_position <= sheet.max_row:
+            print(f"Текущая позиция ячейки K35: строка {k35_position}")
+            print(f"Формула в K{k35_position}: {sheet[f'K{k35_position}'].value}")
         
-        for row in range(total_row_position + 10, min(total_row_position + 20, sheet.max_row + 1)):
-            cell_value = sheet[f'B{row}'].value
-            if cell_value:
-                if "Итого по бюджету сделки" in str(cell_value):
-                    second_table_start = row
-                elif "Прогноз выручки по контракту" in str(cell_value):
-                    revenue_row = row
-                elif "Сумма НДС" in str(cell_value):
-                    vat_row = row
+        # Находим текущие позиции ячеек O36 и O37
+        o36_position = total_row_position + 5
+        o37_position = total_row_position + 6
         
-        if second_table_start:
-            print(f"Вторая таблица начинается: строка {second_table_start}")
+        if o36_position <= sheet.max_row:
+            print(f"Текущая позиция ячейки O36: строка {o36_position}")
+            print(f"Формула в O{o36_position}: {sheet[f'O{o36_position}'].value}")
+            
+        if o37_position <= sheet.max_row:
+            print(f"Текущая позиция ячейки O37: строка {o37_position}")
+            print(f"Формула в O{o37_position}: {sheet[f'O{o37_position}'].value}")
         
-        if revenue_row:
-            print(f"Строка с прогнозом выручки: {revenue_row}")
-            print(f"Формула в I{revenue_row}: {sheet[f'I{revenue_row}'].value}")
+        # Показываем высоты строк
+        print(f"Высота строки {total_row_position}: {sheet.row_dimensions[total_row_position].height if total_row_position in sheet.row_dimensions else 'по умолчанию'}")
         
-        if vat_row:
-            print(f"Строка с НДС: {vat_row}")
-            print(f"Формула в I{vat_row}: {sheet[f'I{vat_row}'].value}")
+        # Показываем формулы для нескольких строк данных
+        start_row = 10
+        end_row = min(15, last_data_row)
+        
+        for row in range(start_row, end_row + 1):
+            print(f"Строка {row}:")
+            for col in ['I', 'J', 'L', 'N', 'O', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'Y', 'Z']:
+                cell = f"{col}{row}"
+                formula = sheet[cell].value
+                if formula and str(formula).startswith('='):
+                    print(f"  {cell}: {formula}")
+            print()
+        
+        # Показываем итоговую строку
+        print(f"Итоговая строка {total_row_position}:")
+        for col in ['I', 'O', 'Q', 'S', 'U', 'X', 'Y', 'Z']:
+            cell = f"{col}{total_row_position}"
+            formula = sheet[cell].value
+            if formula and str(formula).startswith('='):
+                print(f"  {cell}: {formula}")
+        
+        # Показываем ИТОГО с НДС
+        nds_row = total_row_position + 1
+        if sheet[f'I{nds_row}'].value and str(sheet[f'I{nds_row}'].value).startswith('='):
+            print(f"  I{nds_row}: {sheet[f'I{nds_row}'].value}")
         
         workbook.close()
     except Exception as e:
         print(f"Ошибка при детальном просмотре: {str(e)}")
 
+def show_file_preview():
+    """Функция для показа общего просмотра файла"""
+    try:
+        workbook = openpyxl.load_workbook("Обработанный.xlsx")
+        sheet = workbook.active
+        
+        # Определяем последнюю строку с данными
+        last_data_row = find_last_data_row(sheet)
+        total_row_position = last_data_row + 1
+        
+        print(f"\nОбщий просмотр:")
+        print(f"Последняя строка с данными: {last_data_row}")
+        print(f"Итоговая строка: {total_row_position}")
+        
+        # Находим текущую позицию ячейки I39
+        i39_position = total_row_position + 8
+        if i39_position <= sheet.max_row:
+            print(f"Текущая позиция ячейки I39: строка {i39_position}")
+            print(f"Формула в I{i39_position}: {sheet[f'I{i39_position}'].value}")
+        
+        # Находим текущую позицию ячейки K35
+        k35_position = total_row_position + 4
+        if k35_position <= sheet.max_row:
+            print(f"Текущая позиция ячейки K35: строка {k35_position}")
+            print(f"Формула в K{k35_position}: {sheet[f'K{k35_position}'].value}")
+        
+        # Находим текущие позиции ячеек O36 и O37
+        o36_position = total_row_position + 5
+        o37_position = total_row_position + 6
+        
+        if o36_position <= sheet.max_row:
+            print(f"Текущая позиция ячейки O36: строка {o36_position}")
+            print(f"Формула в O{o36_position}: {sheet[f'O{o36_position}'].value}")
+            
+        if o37_position <= sheet.max_row:
+            print(f"Текущая позиция ячейки O37: строка {o37_position}")
+            print(f"Формула в O{o37_position}: {sheet[f'O{o37_position}'].value}")
+        
+        # Показываем первые строки данных
+        print(f"\nПервые 5 строк данных:")
+        for row in range(10, min(15, last_data_row + 1)):
+            row_data = []
+            for col in ['A', 'B', 'I', 'J', 'L', 'N', 'O', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'Y', 'Z']:
+                cell_value = sheet[f"{col}{row}"].value
+                if cell_value and str(cell_value).startswith('='):
+                    row_data.append(f"{col}{row}:FORMULA")
+                else:
+                    display_value = str(cell_value)[:15] if cell_value else ""
+                    row_data.append(display_value)
+            print(f"Строка {row}: {' | '.join(row_data)}")
+        
+        # Показываем последние строки данных
+        if last_data_row > 15:
+            print(f"\nПоследние 3 строки данных:")
+            for row in range(max(10, last_data_row - 2), last_data_row + 1):
+                row_data = []
+                for col in ['A', 'B', 'I', 'J', 'L', 'N', 'O', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'Y', 'Z']:
+                    cell_value = sheet[f"{col}{row}"].value
+                    if cell_value and str(cell_value).startswith('='):
+                        row_data.append(f"{col}{row}:FORMULA")
+                    else:
+                        display_value = str(cell_value)[:15] if cell_value else ""
+                        row_data.append(display_value)
+                print(f"Строка {row}: {' | '.join(row_data)}")
+        
+        # Показываем итоговую строку
+        print(f"\nИтоговая строка {total_row_position}:")
+        row_data = []
+        for col in ['I', 'O', 'Q', 'S', 'U', 'X', 'Y', 'Z']:
+            cell_value = sheet[f"{col}{total_row_position}"].value
+            if cell_value and str(cell_value).startswith('='):
+                row_data.append(f"{col}{total_row_position}:FORMULA")
+            else:
+                display_value = str(cell_value)[:15] if cell_value else ""
+                row_data.append(display_value)
+        print(f"Строка {total_row_position}: {' | '.join(row_data)}")
+        
+        workbook.close()
+    except Exception as e:
+        print(f"Ошибка при предварительном просмотре: {str(e)}")
+
 if __name__ == "__main__":
     process_budget_template()
+    
+    # Показываем общий просмотр после обработки
+    show_file_preview()
     
     # Показываем детальный просмотр формул
     show_detailed_preview()

@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="content-container">
+    <div class="card page-actions">
+        <a href="{{ url_for('admin.admin_panel') }}" class="btn btn-outline">← Назад к админке</a>
+    </div>
+
+    <div class="card">
+        <h2 class="section-title">Итоги</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">{{ user_activity.total_generations }}</div>
+                <div class="stat-label">Всего расчётов</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ user_activity.users_count }}</div>
+                <div class="stat-label">Пользователей</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2 class="section-title">Последние входы</h2>
+        <div class="stats-list">
+            {% for item in user_activity.last_logins %}
+            <div class="stats-row">
+                <span class="stats-name">{{ item.username }}</span>
+                <span class="stats-meta">{{ item.last_login }}</span>
+            </div>
+            {% else %}
+            <div class="muted-text">Нет данных.</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="card">
+        <h2 class="section-title">Самые активные пользователи</h2>
+        <div class="stats-list">
+            {% for item in user_activity.users_activity %}
+            <div class="stats-row">
+                <span class="stats-name">{{ item.username }}</span>
+                <span class="stats-meta">{{ item.generations }} расч.</span>
+            </div>
+            {% else %}
+            <div class="muted-text">Нет данных.</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="card">
+        <h2 class="section-title">Популярные материалы</h2>
+        <div class="stats-list">
+            {% for item in user_activity.popular_materials %}
+            <div class="stats-row">
+                <span class="stats-name">{{ item.material }}</span>
+                <span class="stats-meta">{{ item.count }} раз</span>
+            </div>
+            {% else %}
+            <div class="muted-text">Нет данных.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

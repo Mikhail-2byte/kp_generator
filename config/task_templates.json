@@ -10,7 +10,19 @@
           "filename": "Шаблон для внесения позиций.xlsx"
         }
       ],
-      "updated_at": ""
+      "updated_at": null
+    },
+    {
+      "id": "task_templates-98fb55d2",
+      "title": "Тестовый шаблон",
+      "summary": "Это тест",
+      "files": [
+        {
+          "label": "Тестовый_шаблон.docx",
+          "filename": "Тестовый_шаблон.docx"
+        }
+      ],
+      "updated_at": "19.10.2025"
     }
   ]
 }

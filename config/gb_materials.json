@@ -50,6 +50,83 @@
         {"element": "Cu", "content": "до 0.30"},
         {"element": "As", "content": "до 0.08"}
       ]
+    },
+    {
+      "russian": "09Г2С",
+      "gb": "Q345D",
+      "notes": "Низколегированная конструкционная сталь повышенной прочности",
+      "composition": [
+        {"element": "C", "content": "до 0.12"},
+        {"element": "Si", "content": "0.50 – 0.80"},
+        {"element": "Mn", "content": "1.30 – 1.70"},
+        {"element": "S", "content": "до 0.035"},
+        {"element": "P", "content": "до 0.035"},
+        {"element": "Cu", "content": "до 0.35"},
+        {"element": "Ni", "content": "до 0.30"},
+        {"element": "Cr", "content": "до 0.30"},
+        {"element": "Mo", "content": "до 0.10"},
+        {"element": "V", "content": "до 0.08"}
+      ]
+    },
+    {
+      "russian": "12Х18Н10Т",
+      "gb": "0Cr18Ni10Ti",
+      "notes": "Коррозионностойкая сталь (аналог AISI 321)",
+      "composition": [
+        {"element": "C", "content": "до 0.08"},
+        {"element": "Si", "content": "до 0.75"},
+        {"element": "Mn", "content": "до 2.00"},
+        {"element": "P", "content": "до 0.045"},
+        {"element": "S", "content": "до 0.030"},
+        {"element": "Cr", "content": "17.0 – 19.0"},
+        {"element": "Ni", "content": "9.0 – 12.0"},
+        {"element": "Ti", "content": "5×C – 0.70"}
+      ]
+    },
+    {
+      "russian": "20Х",
+      "gb": "20Cr",
+      "notes": "Легированная конструкционная сталь для улучшения",
+      "composition": [
+        {"element": "C", "content": "0.17 – 0.24"},
+        {"element": "Si", "content": "0.17 – 0.37"},
+        {"element": "Mn", "content": "0.50 – 0.80"},
+        {"element": "Cr", "content": "0.80 – 1.10"},
+        {"element": "Ni", "content": "до 0.30"},
+        {"element": "Cu", "content": "до 0.25"},
+        {"element": "S", "content": "до 0.035"},
+        {"element": "P", "content": "до 0.035"}
+      ]
+    },
+    {
+      "russian": "40Х",
+      "gb": "40Cr",
+      "notes": "Конструкционная легированная сталь для деталей повышенной прочности",
+      "composition": [
+        {"element": "C", "content": "0.37 – 0.44"},
+        {"element": "Si", "content": "0.17 – 0.37"},
+        {"element": "Mn", "content": "0.50 – 0.80"},
+        {"element": "Cr", "content": "0.80 – 1.10"},
+        {"element": "S", "content": "до 0.030"},
+        {"element": "P", "content": "до 0.030"},
+        {"element": "Ni", "content": "до 0.30"},
+        {"element": "Cu", "content": "до 0.25"}
+      ]
+    },
+    {
+      "russian": "65Г",
+      "gb": "65Mn",
+      "notes": "Пружинная и рессорная сталь",
+      "composition": [
+        {"element": "C", "content": "0.62 – 0.70"},
+        {"element": "Si", "content": "0.17 – 0.37"},
+        {"element": "Mn", "content": "0.90 – 1.20"},
+        {"element": "Ni", "content": "до 0.25"},
+        {"element": "Cr", "content": "до 0.25"},
+        {"element": "Cu", "content": "до 0.25"},
+        {"element": "S", "content": "до 0.035"},
+        {"element": "P", "content": "до 0.035"}
+      ]
     }
   ]
 }

@@ -1,0 +1,79 @@
+<div class="section-header">
+    <div>
+        <h2 class="section-title">{{ content_meta.title }}</h2>
+        <p class="section-description">{{ content_meta.description }}</p>
+    </div>
+    <button class="btn btn-primary" data-modal-target="modal-{{ content_meta.key }}-create">{{ content_meta.button_label }}</button>
+</div>
+
+<div class="history-table-wrapper">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Идентификатор</th>
+                <th>Название</th>
+                <th>Описание</th>
+                <th>Файлы</th>
+                <th>Обновлено</th>
+                <th style="width:160px;">Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in content_entries %}
+            <tr>
+                <td>{{ entry.identifier }}</td>
+                <td>{{ entry.title }}</td>
+                <td>{{ entry.summary or '—' }}</td>
+                <td>
+                    {% if entry.files %}
+                        {% for file in entry.files %}
+                            <div>{{ file.label }} — {{ file.filename }}</div>
+                        {% endfor %}
+                    {% else %}
+                        <span class="muted-text">—</span>
+                    {% endif %}
+                </td>
+                <td>{{ entry.updated_at or '—' }}</td>
+                <td class="table-actions">
+                    <button type="button" class="btn btn-secondary" data-modal-target="modal-{{ content_meta.key }}-edit" data-entry='{{ {
+                        "id": entry.identifier,
+                        "title": entry.title,
+                        "summary": entry.summary,
+                        "files": entry.files,
+                        "updated_at": entry.updated_at
+                    } | tojson }}'>Редактировать</button>
+                    <form method="post" class="inline-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="action" value="content:delete:{{ content_meta.action_key }}">
+                        <input type="hidden" name="id" value="{{ entry.identifier }}">
+                        <button type="submit" class="btn btn-danger">Удалить</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="muted-text">{{ content_meta.empty_message }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if versions %}
+<div class="versions-section">
+    <h3>Версии</h3>
+    <form method="post" class="versions-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action" value="content:restore:{{ content_meta.action_key }}">
+        <select name="version" class="select-field" required>
+            <option value="" disabled selected>Выберите версию</option>
+            {% for version in versions %}
+                <option value="{{ version.filename }}">
+                    {{ version.saved_at }} — {{ version.actor or 'system' }}
+                </option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-secondary">Восстановить</button>
+    </form>
+</div>
+{% endif %}

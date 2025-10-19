@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="content-container">
+    <div class="card page-actions">
+        <a href="{{ url_for('admin.admin_panel') }}" class="btn btn-outline">← Назад к админке</a>
+    </div>
+
+    <div class="card">
+        <h2 class="section-title">Добавление ставки пошлины</h2>
+        <p class="section-description">Заполняйте форму, чтобы добавить новую позицию в справочник пошлин.</p>
+        <form method="post" class="form-grid three-columns">
+            {{ duty_form.hidden_tag() }}
+            <div class="field-group">
+                {{ duty_form.product.label(class_='field-label') }}
+                {{ duty_form.product(class_='') }}
+                {% for error in duty_form.product.errors %}
+                    <div class="field-error">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <div class="field-group">
+                {{ duty_form.category.label(class_='field-label') }}
+                {{ duty_form.category(class_='') }}
+                {% for error in duty_form.category.errors %}
+                    <div class="field-error">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <div class="field-group">
+                {{ duty_form.duty_percent.label(class_='field-label') }}
+                {{ duty_form.duty_percent(class_='') }}
+                {% for error in duty_form.duty_percent.errors %}
+                    <div class="field-error">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <div class="controls-row">
+                <span></span>
+                {{ duty_form.submit(class_='btn btn-primary') }}
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2 class="section-title">Список ставок</h2>
+        <div class="history-table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Товар</th>
+                        <th>Категория</th>
+                        <th>Пошлина, %</th>
+                        <th style="width:140px;">Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in duty_items %}
+                    <tr>
+                        <td>{{ item.product }}</td>
+                        <td>{{ item.category }}</td>
+                        <td>{{ item.duty_percent|format_number(2) }}</td>
+                        <td class="table-actions">
+                            <form method="post" class="inline-form">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="action" value="delete_duty">
+                                <input type="hidden" name="index" value="{{ loop.index0 }}">
+                                <button type="submit" class="btn btn-danger">Удалить</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="muted-text">Позиции не найдены.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

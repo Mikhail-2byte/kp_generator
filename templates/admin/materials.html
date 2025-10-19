@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="content-container">
+    <div class="card page-actions">
+        <a href="{{ url_for('admin.admin_panel') }}" class="btn btn-outline">← Назад к админке</a>
+    </div>
+
+    <div class="card">
+        <h2 class="section-title">Добавление материала</h2>
+        <p class="section-description">Заполните форму для добавления аналога материала GB.</p>
+        <form method="post" class="form-grid two-columns">
+            {{ gb_form.hidden_tag() }}
+            <div class="field-group">
+                {{ gb_form.russian.label(class_='field-label') }}
+                {{ gb_form.russian(class_='') }}
+                {% for error in gb_form.russian.errors %}
+                    <div class="field-error">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <div class="field-group">
+                {{ gb_form.gb.label(class_='field-label') }}
+                {{ gb_form.gb(class_='') }}
+                {% for error in gb_form.gb.errors %}
+                    <div class="field-error">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <div class="field-group span-2">
+                {{ gb_form.notes.label(class_='field-label') }}
+                {{ gb_form.notes(class_='') }}
+                {% for error in gb_form.notes.errors %}
+                    <div class="field-error">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <div class="field-group span-2">
+                {{ gb_form.composition.label(class_='field-label') }}
+                {{ gb_form.composition(rows=4, class_='') }}
+                {% for error in gb_form.composition.errors %}
+                    <div class="field-error">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <div class="controls-row">
+                <span></span>
+                {{ gb_form.submit(class_='btn btn-primary') }}
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2 class="section-title">Справочник аналогов</h2>
+        <div class="history-table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Наименование (RU)</th>
+                        <th>Наименование (GB)</th>
+                        <th>Состав</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for material in gb_materials %}
+                    <tr>
+                        <td>{{ material.russian }}</td>
+                        <td>{{ material.gb }}</td>
+                        <td>
+                            {% if material.composition %}
+                                <div class="composition-inline">
+                                    {% for component in material.composition %}
+                                        <span>{{ component.element }} — {{ component.content }}{% if not loop.last %}; {% endif %}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <span class="muted-text">Нет данных</span>
+                            {% endif %}
+                        </td>
+                        <td class="table-actions">
+                            <form method="post" class="inline-form">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="action" value="delete_gb">
+                                <input type="hidden" name="index" value="{{ loop.index0 }}">
+                                <button type="submit" class="btn btn-danger">Удалить</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="muted-text">Материалы не найдены.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -10,7 +10,14 @@
           "filename": "Инструкция №1.docx"
         }
       ],
-      "updated_at": ""
+      "updated_at": null
+    },
+    {
+      "id": "instructions-d62fa5fd",
+      "title": "Тестовая инструкция",
+      "summary": "Тест",
+      "files": [],
+      "updated_at": "19.10.2025"
     }
   ]
 }

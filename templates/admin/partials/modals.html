@@ -1,0 +1,49 @@
+{% macro content_form(action, target_id, title_label) %}
+<form method="post" class="modal-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="action" value="{{ action }}">
+    <input type="hidden" name="id" data-field="id">
+    <div class="form-grid">
+        <div class="field-group span-3">
+            <label class="field-label" for="{{ target_id }}-title">Название</label>
+            <input type="text" id="{{ target_id }}-title" name="title" required data-field="title">
+        </div>
+        <div class="field-group span-3">
+            <label class="field-label" for="{{ target_id }}-summary">Описание</label>
+            <textarea id="{{ target_id }}-summary" name="summary" rows="3" data-field="summary"></textarea>
+        </div>
+        <div class="field-group span-3">
+            <label class="field-label" for="{{ target_id }}-files">Файлы (каждый с новой строки, формат: LABEL | filename.ext)</label>
+            <textarea id="{{ target_id }}-files" name="files" rows="4" data-field="files"></textarea>
+        </div>
+        <div class="field-group">
+            <label class="field-label" for="{{ target_id }}-updated">Дата обновления</label>
+            <input type="text" id="{{ target_id }}-updated" name="updated_at" placeholder="например, 19.10.2025" data-field="updated_at">
+        </div>
+    </div>
+    <div class="modal-actions">
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+        <button type="button" class="btn btn-secondary" data-close-modal>Отмена</button>
+    </div>
+</form>
+{% endmacro %}
+
+<div class="modal" id="modal-{{ content_meta.key }}-create" aria-hidden="true">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>{{ content_meta.modal_create_title }}</h2>
+            <button type="button" class="modal-close" data-close-modal>&times;</button>
+        </div>
+        {{ content_form('content:add:' ~ content_meta.action_key, content_meta.key ~ '-create', content_meta.title_field_label) }}
+    </div>
+</div>
+
+<div class="modal" id="modal-{{ content_meta.key }}-edit" aria-hidden="true">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>{{ content_meta.modal_edit_title }}</h2>
+            <button type="button" class="modal-close" data-close-modal>&times;</button>
+        </div>
+        {{ content_form('content:update:' ~ content_meta.action_key, content_meta.key ~ '-edit', content_meta.title_field_label) }}
+    </div>
+</div>

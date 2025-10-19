@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="content-container">
+    <div class="card page-actions">
+        <a href="{{ url_for('admin.admin_panel') }}" class="btn btn-outline">← Назад к админке</a>
+    </div>
+
+    <div class="card">
+        <h2 class="section-title">Добавление города</h2>
+        <p class="section-description">Укажите тарифы для перевозки в указанный город.</p>
+        <form method="post" class="form-grid">
+            {{ logistics_form.hidden_tag() }}
+            <div class="field-group">
+                {{ logistics_form.name.label(class_='field-label') }}
+                {{ logistics_form.name(class_='') }}
+                {% for error in logistics_form.name.errors %}
+                    <div class="field-error">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <div class="field-group">
+                {{ logistics_form.region.label(class_='field-label') }}
+                {{ logistics_form.region(class_='') }}
+                {% for error in logistics_form.region.errors %}
+                    <div class="field-error">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <div class="field-group">
+                {{ logistics_form.truck_price.label(class_='field-label') }}
+                {{ logistics_form.truck_price(class_='') }}
+                {% for error in logistics_form.truck_price.errors %}
+                    <div class="field-error">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <div class="field-group">
+                {{ logistics_form.trail_price.label(class_='field-label') }}
+                {{ logistics_form.trail_price(class_='') }}
+                {% for error in logistics_form.trail_price.errors %}
+                    <div class="field-error">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <div class="controls-row">
+                <span></span>
+                {{ logistics_form.submit(class_='btn btn-primary') }}
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2 class="section-title">Справочник городов</h2>
+        <div class="history-table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Город</th>
+                        <th>Регион</th>
+                        <th>Фура, руб.</th>
+                        <th>Трал, руб.</th>
+                        <th style="width:140px;">Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for city in logistics_cities %}
+                    <tr>
+                        <td>{{ city.name }}</td>
+                        <td>{{ city.region or '—' }}</td>
+                        <td>{{ city.truck_price|format_number(0) }}</td>
+                        <td>{{ city.trail_price|format_number(0) }}</td>
+                        <td class="table-actions">
+                            <form method="post" class="inline-form">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="action" value="delete_city">
+                                <input type="hidden" name="index" value="{{ loop.index0 }}">
+                                <button type="submit" class="btn btn-danger">Удалить</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="muted-text">Города не найдены.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

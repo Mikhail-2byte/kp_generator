@@ -399,6 +399,95 @@ def get_user_statistics(user_id) -> Dict[str, object]:
         }
 
 
+def get_admin_user_activity(limit: int = 10) -> Dict[str, object]:
+    """Формирует агрегаты активности пользователей для административной панели."""
+    try:
+        with _session_scope() as session:
+            total_generations = session.query(func.count(GenerationHistoryRecord.id)).scalar() or 0
+            users_count = session.query(func.count(UserRecord.id)).scalar() or 0
+
+            last_logins = (
+                session.query(
+                    UserRecord.username,
+                    UserRecord.last_login,
+                    func.coalesce(UserRecord.last_name, ''),
+                    func.coalesce(UserRecord.first_name, '')
+                )
+                .order_by(UserRecord.last_login.desc().nullslast())
+                .limit(limit)
+                .all()
+            )
+
+            users_activity = (
+                session.query(
+                    UserRecord.username,
+                    func.coalesce(UserRecord.last_name, ''),
+                    func.coalesce(UserRecord.first_name, ''),
+                    func.count(GenerationHistoryRecord.id).label('generations')
+                )
+                .outerjoin(GenerationHistoryRecord, GenerationHistoryRecord.user_id == UserRecord.id)
+                .group_by(UserRecord.id)
+                .order_by(func.count(GenerationHistoryRecord.id).desc())
+                .limit(limit)
+                .all()
+            )
+
+            popular_materials = (
+                session.query(
+                    GenerationHistoryRecord.material,
+                    func.count(GenerationHistoryRecord.id).label('total')
+                )
+                .filter(GenerationHistoryRecord.material.isnot(None))
+                .filter(func.trim(GenerationHistoryRecord.material) != '')
+                .group_by(GenerationHistoryRecord.material)
+                .order_by(func.count(GenerationHistoryRecord.id).desc())
+                .limit(limit)
+                .all()
+            )
+
+            def _display_name(username, last_name, first_name):
+                full_name = ' '.join(value for value in [last_name, first_name] if value).strip()
+                return full_name or username
+
+            formatted_logins = [
+                {
+                    'username': _display_name(username, last_name, first_name),
+                    'last_login': _format_timestamp(last_login) if last_login else '—'
+                }
+                for username, last_login, last_name, first_name in last_logins
+            ]
+
+            formatted_activity = [
+                {
+                    'username': _display_name(username, last_name, first_name),
+                    'generations': generations
+                }
+                for username, last_name, first_name, generations in users_activity
+            ]
+
+            formatted_materials = [
+                {'material': material, 'count': total}
+                for material, total in popular_materials
+            ]
+
+            return {
+                'total_generations': total_generations,
+                'users_count': users_count,
+                'last_logins': formatted_logins,
+                'users_activity': formatted_activity,
+                'popular_materials': formatted_materials,
+            }
+    except Exception as exc:  # pragma: no cover - логирование ошибок
+        logging.error('Failed to build admin user activity stats: %s', exc)
+        return {
+            'total_generations': 0,
+            'users_count': 0,
+            'last_logins': [],
+            'users_activity': [],
+            'popular_materials': [],
+        }
+
+
 def update_user_profile(
     user_id,
     username,

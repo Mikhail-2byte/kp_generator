@@ -5,10 +5,24 @@ import os
 from io import BytesIO
 from datetime import datetime
 import zipfile
-from app.helpers import get_safe_filename
+from app.helpers import get_safe_filename, extract_positions_from_form
+from app.services.multi_position_processor import MultiPositionProcessor
 
 def generate_excel_document(template_path, form_data, final_price, general_prise):
     """Заполняет Excel-шаблон значениями расчёта и возвращает файл в памяти."""
+    # Извлекаем позиции из формы
+    positions = extract_positions_from_form(form_data)
+    
+    # Если только одна позиция, используем старый метод для совместимости
+    if len(positions) == 1:
+        return generate_single_position_excel(template_path, form_data, final_price, general_prise)
+    
+    # Для множественных позиций используем новый процессор
+    processor = MultiPositionProcessor(template_path)
+    return processor.process_multiple_positions(positions, form_data, final_price, general_prise)
+
+def generate_single_position_excel(template_path, form_data, final_price, general_prise):
+    """Заполняет Excel-шаблон для одной позиции (старый метод)."""
     wb = load_workbook(template_path)
     ws = wb.active
     

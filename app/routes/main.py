@@ -17,7 +17,8 @@ from flask_login import current_user
 
 from app.calculate import calculate_selling_price
 from app.document_generator import create_zip_archive, generate_excel_document, generate_word_document
-from app.helpers import check_templates_exist, validate_form_data
+from app.helpers import check_templates_exist, validate_form_data, extract_positions_from_form
+from app.services.multi_position_calculator import MultiPositionCalculator
 from app.services import (
     AnalyticsProcessingError,
     analyze_excel,
@@ -302,29 +303,39 @@ def generate():
 
     try:
         company = form_data['company'].strip()
-        quantity = int(form_data['quantity'])
-        cost_price = float(form_data['cost_price'])
-        weight = float(form_data['weight'])
         logistics_rub = float(form_data['logistics'])
         margin_percent = float(form_data['margin_percent'])
         delivery_time = int(form_data['delivery_time'])
-        duty_percent = float(form_data.get('duty_percent', 0))
-
+        
+        # Извлекаем позиции из формы
+        positions = extract_positions_from_form(form_data)
+        
         app_config = current_app.config['APP_SETTINGS']
-
-        final_price = calculate_selling_price(
-            quantity=quantity,
-            purchase_cost=cost_price,
-            logistics_rub=logistics_rub,
-            duty_percent=duty_percent,
-            weight=weight,
-            delivery_time=delivery_time,
-            margin_percent=margin_percent,
-            config=app_config
-        )
-
-        general_price = final_price * quantity
-        final_price_nds = general_price * 1.2
+        
+        # Создаем калькулятор для множественных позиций
+        calculator = MultiPositionCalculator(app_config)
+        
+        # Рассчитываем цены с единой итоговой маржой
+        if len(positions) == 1:
+            # Для одной позиции используем старый метод
+            result = calculator.calculate_legacy_single_position(
+                positions[0], logistics_rub, delivery_time, margin_percent
+            )
+            position_prices = [result]
+            total_general_price = result['general_price']
+        else:
+            # Для множественных позиций используем новый метод с единой маржой
+            calculation_result = calculator.calculate_multi_position_prices(
+                positions, logistics_rub, delivery_time, margin_percent
+            )
+            position_prices = calculation_result['positions']
+            total_general_price = calculation_result['total_revenue']
+        
+        # Для совместимости с существующим кодом используем первую позицию
+        first_position = position_prices[0]
+        final_price = first_position['final_price']
+        general_price = first_position['general_price']
+        final_price_nds = total_general_price * 1.2
 
         user_id = int(current_user.id) if current_user.is_authenticated else None
         if not generation_repository.save_history(form_data, final_price, app_config, user_id):
@@ -343,8 +354,8 @@ def generate():
         excel_template_path = 'templates_docs/template.xlsx'
         word_template_path = 'templates_docs/template.docx'
 
-        excel_file = generate_excel_document(excel_template_path, form_data, final_price, general_price)
-        word_file = generate_word_document(word_template_path, form_data, final_price, general_price, final_price_nds)
+        excel_file = generate_excel_document(excel_template_path, form_data, final_price, total_general_price)
+        word_file = generate_word_document(word_template_path, form_data, final_price, total_general_price, final_price_nds)
         zip_buffer, file_prefix = create_zip_archive(excel_file, word_file, company)
 
         return send_file(

@@ -1252,6 +1252,296 @@ button[disabled] {
   padding: 10px 16px;
 }
 
+/* Улучшенные стили для модального окна истории */
+.modal-dialog-large {
+  width: 95vw !important;
+  height: 95vh !important;
+  max-width: none !important;
+  max-height: none !important;
+}
+.modal-dialog-large {
+  align-self: flex-start;
+  margin-top: 1vh;
+}
+.modal-header-content {
+  flex: 1;
+}
+
+.modal-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.modal-icon {
+  display: flex;
+  align-items: center;
+  color: var(--primary);
+}
+
+.modal-subtitle {
+  font-size: 14px;
+  color: var(--muted-foreground);
+  margin-top: 4px;
+  font-weight: 400;
+}
+
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  background: var(--muted);
+}
+
+.modal-footer-info {
+  flex: 1;
+}
+
+.modal-timestamp {
+  font-size: 13px;
+  color: var(--muted-foreground);
+}
+
+.modal-body {
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Сетка контента модального окна */
+.modal-content-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+  .modal-content-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1200px) {
+  .modal-content-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Секции информации */
+.info-section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  transition: var(--transition);
+}
+
+.info-section:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
+}
+
+.section-header {
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.section-icon {
+  display: flex;
+  align-items: center;
+  color: var(--primary);
+  font-size: 14px;
+}
+
+/* Сетка информации */
+.info-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 480px) {
+  .info-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px;
+  background: var(--muted);
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+}
+
+.info-item:hover {
+  background: var(--secondary);
+}
+
+.info-item.highlight {
+  background: var(--muted);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+}
+
+.info-item.highlight .info-label {
+  color: var(--muted-foreground);
+}
+
+.info-item.highlight .info-value.price-final {
+  color: rgb(34, 197, 94);
+  font-weight: 700;
+}
+
+.info-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--foreground);
+  word-break: break-word;
+}
+
+.info-value.price-final {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.margin-value {
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.margin-value.margin-good {
+  background: rgba(34, 197, 94, 0.1);
+  color: rgb(34, 197, 94);
+}
+
+.margin-value.margin-warning {
+  background: rgba(245, 158, 11, 0.1);
+  color: rgb(245, 158, 11);
+}
+
+/* Секция комментариев */
+.comment-section {
+  grid-column: 1 / -1;
+}
+
+.comment-content {
+  background: var(--muted);
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  border-left: 4px solid var(--primary);
+  font-style: italic;
+  line-height: 1.4;
+  font-size: 13px;
+}
+
+/* Состояния загрузки и ошибок */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border);
+  border-top: 3px solid var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.error-icon {
+  font-size: 48px;
+  color: var(--destructive);
+  margin-bottom: 16px;
+}
+
+.error-state h4 {
+  margin: 0 0 8px 0;
+  color: var(--destructive);
+  font-size: 18px;
+}
+
+.error-state p {
+  margin: 0;
+  color: var(--muted-foreground);
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .modal-dialog-large {
+    width: 95vw;
+    margin: 12px;
+  }
+  
+  .modal-body {
+    padding: 16px;
+  }
+  
+  .info-section {
+    padding: 16px;
+  }
+  
+  .modal-footer {
+    padding: 12px 16px;
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+  
+  .modal-footer-info {
+    text-align: center;
+  }
+}
+
+/* Базовые стили модального окна */
 .modal {
   position: fixed;
   inset: 0;
@@ -1260,12 +1550,15 @@ button[disabled] {
   justify-content: center;
   background: rgba(15, 23, 42, 0.55);
   backdrop-filter: blur(4px);
-  padding: 24px;
-  z-index: 40;
+  padding: 1.5vh;
+  z-index: 80;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .modal.is-open {
   display: flex;
+  opacity: 1;
 }
 
 .modal-content {
@@ -1280,9 +1573,27 @@ button[disabled] {
   flex-direction: column;
 }
 
+.modal-dialog {
+  width: min(640px, 100%);
+  max-height: 90vh;
+  background: var(--card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transform: scale(0.9) translateY(20px);
+  transition: transform 0.3s ease;
+}
+
+.modal.is-open .modal-dialog {
+  transform: scale(1) translateY(0);
+}
+
 .modal-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
   padding: 20px 24px;
@@ -1299,10 +1610,21 @@ button[disabled] {
 .modal-close {
   background: transparent;
   border: none;
-  font-size: 26px;
+  font-size: 24px;
   line-height: 1;
   cursor: pointer;
   color: var(--muted-foreground);
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close:hover {
+  background: var(--muted);
+  color: var(--foreground);
 }
 
 .modal-content .modal-form {

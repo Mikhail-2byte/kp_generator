@@ -84,14 +84,35 @@
 
 {% block overlays %}
 <div class="modal" id="detailsModal" aria-hidden="true" role="dialog" aria-modal="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-large">
         <div class="modal-header">
-            <h3 class="modal-title" id="detailsModalLabel">Детали коммерческого предложения</h3>
-            <button type="button" class="flash-close" data-close-modal>{{ sidebar_icon('x')|safe }}</button>
+            <div class="modal-header-content">
+                <h3 class="modal-title" id="detailsModalLabel">
+                    <span class="modal-icon">{{ sidebar_icon('file-text')|safe }}</span>
+                    Детали коммерческого предложения
+                </h3>
+                <div class="modal-subtitle" id="modalSubtitle"></div>
+            </div>
+            <button type="button" class="modal-close" data-close-modal aria-label="Закрыть">
+                {{ sidebar_icon('x')|safe }}
+            </button>
         </div>
-        <div class="modal-body" id="modalDetailsContent"></div>
-        <div class="modal-actions">
-            <button type="button" class="btn btn-outline" data-close-modal>Закрыть</button>
+        <div class="modal-body" id="modalDetailsContent">
+            <div class="loading-state">
+                <div class="loading-spinner"></div>
+                <p>Загрузка данных...</p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <div class="modal-footer-info">
+                <span class="modal-timestamp" id="modalTimestamp"></span>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" data-close-modal>
+                    <span>{{ sidebar_icon('x')|safe }}</span>
+                    Закрыть
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -112,15 +133,29 @@
         const openModal = () => {
             modal.classList.add('is-open');
             modal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden'; // Блокируем прокрутку фона
         };
 
         const closeModal = () => {
             modal.classList.remove('is-open');
             modal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = ''; // Восстанавливаем прокрутку
         };
 
+        // Обработчики закрытия модального окна
         document.addEventListener('click', (event) => {
             if (event.target.hasAttribute('data-close-modal')) {
+                closeModal();
+            }
+            // Закрытие при клике на фон модального окна
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Закрытие по клавише Escape
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && modal.classList.contains('is-open')) {
                 closeModal();
             }
         });
@@ -128,41 +163,126 @@
         const renderDetails = (data) => {
             const format = (value, empty = 'Не указан') => value ? value : empty;
             const formatCurrency = (value) => Number(value || 0).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const formatNumber = (value) => Number(value || 0).toLocaleString('ru-RU');
             const authorName = [data.last_name, data.first_name].filter(Boolean).join(' ').trim();
             const authorDisplay = authorName || data.username || 'Не указан';
+            
+            // Обновляем заголовок и подзаголовок
+            document.getElementById('modalSubtitle').textContent = `${format(data.company)} • ${format(data.product)}`;
+            document.getElementById('modalTimestamp').textContent = `Создано: ${new Date(data.timestamp).toLocaleString('ru-RU')}`;
 
             modalContent.innerHTML = `
-                <div class="grid-two">
-                    <div>
-                        <h4 class="section-title">Основная информация</h4>
-                        <p><strong>Компания:</strong> ${format(data.company)}</p>
-                        <p><strong>Товар:</strong> ${format(data.product)}</p>
-                        <p><strong>Количество:</strong> ${format(data.quantity)} шт.</p>
-                        <p><strong>Вес единицы:</strong> ${format(data.weight)} кг</p>
-                        <p><strong>Срок поставки:</strong> ${format(data.delivery_time)} дней</p>
+                <div class="modal-content-grid">
+                    <!-- Основная информация -->
+                    <div class="info-section">
+                        <div class="section-header">
+                            <h4 class="section-title">
+                                <span class="section-icon">{{ sidebar_icon('building')|safe }}</span>
+                                Основная информация
+                            </h4>
+                        </div>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">Компания</span>
+                                <span class="info-value">${format(data.company)}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Товар</span>
+                                <span class="info-value">${format(data.product)}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Количество</span>
+                                <span class="info-value">${formatNumber(data.quantity)} шт.</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Вес единицы</span>
+                                <span class="info-value">${formatNumber(data.weight)} кг</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Срок поставки</span>
+                                <span class="info-value">${formatNumber(data.delivery_time)} дней</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Автор</span>
+                                <span class="info-value">${authorDisplay}</span>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <h4 class="section-title">Финансовые показатели</h4>
-                        <p><strong>Закупочная цена:</strong> ${formatCurrency(data.cost_price)} руб.</p>
-                        <p><strong>Логистика:</strong> ${formatCurrency(data.logistics)} руб.</p>
-                        <p><strong>Пошлина:</strong> ${format(data.duty_percent, '0')}%</p>
-                        <p><strong>Маржа:</strong> ${format(data.margin_percent, '0')}%</p>
-                        <p><strong>Итоговая цена:</strong> <strong>${formatCurrency(data.final_price)} руб.</strong></p>
+
+                    <!-- Финансовые показатели -->
+                    <div class="info-section">
+                        <div class="section-header">
+                            <h4 class="section-title">
+                                <span class="section-icon">{{ sidebar_icon('dollar-sign')|safe }}</span>
+                                Финансовые показатели
+                            </h4>
+                        </div>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">Закупочная цена</span>
+                                <span class="info-value">${formatCurrency(data.cost_price)} ₽</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Логистика</span>
+                                <span class="info-value">${formatCurrency(data.logistics)} ₽</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Пошлина</span>
+                                <span class="info-value">${format(data.duty_percent, '0')}%</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Маржа</span>
+                                <span class="info-value margin-value ${data.margin_percent > 20 ? 'margin-good' : 'margin-warning'}">${format(data.margin_percent, '0')}%</span>
+                            </div>
+                            <div class="info-item highlight">
+                                <span class="info-label">Итоговая цена</span>
+                                <span class="info-value price-final">${formatCurrency(data.final_price)} ₽</span>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="section-divider">Дополнительные данные</div>
-                <div class="grid-two">
-                    <div>
-                        <p><strong>Номер тендера:</strong> ${format(data.tender_number)}</p>
-                        <p><strong>Номер чертежа:</strong> ${format(data.drawing_number)}</p>
-                        <p><strong>Материал:</strong> ${format(data.material)}</p>
-                        <p><strong>Адрес доставки:</strong> ${format(data.delivery_address)}</p>
+
+                    <!-- Дополнительные данные -->
+                    <div class="info-section">
+                        <div class="section-header">
+                            <h4 class="section-title">
+                                <span class="section-icon">{{ sidebar_icon('file-text')|safe }}</span>
+                                Дополнительные данные
+                            </h4>
+                        </div>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">Номер тендера</span>
+                                <span class="info-value">${format(data.tender_number)}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Номер чертежа</span>
+                                <span class="info-value">${format(data.drawing_number)}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Материал</span>
+                                <span class="info-value">${format(data.material)}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Адрес доставки</span>
+                                <span class="info-value">${format(data.delivery_address)}</span>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <p><strong>Дата создания:</strong> ${new Date(data.timestamp).toLocaleString('ru-RU')}</p>
-                        <p><strong>Комментарий:</strong><br>${data.comment ? data.comment.replace(/\n/g, '<br>') : 'Комментарий не указан'}</p>
-                        <p><strong>Автор:</strong> ${authorDisplay}</p>
+
+                    <!-- Комментарий -->
+                    ${data.comment ? `
+                    <div class="info-section comment-section">
+                        <div class="section-header">
+                            <h4 class="section-title">
+                                <span class="section-icon">{{ sidebar_icon('message-square')|safe }}</span>
+                                Комментарий
+                            </h4>
+                        </div>
+                        <div class="comment-content">
+                            ${data.comment.replace(/\n/g, '<br>')}
+                        </div>
                     </div>
+                    ` : ''}
                 </div>
             `;
         };
@@ -170,7 +290,12 @@
         document.querySelectorAll('.view-details').forEach(button => {
             button.addEventListener('click', () => {
                 const recordId = button.getAttribute('data-id');
-                modalContent.innerHTML = '<p class="muted-text">Загрузка данных...</p>';
+                modalContent.innerHTML = `
+                    <div class="loading-state">
+                        <div class="loading-spinner"></div>
+                        <p>Загрузка данных...</p>
+                    </div>
+                `;
                 openModal();
 
                 fetch(`/history/details/${recordId}`)
@@ -182,7 +307,13 @@
                     })
                     .then(data => renderDetails(data))
                     .catch(error => {
-                        modalContent.innerHTML = `<p class="flash flash-error">${error.message}</p>`;
+                        modalContent.innerHTML = `
+                            <div class="error-state">
+                                <div class="error-icon">{{ sidebar_icon('alert-circle')|safe }}</div>
+                                <h4>Ошибка загрузки</h4>
+                                <p>${error.message}</p>
+                            </div>
+                        `;
                     });
             });
         });

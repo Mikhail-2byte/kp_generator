@@ -330,8 +330,8 @@ def load_generation_data(gen_id: int) -> Optional[Dict[str, object]]:
                 'user_id': record.user_id,
             }
             
-            # Если есть данные множественных позиций, используем их
-            if record.positions_data and record.positions_count and record.positions_count > 1:
+            # Если есть данные позиций, используем их
+            if record.positions_data:
                 try:
                     positions = json.loads(record.positions_data)
                     # Загружаем все позиции в форму

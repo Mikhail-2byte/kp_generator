@@ -3,6 +3,7 @@
 {% block content %}
 <div class="content-container">
     <div id="cities-data" class="hidden">{{ cities | tojson }}</div>
+    <div id="form-data" class="hidden">{{ form_data | tojson }}</div>
     <form action="{{ url_for('main.generate') }}" method="post" novalidate class="card-stack" id="generateForm">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
@@ -1311,6 +1312,86 @@
         if (firstField) {
             firstField.focus();
         }
+
+        // Обработка данных из form_data для множественных позиций
+        const processFormData = () => {
+            console.log('Processing form data for multiple positions...');
+            
+            // Получаем данные из скрытого поля
+            const formDataElement = document.getElementById('form-data');
+            let formData = {};
+            try {
+                formData = JSON.parse(formDataElement?.textContent || '{}');
+            } catch (error) {
+                console.error('Cannot parse form data', error);
+                return;
+            }
+            
+            console.log('Form data:', formData);
+            
+            // Проверяем, есть ли данные для множественных позиций
+            const positionFields = ['product', 'drawing_number', 'material', 'cost_price', 'cost_price_per_kg', 'quantity', 'weight', 'duty_percent'];
+            const multiplePositions = [];
+            
+            // Собираем все позиции из form_data
+            for (let i = 1; i <= 10; i++) { // Проверяем до 10 позиций
+                const position = {};
+                let hasData = false;
+                
+                for (const field of positionFields) {
+                    const fieldName = i === 1 ? field : `${field}_${i}`;
+                    const value = formData[fieldName];
+                    if (value && value.toString().trim()) {
+                        position[field] = value;
+                        hasData = true;
+                        console.log(`Found data for position ${i}, field ${field}: ${value}`);
+                    }
+                }
+                
+                if (hasData) {
+                    multiplePositions.push(position);
+                    console.log(`Position ${i} has data:`, position);
+                } else if (i > 1) {
+                    break; // Если нет данных для позиции i, то и для следующих позиций тоже не будет
+                }
+            }
+            
+            console.log(`Found ${multiplePositions.length} positions:`, multiplePositions);
+            
+            // Если найдены множественные позиции, создаем их
+            if (multiplePositions.length > 1) {
+                console.log('Creating multiple position blocks...');
+                
+                // Очищаем существующие блоки позиций
+                const existingBlocks = positionsContainer.querySelectorAll('.position-block');
+                existingBlocks.forEach(block => block.remove());
+                
+                // Создаем блоки для всех позиций
+                multiplePositions.forEach((position, index) => {
+                    const fragment = positionTemplate.content.cloneNode(true);
+                    const newBlock = fragment.querySelector('.position-block');
+                    if (!newBlock) {
+                        return;
+                    }
+                    
+                    // Заполняем данные позиции
+                    populatePositionBlock(newBlock, position);
+                    positionsContainer.appendChild(newBlock);
+                    registerPositionBlock(newBlock, true);
+                });
+                
+                reindexPositions();
+                updateWeight();
+                refreshLogisticsValue();
+                
+                console.log('Multiple position blocks created successfully');
+            } else {
+                console.log('No multiple positions found, using default single position');
+            }
+        };
+
+        // Запускаем обработку данных после загрузки DOM
+        processFormData();
     });
 </script>
 {% endblock %}

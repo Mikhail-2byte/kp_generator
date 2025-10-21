@@ -35,19 +35,23 @@ class MultiPositionCalculator:
         logistics_total_yuan = position_logistics / self.CONVERSION_RATE
         
         # Расчет логистики на единицу товара
-        logistics_cnr_per_unit = (logistics_total_yuan * self.LOGISTICS_CNR_RATIO * weight) / position_weight
-        logistics_rf_per_unit = (logistics_total_yuan * self.LOGISTICS_RF_RATIO * weight) / position_weight
+        if position_weight > 0:
+            logistics_cnr_per_unit = (logistics_total_yuan * self.LOGISTICS_CNR_RATIO * weight) / position_weight
+            logistics_rf_per_unit = (logistics_total_yuan * self.LOGISTICS_RF_RATIO * weight) / position_weight
+        else:
+            logistics_cnr_per_unit = 0
+            logistics_rf_per_unit = 0
         
         # Расчет пошлины на единицу товара
         duty_per_unit = (cost_price + logistics_cnr_per_unit) * (duty_percent / 100)
         
         # Расчет стоимости конвертации
         conversion_fee = cost_price * quantity * self.CONVERSION_FEE_RATE
-        conversion_fee_per_unit = conversion_fee / quantity
+        conversion_fee_per_unit = conversion_fee / quantity if quantity > 0 else 0
         
         # Расчет кредитных затрат
         credit_cost = cost_price * quantity * self.CREDIT_RATE / 365 * delivery_time
-        credit_cost_per_unit = credit_cost / quantity
+        credit_cost_per_unit = credit_cost / quantity if quantity > 0 else 0
         
         # Общие затраты на единицу товара
         total_cost_per_unit = (
@@ -71,8 +75,18 @@ class MultiPositionCalculator:
     
     def calculate_multi_position_prices(self, positions: List[Dict[str, Any]], 
                                       logistics_rub: float, delivery_time: int, 
-                                      target_margin_percent: float) -> List[Dict[str, Any]]:
+                                      target_margin_percent: float) -> Dict[str, Any]:
         """Рассчитывает цены для множественных позиций с единой итоговой маржой"""
+        
+        if not positions:
+            return {
+                'positions': [],
+                'total_costs': 0,
+                'total_revenue': 0,
+                'target_margin': target_margin_percent,
+                'actual_margin': 0,
+                'price_coefficient': 1
+            }
         
         # Рассчитываем общий вес всех позиций
         total_weight = sum(float(p['weight']) * int(p['quantity']) for p in positions)
@@ -139,6 +153,15 @@ class MultiPositionCalculator:
         cost_price = float(position['cost_price'])
         weight = float(position['weight'])
         duty_percent = float(position.get('duty_percent', 0))
+        
+        # Проверяем валидность данных
+        if quantity <= 0 or weight <= 0:
+            return {
+                'position': position,
+                'final_price': 0,
+                'general_price': 0,
+                'margin': 0
+            }
         
         # Используем старую логику расчета
         final_price = calculate_selling_price(

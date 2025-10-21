@@ -103,22 +103,17 @@ def _build_generation_detail(record: Optional[GenerationHistoryRecord]):
     if record is None:
         return None
 
-    return {
+    import json
+    
+    # Базовые данные
+    data = {
         'id': record.id,
         'timestamp': _format_timestamp(record.timestamp),
         'tender_number': record.tender_number,
         'company': record.company,
-        'product': record.product,
-        'quantity': record.quantity,
-        'cost_price': record.cost_price,
-        'weight': record.weight,
         'logistics': record.logistics,
         'margin_percent': record.margin_percent,
-        'final_price': record.final_price,
-        'drawing_number': record.drawing_number,
-        'material': record.material,
         'delivery_address': record.delivery_address,
-        'duty_percent': record.duty_percent,
         'delivery_time': record.delivery_time,
         'comment': record.comment,
         'user_id': record.user_id,
@@ -126,6 +121,56 @@ def _build_generation_detail(record: Optional[GenerationHistoryRecord]):
         'last_name': record.user.last_name if record.user else None,
         'first_name': record.user.first_name if record.user else None,
     }
+    
+    # Если есть данные множественных позиций, добавляем их
+    if record.positions_data and record.positions_count and record.positions_count > 1:
+        try:
+            positions = json.loads(record.positions_data)
+            data['positions'] = positions
+            data['positions_count'] = record.positions_count
+            data['total_general_price'] = record.total_general_price
+            
+            # Для совместимости используем данные первой позиции
+            if positions:
+                first_position = positions[0]
+                data.update({
+                    'product': first_position.get('product', record.product),
+                    'quantity': first_position.get('quantity', record.quantity),
+                    'cost_price': first_position.get('cost_price', record.cost_price),
+                    'weight': first_position.get('weight', record.weight),
+                    'drawing_number': first_position.get('drawing_number', record.drawing_number),
+                    'material': first_position.get('material', record.material),
+                    'duty_percent': first_position.get('duty_percent', record.duty_percent),
+                    'final_price': record.final_price,
+                })
+        except (json.JSONDecodeError, TypeError):
+            # Если не удалось распарсить JSON, используем старые поля
+            data.update({
+                'product': record.product,
+                'quantity': record.quantity,
+                'cost_price': record.cost_price,
+                'weight': record.weight,
+                'drawing_number': record.drawing_number,
+                'material': record.material,
+                'duty_percent': record.duty_percent,
+                'final_price': record.final_price,
+            })
+    else:
+        # Старые данные (одна позиция) - создаем массив с одной позицией для совместимости
+        data['positions'] = [{
+            'product': record.product,
+            'quantity': record.quantity,
+            'cost_price': record.cost_price,
+            'weight': record.weight,
+            'drawing_number': record.drawing_number,
+            'material': record.material,
+            'duty_percent': record.duty_percent,
+            'final_price': record.final_price,
+        }]
+        data['positions_count'] = 1
+        data['total_general_price'] = record.final_price * record.quantity
+    
+    return data
 
 
 def _user_to_tuple(user: Optional[UserRecord]):
@@ -173,6 +218,8 @@ def get_generation_history(config) -> List[Dict[str, object]]:
                     'username': record.user.username if record.user else None,
                     'last_name': record.user.last_name if record.user else None,
                     'first_name': record.user.first_name if record.user else None,
+                    'positions_count': record.positions_count or 1,
+                    'total_general_price': record.total_general_price,
                 })
             return result
     except Exception as exc:
@@ -180,9 +227,16 @@ def get_generation_history(config) -> List[Dict[str, object]]:
         return []
 
 
-def save_generation_history(form_data, final_price, config, user_id=None) -> bool:
+def save_generation_history(form_data, final_price, config, user_id=None, total_general_price=None) -> bool:
     """Сохраняет расчёт генерации вместе с расчётными параметрами пользователя."""
     try:
+        import json
+        from app.helpers import extract_positions_from_form
+        
+        # Извлекаем позиции из формы
+        positions = extract_positions_from_form(form_data)
+        
+        # Основные данные (для совместимости)
         quantity = int(form_data.get('quantity', 0))
         cost_price = float(form_data.get('cost_price', 0))
         weight = float(form_data.get('weight', 0))
@@ -190,7 +244,18 @@ def save_generation_history(form_data, final_price, config, user_id=None) -> boo
         margin_percent = float(form_data.get('margin_percent', config.get('margin_percent', 30)))
         duty_percent = float(form_data.get('duty_percent', config.get('default_duty_percent', 0)))
         delivery_time = int(form_data.get('delivery_time', 0))
-
+        
+        # Если есть множественные позиции, используем данные первой позиции для основных полей
+        if len(positions) > 1:
+            first_position = positions[0]
+            quantity = int(first_position.get('quantity', 0))
+            cost_price = float(first_position.get('cost_price', 0))
+            weight = float(first_position.get('weight', 0))
+            duty_percent = float(first_position.get('duty_percent', 0))
+        
+        # Рассчитываем общий вес всех позиций
+        total_weight = sum(float(p.get('weight', 0)) * int(p.get('quantity', 0)) for p in positions)
+        
         with _session_scope() as session:
             record = GenerationHistoryRecord(
                 tender_number=form_data.get('tender_number', ''),
@@ -198,7 +263,7 @@ def save_generation_history(form_data, final_price, config, user_id=None) -> boo
                 product=form_data.get('product', ''),
                 quantity=quantity,
                 cost_price=cost_price,
-                weight=weight,
+                weight=total_weight,  # Общий вес всех позиций
                 logistics=logistics,
                 margin_percent=margin_percent,
                 final_price=final_price,
@@ -209,6 +274,10 @@ def save_generation_history(form_data, final_price, config, user_id=None) -> boo
                 delivery_time=delivery_time,
                 comment=form_data.get('comment', ''),
                 user_id=user_id,
+                # Новые поля для множественных позиций
+                positions_data=json.dumps(positions, ensure_ascii=False),
+                total_general_price=total_general_price or (final_price * quantity),
+                positions_count=len(positions),
             )
             session.add(record)
         return True
@@ -240,31 +309,69 @@ def get_generation_details(record_id: int) -> Optional[Dict[str, object]]:
 def load_generation_data(gen_id: int) -> Optional[Dict[str, object]]:
     """Загружает сохранённую генерацию для повторного редактирования."""
     try:
+        import json
+        
         with _session_scope() as session:
             record = session.query(GenerationHistoryRecord).filter(GenerationHistoryRecord.id == gen_id).one_or_none()
             if record is None:
                 return None
 
-            return {
+            # Базовые данные
+            data = {
                 'id': record.id,
                 'timestamp': _format_timestamp(record.timestamp),
                 'tender_number': record.tender_number,
                 'company': record.company,
-                'product': record.product,
-                'quantity': record.quantity,
-                'cost_price': record.cost_price,
-                'weight': record.weight,
                 'logistics': record.logistics,
                 'margin_percent': record.margin_percent,
-                'final_price': record.final_price,
-                'drawing_number': record.drawing_number,
-                'material': record.material,
                 'delivery_address': record.delivery_address,
-                'duty_percent': record.duty_percent,
                 'delivery_time': record.delivery_time,
                 'comment': record.comment,
                 'user_id': record.user_id,
             }
+            
+            # Если есть данные множественных позиций, используем их
+            if record.positions_data and record.positions_count and record.positions_count > 1:
+                try:
+                    positions = json.loads(record.positions_data)
+                    # Загружаем все позиции в форму
+                    for i, position in enumerate(positions):
+                        if i == 0:
+                            # Первая позиция в основные поля
+                            for field in ['product', 'quantity', 'cost_price', 'weight', 'drawing_number', 'material', 'duty_percent']:
+                                if field in position:
+                                    data[field] = position[field]
+                        else:
+                            # Остальные позиции с суффиксами
+                            for field in ['product', 'quantity', 'cost_price', 'weight', 'drawing_number', 'material', 'duty_percent']:
+                                if field in position:
+                                    data[f"{field}_{i+1}"] = position[field]
+                except (json.JSONDecodeError, TypeError):
+                    # Если не удалось распарсить JSON, используем старые поля
+                    data.update({
+                        'product': record.product,
+                        'quantity': record.quantity,
+                        'cost_price': record.cost_price,
+                        'weight': record.weight,
+                        'drawing_number': record.drawing_number,
+                        'material': record.material,
+                        'duty_percent': record.duty_percent,
+                        'final_price': record.final_price,
+                    })
+            else:
+                # Старые данные (одна позиция)
+                data.update({
+                    'product': record.product,
+                    'quantity': record.quantity,
+                    'cost_price': record.cost_price,
+                    'weight': record.weight,
+                    'drawing_number': record.drawing_number,
+                    'material': record.material,
+                    'duty_percent': record.duty_percent,
+                    'final_price': record.final_price,
+                })
+            
+            return data
     except Exception as exc:
         logging.error('Error loading generation data: %s', exc)
         return None

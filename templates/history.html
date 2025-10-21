@@ -33,8 +33,10 @@
                         <th>Номер тендера</th>
                         <th>Компания</th>
                         <th>Товар</th>
+                        <th>Позиций</th>
                         <th>Маржа, %</th>
                         <th>Цена за ед., руб</th>
+                        <th>Итого без НДС, руб</th>
                         <th>Пошлина, %</th>
                         <th>Автор</th>
                         <th>Действия</th>
@@ -50,11 +52,17 @@
                         <td>{{ item.timestamp }}</td>
                         <td>{{ item.tender_number }}</td>
                         <td>{{ item.company }}</td>
-                        <td>{{ item.product }}</td>
+                        <td>{{ item.product }}{% if item.positions_count and item.positions_count > 1 %} <span class="badge badge-sm">+{{ item.positions_count - 1 }}</span>{% endif %}</td>
+                        <td class="text-center">
+                            <span class="badge {{ 'badge-primary' if item.positions_count and item.positions_count > 1 else 'badge-secondary' }}">
+                                {{ item.positions_count or 1 }}
+                            </span>
+                        </td>
                         <td class="text-center">
                             <span class="status-pill {{ 'status-success' if item.margin_percent|float > 20 else 'status-warning' }}">{{ item.margin_percent }}</span>
                         </td>
                         <td><strong>{{ item.final_price|format_number(2) }}</strong></td>
+                        <td><strong class="text-primary">{{ (item.total_general_price or (item.final_price * (item.quantity or 1)))|format_number(2) }}</strong></td>
                         <td>{{ (item.duty_percent if item.duty_percent is not none else 0)|format_number(2) }}</td>
                         <td>{{ author_display or '—' }}</td>
                         <td class="table-actions">
@@ -168,8 +176,72 @@
             const authorDisplay = authorName || data.username || 'Не указан';
             
             // Обновляем заголовок и подзаголовок
-            document.getElementById('modalSubtitle').textContent = `${format(data.company)} • ${format(data.product)}`;
+            const productTitle = data.positions_count > 1 ? 
+                `${format(data.product)} (+${data.positions_count - 1} позиций)` : 
+                format(data.product);
+            document.getElementById('modalSubtitle').textContent = `${format(data.company)} • ${productTitle}`;
             document.getElementById('modalTimestamp').textContent = `Создано: ${new Date(data.timestamp).toLocaleString('ru-RU')}`;
+
+            // Рендерим позиции
+            const renderPositions = () => {
+                if (data.positions && data.positions.length > 0) {
+                    return `
+                        <div class="info-section">
+                            <div class="section-header">
+                                <h4 class="section-title">
+                                    <span class="section-icon">{{ sidebar_icon('list')|safe }}</span>
+                                    Позиции (${data.positions.length})
+                                </h4>
+                            </div>
+                            <div class="positions-list">
+                                ${data.positions.map((pos, index) => `
+                                    <div class="position-item">
+                                        <div class="position-header">
+                                            <span class="position-number">Позиция ${index + 1}</span>
+                                            <span class="position-price">${formatCurrency(pos.final_price || pos.cost_price || 0)} ₽/шт</span>
+                                        </div>
+                                        <div class="position-details">
+                                            <div class="position-row">
+                                                <span class="position-label">Товар:</span>
+                                                <span class="position-value">${format(pos.product)}</span>
+                                            </div>
+                                            <div class="position-row">
+                                                <span class="position-label">Количество:</span>
+                                                <span class="position-value">${formatNumber(pos.quantity)} шт.</span>
+                                            </div>
+                                            <div class="position-row">
+                                                <span class="position-label">Вес:</span>
+                                                <span class="position-value">${formatNumber(pos.weight)} кг</span>
+                                            </div>
+                                            <div class="position-row">
+                                                <span class="position-label">Цена закупа:</span>
+                                                <span class="position-value">${formatCurrency(pos.cost_price)} ₽</span>
+                                            </div>
+                                            ${pos.drawing_number ? `
+                                            <div class="position-row">
+                                                <span class="position-label">Чертеж:</span>
+                                                <span class="position-value">${format(pos.drawing_number)}</span>
+                                            </div>
+                                            ` : ''}
+                                            ${pos.material ? `
+                                            <div class="position-row">
+                                                <span class="position-label">Материал:</span>
+                                                <span class="position-value">${format(pos.material)}</span>
+                                            </div>
+                                            ` : ''}
+                                            <div class="position-row">
+                                                <span class="position-label">Пошлина:</span>
+                                                <span class="position-value">${format(pos.duty_percent, '0')}%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+                return '';
+            };
 
             modalContent.innerHTML = `
                 <div class="modal-content-grid">
@@ -188,14 +260,14 @@
                             </div>
                             <div class="info-item">
                                 <span class="info-label">Товар</span>
-                                <span class="info-value">${format(data.product)}</span>
+                                <span class="info-value">${productTitle}</span>
                             </div>
                             <div class="info-item">
-                                <span class="info-label">Количество</span>
-                                <span class="info-value">${formatNumber(data.quantity)} шт.</span>
+                                <span class="info-label">Количество позиций</span>
+                                <span class="info-value">${data.positions_count || 1}</span>
                             </div>
                             <div class="info-item">
-                                <span class="info-label">Вес единицы</span>
+                                <span class="info-label">Общий вес</span>
                                 <span class="info-value">${formatNumber(data.weight)} кг</span>
                             </div>
                             <div class="info-item">
@@ -209,6 +281,8 @@
                         </div>
                     </div>
 
+                    ${renderPositions()}
+
                     <!-- Финансовые показатели -->
                     <div class="info-section">
                         <div class="section-header">
@@ -219,25 +293,23 @@
                         </div>
                         <div class="info-grid">
                             <div class="info-item">
-                                <span class="info-label">Закупочная цена</span>
-                                <span class="info-value">${formatCurrency(data.cost_price)} ₽</span>
-                            </div>
-                            <div class="info-item">
                                 <span class="info-label">Логистика</span>
                                 <span class="info-value">${formatCurrency(data.logistics)} ₽</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Пошлина</span>
-                                <span class="info-value">${format(data.duty_percent, '0')}%</span>
                             </div>
                             <div class="info-item">
                                 <span class="info-label">Маржа</span>
                                 <span class="info-value margin-value ${data.margin_percent > 20 ? 'margin-good' : 'margin-warning'}">${format(data.margin_percent, '0')}%</span>
                             </div>
                             <div class="info-item highlight">
-                                <span class="info-label">Итоговая цена</span>
+                                <span class="info-label">Цена за единицу</span>
                                 <span class="info-value price-final">${formatCurrency(data.final_price)} ₽</span>
                             </div>
+                            ${data.total_general_price ? `
+                            <div class="info-item highlight">
+                                <span class="info-label">Общая стоимость</span>
+                                <span class="info-value price-final">${formatCurrency(data.total_general_price)} ₽</span>
+                            </div>
+                            ` : ''}
                         </div>
                     </div>
 

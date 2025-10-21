@@ -331,6 +331,19 @@ def generate():
             position_prices = calculation_result['positions']
             total_general_price = calculation_result['total_revenue']
         
+        # Проверяем, что есть хотя бы одна позиция
+        if not position_prices:
+            flash('Не удалось рассчитать цены для позиций.', 'danger')
+            try:
+                cities = datasets.load_logistics_cities()
+            except Exception as exc:
+                current_app.logger.error('Error loading logistics data for error page: %s', exc)
+                cities = []
+            return render_template(
+                'index.html',
+                **build_context('index', 'Создание коммерческого предложения', form_data=form_data, cities=cities)
+            )
+        
         # Для совместимости с существующим кодом используем первую позицию
         first_position = position_prices[0]
         final_price = first_position['final_price']
@@ -346,9 +359,14 @@ def generate():
             for error in template_errors:
                 flash(f'{error}. Обратитесь к администратору.', 'danger')
                 current_app.logger.error(error)
+            try:
+                cities = datasets.load_logistics_cities()
+            except Exception as exc:
+                current_app.logger.error('Error loading logistics data for template error page: %s', exc)
+                cities = []
             return render_template(
                 'index.html',
-                **build_context('index', 'Создание коммерческого предложения', form_data=form_data)
+                **build_context('index', 'Создание коммерческого предложения', form_data=form_data, cities=cities)
             )
 
         excel_template_path = 'templates_docs/template.xlsx'
@@ -368,9 +386,14 @@ def generate():
     except Exception as exc:  # pragma: no cover - defensive logging
         flash('Произошла непредвиденная ошибка. Попробуйте еще раз.', 'danger')
         current_app.logger.error('Unexpected error: %s', exc)
+        try:
+            cities = datasets.load_logistics_cities()
+        except Exception as exc2:
+            current_app.logger.error('Error loading logistics data for exception page: %s', exc2)
+            cities = []
         return render_template(
             'index.html',
-            **build_context('index', 'Создание коммерческого предложения', form_data=form_data)
+            **build_context('index', 'Создание коммерческого предложения', form_data=form_data, cities=cities)
         )
 
 

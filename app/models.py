@@ -34,20 +34,25 @@ class GenerationHistoryRecord(Base):
     timestamp = Column(DateTime, server_default=func.current_timestamp())
     tender_number = Column(Text)
     company = Column(Text, nullable=False)
-    product = Column(Text, nullable=False)
-    quantity = Column(Integer, nullable=False)
-    cost_price = Column(Float, nullable=False)
-    weight = Column(Float, nullable=False)
+    product = Column(Text, nullable=False)  # Основной товар (для совместимости)
+    quantity = Column(Integer, nullable=False)  # Общее количество (для совместимости)
+    cost_price = Column(Float, nullable=False)  # Основная цена закупа (для совместимости)
+    weight = Column(Float, nullable=False)  # Общий вес (для совместимости)
     logistics = Column(Float, nullable=False)
     margin_percent = Column(Float, nullable=False)
-    final_price = Column(Float, nullable=False)
-    drawing_number = Column(Text)
-    material = Column(Text)
+    final_price = Column(Float, nullable=False)  # Цена за единицу основной позиции (для совместимости)
+    drawing_number = Column(Text)  # Основной номер чертежа (для совместимости)
+    material = Column(Text)  # Основной материал (для совместимости)
     delivery_address = Column(Text)
-    duty_percent = Column(Float, server_default='0')
+    duty_percent = Column(Float, server_default='0')  # Основная пошлина (для совместимости)
     delivery_time = Column(Integer, server_default='0')
     comment = Column(Text)
     user_id = Column(Integer, ForeignKey('users.id'))
+    
+    # Новые поля для множественных позиций
+    positions_data = Column(Text)  # JSON с данными всех позиций
+    total_general_price = Column(Float)  # Общая цена всех позиций
+    positions_count = Column(Integer, server_default='1')  # Количество позиций
 
     user = relationship('UserRecord', back_populates='generations')
 

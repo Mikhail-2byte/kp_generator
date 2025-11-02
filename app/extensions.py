@@ -5,6 +5,7 @@ from flask_login import LoginManager
 from flask_wtf import CSRFProtect
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.pool import StaticPool
 
 
 csrf = CSRFProtect()
@@ -15,7 +16,14 @@ login_manager.login_message_category = 'info'
 
 
 _engine = None
-SessionLocal = scoped_session(sessionmaker(autocommit=False, autoflush=False, future=True))
+SessionLocal = scoped_session(
+    sessionmaker(
+        autocommit=False,
+        autoflush=False,
+        expire_on_commit=False,
+        future=True,
+    )
+)
 
 
 def get_database_url() -> str:
@@ -30,7 +38,33 @@ def init_db_engine(app) -> Optional[object]:
         return _engine
 
     database_url = get_database_url()
-    _engine = create_engine(database_url, future=True)
+
+    engine_options = {
+        'future': True,
+        'pool_pre_ping': True,
+    }
+
+    def _safe_int(name: str, default: int) -> int:
+        value = os.environ.get(name)
+        if value is None:
+            return default
+        try:
+            return int(value)
+        except (TypeError, ValueError):  # pragma: no cover - defensive
+            return default
+
+    if database_url.startswith('sqlite'):  # SQLite needs special handling for multi-threaded servers
+        engine_options['connect_args'] = {'check_same_thread': False}
+
+        # In-memory SQLite requires StaticPool for shared connections
+        if database_url == 'sqlite:///:memory:':
+            engine_options['poolclass'] = StaticPool
+    else:
+        engine_options['pool_size'] = _safe_int('DATABASE_POOL_SIZE', 5)
+        engine_options['max_overflow'] = _safe_int('DATABASE_MAX_OVERFLOW', 10)
+        engine_options['pool_timeout'] = _safe_int('DATABASE_POOL_TIMEOUT', 30)
+
+    _engine = create_engine(database_url, **engine_options)
     SessionLocal.configure(bind=_engine)
 
     @app.teardown_appcontext

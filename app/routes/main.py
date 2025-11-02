@@ -291,14 +291,30 @@ def generate():
         if per_kg_value is not None and weight_value is not None and weight_value > 0:
             form_data['cost_price'] = str(per_kg_value * weight_value)
 
-    errors = validate_form_data(form_data)
+    validation = validate_form_data(form_data)
+    form_data = validation.cleaned_data
 
-    if errors:
-        for error in errors:
+    if validation.errors:
+        for error in validation.errors:
             flash(error, 'danger')
+
+        if validation.invalid_fields:
+            form_data['_invalid_fields'] = validation.invalid_fields
+
+        try:
+            cities = datasets.load_logistics_cities()
+        except Exception as exc:  # pragma: no cover - defensive logging
+            current_app.logger.error('Error loading logistics data for validation errors: %s', exc)
+            cities = []
+
         return render_template(
             'index.html',
-            **build_context('index', 'Создание коммерческого предложения', form_data=form_data)
+            **build_context(
+                'index',
+                'Создание коммерческого предложения',
+                form_data=form_data,
+                cities=cities
+            )
         )
 
     try:
@@ -307,8 +323,8 @@ def generate():
         margin_percent = float(form_data['margin_percent'])
         delivery_time = int(form_data['delivery_time'])
         
-        # Извлекаем позиции из формы
-        positions = extract_positions_from_form(form_data)
+        positions = validation.positions or extract_positions_from_form(form_data)
+        form_data.pop('_invalid_fields', None)
         
         app_config = current_app.config['APP_SETTINGS']
         

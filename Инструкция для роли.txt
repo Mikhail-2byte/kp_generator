@@ -1,6 +1,0 @@
-Откройте командную строку в корне проекта (C:UsersvlasovDesktopДелаkp_generator-main).
-Для того что бы давать и заберать роль в конце скрита пишается users или admin
-
-python manage_roles.py set-role tsc_perm@mail.ru user 
-
-python manage_roles.py set-role tsc_perm@mail.ru admin

@@ -4,6 +4,7 @@
 <div class="content-container">
     <div id="cities-data" class="hidden">{{ cities | tojson }}</div>
     <div id="form-data" class="hidden">{{ form_data | tojson }}</div>
+    {% set invalid_fields = form_data.get('_invalid_fields', []) if form_data else [] %}
     <form action="{{ url_for('main.generate') }}" method="post" novalidate class="card-stack" id="generateForm">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
@@ -17,7 +18,9 @@
                     <div class="field-group">
                         <label for="company" class="field-label">Название компании</label>
                         <input type="text" id="company" name="company" required
-                               value="{{ form_data.company if form_data and form_data.company else '' }}">
+                               value="{{ form_data.company if form_data and form_data.company else '' }}"
+                               class="{% if invalid_fields and 'company' in invalid_fields %}is-invalid{% endif %}"
+                               aria-invalid="{{ 'true' if invalid_fields and 'company' in invalid_fields else 'false' }}">
                     </div>
                     <div class="field-group">
                         <label for="tender_number" class="field-label">Номер тендера</label>
@@ -27,7 +30,9 @@
                     <div class="field-group">
                         <label for="delivery_time" class="field-label">Срок поставки (дней)</label>
                         <input type="number" id="delivery_time" name="delivery_time" min="1" step="1" required
-                               value="{{ form_data.delivery_time if form_data and form_data.delivery_time else '' }}">
+                               value="{{ form_data.delivery_time if form_data and form_data.delivery_time else '' }}"
+                               class="{% if invalid_fields and 'delivery_time' in invalid_fields %}is-invalid{% endif %}"
+                               aria-invalid="{{ 'true' if invalid_fields and 'delivery_time' in invalid_fields else 'false' }}">
                     </div>
                     <div class="field-group delivery-address-group">
                         <label for="delivery_address" class="field-label">Адрес доставки</label>
@@ -68,7 +73,9 @@
                                 <label for="logistics" class="field-label">Стоимость логистики (руб.)</label>
                                 <input type="number" id="logistics" name="logistics" min="0" step="0.01" required
                                        value="{{ form_data.logistics if form_data and form_data.logistics else '' }}"
-                                       placeholder="Введите вручную или используйте подсказку">
+                                       placeholder="Введите вручную или используйте подсказку"
+                                       class="{% if invalid_fields and 'logistics' in invalid_fields %}is-invalid{% endif %}"
+                                       aria-invalid="{{ 'true' if invalid_fields and 'logistics' in invalid_fields else 'false' }}">
                             </div>
                         </div>
                         <div class="logistics-helper" id="logisticsHelper" hidden>
@@ -105,7 +112,9 @@
                         <div class="field-group parameter-wide">
                             <label for="product" class="field-label" data-label-for="product">Наименование товара</label>
                             <input type="text" id="product" name="product" data-field="product" required
-                                value="{{ form_data.product if form_data and form_data.product else '' }}">
+                                value="{{ form_data.product if form_data and form_data.product else '' }}"
+                                class="{% if invalid_fields and 'product' in invalid_fields %}is-invalid{% endif %}"
+                                aria-invalid="{{ 'true' if invalid_fields and 'product' in invalid_fields else 'false' }}">
                         </div>
                         <div class="field-group parameter-wide drawing-field">
                             <label for="drawing_number" class="field-label" data-label-for="drawing_number">Номер чертежа</label>
@@ -124,27 +133,37 @@
                         <div class="field-group slim-field">
                             <label for="cost_price" class="field-label" data-label-for="cost_price">Сумма закупа</label>
                             <input type="number" id="cost_price" name="cost_price" data-field="cost_price" min="0" step="0.01" required
-                                value="{{ form_data.cost_price if form_data and form_data.cost_price else '' }}">
+                                value="{{ form_data.cost_price if form_data and form_data.cost_price else '' }}"
+                                class="{% if invalid_fields and 'cost_price' in invalid_fields %}is-invalid{% endif %}"
+                                aria-invalid="{{ 'true' if invalid_fields and 'cost_price' in invalid_fields else 'false' }}">
                         </div>
                         <div class="field-group slim-field">
                             <label for="cost_price_per_kg" class="field-label" data-label-for="cost_price_per_kg">Цена за кг</label>
                             <input type="number" id="cost_price_per_kg" name="cost_price_per_kg" data-field="cost_price_per_kg" min="0" step="0.01"
-                                value="{{ form_data.cost_price_per_kg if form_data and form_data.cost_price_per_kg else '' }}">
+                                value="{{ form_data.cost_price_per_kg if form_data and form_data.cost_price_per_kg else '' }}"
+                                class="{% if invalid_fields and 'cost_price_per_kg' in invalid_fields %}is-invalid{% endif %}"
+                                aria-invalid="{{ 'true' if invalid_fields and 'cost_price_per_kg' in invalid_fields else 'false' }}">
                         </div>
                         <div class="field-group slim-field">
                             <label for="quantity" class="field-label" data-label-for="quantity">Количество, шт.</label>
                             <input type="number" id="quantity" name="quantity" data-field="quantity" min="1" step="1" required
-                                value="{{ form_data.quantity if form_data and form_data.quantity else '' }}" class="position-quantity">
+                                value="{{ form_data.quantity if form_data and form_data.quantity else '' }}"
+                                class="position-quantity{% if invalid_fields and 'quantity' in invalid_fields %} is-invalid{% endif %}"
+                                aria-invalid="{{ 'true' if invalid_fields and 'quantity' in invalid_fields else 'false' }}">
                         </div>
                         <div class="field-group slim-field">
                             <label for="weight" class="field-label" data-label-for="weight">Вес за шт. (кг)</label>
                             <input type="number" id="weight" name="weight" data-field="weight" min="0" step="0.01" required
-                                value="{{ form_data.weight if form_data and form_data.weight else '' }}" class="position-weight">
+                                value="{{ form_data.weight if form_data and form_data.weight else '' }}"
+                                class="position-weight{% if invalid_fields and 'weight' in invalid_fields %} is-invalid{% endif %}"
+                                aria-invalid="{{ 'true' if invalid_fields and 'weight' in invalid_fields else 'false' }}">
                         </div>
                         <div class="field-group slim-field">
                             <label for="duty_percent" class="field-label" data-label-for="duty_percent">Пошлина (%)</label>
                             <input type="number" id="duty_percent" name="duty_percent" data-field="duty_percent" min="0" max="100" step="0.1"
-                                value="{{ form_data.duty_percent if form_data and form_data.duty_percent else '0' }}" class="position-duty">
+                                value="{{ form_data.duty_percent if form_data and form_data.duty_percent else '0' }}"
+                                class="position-duty{% if invalid_fields and 'duty_percent' in invalid_fields %} is-invalid{% endif %}"
+                                aria-invalid="{{ 'true' if invalid_fields and 'duty_percent' in invalid_fields else 'false' }}">
                         </div>
                     </div>
                 </div>
@@ -222,7 +241,9 @@
                 <div class="summary-value">
                     <div class="value-box">
                         <input type="number" id="margin_percent" name="margin_percent" min="0" max="100" step="0.1" required
-                               value="{{ form_data.margin_percent if form_data and form_data.margin_percent else '30' }}">
+                               value="{{ form_data.margin_percent if form_data and form_data.margin_percent else '30' }}"
+                               class="{% if invalid_fields and 'margin_percent' in invalid_fields %}is-invalid{% endif %}"
+                               aria-invalid="{{ 'true' if invalid_fields and 'margin_percent' in invalid_fields else 'false' }}">
                     </div>
                     <div class="value-unit">%</div>
                 </div>
@@ -342,6 +363,44 @@
         const drawingMatchesContent = document.getElementById('drawingMatchesContent');
         const drawingLookupCache = new Map();
         const drawingLookupPending = new Map();
+
+        const highlightInvalidFields = (invalidFieldNames) => {
+            if (!Array.isArray(invalidFieldNames) || !invalidFieldNames.length) {
+                return;
+            }
+
+            invalidFieldNames.forEach((fieldKey) => {
+                const matchingInputs = form.querySelectorAll(`[name="${fieldKey}"]`);
+                if (matchingInputs.length) {
+                    matchingInputs.forEach((input) => {
+                        input.classList.add('is-invalid');
+                        input.setAttribute('aria-invalid', 'true');
+                    });
+                    return;
+                }
+
+                if (!positionsContainer) {
+                    return;
+                }
+
+                const match = fieldKey.match(/_(\d+)$/);
+                if (!match) {
+                    return;
+                }
+
+                const positionNumber = Number(match[1]);
+                const baseField = fieldKey.replace(/_\d+$/, '');
+                const block = positionsContainer.querySelector(`.position-block[data-position="${positionNumber}"]`);
+                if (!block) {
+                    return;
+                }
+
+                block.querySelectorAll(`[data-field="${baseField}"]`).forEach((input) => {
+                    input.classList.add('is-invalid');
+                    input.setAttribute('aria-invalid', 'true');
+                });
+            });
+        };
 
         const openModal = (modal) => {
             if (!modal) {
@@ -1328,6 +1387,10 @@
             }
             
             console.log('Form data:', formData);
+
+            if (formData && Array.isArray(formData._invalid_fields)) {
+                highlightInvalidFields(formData._invalid_fields);
+            }
             
             // Проверяем, есть ли данные для множественных позиций
             const positionFields = ['product', 'drawing_number', 'material', 'cost_price', 'cost_price_per_kg', 'quantity', 'weight', 'duty_percent'];
@@ -1383,6 +1446,10 @@
                 reindexPositions();
                 updateWeight();
                 refreshLogisticsValue();
+
+                if (Array.isArray(formData._invalid_fields)) {
+                    highlightInvalidFields(formData._invalid_fields);
+                }
                 
                 console.log('Multiple position blocks created successfully');
             } else {

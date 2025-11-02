@@ -17,11 +17,15 @@
    ```powershell
    alembic upgrade head
    ```
-5. Запустите приложение:
+5. Запустите приложение в режиме разработки:
    ```powershell
    python app.py
    ```
-6. Запустите тесты при необходимости:
+6. Для production-режима включите Waitress (в `.env` установите `USE_WAITRESS=1`) и запустите сервер:
+   ```powershell
+   waitress-serve --call "app:create_app"
+   ```
+7. Запустите тесты при необходимости:
    ```powershell
    pytest
    ```

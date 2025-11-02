@@ -24,10 +24,14 @@ def load_config(app):
             app.logger.warning(f'Config file not found: {config_path}')
             
         # Переопределяем чувствительные данные из переменных окружения
+        debug_flag = os.environ.get('DEBUG')
+        if debug_flag is None:
+            debug_flag = os.environ.get('FLASK_DEBUG', 'False')
+
         env_config = {
             'secret_key': os.environ.get('SECRET_KEY'),
             'database_url': os.environ.get('DATABASE_URL', 'sqlite:///kp_generator.db'),
-            'debug': os.environ.get('DEBUG', 'False').lower() == 'true',
+            'debug': str(debug_flag).lower() == 'true',
             'log_level': os.environ.get('LOG_LEVEL', 'INFO'),
         }
         

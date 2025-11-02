@@ -31,14 +31,13 @@
                     <tr>
                         <th>Дата и время</th>
                         <th>Номер тендера</th>
-                        <th>Компания</th>
-                        <th>Товар</th>
                         <th>Позиций</th>
+                        <th>Продажа, руб</th>
+                        <th>Закуп, руб</th>
+                        <th>Вес, кг</th>
+                        <th>Средняя пошлина, %</th>
                         <th>Маржа, %</th>
-                        <th>Цена за ед., руб</th>
-                        <th>Итого без НДС, руб</th>
-                        <th>Пошлина, %</th>
-                        <th>Автор</th>
+                        <th>Менеджер</th>
                         <th>Действия</th>
                     </tr>
                 </thead>
@@ -46,24 +45,36 @@
                     {% for item in history %}
                     {% set author_full = ((item.last_name or '') + ' ' + (item.first_name or '')).strip() %}
                     {% set author_display = author_full if author_full else item.username %}
-                    <tr data-tender="{{ item.tender_number }}" data-drawing="{{ item.drawing_number }}" data-product="{{ item.product }}"
-                        data-date="{{ item.timestamp }}" data-company="{{ item.company }}" data-margin="{{ item.margin_percent }}"
-                        data-price="{{ item.final_price }}" data-duty="{{ item.duty_percent if item.duty_percent is not none else 0 }}" data-username="{{ ((author_display or '') ~ ' ' ~ (item.username or ''))|lower|trim }}">
+                    {% set positions_count = item.positions_count or 1 %}
+                    {% set total_sale = item.total_general_price if item.total_general_price is not none else item.final_price * (item.quantity or 1) %}
+                    {% set total_purchase = item.total_purchase_price if item.total_purchase_price is not none else (item.cost_price or 0) * (item.quantity or 1) %}
+                    {% set total_weight = item.total_weight if item.total_weight is not none else (item.weight or 0) %}
+                    {% set avg_duty = item.avg_duty_percent if item.avg_duty_percent is not none else (item.duty_percent or 0) %}
+                    <tr data-tender="{{ item.tender_number }}"
+                        data-drawing="{{ item.drawing_number }}"
+                        data-product="{{ item.product }}"
+                        data-company="{{ item.company }}"
+                        data-date="{{ item.timestamp }}"
+                        data-positions="{{ positions_count }}"
+                        data-sale="{{ total_sale }}"
+                        data-purchase="{{ total_purchase }}"
+                        data-weight="{{ total_weight }}"
+                        data-duty="{{ avg_duty }}"
+                        data-margin="{{ item.margin_percent }}"
+                        data-username="{{ (author_display or '')|lower }}"
+                        data-manager="{{ (author_display or '')|lower }}">
                         <td>{{ item.timestamp }}</td>
                         <td>{{ item.tender_number }}</td>
-                        <td>{{ item.company }}</td>
-                        <td>{{ item.product }}{% if item.positions_count and item.positions_count > 1 %} <span class="badge badge-sm">+{{ item.positions_count - 1 }}</span>{% endif %}</td>
                         <td class="text-center">
-                            <span class="badge {{ 'badge-primary' if item.positions_count and item.positions_count > 1 else 'badge-secondary' }}">
-                                {{ item.positions_count or 1 }}
-                            </span>
+                            <span class="badge {{ 'badge-primary' if positions_count > 1 else 'badge-secondary' }}">{{ positions_count }}</span>
                         </td>
+                        <td><strong>{{ total_sale|format_number(2) }}</strong></td>
+                        <td>{{ total_purchase|format_number(2) }}</td>
+                        <td>{{ total_weight|format_number(2) }}</td>
+                        <td>{{ avg_duty|format_number(2) }}</td>
                         <td class="text-center">
-                            <span class="status-pill {{ 'status-success' if item.margin_percent|float > 20 else 'status-warning' }}">{{ item.margin_percent }}</span>
+                            <span class="status-pill {{ 'status-success' if item.margin_percent|float >= 20 else 'status-warning' }}">{{ item.margin_percent|format_number(1) }}</span>
                         </td>
-                        <td><strong>{{ item.final_price|format_number(2) }}</strong></td>
-                        <td><strong class="text-primary">{{ (item.total_general_price or (item.final_price * (item.quantity or 1)))|format_number(2) }}</strong></td>
-                        <td>{{ (item.duty_percent if item.duty_percent is not none else 0)|format_number(2) }}</td>
                         <td>{{ author_display or '—' }}</td>
                         <td class="table-actions">
                             <a href="{{ url_for('main.load_generation', gen_id=item.id) }}" class="btn btn-outline" title="Повторить генерацию">
@@ -130,11 +141,11 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const table = document.getElementById('historyTable');
+        const rows = table ? Array.from(table.querySelectorAll('tbody tr')) : [];
         const searchInput = document.getElementById('searchInput');
         const filterSelect = document.getElementById('filterSelect');
         const clearSearch = document.getElementById('clearSearch');
         const recordsCount = document.getElementById('recordsCount');
-        const rows = table ? Array.from(table.querySelectorAll('tbody tr')) : [];
         const modal = document.getElementById('detailsModal');
         const modalContent = document.getElementById('modalDetailsContent');
 
@@ -420,8 +431,12 @@
                             (row.getAttribute('data-tender') || '').toLowerCase().includes(searchText) ||
                             (row.getAttribute('data-drawing') || '').toLowerCase().includes(searchText) ||
                             (row.getAttribute('data-product') || '').toLowerCase().includes(searchText) ||
+                            (row.getAttribute('data-company') || '').toLowerCase().includes(searchText) ||
                             (row.getAttribute('data-date') || '').toLowerCase().includes(searchText) ||
                             (row.getAttribute('data-duty') || '').toString().toLowerCase().includes(searchText) ||
+                            (row.getAttribute('data-sale') || '').toString().toLowerCase().includes(searchText) ||
+                            (row.getAttribute('data-purchase') || '').toString().toLowerCase().includes(searchText) ||
+                            (row.getAttribute('data-manager') || '').includes(searchText) ||
                             usernameAttr.includes(searchText);
                 }
 
@@ -433,10 +448,14 @@
 
             if (searchText) {
                 clearSearch.style.display = 'inline-flex';
-                recordsCount.textContent = `Найдено записей: ${visible}`;
+                if (recordsCount) {
+                    recordsCount.textContent = `Найдено записей: ${visible}`;
+                }
             } else {
                 clearSearch.style.display = 'none';
-                recordsCount.textContent = `Всего записей: ${rows.length}`;
+                if (recordsCount) {
+                    recordsCount.textContent = `Всего записей: ${rows.length}`;
+                }
             }
         };
 

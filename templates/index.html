@@ -5,6 +5,11 @@
     <div id="cities-data" class="hidden">{{ cities | tojson }}</div>
     <div id="form-data" class="hidden">{{ form_data | tojson }}</div>
     {% set invalid_fields = form_data.get('_invalid_fields', []) if form_data else [] %}
+    {% set selected_budget_region = (form_data.budget_region if form_data and form_data.budget_region else 'cn') %}
+    {% set finance_credit_raw = form_data.finance_credit if form_data and form_data.finance_credit is not none else '' %}
+    {% set finance_bank_guarantee_raw = form_data.finance_bank_guarantee if form_data and form_data.finance_bank_guarantee is not none else '' %}
+    {% set finance_credit_checked = (finance_credit_raw|string|lower) in ['1', 'true', 'on', 'yes'] %}
+    {% set finance_bank_guarantee_checked = (finance_bank_guarantee_raw|string|lower) in ['1', 'true', 'on', 'yes'] %}
     <form action="{{ url_for('main.generate') }}" method="post" novalidate class="card-stack" id="generateForm">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
@@ -15,6 +20,34 @@
             </div>
             <div class="card">
                 <div class="form-grid three-columns">
+                    <div class="span-3 budget-finance-row">
+                        <fieldset class="field-group budget-region-selector">
+                            <legend class="field-label">Регион бюджета</legend>
+                            <div class="budget-region-options" role="radiogroup" aria-label="Регион бюджета">
+                                <label class="budget-region-chip">
+                                    <input type="radio" name="budget_region" value="cn" {% if selected_budget_region == 'cn' %}checked{% endif %}>
+                                    <span>Бюджет в юанях (Китай)</span>
+                                </label>
+                                <label class="budget-region-chip">
+                                    <input type="radio" name="budget_region" value="ru" {% if selected_budget_region == 'ru' %}checked{% endif %}>
+                                    <span>Бюджет в рублях (РФ)</span>
+                                </label>
+                            </div>
+                        </fieldset>
+                        <fieldset class="field-group finance-options-selector">
+                            <legend class="field-label">Финансирование</legend>
+                            <div class="finance-options" role="group" aria-label="Варианты финансирования">
+                                <label class="finance-option-chip">
+                                    <input type="checkbox" name="finance_credit" value="1" {% if finance_credit_checked %}checked{% endif %}>
+                                    <span>Кредит</span>
+                                </label>
+                                <label class="finance-option-chip">
+                                    <input type="checkbox" name="finance_bank_guarantee" value="1" {% if finance_bank_guarantee_checked %}checked{% endif %}>
+                                    <span>Банковская гарантия</span>
+                                </label>
+                            </div>
+                        </fieldset>
+                    </div>
                     <div class="field-group">
                         <label for="company" class="field-label">Название компании</label>
                         <input type="text" id="company" name="company" required
@@ -237,6 +270,11 @@
                     <div class="position-pill-row">
                         <span class="pill">Вес груза: <strong id="pillTotalWeight">0 кг</strong></span>
                     </div>
+                    <div class="position-pill-row">
+                        <span class="pill">Регион: <strong id="summaryBudgetRegion">—</strong></span>
+                        <span class="pill">Позиции: <strong id="summaryPositions">—</strong></span>
+                        <span class="pill">Финансирование: <strong id="summaryFinance">—</strong></span>
+                    </div>
                 </div>
                 <div class="summary-value">
                     <div class="value-box">
@@ -342,6 +380,12 @@
         const logisticsHelper = document.getElementById('logisticsHelper');
         const logisticsHelperValue = document.getElementById('logisticsHelperValue');
         const applyLogisticsSuggestionBtn = document.getElementById('applyLogisticsSuggestion');
+        const budgetRegionRadios = document.querySelectorAll('input[name="budget_region"]');
+        const financeCreditInput = document.querySelector('input[name="finance_credit"]');
+        const financeBankGuaranteeInput = document.querySelector('input[name="finance_bank_guarantee"]');
+        const summaryBudgetRegion = document.getElementById('summaryBudgetRegion');
+        const summaryPositions = document.getElementById('summaryPositions');
+        const summaryFinance = document.getElementById('summaryFinance');
         const mainTransportRadios = document.querySelectorAll('input[name="mainTransport"]');
         const mainCalcTypeRadios = document.querySelectorAll('input[name="mainCalcType"]');
         const mainLogisticsBtn = document.getElementById('calculateMainLogistics');
@@ -574,6 +618,62 @@
             }
         };
 
+        const regionLabels = {
+            cn: 'КНР / юани',
+            ru: 'РФ / рубли'
+        };
+
+        const regionSuffix = {
+            cn: 'по КНР',
+            ru: 'по РФ'
+        };
+
+        const formatPositionsCountLabel = (count) => {
+            const absCount = Math.abs(count);
+            const mod10 = absCount % 10;
+            const mod100 = absCount % 100;
+            let noun = 'позиций';
+            if (mod10 === 1 && mod100 !== 11) {
+                noun = 'позиция';
+            } else if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) {
+                noun = 'позиции';
+            }
+            return `${count} ${noun}`;
+        };
+
+        const getSelectedBudgetRegion = () => {
+            const selected = document.querySelector('input[name="budget_region"]:checked');
+            return selected ? selected.value : 'cn';
+        };
+
+        const collectFinanceOptions = () => {
+            const options = [];
+            if (financeCreditInput?.checked) {
+                options.push('Кредит');
+            }
+            if (financeBankGuaranteeInput?.checked) {
+                options.push('Банковская гарантия');
+            }
+            return options;
+        };
+
+        const updateSummaryStats = () => {
+            const region = getSelectedBudgetRegion();
+            if (summaryBudgetRegion) {
+                summaryBudgetRegion.textContent = regionLabels[region] || 'Не выбрано';
+            }
+            if (summaryPositions) {
+                const blocksCount = positionsContainer ? positionsContainer.querySelectorAll('.position-block').length : 0;
+                const baseLabel = formatPositionsCountLabel(blocksCount);
+                const suffix = regionSuffix[region] || '';
+                summaryPositions.textContent = suffix ? `${baseLabel} (${suffix})` : baseLabel;
+            }
+            if (summaryFinance) {
+                const financeSelections = collectFinanceOptions();
+                summaryFinance.textContent = financeSelections.length ? financeSelections.join(' + ') : 'Не выбрано';
+            }
+        };
+
         const formatWeight = (value) => {
             return Number.isFinite(value) ? value.toLocaleString('ru-RU', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) : '0';
         };
@@ -588,6 +688,7 @@
             const formatted = formatWeight(total);
             weightOutputField.value = `${formatted} кг`;
             pillTotalWeight.textContent = `${formatted} кг`;
+            updateSummaryStats();
         };
         const attachValidation = (field) => {
             field.addEventListener('blur', () => validateField(field));
@@ -1085,6 +1186,20 @@
                 refreshLogisticsValue();
             });
         });
+
+        budgetRegionRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                updateSummaryStats();
+            });
+        });
+
+        if (financeCreditInput) {
+            financeCreditInput.addEventListener('change', updateSummaryStats);
+        }
+
+        if (financeBankGuaranteeInput) {
+            financeBankGuaranteeInput.addEventListener('change', updateSummaryStats);
+        }
 
         if (mainLogisticsBtn) {
             mainLogisticsBtn.addEventListener('click', () => {

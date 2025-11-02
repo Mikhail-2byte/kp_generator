@@ -203,24 +203,86 @@ def get_generation_history(config) -> List[Dict[str, object]]:
                 .all()
             )
 
+            import json
+
             result: List[Dict[str, object]] = []
             for record in records:
+                positions: List[Dict[str, object]] = []
+
+                if record.positions_data:
+                    try:
+                        positions = json.loads(record.positions_data) or []
+                    except (json.JSONDecodeError, TypeError, ValueError):  # pragma: no cover - защитное ветвление
+                        positions = []
+
+                if not positions:
+                    quantity = record.quantity or 0
+                    cost_price = record.cost_price or 0
+                    duty_percent = record.duty_percent or 0
+                    weight_value = 0.0
+                    if quantity > 0:
+                        weight_value = (record.weight or 0) / quantity
+
+                    positions = [{
+                        'quantity': quantity,
+                        'cost_price': cost_price,
+                        'weight': weight_value,
+                        'duty_percent': duty_percent,
+                    }]
+
+                total_purchase_price = 0.0
+                total_weight = float(record.weight or 0)
+                duty_weight_sum = 0.0
+                duty_value_sum = 0.0
+
+                for position in positions:
+                    quantity = float(position.get('quantity') or 0)
+                    cost_price = float(position.get('cost_price') or 0)
+                    duty_percent = float(position.get('duty_percent') or 0)
+                    weight_per_unit = position.get('weight')
+
+                    total_purchase_price += cost_price * quantity
+
+                    if total_weight == 0 and weight_per_unit is not None:
+                        total_weight += float(weight_per_unit or 0) * quantity
+
+                    if quantity > 0:
+                        duty_weight_sum += quantity
+                        duty_value_sum += duty_percent * quantity
+                    else:
+                        duty_value_sum += duty_percent
+
+                avg_duty_percent = duty_value_sum / duty_weight_sum if duty_weight_sum else float(record.duty_percent or 0)
+
+                total_sale_price = record.total_general_price
+                if total_sale_price is None:
+                    total_sale_price = record.final_price * (record.quantity or 1)
+
+                positions_count = record.positions_count or len(positions) or 1
+
                 result.append({
                     'id': record.id,
                     'timestamp': _format_history_timestamp(record.timestamp),
                     'tender_number': record.tender_number or 'Не указан',
                     'company': record.company,
                     'product': record.product,
+                    'quantity': record.quantity,
+                    'cost_price': record.cost_price,
                     'margin_percent': record.margin_percent,
                     'final_price': record.final_price,
+                    'total_general_price': total_sale_price,
+                    'total_purchase_price': total_purchase_price,
+                    'total_weight': total_weight,
+                    'avg_duty_percent': avg_duty_percent,
                     'drawing_number': record.drawing_number or 'Не указан',
                     'duty_percent': record.duty_percent,
+                    'weight': record.weight,
                     'username': record.user.username if record.user else None,
                     'last_name': record.user.last_name if record.user else None,
                     'first_name': record.user.first_name if record.user else None,
-                    'positions_count': record.positions_count or 1,
-                    'total_general_price': record.total_general_price,
+                    'positions_count': positions_count,
                 })
+
             return result
     except Exception as exc:
         logging.error('Error getting generation history: %s', exc)

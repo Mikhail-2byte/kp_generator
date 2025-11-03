@@ -1,6 +1,5 @@
 # app/services/multi_position_processor.py
 from copy import copy
-from pathlib import Path
 from typing import List, Dict, Any
 import openpyxl
 from openpyxl.formula.translate import Translator
@@ -115,7 +114,7 @@ class MultiPositionProcessor:
 
     def update_total_row_formulas(self, sheet) -> None:
         """Пересчитывает формулы в итоговой строке и строке с НДС."""
-        last_data_row = max(self.find_last_data_row(sheet), INSERT_ROW_INDEX)
+        last_data_row = max(self.find_last_data_row(sheet), DATA_START_ROW)
         if last_data_row < DATA_START_ROW:
             return
 
@@ -144,7 +143,7 @@ class MultiPositionProcessor:
 
     def update_summary_block(self, sheet, rows_added: int = 0) -> None:
         """Обновляет формулы итоговых строк c учётом новой строки."""
-        last_data_row = max(self.find_last_data_row(sheet), INSERT_ROW_INDEX)
+        last_data_row = max(self.find_last_data_row(sheet), DATA_START_ROW)
         total_row = last_data_row + 1
         
         # Динамически вычисляем все позиции на основе total_row
@@ -188,12 +187,12 @@ class MultiPositionProcessor:
 
         sheet[f"I{i29_row}"] = f"=O{total_row}"
         
-        d_reference_row = total_row + 32
-        sheet[f"I{i30_row}"] = f"=IF(H{i30_row}=D{d_reference_row},I{i29_row}*3.2%,0)"
-
-        sheet[f"I{i31_row}"] = f"=Y{total_row}"
-        sheet[f"I{i32_row}"] = f"=S{total_row}"
+        # Формулы для I30-I33 ссылаются на итоги по соответствующим столбцам
+        sheet[f"I{i30_row}"] = f"=Y{total_row}"
+        sheet[f"I{i31_row}"] = f"=S{total_row}"
+        sheet[f"I{i32_row}"] = f"=U{total_row}"
         sheet[f"I{i33_row}"] = f"=U{total_row}"
+
         sheet[f"I{i34_row}"] = f"=IF(H{i34_row}=\"ДА\",I{i29_row}*16%/365*K{k_formula_row},0)"
         sheet[f"I{i35_row}"] = f"=AA{total_row}"
         sheet[f"I{i36_row}"] = f"=AB{total_row}"
@@ -214,7 +213,7 @@ class MultiPositionProcessor:
 
     def update_logistics_columns(self, sheet) -> None:
         """Настраивает формулы в столбцах R и T для всех строк с данными."""
-        last_data_row = max(self.find_last_data_row(sheet), INSERT_ROW_INDEX)
+        last_data_row = max(self.find_last_data_row(sheet), DATA_START_ROW)
         if last_data_row < DATA_START_ROW:
             return
 
@@ -232,7 +231,7 @@ class MultiPositionProcessor:
             return
         
         # Нумеруем все строки с данными начиная с 1
-        for i, row in enumerate(range(DATA_START_ROW, last_data_row + 1), start=1):
+        for i, row in enumerate(range(DATA_START_ROW, last_data_row + 1), 1):
             sheet[f"B{row}"] = i
 
     def insert_new_rows(self, sheet, rows_to_add: int) -> None:
@@ -263,14 +262,14 @@ class MultiPositionProcessor:
         """Заполняет данные позиции в указанной строке."""
         # Маппинг полей формы на ячейки Excel
         field_mapping = {
-            'product': 'C',      # Наименование товара
+            'product': 'C',  # Наименование товара
             'drawing_number': 'E',  # Номер чертежа
-            'material': 'D',     # Материал
-            'cost_price': 'M',   # Сумма закупа
+            'material': 'D',  # Материал
+            'cost_price': 'M',  # Сумма закупа
             'cost_price_per_kg': 'N',  # Цена за кг
-            'quantity': 'G',     # Количество
-            'weight': 'P',       # Вес за шт
-            'duty_percent': 'X', # Пошлина
+            'quantity': 'G',  # Количество
+            'weight': 'P',  # Вес за шт
+            'duty_percent': 'X',  # Пошлина
         }
         
         for field, column in field_mapping.items():
@@ -339,7 +338,13 @@ class MultiPositionProcessor:
         # Заполняем данные для всех позиций
         for i, position in enumerate(positions):
             row_number = DATA_START_ROW + i
+            sheet[f"B{row_number}"] = i + 1
             self.fill_position_data(sheet, position, row_number)
+        
+        # Гарантируем обновление формул и сводного блока даже при одной позиции
+        self.update_total_row_formulas(sheet)
+        self.update_summary_block(sheet, positions_to_add)
+        self.update_logistics_columns(sheet)
         
         # Сохраняем в BytesIO
         excel_file = BytesIO()

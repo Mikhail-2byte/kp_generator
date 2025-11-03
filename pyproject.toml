@@ -11,12 +11,11 @@ extend-exclude = [
 ]
 
 [tool.ruff.lint]
-select = [
-    "E",
-    "F",
-    "B",
-    "I",
-]
+select = ["E", "F", "B", "I"]
+ignore = ["E501"]  # длина строки контролирует black; не шумим в редакторе
+
+[tool.ruff.lint.per-file-ignores]
+"migrations/*" = ["E402", "F401", "F403"]
 
 [tool.ruff.format]
 quote-style = "single"

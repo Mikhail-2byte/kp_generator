@@ -293,7 +293,6 @@
             <button type="submit" class="btn btn-primary" id="generateBtn">
                 {{ sidebar_icon('download')|safe }}
                 <span id="generateText">Сгенерировать КП</span>
-                <span id="generateSpinner" class="visually-hidden"></span>
             </button>
         </div>
     </form>
@@ -346,10 +345,6 @@
         </div>
     </div>
 </div>
-
-<div class="loading-overlay" id="loadingOverlay" aria-hidden="true">
-    <div class="loading-spinner" role="status"></div>
-</div>
 {% endblock %}
 
 {% block scripts %}
@@ -371,7 +366,6 @@
             return;
         }
         const requiredSelector = 'input[required], textarea[required], select[required]';
-        const loadingOverlay = document.getElementById('loadingOverlay');
         const generateBtn = document.getElementById('generateBtn');
         const generateText = document.getElementById('generateText');
         const weightOutputField = document.getElementById('totalWeightValue');
@@ -1479,7 +1473,6 @@
 
             generateText.textContent = 'Генерация...';
             generateBtn.disabled = true;
-            loadingOverlay.classList.add('active');
         });
 
         const firstField = form.querySelector('input:not([type="hidden"])');

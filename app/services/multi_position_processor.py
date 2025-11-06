@@ -185,12 +185,17 @@ class MultiPositionProcessor:
         sheet[f"I{i27_row}"] = f"=I{i25_row}-I{i26_row}"
         sheet[f"I{i28_row}"] = f"=SUM(I{i29_row}:I{i28_row + 10})"
 
-        sheet[f"I{i29_row}"] = f"=O{total_row}"
+        # Динамическая формула ЕСЛИ для строки I29/I30/... в зависимости от числа позиций
+        positions_count = max(0, last_data_row - DATA_START_ROW + 1)
+        # Формула должна всегда стоять в строке шаблона I29, которая динамически равна i30_row
+        target_if_row = i30_row
+        sheet[f"I{target_if_row}"] = (
+            f"=IF(H{target_if_row}=D{target_if_row + 14},I{target_if_row - 1}*3.2%,0)"
+        )
         
         # Формулы для I30-I33 ссылаются на итоги по соответствующим столбцам
-        sheet[f"I{i30_row}"] = f"=Y{total_row}"
-        sheet[f"I{i31_row}"] = f"=S{total_row}"
-        sheet[f"I{i32_row}"] = f"=U{total_row}"
+        sheet[f"I{i31_row}"] = f"=Y{total_row}"
+        sheet[f"I{i32_row}"] = f"=S{total_row}"
         sheet[f"I{i33_row}"] = f"=U{total_row}"
 
         sheet[f"I{i34_row}"] = f"=IF(H{i34_row}=\"ДА\",I{i29_row}*16%/365*K{k_formula_row},0)"
@@ -221,8 +226,8 @@ class MultiPositionProcessor:
         logistics_row = total_row + 3
 
         for row in range(DATA_START_ROW, last_data_row + 1):
-            sheet[f"R{row}"] = f"=$U${logistics_row}/$Q${total_row}*P{row}/12*0.3"
-            sheet[f"T{row}"] = f"=$U${logistics_row}/$Q${total_row}*P{row}/12*0.7"
+            sheet[f"R{row}"] = f"=$U${logistics_row}/$Q${total_row}*P{row}/11.5*0.3"
+            sheet[f"T{row}"] = f"=$U${logistics_row}/$Q${total_row}*P{row}/11.5*0.7"
 
     def update_row_numbers(self, sheet) -> None:
         """Обновляет нумерацию строк в столбце B начиная с DATA_START_ROW."""

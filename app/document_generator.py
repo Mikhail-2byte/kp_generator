@@ -12,6 +12,7 @@ def generate_excel_document(
     form_data,
     final_price,
     general_prise,
+    position_prices=None,
 ):
     """Готовит Excel-файл в памяти."""
     # Извлекаем позиции из формы
@@ -26,6 +27,7 @@ def generate_excel_document(
         form_data,
         final_price,
         general_prise,
+        position_prices=position_prices,
     )
 
 

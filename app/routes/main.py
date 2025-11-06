@@ -388,7 +388,13 @@ def generate():
         excel_template_path = 'templates_docs/template.xlsx'
         word_template_path = 'templates_docs/template.docx'
 
-        excel_file = generate_excel_document(excel_template_path, form_data, final_price, total_general_price)
+        excel_file = generate_excel_document(
+            excel_template_path,
+            form_data,
+            final_price,
+            total_general_price,
+            position_prices=position_prices,
+        )
         word_file = generate_word_document(word_template_path, form_data, final_price, total_general_price, final_price_nds)
         zip_buffer, file_prefix = create_zip_archive(excel_file, word_file, company)
 

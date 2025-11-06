@@ -184,6 +184,7 @@ class MultiPositionProcessor:
         sheet[f"I{i26_row}"] = f"=I{i25_row}/120*20"
         sheet[f"I{i27_row}"] = f"=I{i25_row}-I{i26_row}"
         sheet[f"I{i28_row}"] = f"=SUM(I{i29_row}:I{i28_row + 10})"
+        sheet[f"I{i29_row}"] = f"=O{total_row}"
 
         # Динамическая формула ЕСЛИ для строки I29/I30/... в зависимости от числа позиций
         positions_count = max(0, last_data_row - DATA_START_ROW + 1)
@@ -320,7 +321,7 @@ class MultiPositionProcessor:
         if general_price is not None:
             sheet['I11'] = general_price  # Общая цена
 
-    def process_multiple_positions(self, positions: List[Dict[str, Any]], form_data: Dict[str, Any] = None, final_price: float = None, general_price: float = None) -> BytesIO:
+    def process_multiple_positions(self, positions: List[Dict[str, Any]], form_data: Dict[str, Any] = None, final_price: float = None, general_price: float = None, position_prices: List[Dict[str, Any]] | None = None) -> BytesIO:
         """Обрабатывает множественные позиции и возвращает Excel файл в памяти."""
         if not positions:
             raise ValueError("Список позиций не может быть пустым")
@@ -345,6 +346,16 @@ class MultiPositionProcessor:
             row_number = DATA_START_ROW + i
             sheet[f"B{row_number}"] = i + 1
             self.fill_position_data(sheet, position, row_number)
+
+            # Проставляем рассчитанные цены по позиции, если переданы
+            if position_prices and i < len(position_prices):
+                pp = position_prices[i]
+                fp = pp.get('final_price')
+                gp = pp.get('general_price')
+                if fp is not None:
+                    sheet[f"H{row_number}"] = fp  # Цена за единицу по позиции
+                if gp is not None:
+                    sheet[f"I{row_number}"] = gp  # Выручка по позиции
         
         # Гарантируем обновление формул и сводного блока даже при одной позиции
         self.update_total_row_formulas(sheet)

@@ -9,6 +9,9 @@ class MultiPositionCalculator:
     def __init__(self, config=None):
         self.config = config or {}
         self.calc_config = self.config.get('calculation_constants', {})
+        pricing_cfg = (self.config or {}).get('pricing', {})
+        # Режим ценообразования: 'global' (по общему коэффициенту) или 'per_position' (каждая позиция к целевой марже)
+        self.pricing_mode = pricing_cfg.get('mode', 'global')
         
         # Константы расчета
         self.CONVERSION_RATE = self.calc_config.get('conversion_rate', 12)
@@ -103,34 +106,48 @@ class MultiPositionCalculator:
             })
             total_costs += costs['total_cost']
         
-        # Рассчитываем коэффициент для достижения целевой маржи
-        # total_revenue = total_costs / (1 - target_margin_percent / 100)
-        # coefficient = total_revenue / total_costs
-        target_revenue = total_costs / (1 - target_margin_percent / 100)
-        price_coefficient = target_revenue / total_costs if total_costs > 0 else 1
-        
-        # Рассчитываем цены для каждой позиции
         result_positions = []
         total_revenue = 0
-        
-        for pos_data in position_costs:
-            position = pos_data['position']
-            costs = pos_data['costs']
-            
-            # Применяем коэффициент к затратам для получения цены
-            final_price = costs['cost_per_unit'] * price_coefficient
-            quantity = int(position['quantity'])
-            general_price = final_price * quantity
-            
-            total_revenue += general_price
-            
-            result_positions.append({
-                'position': position,
-                'final_price': final_price,
-                'general_price': general_price,
-                'costs': costs,
-                'margin': (final_price - costs['cost_per_unit']) / final_price * 100 if final_price > 0 else 0
-            })
+
+        if self.pricing_mode == 'per_position':
+            # Ценообразование: каждая позиция достигает целевой маржи
+            for pos_data in position_costs:
+                position = pos_data['position']
+                costs = pos_data['costs']
+                cost_per_unit = costs['cost_per_unit']
+                if target_margin_percent >= 100:
+                    final_price = cost_per_unit  # защита от деления на ноль; не повышаем цену
+                else:
+                    final_price = cost_per_unit / (1 - target_margin_percent / 100)
+                quantity = int(position['quantity'])
+                general_price = final_price * quantity
+                total_revenue += general_price
+                result_positions.append({
+                    'position': position,
+                    'final_price': final_price,
+                    'general_price': general_price,
+                    'costs': costs,
+                    'margin': (final_price - cost_per_unit) / final_price * 100 if final_price > 0 else 0
+                })
+            price_coefficient = None
+        else:
+            # Ценообразование: общий коэффициент по целевой суммарной марже
+            target_revenue = total_costs / (1 - target_margin_percent / 100)
+            price_coefficient = target_revenue / total_costs if total_costs > 0 else 1
+            for pos_data in position_costs:
+                position = pos_data['position']
+                costs = pos_data['costs']
+                final_price = costs['cost_per_unit'] * price_coefficient
+                quantity = int(position['quantity'])
+                general_price = final_price * quantity
+                total_revenue += general_price
+                result_positions.append({
+                    'position': position,
+                    'final_price': final_price,
+                    'general_price': general_price,
+                    'costs': costs,
+                    'margin': (final_price - costs['cost_per_unit']) / final_price * 100 if final_price > 0 else 0
+                })
         
         # Проверяем итоговую маржу
         actual_margin = (total_revenue - total_costs) / total_revenue * 100 if total_revenue > 0 else 0

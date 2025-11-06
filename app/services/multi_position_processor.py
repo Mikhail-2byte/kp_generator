@@ -1,5 +1,6 @@
 # app/services/multi_position_processor.py
 from copy import copy
+import math
 from typing import List, Dict, Any
 import openpyxl
 from openpyxl.formula.translate import Translator
@@ -133,6 +134,8 @@ class MultiPositionProcessor:
             sheet[f"{col}{total_row}"] = formula
 
         sheet[f"X{total_row}"] = f"=AVERAGE(X{DATA_START_ROW}:X{last_data_row})"
+        # Итог в X также показываем как проценты без десятых
+        sheet[f"X{total_row}"].number_format = '0%'
         sheet[f"Z{total_row}"] = (
             f"=(I{total_row}-O{total_row}-S{total_row}-U{total_row}-"
             f"Y{total_row}-AA{total_row}-AC{total_row}-AB{total_row})/I{total_row}"
@@ -294,7 +297,16 @@ class MultiPositionProcessor:
                     except (ValueError, TypeError):
                         value = 1
                 
-                sheet[f"{column}{row_number}"] = value
+                cell = sheet[f"{column}{row_number}"]
+                cell.value = value
+                # Форматируем числа: X-столбец как проценты без десятых, G-столбец как целое число, остальные до двух знаков
+                if isinstance(value, (int, float)):
+                    if column == 'X':
+                        cell.number_format = '0%'
+                    elif column == 'G':
+                        cell.number_format = '0'  # Целое число для количества
+                    else:
+                        cell.number_format = '0.00'
 
     def fill_common_data(self, sheet, form_data: Dict[str, Any], final_price: float = None, general_price: float = None) -> None:
         """Заполняет общие данные (компания, логистика, дата и т.д.) в Excel."""
@@ -317,9 +329,12 @@ class MultiPositionProcessor:
         
         # Заполняем цены, если они переданы
         if final_price is not None:
-            sheet['H10'] = final_price  # Цена за единицу
+            # Округляем вверх до десятков
+            rounded_fp = math.ceil(float(final_price) / 10.0) * 10.0
+            sheet['H10'] = rounded_fp  # Цена за единицу
         if general_price is not None:
-            sheet['I11'] = general_price  # Общая цена
+            gp = round(float(general_price), 2)
+            sheet['I11'] = gp  # Общая цена
 
     def process_multiple_positions(self, positions: List[Dict[str, Any]], form_data: Dict[str, Any] = None, final_price: float = None, general_price: float = None, position_prices: List[Dict[str, Any]] | None = None) -> BytesIO:
         """Обрабатывает множественные позиции и возвращает Excel файл в памяти."""
@@ -351,11 +366,12 @@ class MultiPositionProcessor:
             if position_prices and i < len(position_prices):
                 pp = position_prices[i]
                 fp = pp.get('final_price')
-                gp = pp.get('general_price')
                 if fp is not None:
-                    sheet[f"H{row_number}"] = fp  # Цена за единицу по позиции
-                if gp is not None:
-                    sheet[f"I{row_number}"] = gp  # Выручка по позиции
+                    # Округляем вверх до десятков
+                    fp_rounded = math.ceil(float(fp) / 10.0) * 10.0
+                    sheet[f"H{row_number}"] = fp_rounded  # Цена за единицу по позиции
+                # Вставляем формулу для выручки: цена за единицу * количество
+                sheet[f"I{row_number}"] = f"=H{row_number}*G{row_number}"
         
         # Гарантируем обновление формул и сводного блока даже при одной позиции
         self.update_total_row_formulas(sheet)

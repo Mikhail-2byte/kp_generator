@@ -395,7 +395,15 @@ def generate():
             total_general_price,
             position_prices=position_prices,
         )
-        word_file = generate_word_document(word_template_path, form_data, final_price, total_general_price, final_price_nds)
+        word_file = generate_word_document(
+            word_template_path,
+            form_data,
+            final_price,
+            total_general_price,
+            final_price_nds,
+            positions=positions,
+            position_prices=position_prices,
+        )
         zip_buffer, file_prefix = create_zip_archive(excel_file, word_file, company)
 
         return send_file(

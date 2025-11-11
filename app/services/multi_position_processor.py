@@ -308,7 +308,7 @@ class MultiPositionProcessor:
                     else:
                         cell.number_format = '0.00'
 
-    def fill_common_data(self, sheet, form_data: Dict[str, Any], final_price: float = None, general_price: float = None) -> None:
+    def fill_common_data(self, sheet, form_data: Dict[str, Any], final_price: float = None, general_price: float = None, manager_fio: str = None) -> None:
         """Заполняет общие данные (компания, логистика, дата и т.д.) в Excel."""
         from datetime import datetime
         
@@ -327,6 +327,10 @@ class MultiPositionProcessor:
         sheet['D5'] = tender_number  # Номер тендера
         sheet['P4'] = delivery_address  # Адрес доставки
         
+        # Заполняем ФИО менеджера в ячейку N22
+        if manager_fio:
+            sheet['N22'] = manager_fio
+        
         # Заполняем цены, если они переданы
         if final_price is not None:
             # Округляем вверх до десятков
@@ -336,7 +340,7 @@ class MultiPositionProcessor:
             gp = round(float(general_price), 2)
             sheet['I11'] = gp  # Общая цена
 
-    def process_multiple_positions(self, positions: List[Dict[str, Any]], form_data: Dict[str, Any] = None, final_price: float = None, general_price: float = None, position_prices: List[Dict[str, Any]] | None = None) -> BytesIO:
+    def process_multiple_positions(self, positions: List[Dict[str, Any]], form_data: Dict[str, Any] = None, final_price: float = None, general_price: float = None, position_prices: List[Dict[str, Any]] | None = None, manager_fio: str = None) -> BytesIO:
         """Обрабатывает множественные позиции и возвращает Excel файл в памяти."""
         if not positions:
             raise ValueError("Список позиций не может быть пустым")
@@ -347,7 +351,7 @@ class MultiPositionProcessor:
         
         # Заполняем общие данные, если они переданы
         if form_data:
-            self.fill_common_data(sheet, form_data, final_price, general_price)
+            self.fill_common_data(sheet, form_data, final_price, general_price, manager_fio)
         
         # Количество позиций для добавления (минус 1, так как первая строка уже есть)
         positions_to_add = len(positions) - 1

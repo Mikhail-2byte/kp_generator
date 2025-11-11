@@ -14,6 +14,7 @@ def generate_excel_document(
     final_price,
     general_prise,
     position_prices=None,
+    manager_fio=None,
 ):
     """Готовит Excel-файл в памяти."""
     # Извлекаем позиции из формы
@@ -29,6 +30,7 @@ def generate_excel_document(
         final_price,
         general_prise,
         position_prices=position_prices,
+        manager_fio=manager_fio,
     )
 
 
@@ -40,6 +42,7 @@ def generate_word_document(
     final_price_NDS,
     positions=None,
     position_prices=None,
+    contact_info=None,
 ):
     """
     Формирует коммерческое предложение в формате Word на основе шаблона.
@@ -55,6 +58,7 @@ def generate_word_document(
         final_price_NDS: Цена с НДС
         positions: Список позиций (опционально, для множественных позиций)
         position_prices: Список рассчитанных цен для каждой позиции (опционально)
+        contact_info: Контактная информация менеджера (опционально)
     """
     # Извлекаем позиции, если они не переданы (обратная совместимость)
     if positions is None:
@@ -72,6 +76,7 @@ def generate_word_document(
         general_prise,
         final_price_nds=final_price_NDS,
         position_prices=position_prices,
+        contact_info=contact_info,
     )
 
 

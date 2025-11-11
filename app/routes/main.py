@@ -385,6 +385,17 @@ def generate():
                 **build_context('index', 'Создание коммерческого предложения', form_data=form_data, cities=cities)
             )
 
+        # Формируем ФИО менеджера для заполнения в шаблоне
+        manager_fio = None
+        contact_info = None
+        if current_user.is_authenticated:
+            last_name = current_user.last_name or ''
+            first_name = current_user.first_name or ''
+            if last_name or first_name:
+                manager_fio = f"{last_name} {first_name}".strip()
+            # Получаем контактную информацию из профиля пользователя
+            contact_info = current_user.contact_info or None
+
         excel_template_path = 'templates_docs/template.xlsx'
         word_template_path = 'templates_docs/template.docx'
 
@@ -394,6 +405,7 @@ def generate():
             final_price,
             total_general_price,
             position_prices=position_prices,
+            manager_fio=manager_fio,
         )
         word_file = generate_word_document(
             word_template_path,
@@ -403,6 +415,7 @@ def generate():
             final_price_nds,
             positions=positions,
             position_prices=position_prices,
+            contact_info=contact_info,
         )
         zip_buffer, file_prefix = create_zip_archive(excel_file, word_file, company)
 

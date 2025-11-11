@@ -304,7 +304,8 @@ class WordMultiPositionProcessor:
                     cell.add_paragraph(cell_text)
     
     def replace_common_placeholders(self, form_data: Dict[str, Any], final_price: float = None, 
-                                   general_price: float = None, final_price_nds: float = None) -> None:
+                                   general_price: float = None, final_price_nds: float = None, 
+                                   contact_info: str = None) -> None:
         """
         Заменяет общие плейсхолдеры в документе (компания, дата, итоговые суммы и т.д.).
         
@@ -313,6 +314,7 @@ class WordMultiPositionProcessor:
             final_price: Цена за единицу (опционально)
             general_price: Общая цена (опционально)
             final_price_nds: Цена с НДС (опционально)
+            contact_info: Контактная информация менеджера (опционально)
         """
         doc = self.load_template()
         
@@ -331,6 +333,10 @@ class WordMultiPositionProcessor:
             '{{ delivery_address }}': delivery_address,
             '{{ date }}': current_date,
         }
+        
+        # Добавляем контактную информацию, если она передана
+        if contact_info:
+            word_data['{{ contact_info }}'] = contact_info.strip()
         
         # Добавляем итоговые цены, если они переданы
         # ВАЖНО: НЕ добавляем {{ final_price }} и {{ general_prise }} в word_data,
@@ -389,7 +395,8 @@ class WordMultiPositionProcessor:
         final_price: float = None,
         general_price: float = None,
         final_price_nds: float = None,
-        position_prices: List[Dict[str, Any]] = None
+        position_prices: List[Dict[str, Any]] = None,
+        contact_info: str = None
     ) -> BytesIO:
         """
         Обрабатывает множественные позиции и возвращает Word файл в памяти.
@@ -401,6 +408,7 @@ class WordMultiPositionProcessor:
             general_price: Общая цена (опционально)
             final_price_nds: Цена с НДС (опционально)
             position_prices: Список рассчитанных цен для каждой позиции (опционально)
+            contact_info: Контактная информация менеджера (опционально)
             
         Returns:
             BytesIO объект с Word документом
@@ -413,7 +421,7 @@ class WordMultiPositionProcessor:
         
         # Заменяем общие плейсхолдеры
         if form_data:
-            self.replace_common_placeholders(form_data, final_price, general_price, final_price_nds)
+            self.replace_common_placeholders(form_data, final_price, general_price, final_price_nds, contact_info)
         
         # Находим таблицу с позициями
         positions_table = self.find_positions_table()

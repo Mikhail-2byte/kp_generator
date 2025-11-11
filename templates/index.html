@@ -13,11 +13,34 @@
     <form action="{{ url_for('main.generate') }}" method="post" novalidate class="card-stack" id="generateForm">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-        <section class="section">
-            <div class="section-header">
-                <h2 class="section-title">Общая информация</h2>
-                <p class="section-description">Заполните ключевые параметры сделки и доставки.</p>
+        <div class="form-page-header">
+            <div class="form-page-header-text">
+                <h1 class="form-page-title">Новое коммерческое предложение</h1>
+                <p class="form-page-subtitle">Заполните форму для создания нового коммерческого предложения</p>
             </div>
+            <div class="form-page-actions">
+                <input type="file" id="importExcelInput" class="visually-hidden" accept=".xlsx,.xlsm">
+                <button type="button" class="btn btn-outline btn-sm" id="importExcelBtn">
+                    {{ sidebar_icon('file-text')|safe }}
+                    <span>Импорт из Excel</span>
+                </button>
+                <div class="generate-action-group">
+                    <button type="submit" class="btn btn-primary btn-sm" id="generateBtn">
+                        {{ sidebar_icon('download')|safe }}
+                        <span id="generateText">Сгенерировать КП</span>
+                    </button>
+                    <label for="margin_percent" class="margin-field">
+                        <span>Маржа, %</span>
+                        <input type="number" id="margin_percent" name="margin_percent" min="0" max="100" step="0.1" required
+                               value="{{ form_data.margin_percent if form_data and form_data.margin_percent else '30' }}"
+                               class="{% if invalid_fields and 'margin_percent' in invalid_fields %}is-invalid{% endif %}"
+                               aria-invalid="{{ 'true' if invalid_fields and 'margin_percent' in invalid_fields else 'false' }}">
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <section class="section">
             <div class="card">
                 <div class="form-grid three-columns">
                     <div class="span-3 budget-finance-row">
@@ -122,133 +145,132 @@
         </section>
 
         <section class="section">
-            <div class="section-header">
-                <div>
-                    <h2 class="section-title">Параметры изделия</h2>
+            <div class="card positions-card">
+                <div class="positions-card-header">
+                    <h3 class="positions-card-title">Товары и услуги</h3>
+                    <button type="button" class="btn btn-secondary add-position-btn" id="addPositionBtn">
+                        {{ sidebar_icon('plus')|safe }}
+                        <span>Добавить позицию</span>
+                    </button>
                 </div>
-                <div class="position-actions">
-                    <input type="file" id="importExcelInput" class="visually-hidden" accept=".xlsx,.xlsm">
-                    <button type="button" class="btn btn-primary" id="importExcelBtn">Выгрузить значения из Excel</button>
-                    <button type="button" class="btn btn-primary add-position-btn" id="addPositionBtn">Добавить позицию</button>
-                </div>
-            </div>
-            <div class="card" id="positionsContainer">
-                <div class="position-block" data-position="1">
-                    <div class="position-header">
-                        <div class="position-label">Позиция <span data-role="position-number">1</span></div>
-                        <button type="button" class="btn btn-ghost btn-xs remove-position-btn" data-role="remove-position" title="Удалить позицию" disabled>
-                            {{ sidebar_icon('trash2')|safe }}
-                            <span class="visually-hidden">Удалить позицию</span>
-                        </button>
-                    </div>
-                    <div class="parameters-row">
-                        <div class="field-group parameter-wide">
-                            <label for="product" class="field-label" data-label-for="product">Наименование товара</label>
-                            <input type="text" id="product" name="product" data-field="product" required
-                                value="{{ form_data.product if form_data and form_data.product else '' }}"
-                                class="{% if invalid_fields and 'product' in invalid_fields %}is-invalid{% endif %}"
-                                aria-invalid="{{ 'true' if invalid_fields and 'product' in invalid_fields else 'false' }}">
-                        </div>
-                        <div class="field-group parameter-wide drawing-field">
-                            <label for="drawing_number" class="field-label" data-label-for="drawing_number">Номер чертежа</label>
-                            <input type="text" id="drawing_number" name="drawing_number" data-field="drawing_number"
-                                value="{{ form_data.drawing_number if form_data and form_data.drawing_number else '' }}">
-                            <button type="button" class="drawing-alert" data-role="drawing-alert" hidden title="Показать найденные бюджеты">
-                                <span aria-hidden="true">!</span>
-                                <span class="visually-hidden">Найдены ранее созданные бюджеты с этим номером чертежа</span>
-                            </button>
-                        </div>
-                        <div class="field-group parameter-wide">
-                            <label for="material" class="field-label" data-label-for="material">Материал</label>
-                            <input type="text" id="material" name="material" data-field="material"
-                                value="{{ form_data.material if form_data and form_data.material else '' }}">
-                        </div>
-                        <div class="field-group slim-field">
-                            <label for="cost_price" class="field-label" data-label-for="cost_price">Сумма закупа</label>
-                            <input type="number" id="cost_price" name="cost_price" data-field="cost_price" min="0" step="0.01" required
-                                value="{{ form_data.cost_price if form_data and form_data.cost_price else '' }}"
-                                class="{% if invalid_fields and 'cost_price' in invalid_fields %}is-invalid{% endif %}"
-                                aria-invalid="{{ 'true' if invalid_fields and 'cost_price' in invalid_fields else 'false' }}">
-                        </div>
-                        <div class="field-group slim-field">
-                            <label for="cost_price_per_kg" class="field-label" data-label-for="cost_price_per_kg">Цена за кг</label>
-                            <input type="number" id="cost_price_per_kg" name="cost_price_per_kg" data-field="cost_price_per_kg" min="0" step="0.01"
-                                value="{{ form_data.cost_price_per_kg if form_data and form_data.cost_price_per_kg else '' }}"
-                                class="{% if invalid_fields and 'cost_price_per_kg' in invalid_fields %}is-invalid{% endif %}"
-                                aria-invalid="{{ 'true' if invalid_fields and 'cost_price_per_kg' in invalid_fields else 'false' }}">
-                        </div>
-                        <div class="field-group slim-field">
-                            <label for="quantity" class="field-label" data-label-for="quantity">Количество, шт.</label>
-                            <input type="number" id="quantity" name="quantity" data-field="quantity" min="1" step="1" required
-                                value="{{ form_data.quantity if form_data and form_data.quantity else '' }}"
-                                class="position-quantity{% if invalid_fields and 'quantity' in invalid_fields %} is-invalid{% endif %}"
-                                aria-invalid="{{ 'true' if invalid_fields and 'quantity' in invalid_fields else 'false' }}">
-                        </div>
-                        <div class="field-group slim-field">
-                            <label for="weight" class="field-label" data-label-for="weight">Вес за шт. (кг)</label>
-                            <input type="number" id="weight" name="weight" data-field="weight" min="0" step="0.01" required
-                                value="{{ form_data.weight if form_data and form_data.weight else '' }}"
-                                class="position-weight{% if invalid_fields and 'weight' in invalid_fields %} is-invalid{% endif %}"
-                                aria-invalid="{{ 'true' if invalid_fields and 'weight' in invalid_fields else 'false' }}">
-                        </div>
-                        <div class="field-group slim-field">
-                            <label for="duty_percent" class="field-label" data-label-for="duty_percent">Пошлина (%)</label>
-                            <input type="number" id="duty_percent" name="duty_percent" data-field="duty_percent" min="0" max="100" step="0.1"
-                                value="{{ form_data.duty_percent if form_data and form_data.duty_percent else '0' }}"
-                                class="position-duty{% if invalid_fields and 'duty_percent' in invalid_fields %} is-invalid{% endif %}"
-                                aria-invalid="{{ 'true' if invalid_fields and 'duty_percent' in invalid_fields else 'false' }}">
-                        </div>
-                    </div>
-                </div>
-                <template id="positionTemplate">
-                    <div class="position-block" data-position>
+                <div class="positions-card-body" id="positionsContainer">
+                    <div class="position-block" data-position="1">
                         <div class="position-header">
-                            <div class="position-label">Позиция <span data-role="position-number"></span></div>
-                            <button type="button" class="btn btn-ghost btn-xs remove-position-btn" data-role="remove-position" title="Удалить позицию">
+                            <div class="position-label">Позиция <span data-role="position-number">1</span></div>
+                            <button type="button" class="btn btn-ghost btn-xs remove-position-btn" data-role="remove-position" title="Удалить позицию" disabled>
                                 {{ sidebar_icon('trash2')|safe }}
                                 <span class="visually-hidden">Удалить позицию</span>
                             </button>
                         </div>
                         <div class="parameters-row">
                             <div class="field-group parameter-wide">
-                                <label class="field-label" data-label-for="product">Наименование товара</label>
-                                <input type="text" data-field="product" required>
+                                <label for="product" class="field-label" data-label-for="product">Наименование товара</label>
+                                <input type="text" id="product" name="product" data-field="product" required
+                                value="{{ form_data.product if form_data and form_data.product else '' }}"
+                                class="{% if invalid_fields and 'product' in invalid_fields %}is-invalid{% endif %}"
+                                aria-invalid="{{ 'true' if invalid_fields and 'product' in invalid_fields else 'false' }}">
                             </div>
                             <div class="field-group parameter-wide drawing-field">
-                                <label class="field-label" data-label-for="drawing_number">Номер чертежа</label>
-                                <input type="text" data-field="drawing_number">
+                                <label for="drawing_number" class="field-label" data-label-for="drawing_number">Номер чертежа</label>
+                                <input type="text" id="drawing_number" name="drawing_number" data-field="drawing_number"
+                                value="{{ form_data.drawing_number if form_data and form_data.drawing_number else '' }}">
                                 <button type="button" class="drawing-alert" data-role="drawing-alert" hidden title="Показать найденные бюджеты">
                                     <span aria-hidden="true">!</span>
                                     <span class="visually-hidden">Найдены ранее созданные бюджеты с этим номером чертежа</span>
                                 </button>
                             </div>
                             <div class="field-group parameter-wide">
-                                <label class="field-label" data-label-for="material">Материал</label>
-                                <input type="text" data-field="material">
+                                <label for="material" class="field-label" data-label-for="material">Материал</label>
+                                <input type="text" id="material" name="material" data-field="material"
+                                value="{{ form_data.material if form_data and form_data.material else '' }}">
                             </div>
                             <div class="field-group slim-field">
-                                <label class="field-label" data-label-for="cost_price">Сумма закупа</label>
-                                <input type="number" data-field="cost_price" min="0" step="0.01" required>
+                                <label for="cost_price" class="field-label" data-label-for="cost_price">Сумма закупа</label>
+                                <input type="number" id="cost_price" name="cost_price" data-field="cost_price" min="0" step="0.01" required
+                                value="{{ form_data.cost_price if form_data and form_data.cost_price else '' }}"
+                                class="{% if invalid_fields and 'cost_price' in invalid_fields %}is-invalid{% endif %}"
+                                aria-invalid="{{ 'true' if invalid_fields and 'cost_price' in invalid_fields else 'false' }}">
                             </div>
                             <div class="field-group slim-field">
-                                <label class="field-label" data-label-for="cost_price_per_kg">Цена за кг</label>
-                                <input type="number" data-field="cost_price_per_kg" min="0" step="0.01">
+                                <label for="cost_price_per_kg" class="field-label" data-label-for="cost_price_per_kg">Цена за кг</label>
+                                <input type="number" id="cost_price_per_kg" name="cost_price_per_kg" data-field="cost_price_per_kg" min="0" step="0.01"
+                                value="{{ form_data.cost_price_per_kg if form_data and form_data.cost_price_per_kg else '' }}"
+                                class="{% if invalid_fields and 'cost_price_per_kg' in invalid_fields %}is-invalid{% endif %}"
+                                aria-invalid="{{ 'true' if invalid_fields and 'cost_price_per_kg' in invalid_fields else 'false' }}">
                             </div>
                             <div class="field-group slim-field">
-                                <label class="field-label" data-label-for="quantity">Количество, шт.</label>
-                                <input type="number" data-field="quantity" min="1" step="1" required class="position-quantity">
+                                <label for="quantity" class="field-label" data-label-for="quantity">Количество, шт.</label>
+                                <input type="number" id="quantity" name="quantity" data-field="quantity" min="1" step="1" required
+                                value="{{ form_data.quantity if form_data and form_data.quantity else '' }}"
+                                class="position-quantity{% if invalid_fields and 'quantity' in invalid_fields %} is-invalid{% endif %}"
+                                aria-invalid="{{ 'true' if invalid_fields and 'quantity' in invalid_fields else 'false' }}">
                             </div>
                             <div class="field-group slim-field">
-                                <label class="field-label" data-label-for="weight">Вес за шт. (кг)</label>
-                                <input type="number" data-field="weight" min="0" step="0.01" required class="position-weight">
+                                <label for="weight" class="field-label" data-label-for="weight">Вес за шт. (кг)</label>
+                                <input type="number" id="weight" name="weight" data-field="weight" min="0" step="0.01" required
+                                value="{{ form_data.weight if form_data and form_data.weight else '' }}"
+                                class="position-weight{% if invalid_fields and 'weight' in invalid_fields %} is-invalid{% endif %}"
+                                aria-invalid="{{ 'true' if invalid_fields and 'weight' in invalid_fields else 'false' }}">
                             </div>
                             <div class="field-group slim-field">
-                                <label class="field-label" data-label-for="duty_percent">Пошлина (%)</label>
-                                <input type="number" data-field="duty_percent" min="0" max="100" step="0.1" class="position-duty">
+                                <label for="duty_percent" class="field-label" data-label-for="duty_percent">Пошлина (%)</label>
+                                <input type="number" id="duty_percent" name="duty_percent" data-field="duty_percent" min="0" max="100" step="0.1"
+                                value="{{ form_data.duty_percent if form_data and form_data.duty_percent else '0' }}"
+                                class="position-duty{% if invalid_fields and 'duty_percent' in invalid_fields %} is-invalid{% endif %}"
+                                aria-invalid="{{ 'true' if invalid_fields and 'duty_percent' in invalid_fields else 'false' }}">
                             </div>
                         </div>
                     </div>
-                </template>
+                    <template id="positionTemplate">
+                        <div class="position-block" data-position>
+                            <div class="position-header">
+                                <div class="position-label">Позиция <span data-role="position-number"></span></div>
+                                <button type="button" class="btn btn-ghost btn-xs remove-position-btn" data-role="remove-position" title="Удалить позицию">
+                                    {{ sidebar_icon('trash2')|safe }}
+                                    <span class="visually-hidden">Удалить позицию</span>
+                                </button>
+                            </div>
+                            <div class="parameters-row">
+                                <div class="field-group parameter-wide">
+                                    <label class="field-label" data-label-for="product">Наименование товара</label>
+                                    <input type="text" data-field="product" required>
+                                </div>
+                                <div class="field-group parameter-wide drawing-field">
+                                    <label class="field-label" data-label-for="drawing_number">Номер чертежа</label>
+                                    <input type="text" data-field="drawing_number">
+                                    <button type="button" class="drawing-alert" data-role="drawing-alert" hidden title="Показать найденные бюджеты">
+                                        <span aria-hidden="true">!</span>
+                                        <span class="visually-hidden">Найдены ранее созданные бюджеты с этим номером чертежа</span>
+                                    </button>
+                                </div>
+                                <div class="field-group parameter-wide">
+                                    <label class="field-label" data-label-for="material">Материал</label>
+                                    <input type="text" data-field="material">
+                                </div>
+                                <div class="field-group slim-field">
+                                    <label class="field-label" data-label-for="cost_price">Сумма закупа</label>
+                                    <input type="number" data-field="cost_price" min="0" step="0.01" required>
+                                </div>
+                                <div class="field-group slim-field">
+                                    <label class="field-label" data-label-for="cost_price_per_kg">Цена за кг</label>
+                                    <input type="number" data-field="cost_price_per_kg" min="0" step="0.01">
+                                </div>
+                                <div class="field-group slim-field">
+                                    <label class="field-label" data-label-for="quantity">Количество, шт.</label>
+                                    <input type="number" data-field="quantity" min="1" step="1" required class="position-quantity">
+                                </div>
+                                <div class="field-group slim-field">
+                                    <label class="field-label" data-label-for="weight">Вес за шт. (кг)</label>
+                                    <input type="number" data-field="weight" min="0" step="0.01" required class="position-weight">
+                                </div>
+                                <div class="field-group slim-field">
+                                    <label class="field-label" data-label-for="duty_percent">Пошлина (%)</label>
+                                    <input type="number" data-field="duty_percent" min="0" max="100" step="0.1" class="position-duty">
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
             </div>
         </section>
 
@@ -264,37 +286,37 @@
 
         <section class="section">
             <div class="card summary-card">
-                <div class="summary-info">
-                    <h3>Итоговые показатели</h3>
-                    <p>Укажите желаемую маржу и контролируйте массу заказа.</p>
-                    <div class="position-pill-row">
-                        <span class="pill">Вес груза: <strong id="pillTotalWeight">0 кг</strong></span>
-                    </div>
-                    <div class="position-pill-row">
-                        <span class="pill">Регион: <strong id="summaryBudgetRegion">—</strong></span>
-                        <span class="pill">Позиции: <strong id="summaryPositions">—</strong></span>
-                        <span class="pill">Финансирование: <strong id="summaryFinance">—</strong></span>
-                    </div>
+                <div class="summary-card-header">
+                    <h3 class="summary-card-title">Итоговые показатели</h3>
+                    <p class="summary-card-subtitle">Проверьте ключевые значения перед генерацией документов.</p>
                 </div>
-                <div class="summary-value">
-                    <div class="value-box">
-                        <input type="number" id="margin_percent" name="margin_percent" min="0" max="100" step="0.1" required
-                               value="{{ form_data.margin_percent if form_data and form_data.margin_percent else '30' }}"
-                               class="{% if invalid_fields and 'margin_percent' in invalid_fields %}is-invalid{% endif %}"
-                               aria-invalid="{{ 'true' if invalid_fields and 'margin_percent' in invalid_fields else 'false' }}">
+                <div class="summary-grid">
+                    <div class="summary-metric">
+                        <span class="summary-label">Всего товаров</span>
+                        <div class="summary-value-block">
+                            <span class="summary-value" id="summaryTotalItems">0 позиций</span>
+                            <span class="summary-meta" id="summaryRegionTag">{% if selected_budget_region == 'ru' %}по РФ{% else %}по КНР{% endif %}</span>
+                        </div>
                     </div>
-                    <div class="value-unit">%</div>
+                    <div class="summary-metric">
+                        <span class="summary-label">Финансирование</span>
+                        <span class="summary-value" id="summaryFinance">—</span>
+                    </div>
+                    <div class="summary-metric">
+                        <span class="summary-label">Общий вес</span>
+                        <span class="summary-value" id="summaryTotalWeight">0 кг</span>
+                    </div>
+                    <div class="summary-metric">
+                        <span class="summary-label">Общая стоимость</span>
+                        <span class="summary-value" id="summaryTotalCost">0 ₽</span>
+                    </div>
+                    <div class="summary-metric">
+                        <span class="summary-label">Стоимость логистики</span>
+                        <span class="summary-value" id="summaryLogistics">{{ form_data.logistics if form_data and form_data.logistics else '0' }} ₽</span>
+                    </div>
                 </div>
             </div>
         </section>
-
-        <div class="controls-row">
-            <p class="muted-text">После генерации вы получите ZIP‑архив с файлами Excel и Word.</p>
-            <button type="submit" class="btn btn-primary" id="generateBtn">
-                {{ sidebar_icon('download')|safe }}
-                <span id="generateText">Сгенерировать КП</span>
-            </button>
-        </div>
     </form>
 </div>
 {% endblock %}
@@ -369,7 +391,6 @@
         const generateBtn = document.getElementById('generateBtn');
         const generateText = document.getElementById('generateText');
         const weightOutputField = document.getElementById('totalWeightValue');
-        const pillTotalWeight = document.getElementById('pillTotalWeight');
         const logisticsInput = document.getElementById('logistics');
         const logisticsHelper = document.getElementById('logisticsHelper');
         const logisticsHelperValue = document.getElementById('logisticsHelperValue');
@@ -377,9 +398,12 @@
         const budgetRegionRadios = document.querySelectorAll('input[name="budget_region"]');
         const financeCreditInput = document.querySelector('input[name="finance_credit"]');
         const financeBankGuaranteeInput = document.querySelector('input[name="finance_bank_guarantee"]');
-        const summaryBudgetRegion = document.getElementById('summaryBudgetRegion');
-        const summaryPositions = document.getElementById('summaryPositions');
+        const summaryTotalItems = document.getElementById('summaryTotalItems');
+        const summaryRegionTag = document.getElementById('summaryRegionTag');
         const summaryFinance = document.getElementById('summaryFinance');
+        const summaryTotalWeight = document.getElementById('summaryTotalWeight');
+        const summaryTotalCost = document.getElementById('summaryTotalCost');
+        const summaryLogistics = document.getElementById('summaryLogistics');
         const mainTransportRadios = document.querySelectorAll('input[name="mainTransport"]');
         const mainCalcTypeRadios = document.querySelectorAll('input[name="mainCalcType"]');
         const mainLogisticsBtn = document.getElementById('calculateMainLogistics');
@@ -613,11 +637,6 @@
         };
 
         const regionLabels = {
-            cn: 'КНР / юани',
-            ru: 'РФ / рубли'
-        };
-
-        const regionSuffix = {
             cn: 'по КНР',
             ru: 'по РФ'
         };
@@ -653,14 +672,12 @@
 
         const updateSummaryStats = () => {
             const region = getSelectedBudgetRegion();
-            if (summaryBudgetRegion) {
-                summaryBudgetRegion.textContent = regionLabels[region] || 'Не выбрано';
-            }
-            if (summaryPositions) {
+            if (summaryTotalItems) {
                 const blocksCount = positionsContainer ? positionsContainer.querySelectorAll('.position-block').length : 0;
-                const baseLabel = formatPositionsCountLabel(blocksCount);
-                const suffix = regionSuffix[region] || '';
-                summaryPositions.textContent = suffix ? `${baseLabel} (${suffix})` : baseLabel;
+                summaryTotalItems.textContent = formatPositionsCountLabel(blocksCount);
+            }
+            if (summaryRegionTag) {
+                summaryRegionTag.textContent = regionLabels[region] || '';
             }
             if (summaryFinance) {
                 const financeSelections = collectFinanceOptions();
@@ -674,16 +691,43 @@
 
         const updateWeight = () => {
             let total = 0;
+            let totalCost = 0;
             form.querySelectorAll('.position-block').forEach(block => {
                 const qty = parseFloat(block.querySelector('.position-quantity')?.value) || 0;
                 const weight = parseFloat(block.querySelector('.position-weight')?.value) || 0;
                 total += qty * weight;
+                const costInput = block.querySelector('[data-field="cost_price"]');
+                const rawCost = (costInput?.value || '').replace(/\s+/g, '').replace(',', '.');
+                const costPrice = Number.parseFloat(rawCost);
+                if (Number.isFinite(costPrice)) {
+                    totalCost += costPrice;
+                }
             });
             const formatted = formatWeight(total);
             weightOutputField.value = `${formatted} кг`;
-            pillTotalWeight.textContent = `${formatted} кг`;
+            if (summaryTotalWeight) {
+                summaryTotalWeight.textContent = `${formatted} кг`;
+            }
+            if (summaryTotalCost) {
+                const roundedCost = Math.round(totalCost);
+                summaryTotalCost.textContent = `${roundedCost.toLocaleString('ru-RU')} ₽`;
+            }
             updateSummaryStats();
         };
+
+        const updateLogisticsSummary = () => {
+            if (!summaryLogistics) {
+                return;
+            }
+            const raw = (logisticsInput?.value || '').replace(/\s+/g, '').replace(',', '.');
+            const parsed = Number.parseFloat(raw);
+            if (Number.isFinite(parsed) && parsed > 0) {
+                summaryLogistics.textContent = `${Math.round(parsed).toLocaleString('ru-RU')} ₽`;
+            } else {
+                summaryLogistics.textContent = '0 ₽';
+            }
+        };
+
         const attachValidation = (field) => {
             field.addEventListener('blur', () => validateField(field));
             field.addEventListener('input', () => clearFieldError(field));
@@ -982,6 +1026,7 @@
         form.querySelectorAll(requiredSelector).forEach(field => attachValidation(field));
 
         updateWeight();
+        updateLogisticsSummary();
 
         const applyImportedPositions = (positions) => {
             if (!positionsContainer || !Array.isArray(positions) || !positions.length) {
@@ -1037,9 +1082,9 @@
                 const formData = new FormData();
                 formData.append('positions_file', file);
 
+                const originalContent = importExcelBtn.innerHTML;
                 importExcelBtn.disabled = true;
-                const originalText = importExcelBtn.textContent;
-                importExcelBtn.textContent = 'Загрузка...';
+                importExcelBtn.innerText = 'Загрузка...';
 
                 try {
                     const response = await fetch(importEndpoint, {
@@ -1064,7 +1109,7 @@
                     window.alert('Не удалось загрузить файл. Попробуйте еще раз.');
                 } finally {
                     importExcelBtn.disabled = false;
-                    importExcelBtn.textContent = originalText;
+                    importExcelBtn.innerHTML = originalContent;
                     importExcelInput.value = '';
                 }
             });
@@ -1134,6 +1179,7 @@
                 if (mainSelectedCityPrice) {
                     mainSelectedCityPrice.value = '';
                 }
+                updateLogisticsSummary();
                 return;
             }
 
@@ -1148,6 +1194,7 @@
                 if (mainSelectedCityPrice) {
                     mainSelectedCityPrice.value = '';
                 }
+                updateLogisticsSummary();
                 return;
             }
 
@@ -1167,6 +1214,7 @@
             } else {
                 clearLogisticsSuggestion();
             }
+            updateLogisticsSummary();
         }
 
         mainTransportRadios.forEach(radio => {
@@ -1213,6 +1261,7 @@
                     if (mainCityInput) {
                         mainCityInput.value = '';
                     }
+                    updateLogisticsSummary();
                     return;
                 }
                 const matchedCity = cities.find(city => addressValue.includes((city.name || '').toLowerCase()));
@@ -1229,6 +1278,7 @@
                         mainCityInput.value = '';
                     }
                     clearSelectedCity();
+                    updateLogisticsSummary();
                 }
             };
 
@@ -1309,6 +1359,7 @@
                         mainCityInput.value = '';
                     }
                     clearSelectedCity();
+                    updateLogisticsSummary();
                     return;
                 }
 
@@ -1323,6 +1374,7 @@
                         mainCityInput.value = '';
                     }
                     clearSelectedCity();
+                    updateLogisticsSummary();
                 }
             });
 
@@ -1352,6 +1404,7 @@
             refreshLogisticsValue();
         } else {
             clearSelectedCity();
+            updateLogisticsSummary();
         }
 
         if (applyLogisticsSuggestionBtn && logisticsInput) {
@@ -1365,6 +1418,7 @@
                 if (Number.isFinite(parsed)) {
                     logisticsInput.value = Math.round(parsed).toString();
                     clearLogisticsSuggestion();
+                    updateLogisticsSummary();
                 }
             });
         }
@@ -1372,6 +1426,7 @@
         if (logisticsInput) {
             logisticsInput.addEventListener('input', () => {
                 clearLogisticsSuggestion();
+                updateLogisticsSummary();
             });
         }
 

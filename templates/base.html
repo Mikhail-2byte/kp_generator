@@ -20,6 +20,10 @@
                     <span class="sidebar-icon">{{ sidebar_icon('file-text')|safe }}</span>
                     <span class="sidebar-label">Создать КП</span>
                 </a>
+                <a href="{{ url_for('main.history') }}" class="sidebar-link" data-nav="history">
+                    <span class="sidebar-icon">{{ sidebar_icon('history')|safe }}</span>
+                    <span class="sidebar-label">История</span>
+                </a>
                 <a href="{{ url_for('main.logistics') }}" class="sidebar-link" data-nav="logistics">
                     <span class="sidebar-icon">{{ sidebar_icon('truck')|safe }}</span>
                     <span class="sidebar-label">Логистика</span>
@@ -53,6 +57,22 @@
                     <span class="sidebar-label">Обратная связь</span>
                 </a>
             </nav>
+
+            <div class="sidebar-bottom" aria-label="Дополнительная навигация">
+                {% set settings_href = url_for('admin.admin_panel') if current_user.is_authenticated and current_user.is_admin else url_for('auth.profile') %}
+                <a href="{{ settings_href }}" class="sidebar-link sidebar-link-secondary" data-nav="settings">
+                    <span class="sidebar-icon">{{ sidebar_icon('settings')|safe }}</span>
+                    <span class="sidebar-label">Настройки</span>
+                </a>
+                <a href="{{ url_for('main.instructions_page') }}" class="sidebar-link sidebar-link-secondary" data-nav="help">
+                    <span class="sidebar-icon">{{ sidebar_icon('help-circle')|safe }}</span>
+                    <span class="sidebar-label">Помощь</span>
+                </a>
+                <a href="{{ url_for('auth.profile') }}" class="sidebar-link sidebar-link-secondary" data-nav="profile">
+                    <span class="sidebar-icon">{{ sidebar_icon('user')|safe }}</span>
+                    <span class="sidebar-label">Профиль</span>
+                </a>
+            </div>
         </aside>
 
         <button type="button" class="sidebar-toggle" id="sidebarToggle" aria-label="Свернуть боковую панель" aria-expanded="true">
@@ -61,37 +81,6 @@
         </button>
 
         <div class="app-main">
-            <header class="app-header">
-                <div class="app-header-title">
-                    <h1>{{ header_title or '' }}</h1>
-                    {% if header_subtitle %}
-                        <p>{{ header_subtitle }}</p>
-                    {% endif %}
-                </div>
-                <div class="app-header-actions">
-                    {% if current_user.is_authenticated and current_user.is_admin %}
-                    <a href="{{ url_for('admin.admin_panel') }}" class="header-link" data-header-action="admin">
-                        <span class="header-icon">{{ sidebar_icon('settings')|safe }}</span>
-                        <span>Админка</span>
-                    </a>
-                    {% endif %}
-                    <a href="{{ url_for('main.history') }}" class="header-link" data-header-action="history">
-                        <span class="header-icon">{{ sidebar_icon('history')|safe }}</span>
-                        <span>История</span>
-                    </a>
-                    <a href="{{ url_for('auth.profile') }}" class="header-link" data-header-action="profile">
-                        <span class="header-icon">{{ sidebar_icon('user')|safe }}</span>
-                        <span>
-                            {% if current_user.is_authenticated %}
-                                {{ ((current_user.last_name or '') ~ ' ' ~ (current_user.first_name or '')).strip() or current_user.username }}
-                            {% else %}
-                                Профиль
-                            {% endif %}
-                        </span>
-                    </a>
-                </div>
-            </header>
-
             <main class="app-content">
                 {% include '_messages.html' %}
                 {% block content %}{% endblock %}
@@ -187,14 +176,47 @@
                 }
             });
 
-            const headerHistory = document.querySelector('[data-header-action="history"]');
-            if (headerHistory) {
+            const sidebarHistoryLink = document.querySelector('.sidebar-link[data-nav="history"]');
+            if (sidebarHistoryLink) {
                 if (activePage === 'history') {
-                    headerHistory.classList.add('is-active');
-                    headerHistory.setAttribute('aria-current', 'page');
+                    sidebarHistoryLink.classList.add('is-active');
+                    sidebarHistoryLink.setAttribute('aria-current', 'page');
                 } else {
-                    headerHistory.classList.remove('is-active');
-                    headerHistory.removeAttribute('aria-current');
+                    sidebarHistoryLink.classList.remove('is-active');
+                    sidebarHistoryLink.removeAttribute('aria-current');
+                }
+            }
+
+            const sidebarSettingsLink = document.querySelector('.sidebar-link[data-nav="settings"]');
+            if (sidebarSettingsLink) {
+                if (activePage === 'admin') {
+                    sidebarSettingsLink.classList.add('is-active');
+                    sidebarSettingsLink.setAttribute('aria-current', 'page');
+                } else {
+                    sidebarSettingsLink.classList.remove('is-active');
+                    sidebarSettingsLink.removeAttribute('aria-current');
+                }
+            }
+
+            const sidebarHelpLink = document.querySelector('.sidebar-link[data-nav="help"]');
+            if (sidebarHelpLink) {
+                if (activePage === 'instructions') {
+                    sidebarHelpLink.classList.add('is-active');
+                    sidebarHelpLink.setAttribute('aria-current', 'page');
+                } else {
+                    sidebarHelpLink.classList.remove('is-active');
+                    sidebarHelpLink.removeAttribute('aria-current');
+                }
+            }
+
+            const sidebarProfileLink = document.querySelector('.sidebar-link[data-nav="profile"]');
+            if (sidebarProfileLink) {
+                if (activePage === 'profile') {
+                    sidebarProfileLink.classList.add('is-active');
+                    sidebarProfileLink.setAttribute('aria-current', 'page');
+                } else {
+                    sidebarProfileLink.classList.remove('is-active');
+                    sidebarProfileLink.removeAttribute('aria-current');
                 }
             }
 

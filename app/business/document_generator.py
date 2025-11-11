@@ -1,9 +1,9 @@
-# app/document_generator.py
+# Document generation
 from docx import Document
 from io import BytesIO
 from datetime import datetime
 import zipfile
-from app.helpers import get_safe_filename, extract_positions_from_form
+from app.presentation.helpers import get_safe_filename, extract_positions_from_form
 from app.services.multi_position_processor import MultiPositionProcessor
 from app.services.word_multi_position_processor import WordMultiPositionProcessor
 

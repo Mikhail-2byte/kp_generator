@@ -4,13 +4,13 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from app.forms import (
+from app.presentation.forms import (
     DeleteAccountForm,
     LoginForm,
     ProfileUpdateForm,
     RegistrationForm
 )
-from app.ui import build_context
+from app.presentation.ui import build_context
 from app.services.repositories import user_repository
 
 

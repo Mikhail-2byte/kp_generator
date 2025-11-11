@@ -1,6 +1,6 @@
 # app/services/multi_position_calculator.py
 from typing import List, Dict, Any, Tuple
-from app.calculate import calculate_selling_price
+from app.business.price_calculator import calculate_selling_price
 
 
 class MultiPositionCalculator:

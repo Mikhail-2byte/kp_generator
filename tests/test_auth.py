@@ -1,7 +1,7 @@
 from werkzeug.security import generate_password_hash
 
-from app.extensions import SessionLocal
-from app.models import UserRecord
+from app.core.extensions import SessionLocal
+from app.models.models import UserRecord
 
 
 def _create_user(username: str, password: str) -> None:

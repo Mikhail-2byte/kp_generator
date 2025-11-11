@@ -1,6 +1,6 @@
 from flask import render_template
 
-from app.ui import build_context
+from app.presentation.ui import build_context
 
 
 def register_error_handlers(app):

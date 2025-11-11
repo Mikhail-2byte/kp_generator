@@ -5,7 +5,7 @@ from typing import Iterator
 import pytest
 
 from app import create_app
-from app.extensions import SessionLocal
+from app.core.extensions import SessionLocal
 from flask import Flask
 
 

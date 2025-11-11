@@ -2,8 +2,22 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional
 
-from app import database
-from app.models import User
+from app.database import (
+    create_user,
+    get_user_by_username,
+    get_user_by_id,
+    update_last_login,
+    get_user_statistics,
+    update_user_profile,
+    delete_user,
+    save_generation_history,
+    get_generation_history,
+    get_generation_details,
+    load_generation_data,
+    get_generations_by_drawing,
+    get_admin_user_activity,
+)
+from app.models.models import User
 
 
 class UserRepository:
@@ -18,26 +32,26 @@ class UserRepository:
         contact_info: Optional[str] = None
     ) -> Optional[User]:
         """Создаёт пользователя и возвращает готовый объект для работы в приложении."""
-        user_id = database.create_user(username, password_hash, last_name, first_name, role, contact_info)
+        user_id = create_user(username, password_hash, last_name, first_name, role, contact_info)
         return self.get_by_id(user_id) if user_id else None
 
     def get_by_username(self, username: str) -> Optional[User]:
         """Находит пользователя по логину (используется при входе)."""
-        row = database.get_user_by_username(username)
+        row = get_user_by_username(username)
         return User.from_row(row) if row else None
 
     def get_by_id(self, user_id: Any) -> Optional[User]:
         """Возвращает пользователя по идентификатору с учётом пустых значений."""
         if user_id is None:
             return None
-        row = database.get_user_by_id(int(user_id))
+        row = get_user_by_id(int(user_id))
         return User.from_row(row) if row else None
 
     def record_login(self, user_id: Any) -> bool:
         """Фиксирует время последнего входа пользователя."""
         if user_id is None:
             return False
-        return database.update_last_login(int(user_id))
+        return update_last_login(int(user_id))
 
     def update_profile(
         self,
@@ -51,7 +65,7 @@ class UserRepository:
         """Обновляет логин, имя и пароль пользователя."""
         if user_id is None:
             return False
-        return database.update_user_profile(
+        return update_user_profile(
             int(user_id),
             username,
             last_name,
@@ -64,36 +78,36 @@ class UserRepository:
         """Удаляет пользователя и связанные записи истории."""
         if user_id is None:
             return False
-        return database.delete_user(int(user_id))
+        return delete_user(int(user_id))
 
     def get_statistics(self, user_id: Any) -> Dict[str, Any]:
         """Возвращает превью активности пользователя для личного кабинета."""
         if user_id is None:
             return {}
-        return database.get_user_statistics(int(user_id)) or {}
+        return get_user_statistics(int(user_id)) or {}
 
 
 class GenerationRepository:
     """Сервис-обёртка для чтения и сохранения историй генераций."""
     def save_history(self, payload: Dict[str, Any], final_price: float, config: Dict[str, Any], user_id: Any) -> bool:
         """Сохраняет расчёт генерации с привязкой к пользователю."""
-        return database.save_generation_history(payload, final_price, config, int(user_id) if user_id is not None else None)
+        return save_generation_history(payload, final_price, config, int(user_id) if user_id is not None else None)
 
     def get_history(self, config: Dict[str, Any]):
         """Возвращает ограниченную историю генераций согласно конфигурации."""
-        return database.get_generation_history(config)
+        return get_generation_history(config)
 
     def get_details(self, record_id: int):
         """Загружает подробности конкретной генерации по идентификатору."""
-        return database.get_generation_details(record_id)
+        return get_generation_details(record_id)
 
     def load_generation(self, record_id: int):
         """Возвращает данные генерации для повторного использования в форме."""
-        return database.load_generation_data(record_id)
+        return load_generation_data(record_id)
 
     def get_by_drawing(self, drawing_number: str):
         """Возвращает список генераций, созданных с указанным номером чертежа."""
-        return database.get_generations_by_drawing(drawing_number)
+        return get_generations_by_drawing(drawing_number)
 
 
 class AdminStatsRepository:
@@ -101,7 +115,7 @@ class AdminStatsRepository:
 
     def get_user_activity(self, limit: int = 10):
         """Возвращает статистику пользовательской активности."""
-        return database.get_admin_user_activity(limit)
+        return get_admin_user_activity(limit)
 
 
 user_repository = UserRepository()

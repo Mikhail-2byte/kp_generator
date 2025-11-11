@@ -1,6 +1,6 @@
 from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
 
-from app.forms import (
+from app.presentation.forms import (
     DutyDeleteForm,
     DutyItemForm,
     GBMaterialDeleteForm,
@@ -8,11 +8,11 @@ from app.forms import (
     LogisticsCityDeleteForm,
     LogisticsCityForm
 )
-from app.security import admin_required
+from app.auth.security import admin_required
 from app.services import datasets
 from app.services.content_manager import ContentManager, build_manager
 from app.services.repositories import admin_stats_repository
-from app.ui import build_context
+from app.presentation.ui import build_context
 
 
 admin_bp = Blueprint('admin', __name__)  # Управление справочниками через административный интерфейс

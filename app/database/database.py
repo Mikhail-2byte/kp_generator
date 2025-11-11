@@ -1,4 +1,4 @@
-# app/database.py
+# Database operations
 import logging
 import sqlite3
 from contextlib import contextmanager
@@ -12,11 +12,11 @@ from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 
-from app.extensions import SessionLocal, get_database_url
-from app.models import GenerationHistoryRecord, UserRecord
+from app.core.extensions import SessionLocal, get_database_url
+from app.models.models import GenerationHistoryRecord, UserRecord
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
 def _resolve_sqlite_path(database_url: str) -> str:
@@ -293,7 +293,7 @@ def save_generation_history(form_data, final_price, config, user_id=None, total_
     """Сохраняет расчёт генерации вместе с расчётными параметрами пользователя."""
     try:
         import json
-        from app.helpers import extract_positions_from_form
+        from app.presentation.helpers import extract_positions_from_form
         
         # Извлекаем позиции из формы
         positions = extract_positions_from_form(form_data)

@@ -2,14 +2,14 @@ from pathlib import Path
 
 from flask import Flask
 
-from app.config import load_config, setup_app_security, setup_logging
+from app.core.config import load_config, setup_app_security, setup_logging
 from app.database import init_db
-from app.errors import register_error_handlers
-from app.extensions import csrf, init_db_engine, login_manager
+from app.core.errors import register_error_handlers
+from app.core.extensions import csrf, init_db_engine, login_manager
 from app.routes import register_blueprints
 from app.services import datasets
 from app.services.repositories import user_repository
-from app.ui import register_ui
+from app.presentation.ui import register_ui
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]

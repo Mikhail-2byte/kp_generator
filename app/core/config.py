@@ -11,7 +11,7 @@ load_dotenv()
 def load_config(app):
     """Загружает конфигурацию из settings.json и переменных окружения"""
     try:
-        config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'config', 'settings.json')
+        config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'config', 'settings.json')
         
         config_data = {}
         

@@ -15,9 +15,9 @@ from flask import (
 )
 from flask_login import current_user
 
-from app.calculate import calculate_selling_price
-from app.document_generator import create_zip_archive, generate_excel_document, generate_word_document
-from app.helpers import check_templates_exist, validate_form_data, extract_positions_from_form
+from app.business.price_calculator import calculate_selling_price
+from app.business.document_generator import create_zip_archive, generate_excel_document, generate_word_document
+from app.presentation.helpers import check_templates_exist, validate_form_data, extract_positions_from_form
 from app.services.multi_position_calculator import MultiPositionCalculator
 from app.services import (
     AnalyticsProcessingError,
@@ -27,7 +27,7 @@ from app.services import (
 from app.services.repositories import generation_repository
 from app.services.feedback import save_feedback_entry
 from app.services.excel_importer import ExcelImportError, parse_positions_from_excel
-from app.ui import build_context
+from app.presentation.ui import build_context
 
 
 main_bp = Blueprint('main', __name__)  # Основные страницы и бизнес-логика генератора КП

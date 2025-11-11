@@ -2,7 +2,7 @@
 import logging
 import sqlite3
 from contextlib import contextmanager
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -505,7 +505,7 @@ def update_last_login(user_id, last_login=None) -> bool:
             if user is None:
                 return False
             if last_login is None:
-                user.last_login = datetime.utcnow()
+                user.last_login = datetime.now(timezone.utc)
             else:
                 user.last_login = last_login
         return True

@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 from flask import (
     Blueprint,
@@ -17,7 +17,8 @@ from flask_login import current_user
 
 from app.business.price_calculator import calculate_selling_price
 from app.business.document_generator import create_zip_archive, generate_excel_document, generate_word_document
-from app.presentation.helpers import check_templates_exist, validate_form_data, extract_positions_from_form
+from app.presentation.helpers import check_templates_exist, extract_positions_from_form
+from app.presentation.validators import validate_form_data
 from app.services.multi_position_calculator import MultiPositionCalculator
 from app.services import (
     AnalyticsProcessingError,
@@ -125,7 +126,7 @@ def feedback():
             )
 
         entry = {
-            'timestamp': datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
+            'timestamp': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
             'name': name or 'Аноним',
             'contact': contact,
             'feedback': feedback_text,

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
@@ -512,7 +512,7 @@ def _snapshot_version(collection: str, payload: Dict[str, Any], actor: Optional[
     if not payload:
         return
 
-    timestamp = datetime.utcnow().strftime('%Y%m%dT%H%M%S')
+    timestamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S')
     versions_path = VERSIONS_DIR / collection
     versions_path.mkdir(parents=True, exist_ok=True)
 

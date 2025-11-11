@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from app.services import datasets
@@ -161,7 +161,7 @@ class ContentManager:
 
     @staticmethod
     def _current_date() -> str:
-        return datetime.utcnow().strftime('%d.%m.%Y')
+        return datetime.now(timezone.utc).strftime('%d.%m.%Y')
 
 
 def build_manager(actor: Optional[str] = None) -> ContentManager:

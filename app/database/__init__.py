@@ -16,6 +16,7 @@ from .database import (
     delete_user,
     get_generations_by_drawing,
 )
+from .service import DatabaseService, database_service
 
 __all__ = [
     'connect_db',
@@ -33,4 +34,6 @@ __all__ = [
     'update_user_profile',
     'delete_user',
     'get_generations_by_drawing',
+    'DatabaseService',
+    'database_service',
 ]

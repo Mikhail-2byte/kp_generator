@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Mapping, Sequence
 
 from flask_login import UserMixin
@@ -141,4 +141,4 @@ class User(UserMixin):
 
     def set_last_login_now(self):
         """Проставляет текущее время последнего входа (используется в UI)."""
-        self.last_login = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+        self.last_login = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')

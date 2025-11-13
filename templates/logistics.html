@@ -24,13 +24,14 @@
 
     <div class="card">
         <h2 class="section-title">Калькулятор логистики</h2>
-        <p class="section-description">Выберите тип транспорта и укажите параметры груза.</p>
+        <p class="section-description">Выберите тип транспорта и укажите параметры груза. Габариты (опционально) - для расчета по объему.</p>
         <form id="logisticsForm" class="form-grid">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="field-group span-3">
                 <label class="field-label">Тип транспорта</label>
                 <div class="radio-row">
-                    <label><input type="radio" name="transportType" id="truckRadio" value="truck" checked> Фура</label>
-                    <label><input type="radio" name="transportType" id="trailRadio" value="trail"> Трал</label>
+                    <label><input type="radio" name="transportType" id="truckRadio" value="truck" checked> Фура (до 20 т, 88 м³)</label>
+                    <label><input type="radio" name="transportType" id="trailRadio" value="trail"> Трал (до 40 т)</label>
                 </div>
             </div>
             <div class="field-group span-3">
@@ -41,10 +42,28 @@
                 <input type="hidden" id="selectedCityPrice">
                 <input type="hidden" id="selectedCityName">
             </div>
-            <div class="field-group span-3">
+            <div class="field-group">
                 <label for="cargoWeight" class="field-label">Вес груза (кг)</label>
-                <input type="number" id="cargoWeight" min="1" placeholder="Введите вес" required>
+                <input type="number" id="cargoWeight" min="1" step="0.01" placeholder="Введите вес" required>
                 <div class="form-helper" id="weightHelpText">Для веса более 20 000 кг будет рассчитано несколько машин</div>
+            </div>
+            <div class="field-group span-2">
+                <label class="field-label">Габариты груза (мм) - опционально</label>
+                <div class="form-grid" style="grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
+                    <div>
+                        <input type="number" id="cargoLength" min="1" step="1" placeholder="Длина (мм)">
+                        <small class="form-helper">Длина</small>
+                    </div>
+                    <div>
+                        <input type="number" id="cargoWidth" min="1" step="1" placeholder="Ширина (мм)">
+                        <small class="form-helper">Ширина</small>
+                    </div>
+                    <div>
+                        <input type="number" id="cargoHeight" min="1" step="1" placeholder="Высота (мм)">
+                        <small class="form-helper">Высота</small>
+                    </div>
+                </div>
+                <div class="form-helper">Если указаны габариты, расчет будет по весу или объему (выбирается превалирующий параметр)</div>
             </div>
             <div class="controls-row">
                 <span class="muted-text">Убедитесь, что указали действующий город и вес груза.</span>
@@ -56,8 +75,12 @@
             <strong>Результаты расчёта</strong>
             <p><strong>Направление:</strong> КНР-<span id="resultCityName"></span></p>
             <p><strong>Тип транспорта:</strong> <span id="resultTransportType"></span></p>
+            <p id="resultBasis" class="hidden"><strong>Расчет:</strong> <span id="basisText"></span></p>
+            <p id="resultDimensions" class="hidden"><strong>Габариты:</strong> <span id="dimensionsText"></span></p>
+            <p id="resultOversized" class="hidden"><strong>⚠ Негабаритный груз</strong></p>
+            <p id="resultHeavy" class="hidden"><strong>⚠ Тяжеловесный груз</strong></p>
             <p><strong>Количество машин:</strong> <span id="truckCount"></span></p>
-            <p><strong>Средняя стоимость за кг:</strong> <span id="pricePerKg"></span> руб/кг</p>
+            <p id="pricePerUnit"><strong>Стоимость за единицу:</strong> <span id="pricePerUnitText"></span></p>
             <p><strong>Итоговая стоимость:</strong> <span id="totalPrice"></span> руб</p>
             <p class="muted-text" id="calculationDetails"></p>
         </div>
@@ -74,15 +97,21 @@
         <h2 class="section-title">Частые вопросы</h2>
         <details open>
             <summary class="section-description">Как рассчитывается стоимость доставки?</summary>
-            <p>Стоимость рассчитывается по формуле <strong>(Стоимость транспорта до города / Грузоподъёмность) × Вес груза</strong>. Если вес превышает грузоподъёмность одной машины, автоматически добавляется вторая.</p>
+            <p>Стоимость рассчитывается по весу или объему (выбирается превалирующий параметр):</p>
+            <ul>
+                <li><strong>По весу:</strong> (Стоимость транспорта до города / Грузоподъёмность) × Вес груза</li>
+                <li><strong>По объему:</strong> (Стоимость фуры / Полный полезный объем кузова) × Объем груза</li>
+            </ul>
+            <p>Если вес или объем превышает грузоподъёмность/объем одной машины, автоматически рассчитывается несколько машин.</p>
+            <p><strong>Стандартные параметры:</strong> Фура — 20 тонн, 88 м³ (13600×2450×2650 мм). Трал — 40 тонн.</p>
         </details>
         <details>
             <summary class="section-description">Что делать, если моего города нет в списке?</summary>
             <p>Напишите менеджеру для добавления нового направления или выберите ближайший крупный город.</p>
         </details>
         <details>
-            <summary class="section-description">Почему грузы легче 700 кг отправляются через «Деловые линии»?</summary>
-            <p>Заказ отдельного транспорта для малых партий невыгоден. Для таких отправок используйте сборный сервис.</p>
+            <summary class="section-description">Почему грузы легче 600 кг отправляются через «Деловые линии»?</summary>
+            <p>Для грузов до 600 кг рекомендуется транспортная компания «Деловые линии» (dellin.ru). Расчет производится от Забайкальска (погранпереход) до точки назначения. Логистика по Китаю + 30% к стоимости из просчета.</p>
         </details>
         <details>
             <summary class="section-description">В чём разница между фурой и тралом?</summary>
@@ -129,10 +158,38 @@
         transportRadios.forEach(radio => {
             radio.addEventListener('change', () => {
                 updateWeightLimit();
-                document.getElementById('selectedCityPrice').value = '';
-                document.getElementById('selectedCityName').value = '';
-                if (cityInput) {
-                    cityInput.value = '';
+                const priceInput = document.getElementById('selectedCityPrice');
+                const nameInput = document.getElementById('selectedCityName');
+                const currentCityName = nameInput ? nameInput.value.trim() : '';
+                
+                // Если город уже выбран, обновляем цену для нового типа транспорта
+                if (currentCityName && cityInput) {
+                    const selectedCity = cities.find(c => c.name === currentCityName);
+                    if (selectedCity) {
+                        const newTransportType = radio.value;
+                        const newPrice = newTransportType === 'trail' ? selectedCity.trail_price : selectedCity.truck_price;
+                        if (newPrice && Number.isFinite(newPrice) && newPrice > 0) {
+                            if (priceInput) {
+                                priceInput.value = newPrice;
+                            }
+                            console.log('Updated price for', currentCityName, 'to', newPrice, 'for', newTransportType);
+                        } else {
+                            // Если для нового типа транспорта нет цены, очищаем выбор
+                            if (priceInput) priceInput.value = '';
+                            if (nameInput) nameInput.value = '';
+                            cityInput.value = '';
+                        }
+                    } else {
+                        // Город не найден, очищаем
+                        if (priceInput) priceInput.value = '';
+                        if (nameInput) nameInput.value = '';
+                        cityInput.value = '';
+                    }
+                } else {
+                    // Город не выбран, просто очищаем
+                    if (priceInput) priceInput.value = '';
+                    if (nameInput) nameInput.value = '';
+                    if (cityInput) cityInput.value = '';
                 }
                 hideElement(resultBlock);
             });
@@ -209,14 +266,28 @@
 
             matchingCities.forEach(city => {
                 const price = transportType === 'trail' ? city.trail_price : city.truck_price;
+                
+                // Пропускаем города без цены
+                if (!price || !Number.isFinite(price) || price <= 0) {
+                    console.warn('City has invalid price:', city.name, price);
+                    return;
+                }
+                
                 const item = document.createElement('div');
-                item.innerHTML = `<strong>${city.name}</strong> — ${city.region}<br><small>${formatMoney(price)} руб</small>`;
+                item.innerHTML = `<strong>${city.name}</strong> — ${city.region || ''}<br><small>${formatMoney(price)} руб</small>`;
                 item.addEventListener('click', () => {
                     cityInput.value = city.name;
-                    document.getElementById('selectedCityPrice').value = price;
-                    document.getElementById('selectedCityName').value = city.name;
+                    const priceInput = document.getElementById('selectedCityPrice');
+                    const nameInput = document.getElementById('selectedCityName');
+                    if (priceInput) {
+                        priceInput.value = price;
+                    }
+                    if (nameInput) {
+                        nameInput.value = city.name;
+                    }
                     hideElement(document.getElementById('cityNotFound'));
                     closeAllLists();
+                    console.log('City selected:', city.name, 'Price:', price);
                 });
                 list.appendChild(item);
             });
@@ -271,10 +342,15 @@
         return transportName.toLowerCase();
     }
 
-    function calculateLogistics() {
-        const logisticsCost = parseFloat(document.getElementById('selectedCityPrice').value);
-        const cityName = document.getElementById('selectedCityName').value;
+    async function calculateLogistics() {
+        const priceInput = document.getElementById('selectedCityPrice');
+        const nameInput = document.getElementById('selectedCityName');
+        const logisticsCost = priceInput ? parseFloat(priceInput.value) : NaN;
+        const cityName = nameInput ? nameInput.value.trim() : '';
         const cargoWeightInput = document.getElementById('cargoWeight');
+        const cargoLengthInput = document.getElementById('cargoLength');
+        const cargoWidthInput = document.getElementById('cargoWidth');
+        const cargoHeightInput = document.getElementById('cargoHeight');
         const transportTypeField = document.querySelector('input[name="transportType"]:checked');
         const transportType = transportTypeField ? transportTypeField.value : 'truck';
         const transportName = transportType === 'trail' ? 'Трал' : 'Фура';
@@ -298,45 +374,140 @@
             return;
         }
 
-        if (!logisticsCost || !cityName) {
+        if (!logisticsCost || !cityName || !Number.isFinite(logisticsCost) || logisticsCost <= 0) {
             showElement(cityNotFound);
+            console.error('Invalid city data:', { logisticsCost, cityName });
             return;
         }
 
-        const capacity = transportType === 'trail' ? 40000 : 20000;
-        const pricePerKgBase = logisticsCost / capacity;
-        let totalPrice;
-        let calculationDetails;
-        let truckCountText;
+        // Собираем данные для API
+        const requestData = {
+            weight_kg: cargoWeight,
+            city_price: parseFloat(logisticsCost),
+            transport_type: transportType,
+        };
 
-        if (cargoWeight <= capacity) {
-            totalPrice = pricePerKgBase * cargoWeight;
-            calculationDetails = `(${formatMoney(logisticsCost)} руб / ${formatNumber(capacity)} кг) × ${formatNumber(cargoWeight)} кг = ${formatMoney(totalPrice)} руб`;
-            truckCountText = '1 машина';
+        // Добавляем габариты, если указаны
+        const length = cargoLengthInput ? parseFloat(cargoLengthInput.value) : null;
+        const width = cargoWidthInput ? parseFloat(cargoWidthInput.value) : null;
+        const height = cargoHeightInput ? parseFloat(cargoHeightInput.value) : null;
+
+        // Проверяем, что все три габарита указаны и валидны
+        console.log('Raw dimensions:', { length, width, height });
+        if (length && width && height && 
+            Number.isFinite(length) && Number.isFinite(width) && Number.isFinite(height) &&
+            length > 0 && width > 0 && height > 0) {
+            requestData.length_mm = length;
+            requestData.width_mm = width;
+            requestData.height_mm = height;
+            console.log('Dimensions added to request');
         } else {
-            const fullTrucks = Math.floor(cargoWeight / capacity);
-            const remainingWeight = cargoWeight % capacity;
-            if (remainingWeight > 0) {
-                const partialPrice = remainingWeight * pricePerKgBase;
-                totalPrice = (fullTrucks * logisticsCost) + partialPrice;
-                truckCountText = `${fullTrucks} ${getTruckWord(fullTrucks, transportName)} + частичная загрузка`;
-                calculationDetails = `${fullTrucks} × ${formatMoney(logisticsCost)} руб + ${formatNumber(remainingWeight)} кг × ${formatMoney(pricePerKgBase)} руб = ${formatMoney(totalPrice)} руб`;
-            } else {
-                totalPrice = fullTrucks * logisticsCost;
-                truckCountText = `${fullTrucks} ${getTruckWord(fullTrucks, transportName)}`;
-                calculationDetails = `${fullTrucks} × ${formatMoney(logisticsCost)} руб = ${formatMoney(totalPrice)} руб`;
-            }
+            console.log('Dimensions not added (incomplete or invalid)');
         }
 
-        document.getElementById('resultCityName').textContent = cityName;
-        document.getElementById('resultTransportType').textContent = transportName;
-        document.getElementById('truckCount').textContent = truckCountText;
-        document.getElementById('pricePerKg').textContent = formatMoney(pricePerKgBase);
-        document.getElementById('totalPrice').textContent = formatMoney(totalPrice);
-        document.getElementById('calculationDetails').textContent = calculationDetails;
+        // Получаем CSRF токен из формы
+        const form = document.getElementById('logisticsForm');
+        const csrfTokenInput = form ? form.querySelector('input[name="csrf_token"]') : null;
+        const csrfToken = csrfTokenInput ? csrfTokenInput.value : '';
 
-        showElement(resultBlock);
-        resultBlock.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        console.log('Sending logistics calculation request:', JSON.stringify(requestData, null, 2));
+
+        try {
+            const response = await fetch('/api/logistics/calculate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                },
+                body: JSON.stringify(requestData),
+            });
+
+            if (!response.ok) {
+                let errorData;
+                try {
+                    const text = await response.text();
+                    console.error('Server response (not OK):', text);
+                    try {
+                        errorData = JSON.parse(text);
+                    } catch (e) {
+                        errorData = { error: `Ошибка ${response.status}: ${text || 'Неизвестная ошибка'}` };
+                    }
+                } catch (e) {
+                    console.error('Failed to read error response:', e);
+                    errorData = { error: `Ошибка ${response.status}: Не удалось прочитать ответ сервера` };
+                }
+                console.error('Logistics calculation error:', errorData, 'Status:', response.status);
+                alert(errorData.error || `Ошибка при расчете логистики (код ${response.status})`);
+                return;
+            }
+
+            const result = await response.json();
+
+            // Обработка мелкогабаритного груза
+            if (result.recommendation === 'dellin') {
+                showElement(lowWeightWarning);
+                lowWeightWarning.textContent = result.message;
+                return;
+            }
+
+            // Отображаем результаты
+            document.getElementById('resultCityName').textContent = cityName;
+            document.getElementById('resultTransportType').textContent = transportName;
+
+            // Базис расчета
+            const basisText = result.basis === 'weight' ? 'по весу' : 'по объему';
+            document.getElementById('basisText').textContent = basisText;
+            showElement(document.getElementById('resultBasis'));
+
+            // Габариты
+            if (result.dimensions && result.dimensions.length_mm) {
+                const dims = result.dimensions;
+                document.getElementById('dimensionsText').textContent = 
+                    `${formatNumber(dims.length_mm)} × ${formatNumber(dims.width_mm)} × ${formatNumber(dims.height_mm)} мм (${result.volume_m3.toFixed(2)} м³)`;
+                showElement(document.getElementById('resultDimensions'));
+            } else {
+                hideElement(document.getElementById('resultDimensions'));
+            }
+
+            // Предупреждения
+            if (result.oversized) {
+                showElement(document.getElementById('resultOversized'));
+            } else {
+                hideElement(document.getElementById('resultOversized'));
+            }
+
+            if (result.heavy) {
+                showElement(document.getElementById('resultHeavy'));
+            } else {
+                hideElement(document.getElementById('resultHeavy'));
+            }
+
+            // Количество машин
+            const trucksCount = result.trucks_count || 1;
+            document.getElementById('truckCount').textContent = 
+                trucksCount === 1 ? '1 машина' : `${trucksCount} ${getTruckWord(trucksCount, transportName)}`;
+
+            // Стоимость за единицу
+            if (result.basis === 'weight') {
+                document.getElementById('pricePerUnitText').textContent = 
+                    `${formatMoney(result.price_per_kg)} руб/кг`;
+            } else {
+                document.getElementById('pricePerUnitText').textContent = 
+                    `${formatMoney(result.price_per_m3)} руб/м³`;
+            }
+
+            // Итоговая стоимость
+            document.getElementById('totalPrice').textContent = formatMoney(result.total_price);
+
+            // Детали расчета
+            document.getElementById('calculationDetails').textContent = result.calculation_formula || '';
+
+            showElement(resultBlock);
+            resultBlock.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        } catch (error) {
+            console.error('Error calculating logistics:', error);
+            alert('Ошибка при расчете логистики. Попробуйте еще раз.');
+        }
     }
 </script>
 {% endblock %}

@@ -29,6 +29,7 @@ from app.services.repositories import generation_repository
 from app.services.feedback import save_feedback_entry
 from app.services.excel_importer import ExcelImportError, parse_positions_from_excel
 from app.presentation.ui import build_context
+from app.core.extensions import csrf
 
 
 main_bp = Blueprint('main', __name__)  # Основные страницы и бизнес-логика генератора КП
@@ -480,3 +481,103 @@ def logistics():
         'logistics.html',
         **build_context('logistics', 'Просчёт логистики', cities=cities)
     )
+
+
+@main_bp.route('/api/logistics/calculate', methods=['POST'])
+@csrf.exempt
+def calculate_logistics_api():
+    """API endpoint для расчета логистики с учетом габаритов."""
+    from app.services.logistics_calculator import calculate_logistics
+    
+    try:
+        data = request.get_json()
+        if data is None:
+            current_app.logger.error('No JSON data received in logistics calculation request')
+            return jsonify({'error': 'Не получены данные запроса'}), 400
+        
+        current_app.logger.debug('Logistics calculation request data: %s', data)
+        
+        # Получаем и валидируем обязательные поля
+        weight_kg_raw = data.get('weight_kg')
+        city_price_raw = data.get('city_price')
+        
+        if weight_kg_raw is None or city_price_raw is None:
+            return jsonify({
+                'error': 'Не указаны обязательные параметры: weight_kg и city_price'
+            }), 400
+        
+        try:
+            weight_kg = float(weight_kg_raw)
+            city_price = float(city_price_raw)
+        except (ValueError, TypeError) as e:
+            current_app.logger.error('Invalid numeric values: weight_kg=%s, city_price=%s', weight_kg_raw, city_price_raw)
+            return jsonify({
+                'error': 'Некорректные числовые значения для веса или стоимости города'
+            }), 400
+        
+        transport_type = data.get('transport_type', 'truck')
+        length_mm = data.get('length_mm')
+        width_mm = data.get('width_mm')
+        height_mm = data.get('height_mm')
+        
+        if weight_kg <= 0:
+            return jsonify({'error': 'Вес должен быть положительным числом'}), 400
+        
+        if city_price <= 0:
+            return jsonify({'error': 'Стоимость города должна быть положительным числом'}), 400
+        
+        # Преобразуем габариты в float, если они указаны
+        # Обрабатываем случаи: None, пустая строка, 0, или валидное число
+        length_mm_float = None
+        width_mm_float = None
+        height_mm_float = None
+        
+        if length_mm is not None and length_mm != '':
+            try:
+                length_mm_float = float(length_mm)
+                if length_mm_float <= 0:
+                    return jsonify({'error': 'Длина должна быть положительным числом'}), 400
+            except (ValueError, TypeError):
+                return jsonify({'error': 'Некорректное значение длины'}), 400
+        
+        if width_mm is not None and width_mm != '':
+            try:
+                width_mm_float = float(width_mm)
+                if width_mm_float <= 0:
+                    return jsonify({'error': 'Ширина должна быть положительным числом'}), 400
+            except (ValueError, TypeError):
+                return jsonify({'error': 'Некорректное значение ширины'}), 400
+        
+        if height_mm is not None and height_mm != '':
+            try:
+                height_mm_float = float(height_mm)
+                if height_mm_float <= 0:
+                    return jsonify({'error': 'Высота должна быть положительным числом'}), 400
+            except (ValueError, TypeError):
+                return jsonify({'error': 'Некорректное значение высоты'}), 400
+        
+        # Если указаны не все три габарита, игнорируем их все
+        if length_mm_float is None or width_mm_float is None or height_mm_float is None:
+            length_mm_float = None
+            width_mm_float = None
+            height_mm_float = None
+        
+        current_app.logger.debug(
+            'Calculating logistics: weight=%.2f, city_price=%.2f, transport=%s, dims=%sx%sx%s',
+            weight_kg, city_price, transport_type, length_mm_float, width_mm_float, height_mm_float
+        )
+        
+        result = calculate_logistics(
+            weight_kg=weight_kg,
+            city_price=city_price,
+            transport_type=transport_type,
+            length_mm=length_mm_float,
+            width_mm=width_mm_float,
+            height_mm=height_mm_float,
+        )
+        
+        current_app.logger.debug('Logistics calculation result: %s', result)
+        return jsonify(result)
+    except Exception as exc:
+        current_app.logger.exception('Error calculating logistics: %s', exc)
+        return jsonify({'error': f'Ошибка при расчете логистики: {str(exc)}'}), 500

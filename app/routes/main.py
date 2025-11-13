@@ -241,15 +241,15 @@ def duty():
     """Предоставляет поиск по ставкам пошлин и категориям товаров."""
     query = request.args.get('q', '').strip()
     normalized_query = query.lower()
-    filtered_items = datasets.get_duty_rates()
+    catalog = datasets.get_duty_catalog()
 
     if normalized_query:
         filtered_items = [
-            item for item in datasets.get_duty_rates()
-            if normalized_query in item.get('product_search', '')
-            or normalized_query in item.get('category_search', '')
-            or normalized_query in item.get('duty_search', '')
+            item for item in catalog
+            if normalized_query in item.get('search_blob', '')
         ]
+    else:
+        filtered_items = catalog
 
     return render_template(
         'duty.html',

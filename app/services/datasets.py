@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import csv
 import json
 import os
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -16,6 +18,7 @@ VERSIONS_DIR = CONFIG_DIR / 'versions'
 
 GB_ANALOGS: List[Dict[str, Any]] = []
 DUTY_RATES: List[Dict[str, Any]] = []
+TNVED_CATALOG: List[Dict[str, Any]] = []
 ORDERS_REGISTRY: List[Dict[str, Any]] = []
 TASK_TEMPLATES: List[Dict[str, Any]] = []
 TASK_INSTRUCTIONS: List[Dict[str, Any]] = []
@@ -110,6 +113,132 @@ def load_duty_rates() -> List[Dict[str, Any]]:
     return []
 
 
+def _tnved_catalog_path() -> Optional[Path]:
+    """Определяет путь к CSV каталогу ТН ВЭД."""
+    candidates = [
+        CONFIG_DIR / 'tnved_catalog.csv',
+        BASE_DIR / 'ТН-ВЭД-ТД-для-менеджеров-с-ключевыми-словами.csv',
+    ]
+
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+
+    try:
+        match = next(
+            (
+                path
+                for path in BASE_DIR.glob('*ТН*ВЭД*csv')
+                if path.is_file()
+            ),
+            None,
+        )
+    except OSError:
+        match = None
+
+    return match
+
+
+def _split_keywords(raw_text: str) -> List[str]:
+    """Разбивает строку ключевых слов на список значений."""
+    if not raw_text:
+        return []
+    parts = re.split(r'[;,/]|(?:\s{2,})', raw_text)
+    keywords = []
+    for part in parts:
+        cleaned = part.strip()
+        if cleaned:
+            keywords.append(cleaned)
+    if not keywords and raw_text.strip():
+        keywords.append(raw_text.strip())
+    return keywords
+
+
+def _extract_percent_value(raw_text: str) -> Optional[float]:
+    """Извлекает числовое значение процента из текстового описания."""
+    if not raw_text:
+        return None
+    match = re.search(r'(\d+(?:[.,]\d+)?)\s*%', raw_text)
+    if not match:
+        return None
+    value = match.group(1).replace(',', '.')
+    try:
+        return float(value)
+    except ValueError:
+        return None
+
+
+def _format_percent_display(value: Optional[float]) -> str:
+    """Формирует строковое представление значения процента."""
+    if value is None:
+        return '—'
+    formatted = f'{value:.2f}'.rstrip('0').rstrip('.')
+    return f'{formatted}%'
+
+
+def load_tnved_catalog() -> List[Dict[str, Any]]:
+    """Загружает расширенный каталог ставок пошлин из CSV."""
+    catalog_path = _tnved_catalog_path()
+    if catalog_path is None:
+        _log_error('TNVED catalog file not found.')
+        return []
+
+    items: List[Dict[str, Any]] = []
+    try:
+        with catalog_path.open('r', encoding='utf-8-sig', newline='') as csv_file:
+            reader = csv.reader(csv_file)
+            for row in reader:
+                if not row or not any(cell.strip() for cell in row):
+                    continue
+
+                if len(row) < 6:
+                    continue
+
+                index_raw = row[0].strip().strip('"')
+                if not index_raw or not index_raw.isdigit():
+                    continue
+
+                code = row[1].strip()
+                description = row[2].strip()
+                keywords_text = row[3].strip()
+                examples_text = row[4].strip()
+                duty_text = row[5].strip() or '—'
+
+                keywords_list = _split_keywords(keywords_text)
+                duty_percent = _extract_percent_value(duty_text)
+
+                search_chunks = [
+                    code.lower(),
+                    keywords_text.lower(),
+                    description.lower(),
+                    examples_text.lower(),
+                    duty_text.lower(),
+                ]
+
+                items.append({
+                    'code': code,
+                    'description': description,
+                    'keywords_display': keywords_text,
+                    'keywords_list': keywords_list,
+                    'examples': examples_text,
+                    'duty_text': duty_text,
+                    'duty_percent': duty_percent,
+                    'title': keywords_text or description or code,
+                    'title_search': (keywords_text or description or code).lower(),
+                    'description_search': description.lower(),
+                    'examples_search': examples_text.lower(),
+                    'duty_search': duty_text.lower(),
+                    'search_blob': ' '.join(filter(None, search_chunks)),
+                    'source': 'tnved',
+                })
+    except FileNotFoundError:
+        _log_error(f'TNVED catalog file not found: {catalog_path}')
+    except Exception as exc:  # pragma: no cover - defensive logging
+        _log_error(f'Failed to parse TNVED catalog: {exc}')
+
+    return items
+
+
 def save_duty_rates(items: List[Dict[str, Any]], *, actor: Optional[str] = None):
     """Сохраняет изменённый список ставок пошлин в конфигурационный файл."""
     duty_path = CONFIG_DIR / 'duty_rates.json'
@@ -147,6 +276,79 @@ def refresh_duty_rates():
 def get_duty_rates() -> List[Dict[str, Any]]:
     """Возвращает копию кэшированного списка ставок пошлин."""
     return list(DUTY_RATES)
+
+
+def refresh_tnved_catalog():
+    """Обновляет кэш расширенного каталога ставок пошлин."""
+    global TNVED_CATALOG
+    TNVED_CATALOG = load_tnved_catalog()
+
+
+def get_tnved_catalog() -> List[Dict[str, Any]]:
+    """Возвращает копию каталога ставок из CSV."""
+    return list(TNVED_CATALOG)
+
+
+def _normalize_manual_duty_items(manual_items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Преобразует ручные записи пошлин в общий формат каталога."""
+    normalized: List[Dict[str, Any]] = []
+    for item in manual_items:
+        product = str(item.get('product', '')).strip()
+        category = str(item.get('category', '')).strip()
+        duty_percent = item.get('duty_percent')
+        duty_text = _format_percent_display(duty_percent if duty_percent is not None else None)
+        title = product or category or 'Без названия'
+        title_search = title.lower()
+        description_search = category.lower()
+        duty_search = duty_text.lower()
+
+        normalized.append({
+            'code': '',
+            'description': category,
+            'keywords_display': product,
+            'keywords_list': [product] if product else [],
+            'examples': '',
+            'duty_text': duty_text,
+            'duty_percent': duty_percent,
+            'title': title,
+            'title_search': title_search,
+            'description_search': description_search,
+            'examples_search': '',
+            'duty_search': duty_search,
+            'search_blob': ' '.join(filter(None, [title_search, description_search, duty_search])),
+            'product': product,
+            'category': category,
+            'source': 'manual',
+        })
+    return normalized
+
+
+def _normalize_tnved_items(catalog_items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Нормализует записи каталога ТН ВЭД (здесь данные уже стандартизированы)."""
+    normalized: List[Dict[str, Any]] = []
+    for item in catalog_items:
+        normalized.append({
+            **item,
+            'product': item.get('keywords_display', ''),
+            'category': item.get('description', ''),
+        })
+    return normalized
+
+
+def _duty_catalog_sort_key(item: Dict[str, Any]) -> tuple:
+    """Используется для устойчивой сортировки общего каталога."""
+    source_priority = 0 if item.get('source') == 'manual' else 1
+    code = item.get('code') or ''
+    title = item.get('title') or ''
+    return (source_priority, code, title.lower())
+
+
+def get_duty_catalog() -> List[Dict[str, Any]]:
+    """Возвращает объединённый каталог пошлин (ручные записи + ТН ВЭД)."""
+    manual = _normalize_manual_duty_items(get_duty_rates())
+    tnved = _normalize_tnved_items(get_tnved_catalog())
+    combined = manual + tnved
+    return sorted(combined, key=_duty_catalog_sort_key)
 
 
 def load_logistics_cities() -> List[Dict[str, Any]]:
@@ -502,6 +704,7 @@ def init_app(_app):
     """Инициализирует кэшированные данные при старте приложения."""
     refresh_gb_analogs()
     refresh_duty_rates()
+    refresh_tnved_catalog()
     refresh_orders_documents()
     refresh_task_templates()
     refresh_task_instructions()

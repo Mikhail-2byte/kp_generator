@@ -115,7 +115,9 @@ def load_duty_rates() -> List[Dict[str, Any]]:
 
 def _tnved_catalog_path() -> Optional[Path]:
     """Определяет путь к CSV каталогу ТН ВЭД."""
+    data_dir = BASE_DIR / 'data'
     candidates = [
+        data_dir / 'tnved_catalog.csv',
         CONFIG_DIR / 'tnved_catalog.csv',
         BASE_DIR / 'ТН-ВЭД-ТД-для-менеджеров-с-ключевыми-словами.csv',
     ]

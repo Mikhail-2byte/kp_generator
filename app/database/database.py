@@ -1,5 +1,6 @@
 # Database operations
 import logging
+import math
 import sqlite3
 from contextlib import contextmanager
 from datetime import datetime, timezone
@@ -321,18 +322,28 @@ def _user_to_tuple(user: Optional[UserRecord]):
     )
 
 
-def get_generation_history(config) -> List[Dict[str, object]]:
-    """Возвращает историю генераций с учётом ограничений конфигурации."""
-    limit = config.get('max_history_items', 50)
+def _normalize_pagination(config: Dict[str, object], page: int, per_page: Optional[int]) -> tuple[int, int]:
+    default_page_size = int(config.get('history_page_size') or config.get('max_history_items', 50))
+    page = max(int(page or 1), 1)
+    page_size = per_page or default_page_size
+    page_size = max(1, min(int(page_size), 200))
+    return page, page_size
+
+
+def get_generation_history(config, *, page: int = 1, per_page: Optional[int] = None) -> Dict[str, object]:
+    """Возвращает историю генераций с пагинацией."""
+    page, limit = _normalize_pagination(config, page, per_page)
+    offset = (page - 1) * limit
     try:
         with _session_scope() as session:
-            records = (
+            base_query = (
                 session.query(GenerationHistoryRecord)
                 .options(joinedload(GenerationHistoryRecord.user))
                 .order_by(GenerationHistoryRecord.timestamp.desc())
-                .limit(limit)
-                .all()
             )
+
+            total = session.query(func.count(GenerationHistoryRecord.id)).scalar() or 0
+            records = base_query.offset(offset).limit(limit).all()
 
             import json
 
@@ -414,10 +425,32 @@ def get_generation_history(config) -> List[Dict[str, object]]:
                     'positions_count': positions_count,
                 })
 
-            return result
+            total_pages = math.ceil(total / limit) if limit else 1
+
+            return {
+                'items': result,
+                'pagination': {
+                    'page': page,
+                    'per_page': limit,
+                    'total': total,
+                    'pages': max(total_pages, 1),
+                    'has_prev': page > 1,
+                    'has_next': page < max(total_pages, 1),
+                }
+            }
     except Exception as exc:
         logging.error('Error getting generation history: %s', exc)
-        return []
+        return {
+            'items': [],
+            'pagination': {
+                'page': page,
+                'per_page': limit,
+                'total': 0,
+                'pages': 1,
+                'has_prev': False,
+                'has_next': False,
+            }
+        }
 
 
 def save_generation_history(form_data, final_price, config, user_id=None, total_general_price=None) -> bool:

@@ -94,10 +94,19 @@ def history_by_drawing():
 def history():
     """Отображает список последних генераций пользователя."""
     app_config = current_app.config['APP_SETTINGS']
-    history_data = generation_repository.get_history(app_config)
+    try:
+        page = int(request.args.get('page', '1'))
+    except ValueError:
+        page = 1
+    history_data = generation_repository.get_history(app_config, page=page)
     return render_template(
         'history.html',
-        **build_context('history', 'История генераций КП', history=history_data)
+        **build_context(
+            'history',
+            'История генераций КП',
+            history_items=history_data['items'],
+            pagination=history_data['pagination']
+        )
     )
 
 

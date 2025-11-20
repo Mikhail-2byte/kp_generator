@@ -2,6 +2,7 @@
   "margin_percent": 20,
   "default_duty_percent": 0,
   "max_history_items": 50,
+  "history_page_size": 25,
   "calculation_constants": {
     "conversion_rate": 12,
     "logistics_cnr_ratio": 0.3,

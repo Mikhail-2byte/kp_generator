@@ -52,6 +52,7 @@ waitress-serve --call "app:create_app"
 - Профили окружений: `config/environments/{development,staging,production}.json`
   - Выбор профиля переменной `APP_ENV` (по умолчанию `development`)
   - Значения `DATABASE_URL`, `SECRET_KEY`, `LOG_LEVEL`, `DEBUG` можно задать в профиле или через переменные окружения
+- `history_page_size` определяет размер страницы истории (по умолчанию 25); серверная пагинация управляется параметром `?page=N`
 
 ## Миграции
 - Статус/применение:

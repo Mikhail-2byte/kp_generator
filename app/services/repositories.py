@@ -87,9 +87,9 @@ class GenerationRepository:
         """Сохраняет расчёт генерации с привязкой к пользователю."""
         return self._db.save_generation_history(payload, final_price, config, int(user_id) if user_id is not None else None)
 
-    def get_history(self, config: Dict[str, Any]):
-        """Возвращает ограниченную историю генераций согласно конфигурации."""
-        return self._db.get_generation_history(config)
+    def get_history(self, config: Dict[str, Any], *, page: int = 1, per_page: Optional[int] = None):
+        """Возвращает историю генераций с пагинацией."""
+        return self._db.get_generation_history(config, page=page, per_page=per_page)
 
     def get_details(self, record_id: int):
         """Загружает подробности конкретной генерации по идентификатору."""

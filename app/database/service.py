@@ -80,8 +80,8 @@ class DatabaseService:
     ) -> bool:
         return save_generation_history(payload, final_price, config, user_id)
 
-    def get_generation_history(self, config: Dict[str, Any]):
-        return get_generation_history(config)
+    def get_generation_history(self, config: Dict[str, Any], *, page: int = 1, per_page: Optional[int] = None):
+        return get_generation_history(config, page=page, per_page=per_page)
 
     def get_generation_details(self, record_id: int):
         return get_generation_details(record_id)

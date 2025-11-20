@@ -8,7 +8,7 @@
                 <h2 class="section-title">История генераций</h2>
                 <p class="section-description">Просматривайте и выгружайте ранее созданные коммерческие предложения.</p>
             </div>
-            <span class="badge" id="recordsCount">Всего записей: {{ history|length }}</span>
+            <span class="badge" id="recordsCount">Всего записей: {{ pagination.total }}</span>
         </div>
 
         <div class="search-controls">
@@ -24,7 +24,7 @@
             <button id="clearSearch" class="btn btn-outline" style="display:none;">Очистить поиск</button>
         </div>
 
-        {% if history %}
+        {% if history_items %}
         <div class="history-table-wrapper">
             <table class="data-table" id="historyTable">
                 <thead>
@@ -42,7 +42,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for item in history %}
+                    {% for item in history_items %}
                     {% set author_full = ((item.last_name or '') + ' ' + (item.first_name or '')).strip() %}
                     {% set author_display = author_full if author_full else item.username %}
                     {% set positions_count = item.positions_count or 1 %}
@@ -89,6 +89,25 @@
                 </tbody>
             </table>
         </div>
+        {% if pagination.pages > 1 %}
+        <div class="pagination-controls">
+            <div class="pagination-info">
+                Страница {{ pagination.page }} из {{ pagination.pages }}
+            </div>
+            <div class="pagination-buttons">
+                {% if pagination.has_prev %}
+                <a class="btn btn-outline" href="{{ url_for('main.history', page=pagination.page - 1) }}">Предыдущая</a>
+                {% else %}
+                <button class="btn btn-outline" disabled>Предыдущая</button>
+                {% endif %}
+                {% if pagination.has_next %}
+                <a class="btn btn-outline" href="{{ url_for('main.history', page=pagination.page + 1) }}">Следующая</a>
+                {% else %}
+                <button class="btn btn-outline" disabled>Следующая</button>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
         {% else %}
         <div class="card">
             <div class="empty-state">

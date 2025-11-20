@@ -5,13 +5,13 @@ import sqlite3
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Sequence
 
 from alembic import command
 from alembic.config import Config
 from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
-from sqlalchemy import create_engine, func
+from sqlalchemy import create_engine, func, String, cast
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 
@@ -331,24 +331,51 @@ def _normalize_pagination(config: Dict[str, object], page: int, per_page: Option
 
 
 def get_generation_history(config, *, page: int = 1, per_page: Optional[int] = None) -> Dict[str, object]:
-    """Возвращает историю генераций с пагинацией."""
+    """Возвращает историю генераций с пагинацией по тендерам (последняя версия)."""
     page, limit = _normalize_pagination(config, page, per_page)
     offset = (page - 1) * limit
     try:
         with _session_scope() as session:
-            base_query = (
-                session.query(GenerationHistoryRecord)
-                .options(joinedload(GenerationHistoryRecord.user))
-                .order_by(GenerationHistoryRecord.timestamp.desc())
+            tender_key_expr = func.coalesce(
+                func.lower(GenerationHistoryRecord.tender_number),
+                cast(GenerationHistoryRecord.id, String)
             )
 
-            total = session.query(func.count(GenerationHistoryRecord.id)).scalar() or 0
-            records = base_query.offset(offset).limit(limit).all()
+            window_subquery = (
+                session.query(
+                    GenerationHistoryRecord.id.label('id'),
+                    tender_key_expr.label('tender_key'),
+                    func.row_number()
+                    .over(partition_by=tender_key_expr, order_by=GenerationHistoryRecord.timestamp.desc())
+                    .label('row_number'),
+                    func.count()
+                    .over(partition_by=tender_key_expr)
+                    .label('version_count')
+                )
+            ).subquery()
+
+            distinct_tenders_subq = (
+                session.query(window_subquery.c.tender_key)
+                .filter(window_subquery.c.row_number == 1)
+                .subquery()
+            )
+            total = session.query(func.count()).select_from(distinct_tenders_subq).scalar() or 0
+
+            records_query = (
+                session.query(GenerationHistoryRecord, window_subquery.c.tender_key, window_subquery.c.version_count)
+                .options(joinedload(GenerationHistoryRecord.user))
+                .join(window_subquery, GenerationHistoryRecord.id == window_subquery.c.id)
+                .filter(window_subquery.c.row_number == 1)
+                .order_by(GenerationHistoryRecord.timestamp.desc())
+                .offset(offset)
+                .limit(limit)
+            )
+            records = records_query.all()
 
             import json
 
             result: List[Dict[str, object]] = []
-            for record in records:
+            for record, tender_key, version_count in records:
                 positions: List[Dict[str, object]] = []
 
                 if record.positions_data:
@@ -423,6 +450,8 @@ def get_generation_history(config, *, page: int = 1, per_page: Optional[int] = N
                     'last_name': record.user.last_name if record.user else None,
                     'first_name': record.user.first_name if record.user else None,
                     'positions_count': positions_count,
+                    'tender_key': tender_key,
+                    'version_count': int(version_count or 1),
                 })
 
             total_pages = math.ceil(total / limit) if limit else 1
@@ -889,4 +918,37 @@ def get_generations_by_drawing(drawing_number: str, limit: int = 5) -> List[Dict
             return [detail for record in records if (detail := _build_generation_detail(record))]
     except Exception as exc:
         logging.error('Error fetching generations by drawing: %s', exc)
+        return []
+
+
+def get_generations_by_tender(tender_number: str) -> List[Dict[str, object]]:
+    """Возвращает все генерации по указанному номеру тендера."""
+    if not tender_number:
+        return []
+
+    try:
+        with _session_scope() as session:
+            records: Sequence[GenerationHistoryRecord] = (
+                session.query(GenerationHistoryRecord)
+                .options(joinedload(GenerationHistoryRecord.user))
+                .filter(func.lower(GenerationHistoryRecord.tender_number) == tender_number.lower())
+                .order_by(GenerationHistoryRecord.timestamp.desc())
+                .all()
+            )
+
+            return [
+                {
+                    'id': record.id,
+                    'timestamp': _format_history_timestamp(record.timestamp),
+                    'company': record.company,
+                    'product': record.product,
+                    'margin_percent': record.margin_percent,
+                    'final_price': record.final_price,
+                    'total_general_price': record.total_general_price or (record.final_price * (record.quantity or 1)),
+                    'positions_count': record.positions_count or 1,
+                }
+                for record in records
+            ]
+    except Exception as exc:
+        logging.error('Error fetching generations by tender: %s', exc)
         return []

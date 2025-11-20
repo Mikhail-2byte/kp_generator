@@ -18,6 +18,7 @@ from .database import (
     update_user_profile,
     delete_user,
     get_generations_by_drawing,
+    get_generations_by_tender,
 )
 
 
@@ -91,6 +92,9 @@ class DatabaseService:
 
     def get_generations_by_drawing(self, drawing_number: str):
         return get_generations_by_drawing(drawing_number)
+
+    def get_generations_by_tender(self, tender_number: str):
+        return get_generations_by_tender(tender_number)
 
     # --- Админская аналитика ----------------------------------------------------------
 

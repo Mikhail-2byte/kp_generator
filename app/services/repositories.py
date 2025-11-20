@@ -103,6 +103,10 @@ class GenerationRepository:
         """Возвращает список генераций, созданных с указанным номером чертежа."""
         return self._db.get_generations_by_drawing(drawing_number)
 
+    def get_by_tender(self, tender_number: str):
+        """Возвращает список генераций по номеру тендера."""
+        return self._db.get_generations_by_tender(tender_number)
+
 
 class AdminStatsRepository:
     """Предоставляет агрегированные данные для административной панели."""

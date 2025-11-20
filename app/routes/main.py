@@ -1,4 +1,6 @@
 import json
+import re
+from collections import OrderedDict
 from datetime import datetime, timezone
 
 from flask import (
@@ -90,6 +92,52 @@ def history_by_drawing():
         return jsonify({'matches': []}), 500
 
 
+@main_bp.route('/history/tender/<string:tender_number>')
+def history_by_tender(tender_number):
+    """Возвращает все версии генераций по номеру тендера."""
+    if not tender_number:
+        return jsonify({'records': []})
+    records = generation_repository.get_by_tender(tender_number)
+    return jsonify({'records': records})
+
+
+def _build_tender_groups(items):
+    groups = []
+    lookup = OrderedDict()
+
+    for item in items:
+        tender_number = item.get('tender_number')
+        if tender_number:
+            key = tender_number.lower()
+        else:
+            key = f'record-{item["id"]}'
+
+        group = lookup.get(key)
+        if group is None:
+            identifier_source = tender_number or f'{item["id"]}'
+            identifier = re.sub(r'[^a-zA-Z0-9_-]+', '-', identifier_source).strip('-').lower() or f'group-{item["id"]}'
+            group = {
+                'identifier': identifier,
+                'tender_number': tender_number,
+                'display_tender': tender_number or 'Без номера тендера',
+                'latest': item,
+                'previous': [],
+                'version_count': item.get('version_count', 1),
+                'has_remote': bool(tender_number),
+            }
+            lookup[key] = group
+            groups.append(group)
+        else:
+            group['previous'].append(item)
+
+    for group in groups:
+        group['previous'] = sorted(group['previous'], key=lambda x: x.get('timestamp', ''), reverse=True)
+        if not group.get('version_count'):
+            group['version_count'] = 1
+
+    return groups
+
+
 @main_bp.route('/history')
 def history():
     """Отображает список последних генераций пользователя."""
@@ -99,12 +147,13 @@ def history():
     except ValueError:
         page = 1
     history_data = generation_repository.get_history(app_config, page=page)
+    history_groups = _build_tender_groups(history_data['items'])
     return render_template(
         'history.html',
         **build_context(
             'history',
             'История генераций КП',
-            history_items=history_data['items'],
+            history_groups=history_groups,
             pagination=history_data['pagination']
         )
     )

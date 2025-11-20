@@ -552,6 +552,10 @@ h1 {
   gap: 20px;
 }
 
+[data-page="history"] .content-container {
+  width: min(100%, 1650px);
+}
+
 .card-stack {
   display: flex;
   flex-direction: column;
@@ -2380,7 +2384,6 @@ button[disabled] {
 .data-table th,
 .data-table td {
   padding: 14px 18px;
-  border-bottom: 1px solid var(--border);
   text-align: left;
   font-size: 14px;
   color: var(--foreground);
@@ -2391,8 +2394,20 @@ button[disabled] {
   color: var(--muted-foreground);
 }
 
+.data-table tbody tr {
+  border-bottom: 1px solid var(--border);
+}
+
+.data-table tbody tr:last-child {
+  border-bottom: none;
+}
+
 .data-table tbody tr:hover {
   background: rgba(17, 24, 39, 0.04);
+}
+
+.history-details-row td {
+  border-bottom: none;
 }
 
 .badge {

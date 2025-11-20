@@ -7,6 +7,8 @@ from typing import BinaryIO, Dict, Iterable, List
 from openpyxl import load_workbook
 from openpyxl.utils.exceptions import InvalidFileException
 
+from app.business.interfaces import ExcelImporterPort
+
 
 HeaderMap = Dict[str, str]
 
@@ -120,71 +122,81 @@ def _prepare_value(field: str, value: object, row_idx: int) -> str:
     return str(value).strip()
 
 
+class ExcelImporterService(ExcelImporterPort):
+    """Стандартная реализация импорта позиций из Excel."""
+
+    def parse_positions(self, stream: BinaryIO) -> List[Dict[str, str]]:
+        """Читает Excel шаблон и возвращает список позиций для заполнения формы."""
+
+        if hasattr(stream, 'seek'):
+            stream.seek(0)
+
+        try:
+            workbook = load_workbook(stream, data_only=True)
+        except InvalidFileException as exc:
+            raise ExcelImportError('Не удалось прочитать файл Excel. Убедитесь, что используется формат .xlsx.') from exc
+        except Exception as exc:  # pragma: no cover - делегирование неожиданных ошибок
+            raise ExcelImportError('Файл повреждён или имеет неподдерживаемый формат.') from exc
+
+        sheet = workbook.active
+
+        header_row = None
+        for row in sheet.iter_rows(min_row=1, max_row=sheet.max_row):
+            if any(str(cell.value).strip() for cell in row if cell.value is not None):
+                header_row = row
+                break
+
+        if not header_row:
+            raise ExcelImportError('Файл не содержит заголовков и не может быть импортирован.')
+
+        column_map: Dict[str, int] = {}
+        for idx, cell in enumerate(header_row):
+            field_name = SCHEMA.resolve_field(cell.value)
+            if field_name and field_name not in column_map:
+                column_map[field_name] = idx
+
+        missing = [FIELD_LABELS[field] for field in SCHEMA.required_fields if field not in column_map]
+        if missing:
+            missing_list = ', '.join(missing)
+            raise ExcelImportError(f'В файле отсутствуют обязательные столбцы: {missing_list}.')
+
+        positions: List[Dict[str, str]] = []
+        start_row = header_row[0].row + 1
+
+        for row in sheet.iter_rows(min_row=start_row, max_row=sheet.max_row):
+            row_idx = row[0].row
+            row_payload: Dict[str, str] = {}
+
+            for field, column_index in column_map.items():
+                value = row[column_index].value if column_index < len(row) else None
+                row_payload[field] = _prepare_value(field, value, row_idx)
+
+            if not any(row_payload.get(field) for field in SCHEMA.required_fields):
+                continue
+
+            for field in SCHEMA.required_fields:
+                if not row_payload.get(field):
+                    raise ExcelImportError(
+                        f"В строке {row_idx} отсутствует значение в столбце '{FIELD_LABELS[field]}'."
+                    )
+
+            if 'duty_percent' in row_payload:
+                row_payload['duty_percent'] = row_payload.get('duty_percent') or '0'
+            else:
+                row_payload['duty_percent'] = '0'
+            positions.append(row_payload)
+
+        if not positions:
+            raise ExcelImportError('Файл не содержит позиций для импорта.')
+
+        return positions
+
+
+_default_importer = ExcelImporterService()
+
+
 def parse_positions_from_excel(stream: BinaryIO) -> List[Dict[str, str]]:
-    """Читает Excel шаблон и возвращает список позиций для заполнения формы."""
-
-    if hasattr(stream, 'seek'):
-        stream.seek(0)
-
-    try:
-        workbook = load_workbook(stream, data_only=True)
-    except InvalidFileException as exc:
-        raise ExcelImportError('Не удалось прочитать файл Excel. Убедитесь, что используется формат .xlsx.') from exc
-    except Exception as exc:  # pragma: no cover - делегирование неожиданных ошибок
-        raise ExcelImportError('Файл повреждён или имеет неподдерживаемый формат.') from exc
-
-    sheet = workbook.active
-
-    header_row = None
-    for row in sheet.iter_rows(min_row=1, max_row=sheet.max_row):
-        if any(str(cell.value).strip() for cell in row if cell.value is not None):
-            header_row = row
-            break
-
-    if not header_row:
-        raise ExcelImportError('Файл не содержит заголовков и не может быть импортирован.')
-
-    column_map: Dict[str, int] = {}
-    for idx, cell in enumerate(header_row):
-        field_name = SCHEMA.resolve_field(cell.value)
-        if field_name and field_name not in column_map:
-            column_map[field_name] = idx
-
-    missing = [FIELD_LABELS[field] for field in SCHEMA.required_fields if field not in column_map]
-    if missing:
-        missing_list = ', '.join(missing)
-        raise ExcelImportError(f'В файле отсутствуют обязательные столбцы: {missing_list}.')
-
-    positions: List[Dict[str, str]] = []
-    start_row = header_row[0].row + 1
-
-    for row in sheet.iter_rows(min_row=start_row, max_row=sheet.max_row):
-        row_idx = row[0].row
-        row_payload: Dict[str, str] = {}
-
-        for field, column_index in column_map.items():
-            value = row[column_index].value if column_index < len(row) else None
-            row_payload[field] = _prepare_value(field, value, row_idx)
-
-        if not any(row_payload.get(field) for field in SCHEMA.required_fields):
-            continue
-
-        for field in SCHEMA.required_fields:
-            if not row_payload.get(field):
-                raise ExcelImportError(
-                    f"В строке {row_idx} отсутствует значение в столбце '{FIELD_LABELS[field]}'."
-                )
-
-        if 'duty_percent' in row_payload:
-            row_payload['duty_percent'] = row_payload.get('duty_percent') or '0'
-        else:
-            row_payload['duty_percent'] = '0'
-        positions.append(row_payload)
-
-    if not positions:
-        raise ExcelImportError('Файл не содержит позиций для импорта.')
-
-    return positions
+    return _default_importer.parse_positions(stream)
 
 
-__all__ = ['ExcelImportError', 'parse_positions_from_excel']
+__all__ = ['ExcelImportError', 'ExcelImporterService', 'parse_positions_from_excel']

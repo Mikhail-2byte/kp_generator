@@ -1,9 +1,11 @@
 # app/services/multi_position_calculator.py
 from typing import List, Dict, Any, Tuple
+
+from app.business.interfaces import PriceCalculatorPort
 from app.business.price_calculator import calculate_selling_price
 
 
-class MultiPositionCalculator:
+class MultiPositionCalculator(PriceCalculatorPort):
     """Калькулятор для множественных позиций с единой итоговой маржой"""
     
     def __init__(self, config=None):
@@ -76,8 +78,23 @@ class MultiPositionCalculator:
             'credit_cost_per_unit': credit_cost_per_unit
         }
     
-    def calculate_multi_position_prices(self, positions: List[Dict[str, Any]], 
-                                      logistics_rub: float, delivery_time: int, 
+    def calculate_positions(
+        self,
+        positions: List[Dict[str, Any]],
+        logistics_rub: float,
+        delivery_time: int,
+        margin_percent: float,
+    ) -> Dict[str, Any]:
+        """Реализация интерфейса калькулятора."""
+        return self.calculate_multi_position_prices(
+            positions,
+            logistics_rub,
+            delivery_time,
+            margin_percent,
+        )
+
+    def calculate_multi_position_prices(self, positions: List[Dict[str, Any]],
+                                      logistics_rub: float, delivery_time: int,
                                       target_margin_percent: float) -> Dict[str, Any]:
         """Рассчитывает цены для множественных позиций с единой итоговой маржой"""
         

@@ -199,6 +199,21 @@ def _format_timestamp(value: Optional[datetime]) -> Optional[str]:
     return value.strftime('%Y-%m-%d %H:%M:%S')
 
 
+def _ensure_datetime_utc(value: Optional[datetime]) -> Optional[datetime]:
+    """Гарантирует, что дата содержит информацию о часовом поясе (UTC)."""
+    if value is None:
+        return None
+    if isinstance(value, str):
+        try:
+            parsed = datetime.fromisoformat(value)
+        except ValueError:
+            return value
+        value = parsed
+    if isinstance(value, datetime) and value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value
+
+
 def _format_history_timestamp(value: Optional[datetime]) -> str:
     """Преобразует дату истории в пользовательский формат dd.mm.yyyy HH:MM."""
     if value is None:
@@ -291,12 +306,14 @@ def _user_to_tuple(user: Optional[UserRecord]):
     """Поддерживает совместимость с устаревшим интерфейсом кортежей пользователя."""
     if user is None:
         return None
+    created_at = _ensure_datetime_utc(user.created_at)
+    last_login = _ensure_datetime_utc(user.last_login)
     return (
         user.id,
         user.username,
         user.password_hash,
-        user.created_at,
-        user.last_login,
+        created_at,
+        last_login,
         user.last_name,
         user.first_name,
         user.contact_info,
@@ -618,10 +635,10 @@ def update_last_login(user_id, last_login=None) -> bool:
             user = session.query(UserRecord).filter(UserRecord.id == user_id).one_or_none()
             if user is None:
                 return False
-            if last_login is None:
-                user.last_login = datetime.now(timezone.utc)
-            else:
-                user.last_login = last_login
+            timestamp = last_login or datetime.now(timezone.utc)
+            if timestamp.tzinfo is None:
+                timestamp = timestamp.replace(tzinfo=timezone.utc)
+            user.last_login = timestamp
         return True
     except Exception as exc:
         logging.error('Error updating last login: %s', exc)

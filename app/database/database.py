@@ -8,7 +8,9 @@ from typing import Dict, List, Optional
 
 from alembic import command
 from alembic.config import Config
-from sqlalchemy import func
+from alembic.runtime.migration import MigrationContext
+from alembic.script import ScriptDirectory
+from sqlalchemy import create_engine, func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 
@@ -38,6 +40,110 @@ def _resolve_sqlite_path(database_url: str) -> str:
     raise ValueError(f'Unsupported database URL: {database_url}')
 
 
+def _alembic_ini_path() -> Path:
+    return PROJECT_ROOT / 'alembic.ini'
+
+
+def get_alembic_config(strict: bool = False) -> Optional[Config]:
+    """Возвращает конфигурацию Alembic с подставленным URL базы данных."""
+    alembic_cfg = _alembic_ini_path()
+    if not alembic_cfg.exists():
+        message = f'Alembic configuration not found at {alembic_cfg}'
+        if strict:
+            raise FileNotFoundError(message)
+        logging.warning(message)
+        return None
+
+    config = Config(str(alembic_cfg))
+    config.set_main_option('sqlalchemy.url', get_database_url())
+    return config
+
+
+def get_migration_status(config: Optional[Config] = None) -> Dict[str, object]:
+    """Возвращает сведения о состоянии миграций Alembic."""
+    config = config or get_alembic_config()
+    database_url = get_database_url()
+
+    if config is None:
+        return {
+            'configured': False,
+            'database_url': database_url,
+            'current_revision': None,
+            'head_revision': None,
+            'head_revisions': [],
+            'pending': False,
+            'has_database': False,
+        }
+
+    script = ScriptDirectory.from_config(config)
+    head_revisions = script.get_heads()
+    head_revision = script.get_current_head() if head_revisions else None
+
+    current_revision = None
+    has_database = False
+
+    engine = create_engine(database_url, future=True)
+    try:
+        with engine.connect() as connection:
+            context = MigrationContext.configure(connection)
+            current_revision = context.get_current_revision()
+            has_database = True
+    finally:
+        engine.dispose()
+
+    pending = bool(head_revisions) and current_revision not in head_revisions
+
+    return {
+        'configured': True,
+        'database_url': database_url,
+        'current_revision': current_revision,
+        'head_revision': head_revision,
+        'head_revisions': head_revisions,
+        'pending': pending,
+        'has_database': has_database,
+    }
+
+
+def apply_migrations(target_revision: str = 'head', *, raise_on_error: bool = True) -> bool:
+    """Применяет миграции Alembic до указанной ревизии."""
+    config = get_alembic_config()
+    if config is None:
+        message = 'Alembic configuration is missing; cannot apply migrations.'
+        if raise_on_error:
+            raise RuntimeError(message)
+        logging.error(message)
+        return False
+
+    try:
+        command.upgrade(config, target_revision)
+        return True
+    except Exception as exc:  # pragma: no cover - проксируем исключение вызывающему коду
+        logging.exception('Failed to apply alembic migrations: %s', exc)
+        if raise_on_error:
+            raise
+        return False
+
+
+def downgrade_migrations(target_revision: str = '-1', *, raise_on_error: bool = True) -> bool:
+    """Откатывает миграции Alembic до указанной ревизии."""
+    config = get_alembic_config()
+    if config is None:
+        message = 'Alembic configuration is missing; cannot downgrade migrations.'
+        if raise_on_error:
+            raise RuntimeError(message)
+        logging.error(message)
+        return False
+
+    try:
+        command.downgrade(config, target_revision)
+        return True
+    except Exception as exc:  # pragma: no cover - проксируем исключение вызывающему коду
+        logging.exception('Failed to downgrade alembic migrations: %s', exc)
+        if raise_on_error:
+            raise
+        return False
+
+
 def connect_db():
     """Устанавливает соединение с базой данных через sqlite3 (наследие)."""
     database_url = get_database_url()
@@ -46,20 +152,28 @@ def connect_db():
 
 
 def init_db():
-    """Запускает миграции Alembic и приводит схему к актуальному состоянию."""
-    alembic_cfg = PROJECT_ROOT / 'alembic.ini'
-    if not alembic_cfg.exists():
-        logging.warning('Alembic configuration not found at %s', alembic_cfg)
+    """Запускает миграции Alembic и проверяет актуальность схемы."""
+    config = get_alembic_config()
+    if config is None:
         return
 
-    config = Config(str(alembic_cfg))
-    config.set_main_option('sqlalchemy.url', get_database_url())
+    status = get_migration_status(config=config)
+    if status.get('pending'):
+        logging.info(
+            'Pending migrations detected (current=%s, head=%s). Applying...',
+            status.get('current_revision') or 'base',
+            status.get('head_revision') or '—',
+        )
 
     try:
         command.upgrade(config, 'head')
     except Exception as exc:
         logging.exception('Failed to apply database migrations: %s', exc)
         raise
+
+    final_status = get_migration_status(config=config)
+    if final_status.get('pending'):
+        raise RuntimeError('Database schema is out of date after migrations execution.')
 
 
 @contextmanager

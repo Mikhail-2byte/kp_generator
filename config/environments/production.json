@@ -1,0 +1,8 @@
+{
+  "profile": "production",
+  "debug": false,
+  "log_level": "WARNING",
+  "database_url": "sqlite:///kp_generator.db",
+  "secret_key": null
+}
+

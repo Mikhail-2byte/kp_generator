@@ -49,5 +49,24 @@ waitress-serve --call "app:create_app"
 ## Конфигурация
 - `.env` и `config/settings.json` (переменные, секреты, БД)
 - По умолчанию SQLite: `sqlite:///kp_generator.db`
+- Профили окружений: `config/environments/{development,staging,production}.json`
+  - Выбор профиля переменной `APP_ENV` (по умолчанию `development`)
+  - Значения `DATABASE_URL`, `SECRET_KEY`, `LOG_LEVEL`, `DEBUG` можно задать в профиле или через переменные окружения
+
+## Миграции
+- Статус/применение:
+  - `python manage_migrations.py status`
+  - `python manage_migrations.py upgrade [revision]`
+  - `python manage_migrations.py downgrade <revision>`
+  - `python manage_migrations.py history [--verbose]`
+- Приложение при старте автоматически проверяет возможность применения и актуальность миграций Alembic; при несоответствии схема не запускается.
+
+## Health-check
+- `GET /health` или `/healthz` — JSON-отчёт о состоянии:
+  - подключение к БД и актуальность миграций;
+  - наличие шаблонов документов;
+  - доступность справочников и кэшированных данных;
+  - существование обязательных каталогов (`logs`, `templates_docs`).
+- При сбоях возвращается HTTP 503 с деталями по каждому чек-пойнту.
 
 

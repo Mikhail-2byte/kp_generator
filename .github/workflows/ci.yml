@@ -2,6 +2,55 @@ name: CI
 
 on:
   push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Prepare test database and env
+        run: |
+          export DATABASE_URL="sqlite:///./ci.db"
+          export SECRET_KEY="ci-secret-key"
+          export APP_ENV="development"
+          echo "DATABASE_URL=${DATABASE_URL}" >> $GITHUB_ENV
+          echo "SECRET_KEY=${SECRET_KEY}" >> $GITHUB_ENV
+          echo "APP_ENV=${APP_ENV}" >> $GITHUB_ENV
+
+      - name: Run migrations
+        run: |
+          alembic upgrade head
+
+      - name: Run tests
+        run: |
+          python -m pytest
+name: CI
+
+on:
+  push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]

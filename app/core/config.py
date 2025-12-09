@@ -17,6 +17,24 @@ ENVIRONMENTS_DIR = CONFIG_DIR / 'environments'
 DEFAULT_PROFILE = 'development'
 
 
+def _resolve_log_level_value(value: Any) -> int:
+    """
+    Приводит значение уровня логирования к числу, устойчиво к строкам в любом регистре.
+    Некорректные значения откатываются на INFO, чтобы не рушить инициализацию.
+    """
+    if isinstance(value, int):
+        return value
+
+    if isinstance(value, str):
+        normalized = value.strip().upper()
+        resolved = logging.getLevelName(normalized)
+        if isinstance(resolved, int):
+            return resolved
+
+    logging.getLogger(__name__).warning('Unknown log level "%s", fallback to INFO', value)
+    return logging.INFO
+
+
 def _deep_update(target: Dict[str, Any], updates: Dict[str, Any]) -> Dict[str, Any]:
     """Рекурсивно обновляет словарь, не теряя вложенные структуры."""
     for key, value in updates.items():
@@ -90,7 +108,13 @@ def load_config(app):
 
 def setup_app_security(app, config):
     """Настраивает безопасность приложения"""
-    secret_key = config.get('secret_key') or secrets.token_hex(32)
+    secret_key = config.get('secret_key')
+
+    # В продакшене запрещаем автогенерацию ключа, чтобы не ронять сессии между рестартами
+    if (config.get('profile') or '').lower() == 'production' and not secret_key:
+        raise RuntimeError('SECRET_KEY обязателен в production. Задайте переменную окружения или config/environments/production.json')
+
+    secret_key = secret_key or secrets.token_hex(32)
     app.secret_key = secret_key
     
     # Настройка Flask на основе конфигурации
@@ -104,7 +128,7 @@ def setup_logging(app, config):
     if not os.path.exists('logs'):
         os.makedirs('logs')
     
-    log_level = getattr(logging, config.get('log_level', 'INFO'))
+    log_level = _resolve_log_level_value(config.get('log_level', 'INFO'))
     
     file_handler = RotatingFileHandler('logs/kp_generator.log', maxBytes=10240, backupCount=10)
     file_handler.setFormatter(logging.Formatter(

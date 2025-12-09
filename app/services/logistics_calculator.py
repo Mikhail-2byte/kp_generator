@@ -199,14 +199,3 @@ def calculate_logistics(
     return result
 
 
-def format_logistics_result(result: Dict[str, any]) -> str:
-    """Форматирует результат расчета для отображения."""
-    if result.get('recommendation') == 'dellin':
-        return result.get('message', '')
-    
-    basis_text = 'по весу' if result.get('basis') == 'weight' else 'по объему'
-    price = result.get('total_price', 0)
-    trucks = result.get('trucks_count', 1)
-    
-    return f'Расчет {basis_text}: {result.get("calculation_formula", "")} = {price:,.0f} руб. Требуется машин: {trucks}'
-

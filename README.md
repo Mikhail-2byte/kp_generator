@@ -47,11 +47,18 @@ waitress-serve --call "app:create_app"
 - Линтинг: Ruff (`pyproject.toml`)
 
 ## Конфигурация
-- `.env` и `config/settings.json` (переменные, секреты, БД)
+- `.env` и `config/settings.json` (переменные, секреты, БД). Минимальный пример `.env`:
+  ```
+  APP_ENV=development
+  DATABASE_URL=sqlite:///kp_generator.db
+  SECRET_KEY=dev-secret-key
+  LOG_LEVEL=INFO
+  ```
 - По умолчанию SQLite: `sqlite:///kp_generator.db`
 - Профили окружений: `config/environments/{development,staging,production}.json`
   - Выбор профиля переменной `APP_ENV` (по умолчанию `development`)
   - Значения `DATABASE_URL`, `SECRET_KEY`, `LOG_LEVEL`, `DEBUG` можно задать в профиле или через переменные окружения
+- В `production` ключ `SECRET_KEY` обязателен (автогенерация отключена для сохранения сессий).
 - `history_page_size` определяет размер страницы истории (по умолчанию 25); серверная пагинация управляется параметром `?page=N`
 
 ## Миграции
@@ -61,6 +68,10 @@ waitress-serve --call "app:create_app"
   - `python manage_migrations.py downgrade <revision>`
   - `python manage_migrations.py history [--verbose]`
 - Приложение при старте автоматически проверяет возможность применения и актуальность миграций Alembic; при несоответствии схема не запускается.
+
+## Быстрые проверки
+- Дымовой тест: `python -m pytest tests/test_smoke_health.py`
+- Полный набор: `python -m pytest`
 
 ## Health-check
 - `GET /health` или `/healthz` — JSON-отчёт о состоянии:

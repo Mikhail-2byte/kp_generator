@@ -341,6 +341,9 @@ def get_generation_history(config, *, page: int = 1, per_page: Optional[int] = N
                 cast(GenerationHistoryRecord.id, String)
             )
 
+            # Общее количество уникальных тендеров (или отдельных записей, если тендер не указан)
+            total = session.query(func.count(func.distinct(tender_key_expr))).scalar() or 0
+
             window_subquery = (
                 session.query(
                     GenerationHistoryRecord.id.label('id'),
@@ -353,13 +356,6 @@ def get_generation_history(config, *, page: int = 1, per_page: Optional[int] = N
                     .label('version_count')
                 )
             ).subquery()
-
-            distinct_tenders_subq = (
-                session.query(window_subquery.c.tender_key)
-                .filter(window_subquery.c.row_number == 1)
-                .subquery()
-            )
-            total = session.query(func.count()).select_from(distinct_tenders_subq).scalar() or 0
 
             records_query = (
                 session.query(GenerationHistoryRecord, window_subquery.c.tender_key, window_subquery.c.version_count)

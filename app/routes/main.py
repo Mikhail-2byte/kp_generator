@@ -1,7 +1,7 @@
 import json
 import re
 from collections import OrderedDict
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from flask import (
     Blueprint,
@@ -35,16 +35,54 @@ from app.core.extensions import csrf
 
 
 main_bp = Blueprint('main', __name__)  # Основные страницы и бизнес-логика генератора КП
+FORM_TTL_HOURS = 24  # время жизни сохранённой формы в сессии
+
+
+def _clear_form_session():
+    """Очищает сохранённые данные формы и импортированные позиции в сессии."""
+    session.pop('form_data', None)
+    session.pop('form_saved_at', None)
+    session.pop('imported_positions', None)
+
+
+def _save_form_session(form_data, imported_positions=None):
+    """Сохраняет состояние формы и (опционально) импортированные позиции в сессии с отметкой времени."""
+    session['form_data'] = form_data or {}
+    if imported_positions is not None:
+        session['imported_positions'] = imported_positions
+    session['form_saved_at'] = datetime.now(timezone.utc).isoformat()
+
+
+def _load_form_session():
+    """Возвращает сохранённое состояние формы, если оно не устарело."""
+    saved_at_raw = session.get('form_saved_at')
+    form_data = session.get('form_data') or {}
+    imported_positions = session.get('imported_positions')
+
+    if not saved_at_raw:
+        return form_data, imported_positions
+
+    try:
+        saved_at = datetime.fromisoformat(saved_at_raw)
+    except ValueError:
+        _clear_form_session()
+        return {}, None
+
+    if saved_at < datetime.now(timezone.utc) - timedelta(hours=FORM_TTL_HOURS):
+        _clear_form_session()
+        return {}, None
+
+    return form_data, imported_positions
 
 
 @main_bp.route('/')
 def index():
     """Показывает форму расчёта коммерческого предложения и заполняет справочники."""
-    form_data = session.pop('form_data', {})
+    # Забираем сохранённое состояние формы, но не удаляем — чтобы после навигации данные оставались
+    form_data, imported_positions = _load_form_session()
     for field in ['id', 'timestamp', 'final_price', 'user_id']:
         form_data.pop(field, None)
 
-    imported_positions = session.pop('imported_positions', None)
     if imported_positions:
         form_data.setdefault('positions_payload', json.dumps(imported_positions, ensure_ascii=False))
         first_position = imported_positions[0]
@@ -358,6 +396,8 @@ def generate():
         for error in validation.errors:
             flash(error, 'danger')
 
+        # Сохраняем состояние формы и ошибки в сессии, чтобы пользователь не потерял данные при переходах
+        _save_form_session(form_data, validation.positions or session.get('imported_positions'))
         if validation.invalid_fields:
             form_data['_invalid_fields'] = validation.invalid_fields
 
@@ -440,6 +480,8 @@ def generate():
             except Exception as exc:
                 current_app.logger.error('Error loading logistics data for template error page: %s', exc)
                 cities = []
+            # Сохраняем форму, чтобы пользователь мог вернуться без потери данных
+            _save_form_session(form_data, session.get('imported_positions'))
             return render_template(
                 'index.html',
                 **build_context('index', 'Создание коммерческого предложения', form_data=form_data, cities=cities)
@@ -478,6 +520,9 @@ def generate():
             contact_info=contact_info,
         )
         zip_buffer, file_prefix = create_zip_archive(excel_file, word_file, company)
+
+        # Успешная генерация — очищаем сохранённую форму/импорт
+        _clear_form_session()
 
         return send_file(
             zip_buffer,
@@ -521,7 +566,46 @@ def import_positions():
         return jsonify({'error': 'Не удалось импортировать файл. Попробуйте позже.'}), 500
 
     session['imported_positions'] = positions
+    # Сохраняем текущую форму, если она была отправлена вместе с импортом
+    if request.form:
+        _save_form_session({**request.form.to_dict()}, positions)
     return jsonify({'positions': positions})
+
+
+@main_bp.route('/form/reset', methods=['POST'])
+@csrf.exempt
+def reset_form_state():
+    """Очищает сохранённый черновик формы и импортированные позиции в сессии."""
+    _clear_form_session()
+    return jsonify({'status': 'ok'})
+
+
+@main_bp.route('/form/save', methods=['POST'])
+@csrf.exempt
+def save_form_state():
+    """
+    Сохраняет черновик формы из JSON-пейлоада.
+    Ожидает тело вида:
+    {
+        "form_data": {...},
+        "positions": [...]
+    }
+    """
+    try:
+        payload = request.get_json(silent=True) or {}
+        form_data = payload.get('form_data') or {}
+        positions = payload.get('positions')
+        if positions is not None:
+            try:
+                # Сериализуем positions в строку JSON, если нужно сохранить в форму для совместимости
+                form_data['positions_payload'] = json.dumps(positions, ensure_ascii=False)
+            except (TypeError, ValueError):
+                pass
+        _save_form_session(form_data, positions)
+        return jsonify({'status': 'ok'})
+    except Exception as exc:  # pragma: no cover - defensive
+        current_app.logger.error('Failed to save draft: %s', exc)
+        return jsonify({'status': 'error', 'message': 'Не удалось сохранить черновик'}), 500
 
 
 @main_bp.route('/logistics')

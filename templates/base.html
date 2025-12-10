@@ -59,15 +59,6 @@
             </nav>
 
             <div class="sidebar-bottom" aria-label="Дополнительная навигация">
-                {% set settings_href = url_for('admin.admin_panel') if current_user.is_authenticated and current_user.is_admin else url_for('auth.profile') %}
-                <a href="{{ settings_href }}" class="sidebar-link sidebar-link-secondary" data-nav="settings">
-                    <span class="sidebar-icon">{{ sidebar_icon('settings')|safe }}</span>
-                    <span class="sidebar-label">Настройки</span>
-                </a>
-                <a href="{{ url_for('main.instructions_page') }}" class="sidebar-link sidebar-link-secondary" data-nav="help">
-                    <span class="sidebar-icon">{{ sidebar_icon('help-circle')|safe }}</span>
-                    <span class="sidebar-label">Помощь</span>
-                </a>
                 <a href="{{ url_for('auth.profile') }}" class="sidebar-link sidebar-link-secondary" data-nav="profile">
                     <span class="sidebar-icon">{{ sidebar_icon('user')|safe }}</span>
                     <span class="sidebar-label">Профиль</span>

@@ -19,12 +19,12 @@
                 <p class="form-page-subtitle">Заполните форму для создания нового коммерческого предложения</p>
             </div>
             <div class="form-page-actions">
-                <input type="file" id="importExcelInput" class="visually-hidden" accept=".xlsx,.xlsm">
-                <button type="button" class="btn btn-outline btn-sm" id="importExcelBtn">
-                    {{ sidebar_icon('file-text')|safe }}
-                    <span>Импорт из Excel</span>
-                </button>
                 <div class="generate-action-group">
+                    <input type="file" id="importExcelInput" class="visually-hidden" accept=".xlsx,.xlsm">
+                    <button type="button" class="btn btn-outline btn-sm" id="importExcelBtn">
+                        {{ sidebar_icon('file-text')|safe }}
+                        <span>Импорт из Excel</span>
+                    </button>
                     <button type="submit" class="btn btn-primary btn-sm" id="generateBtn">
                         {{ sidebar_icon('download')|safe }}
                         <span id="generateText">Сгенерировать КП</span>
@@ -36,14 +36,14 @@
                                class="{% if invalid_fields and 'margin_percent' in invalid_fields %}is-invalid{% endif %}"
                                aria-invalid="{{ 'true' if invalid_fields and 'margin_percent' in invalid_fields else 'false' }}">
                     </label>
-                        <button type="button" class="btn btn-ghost btn-sm" id="resetFormBtn" title="Очистить черновик">
-                            {{ sidebar_icon('rotate-ccw')|safe }}
-                            <span>Сбросить</span>
-                        </button>
-                        <button type="button" class="btn btn-outline btn-sm" id="saveDraftBtn" title="Сохранить черновик">
-                            {{ sidebar_icon('save')|safe }}
-                            <span>Сохранить</span>
-                        </button>
+                    <button type="button" class="btn btn-ghost btn-sm" id="resetFormBtn" title="Очистить черновик">
+                        {{ sidebar_icon('rotate-ccw')|safe }}
+                        <span>Сбросить</span>
+                    </button>
+                    <button type="button" class="btn btn-outline btn-sm" id="saveDraftBtn" title="Сохранить черновик">
+                        {{ sidebar_icon('save')|safe }}
+                        <span>Сохранить</span>
+                    </button>
                 </div>
             </div>
         </div>

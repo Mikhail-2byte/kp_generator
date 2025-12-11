@@ -5,6 +5,7 @@ from flask_login import current_user, login_required, login_user, logout_user
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.presentation.forms import (
+    ContactInfoForm,
     DeleteAccountForm,
     LoginForm,
     ProfileUpdateForm,
@@ -24,8 +25,10 @@ def profile():
     register_form = RegistrationForm(prefix='register')
     update_form = ProfileUpdateForm(prefix='update') if current_user.is_authenticated else None
     delete_form = DeleteAccountForm(prefix='delete') if current_user.is_authenticated else None
+    contact_form = ContactInfoForm(prefix='contact') if current_user.is_authenticated else None
     show_registration_modal = False
     show_update_form = bool(update_form and update_form.submit_update.data)
+    show_contact_form = bool(contact_form and contact_form.submit.data)
 
     if request.method == 'POST':
         if login_form.submit_login.data:
@@ -70,11 +73,9 @@ def profile():
                 last_name = (update_form.last_name.data or '').strip()
                 first_name = (update_form.first_name.data or '').strip()
                 new_password = (update_form.new_password.data or '').strip()
-                contact_info = (update_form.contact_info.data or '').strip()
                 update_form.username.data = username
                 update_form.last_name.data = last_name
                 update_form.first_name.data = first_name
-                update_form.contact_info.data = contact_info
 
                 existing_user = user_repository.get_by_username(username)
                 if existing_user and str(existing_user.id) != str(current_user.id):
@@ -86,14 +87,13 @@ def profile():
                         username,
                         last_name,
                         first_name,
-                        contact_info,
+                        current_user.contact_info,  # сохраняем текущую контактную информацию
                         password_hash
                     )
                     if updated:
                         current_user.username = username
                         current_user.last_name = last_name
                         current_user.first_name = first_name
-                        current_user.contact_info = contact_info
                         flash('Профиль успешно обновлён.', 'success')
                         return redirect(url_for('auth.profile'))
                     flash('Не удалось обновить профиль. Попробуйте позже.', 'danger')
@@ -105,6 +105,27 @@ def profile():
                     flash('Аккаунт и связанные данные удалены.', 'info')
                     return redirect(url_for('auth.profile'))
                 flash('Не удалось удалить аккаунт. Попробуйте позже.', 'danger')
+        elif current_user.is_authenticated and contact_form and contact_form.submit.data:
+            if contact_form.validate():
+                contact_info = (contact_form.contact_info.data or '').strip()
+                contact_form.contact_info.data = contact_info
+
+                updated = user_repository.update_profile(
+                    current_user.id,
+                    current_user.username,  # сохраняем текущие значения
+                    current_user.last_name,
+                    current_user.first_name,
+                    contact_info,  # обновляем только контактную информацию
+                    None  # не меняем пароль
+                )
+                
+                if updated:
+                    current_user.contact_info = contact_info
+                    flash('Контактная информация успешно обновлена.', 'success')
+                    return redirect(url_for('auth.profile'))
+                else:
+                    flash('Не удалось обновить контактную информацию. Попробуйте позже.', 'danger')
+                    show_contact_form = True
 
     stats = None
     if current_user.is_authenticated:
@@ -143,10 +164,14 @@ def profile():
             update_form.username.data = current_user.username
             update_form.last_name.data = current_user.last_name or ''
             update_form.first_name.data = current_user.first_name or ''
-            update_form.contact_info.data = current_user.contact_info or ''
+
+    if request.method != 'POST' and contact_form:
+        contact_form.contact_info.data = current_user.contact_info or ''
 
     if update_form and update_form.errors:
         show_update_form = True
+    if contact_form and contact_form.errors:
+        show_contact_form = True
 
     return render_template(
         'profile.html',
@@ -159,7 +184,9 @@ def profile():
             show_registration_modal=show_registration_modal,
             update_form=update_form,
             delete_form=delete_form,
-            show_update_form=show_update_form
+            contact_form=contact_form,
+            show_update_form=show_update_form,
+            show_contact_form=show_contact_form
         )
     )
 

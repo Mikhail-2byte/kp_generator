@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="content-container">
+    <div class="card" style="max-width: 800px; margin: 0 auto;">
+        <div class="card-header">
+            <div>
+                <h2 class="section-title">Контактная информация</h2>
+                <p class="section-description">Эти данные будут автоматически подставляться в коммерческие предложения.</p>
+            </div>
+            <a href="{{ url_for('auth.profile') }}" class="btn btn-outline">
+                {{ sidebar_icon('arrow-left')|safe }}
+                <span>Назад к профилю</span>
+            </a>
+        </div>
+
+        <form method="post" action="{{ url_for('auth.contact_info') }}" class="form-grid">
+            {{ form.hidden_tag() }}
+            
+            <div class="field-group span-3">
+                {{ form.contact_info.label(class_='field-label') }}
+                {{ form.contact_info(rows=6, placeholder='Введите вашу контактную информацию:
+ФИО: Иванов Иван Иванович
+Телефон: +7 (999) 123-45-67
+Email: ivanov@example.com
+Должность: Менеджер по продажам') }}
+                {% for error in form.contact_info.errors %}
+                    <div class="field-error">{{ error }}</div>
+                {% endfor %}
+                <div class="form-helper">
+                    Рекомендуется указать: ФИО, телефон, email, должность
+                </div>
+            </div>
+
+            <div class="controls-row">
+                <span></span>
+                {{ form.submit(class_='btn btn-primary') }}
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+    {{ super() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const textarea = document.querySelector('textarea[name="contact_info"]');
+            if (textarea) {
+                // Автоматическое увеличение высоты при вводе
+                textarea.addEventListener('input', function() {
+                    this.style.height = 'auto';
+                    this.style.height = Math.max(150, this.scrollHeight) + 'px';
+                });
+                
+                // Инициализация высоты при загрузке
+                textarea.style.height = 'auto';
+                textarea.style.height = Math.max(150, textarea.scrollHeight) + 'px';
+            }
+        });
+    </script>
+{% endblock %}

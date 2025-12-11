@@ -59,6 +59,12 @@
             </nav>
 
             <div class="sidebar-bottom" aria-label="Дополнительная навигация">
+                {% if current_user.is_authenticated and current_user.is_admin %}
+                <a href="{{ url_for('admin.admin_panel') }}" class="sidebar-link sidebar-link-secondary" data-nav="admin">
+                    <span class="sidebar-icon">{{ sidebar_icon('shield')|safe }}</span>
+                    <span class="sidebar-label">Администратор</span>
+                </a>
+                {% endif %}
                 <a href="{{ url_for('auth.profile') }}" class="sidebar-link sidebar-link-secondary" data-nav="profile">
                     <span class="sidebar-icon">{{ sidebar_icon('user')|safe }}</span>
                     <span class="sidebar-label">Профиль</span>
@@ -200,6 +206,19 @@
                 }
             }
 
+            const sidebarAdminLink = document.querySelector('.sidebar-link[data-nav="admin"]');
+            if (sidebarAdminLink) {
+                // Подсвечиваем админскую ссылку для всех админских страниц
+                const adminPages = ['admin', 'admin_stats', 'admin_duty', 'admin_materials', 'admin_logistics', 'admin_orders', 'admin_templates', 'admin_instructions'];
+                if (adminPages.includes(activePage)) {
+                    sidebarAdminLink.classList.add('is-active');
+                    sidebarAdminLink.setAttribute('aria-current', 'page');
+                } else {
+                    sidebarAdminLink.classList.remove('is-active');
+                    sidebarAdminLink.removeAttribute('aria-current');
+                }
+            }
+
             const sidebarProfileLink = document.querySelector('.sidebar-link[data-nav="profile"]');
             if (sidebarProfileLink) {
                 if (activePage === 'profile') {
@@ -210,6 +229,8 @@
                     sidebarProfileLink.removeAttribute('aria-current');
                 }
             }
+
+            
 
             const headerProfile = document.querySelector('[data-header-action="profile"]');
             if (headerProfile && activePage === 'profile') {

@@ -37,13 +37,18 @@ class ProfileUpdateForm(FlaskForm):
     username = StringField('Логин', validators=[DataRequired(), Length(min=3, max=50)])
     last_name = StringField('Фамилия', validators=[DataRequired(), Length(min=2, max=100)])
     first_name = StringField('Имя', validators=[DataRequired(), Length(min=2, max=100)])
-    contact_info = TextAreaField('Контактная информация', validators=[Optional(), Length(max=1000)])
     new_password = PasswordField('Новый пароль', validators=[Optional(), Length(min=6, max=128)])
     confirm_new_password = PasswordField(
         'Подтвердите новый пароль',
         validators=[Optional(), EqualTo('new_password', message='Пароли должны совпадать')]
     )
     submit_update = SubmitField('Сохранить изменения')
+
+
+class ContactInfoForm(FlaskForm):
+    """Форма редактирования контактной информации пользователя."""
+    contact_info = TextAreaField('Контактная информация', validators=[Optional(), Length(max=1000)])
+    submit = SubmitField('Сохранить')
 
 
 class DeleteAccountForm(FlaskForm):

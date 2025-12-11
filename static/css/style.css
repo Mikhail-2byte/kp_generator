@@ -787,6 +787,50 @@ h1 {
   gap: 12px;
   color: var(--foreground);
 }
+
+.order-title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+}
+
+.order-number {
+  font-weight: 600;
+  color: var(--foreground);
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-width: fit-content;
+}
+
+.order-brief {
+  color: var(--muted-foreground);
+  line-height: 1.4;
+  text-align: left;
+  flex: 1;
+  margin-left: 8px;
+}
+
+.orders-detail-title {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.orders-files-title {
+  margin: 16px 0 8px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.orders-full-text {
+  margin-bottom: 16px;
+}
 .orders-text,
 .templates-text,
 .instructions-text {
@@ -799,6 +843,28 @@ h1 {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+}
+
+.orders-files-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.orders-files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  flex: 1;
+}
+
+.orders-updated-date {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .card {

@@ -10,22 +10,37 @@
             <div class="orders-accordion mt-lg">
                 {% for order in orders %}
                     <details class="orders-item" {% if loop.first %}open{% endif %}>
-                        <summary class="section-description orders-summary">{{ order.title }}</summary>
+                        <summary class="orders-summary">
+                            <div class="order-title">
+                                <span class="order-number">{{ order.title }}</span>
+                                <span class="order-brief">
+                                    {% if order.brief %}
+                                        {{ order.brief }}
+                                    {% else %}
+                                        Краткое описание будет добавлено позже
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </summary>
                         <div class="orders-body">
-                            {% if order.updated_at %}
-                                <p class="muted-text">Обновлено: {{ order.updated_at }}</p>
-                            {% endif %}
                             {% if order.summary %}
-                                <p class="orders-text">{{ order.summary }}</p>
+                                <p class="orders-text">{{ order.summary|replace('\r\n', '<br>')|safe }}</p>
                             {% endif %}
 
                             {% if order.files %}
-                                <div class="orders-files">
-                                    {% for file in order.files %}
-                                        <a class="btn btn-secondary" href="{{ url_for('static', filename='orders/' ~ file.filename) }}" download>
-                                            {{ file.label }}
-                                        </a>
-                                    {% endfor %}
+                                <div class="orders-files-container">
+                                    <div class="orders-files">
+                                        {% for file in order.files %}
+                                            <a class="btn btn-secondary" href="{{ url_for('static', filename='orders/' ~ file.filename) }}" download>
+                                                {{ file.label }}
+                                            </a>
+                                        {% endfor %}
+                                    </div>
+                                    {% if order.updated_at %}
+                                        <div class="orders-updated-date">
+                                            <span class="muted-text">Обновлено: {{ order.updated_at }}</span>
+                                        </div>
+                                    {% endif %}
                                 </div>
                             {% else %}
                                 <p class="muted-text">Файлы для этого распоряжения будут добавлены позже.</p>

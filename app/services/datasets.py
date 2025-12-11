@@ -430,6 +430,7 @@ def load_orders_documents() -> List[Dict[str, Any]]:
         normalized_orders.append({
             'id': entry.get('id') or entry.get('identifier'),
             'title': entry.get('title') or entry.get('name') or 'Распоряжение',
+            'brief': str(entry.get('brief', '')).strip(),
             'summary': str(entry.get('summary', '')).strip(),
             'files': files,
             'updated_at': entry.get('updated_at') or entry.get('date')

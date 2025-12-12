@@ -98,9 +98,15 @@
                                class="{% if invalid_fields and 'delivery_time' in invalid_fields %}is-invalid{% endif %}"
                                aria-invalid="{{ 'true' if invalid_fields and 'delivery_time' in invalid_fields else 'false' }}">
                     </div>
-                    <div class="field-group delivery-address-group">
+                    <div class="field-group">
+                        <label for="payment_terms" class="field-label">Условия оплаты</label>
+                        <input type="text" id="payment_terms" name="payment_terms"
+                               value="{{ form_data.payment_terms if form_data and form_data.payment_terms else '' }}"
+                               placeholder="Например: 100% предоплата, 50% предоплата + 50% по факту поставки">
+                    </div>
+                    <div class="field-group">
                         <label for="delivery_address" class="field-label">Адрес доставки</label>
-                        <textarea id="delivery_address" name="delivery_address" rows="2" placeholder="123458, город Москва, ул. Маршала Прошлякова, д. 30, офис 605 ">{{ form_data.delivery_address.strip() if form_data and form_data.delivery_address else '' }}</textarea>
+                        <textarea id="delivery_address" name="delivery_address" rows="2" placeholder="123458, город Москва, ул. Маршала Прошлякова, д. 30, офис 605">{{ form_data.delivery_address.strip() if form_data and form_data.delivery_address else '' }}</textarea>
                     </div>
                     <div class="field-group logistics-panel">
                         <div class="logistics-toggle-group">
@@ -122,16 +128,16 @@
                         </div>
                         <div class="logistics-inline-fields">
                             <div class="field-group inline">
-                                <label class="field-label">Оценочный вес</label>
-                                <input type="text" id="totalWeightValue" readonly value="0 кг" class="weight-output" tabindex="-1">
-                            </div>
-                            <div class="field-group inline">
                                 <label for="logistics_city" class="field-label">Город доставки</label>
                                 <div class="autocomplete">
                                     <input type="text" id="logistics_city" autocomplete="off" placeholder="Начните вводить город">
                                 </div>
                                 <input type="hidden" id="mainSelectedCityPrice">
                                 <input type="hidden" id="mainSelectedCityName">
+                            </div>
+                            <div class="field-group inline">
+                                <label class="field-label">Оценочный вес</label>
+                                <input type="text" id="totalWeightValue" readonly value="0 кг" class="weight-output" tabindex="-1">
                             </div>
                             <div class="field-group inline">
                                 <label for="logistics" class="field-label">Стоимость логистики (руб.)</label>
@@ -773,6 +779,7 @@
                             <div>
                                 <p><strong>Цена за ед.:</strong> ${formatCurrency(record.final_price)} руб.</p>
                                 <p><strong>Срок поставки:</strong> ${escapeHtml(formatValue(record.delivery_time, '—'))} дн.</p>
+                                <p><strong>Условия оплаты:</strong> ${escapeHtml(formatValue(record.payment_terms, '—'))}</p>
                                 <p><strong>Материал:</strong> ${escapeHtml(formatValue(record.material))}</p>
                                 <p><strong>Автор:</strong> ${escapeHtml(author)}</p>
                             </div>

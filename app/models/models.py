@@ -46,6 +46,7 @@ class GenerationHistoryRecord(Base):
     delivery_address = Column(Text)
     duty_percent = Column(Float, server_default='0')  # Основная пошлина (для совместимости)
     delivery_time = Column(Integer, server_default='0')
+    payment_terms = Column(Text)
     comment = Column(Text)
     user_id = Column(Integer, ForeignKey('users.id'))
     

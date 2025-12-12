@@ -78,6 +78,7 @@ def validate_form_data(form_data: Dict[str, Any]) -> FormValidationResult:
         'logistics': 'Стоимость логистики',
         'margin_percent': 'Маржа, %',
         'delivery_time': 'Срок поставки (дней)',
+        'payment_terms': 'Условия оплаты',
         'comment': 'Комментарий',
         'product': 'Наименование товара',
         'drawing_number': 'Номер чертежа',
@@ -112,6 +113,12 @@ def validate_form_data(form_data: Dict[str, Any]) -> FormValidationResult:
     delivery_address = cleaned_data.get('delivery_address')
     if isinstance(delivery_address, str):
         cleaned_data['delivery_address'] = delivery_address.strip()
+
+    payment_terms = cleaned_data.get('payment_terms', '') or ''
+    if payment_terms and len(payment_terms) > 500:
+        errors.append('Условия оплаты не должны превышать 500 символов.')
+        invalid_fields.add('payment_terms')
+    cleaned_data['payment_terms'] = payment_terms
 
     comment = cleaned_data.get('comment', '') or ''
     if comment and len(comment) > 2000:

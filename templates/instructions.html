@@ -10,22 +10,37 @@
             <div class="instructions-accordion mt-lg">
                 {% for instruction in instructions %}
                     <details class="instructions-item" {% if loop.first %}open{% endif %}>
-                        <summary class="section-description instructions-summary">{{ instruction.title }}</summary>
+                        <summary class="instructions-summary">
+                            <div class="order-title">
+                                <span class="order-number">{{ instruction.title }}</span>
+                                <span class="order-brief">
+                                    {% if instruction.brief %}
+                                        {{ instruction.brief }}
+                                    {% else %}
+                                        Краткое описание будет добавлено позже
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </summary>
                         <div class="instructions-body">
-                            {% if instruction.updated_at %}
-                                <p class="muted-text">Обновлено: {{ instruction.updated_at }}</p>
-                            {% endif %}
                             {% if instruction.summary %}
                                 <p class="instructions-text">{{ instruction.summary }}</p>
                             {% endif %}
 
                             {% if instruction.files %}
-                                <div class="instructions-files">
-                                    {% for file in instruction.files %}
-                                        <a class="btn btn-secondary" href="{{ url_for('static', filename='instructions/' ~ file.filename) }}" download>
-                                            {{ file.label }}
-                                        </a>
-                                    {% endfor %}
+                                <div class="orders-files-container">
+                                    <div class="instructions-files">
+                                        {% for file in instruction.files %}
+                                            <a class="btn btn-secondary" href="{{ url_for('static', filename='instructions/' ~ file.filename) }}" download>
+                                                {{ file.label }}
+                                            </a>
+                                        {% endfor %}
+                                    </div>
+                                    {% if instruction.updated_at %}
+                                        <div class="orders-updated-date">
+                                            <span class="muted-text">Обновлено: {{ instruction.updated_at }}</span>
+                                        </div>
+                                    {% endif %}
                                 </div>
                             {% else %}
                                 <p class="muted-text">Файлы будут добавлены позже.</p>

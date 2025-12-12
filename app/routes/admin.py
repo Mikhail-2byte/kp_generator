@@ -544,6 +544,7 @@ def _extract_content_payload() -> dict:
     payload = {
         'id': request.form.get('id') or request.form.get('identifier'),
         'title': (request.form.get('title') or '').strip(),
+        'brief': (request.form.get('brief') or '').strip(),
         'summary': (request.form.get('summary') or '').strip(),
         'files': files,
         'updated_at': (request.form.get('updated_at') or '').strip(),

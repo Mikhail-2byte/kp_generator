@@ -9,7 +9,11 @@
             <input type="text" id="{{ target_id }}-title" name="title" required data-field="title">
         </div>
         <div class="field-group span-3">
-            <label class="field-label" for="{{ target_id }}-summary">Описание</label>
+            <label class="field-label" for="{{ target_id }}-brief">Краткое наименование</label>
+            <input type="text" id="{{ target_id }}-brief" name="brief" data-field="brief" placeholder="например, Об оформлении карт приемки">
+        </div>
+        <div class="field-group span-3">
+            <label class="field-label" for="{{ target_id }}-summary">Подробное описание</label>
             <textarea id="{{ target_id }}-summary" name="summary" rows="3" data-field="summary"></textarea>
         </div>
         <div class="field-group span-3">

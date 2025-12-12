@@ -12,6 +12,7 @@ from app.services import datasets
 class ContentEntry:
     identifier: Optional[str]
     title: str
+    brief: str
     summary: str
     files: List[Dict[str, Any]]
     updated_at: Optional[str] = None
@@ -23,6 +24,7 @@ class ContentEntry:
         return cls(
             identifier=identifier,
             title=str(payload.get('title') or payload.get('name') or ''),
+            brief=str(payload.get('brief') or ''),
             summary=str(payload.get('summary') or ''),
             files=deepcopy(payload.get('files', [])),
             updated_at=payload.get('updated_at') or payload.get('date'),
@@ -32,6 +34,7 @@ class ContentEntry:
         return {
             'id': self.identifier,
             'title': self.title,
+            'brief': self.brief,
             'summary': self.summary,
             'files': deepcopy(self.files),
             'updated_at': self.updated_at,
@@ -85,6 +88,7 @@ class ContentManager:
                 entries[index] = ContentEntry(
                     identifier=identifier,
                     title=payload.get('title', entry.title),
+                    brief=payload.get('brief', entry.brief),
                     summary=payload.get('summary', entry.summary),
                     files=deepcopy(payload.get('files', entry.files)),
                     updated_at=payload.get('updated_at') or self._current_date(),

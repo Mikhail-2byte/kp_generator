@@ -1,0 +1,29 @@
+{
+  "saved_at": "20251212T070645",
+  "actor": "tsc_perm@mail.ru",
+  "data": {
+    "instructions": [
+      {
+        "id": "instruction-1",
+        "title": "Инструкция №1",
+        "brief": "",
+        "summary": "Описание будет добавлено позже.",
+        "files": [
+          {
+            "label": "DOCX",
+            "filename": "Инструкция №1.docx"
+          }
+        ],
+        "updated_at": null
+      },
+      {
+        "id": "instructions-d62fa5fd",
+        "title": "Тестовая инструкция",
+        "brief": "Тестовое краткое наименование",
+        "summary": "Тест",
+        "files": [],
+        "updated_at": "19.10.2025"
+      }
+    ]
+  }
+}

@@ -12,6 +12,7 @@
             <tr>
                 <th>Идентификатор</th>
                 <th>Название</th>
+                <th>Краткое наименование</th>
                 <th>Описание</th>
                 <th>Файлы</th>
                 <th>Обновлено</th>
@@ -23,6 +24,7 @@
             <tr>
                 <td>{{ entry.identifier }}</td>
                 <td>{{ entry.title }}</td>
+                <td>{{ entry.brief or '—' }}</td>
                 <td>{{ entry.summary or '—' }}</td>
                 <td>
                     {% if entry.files %}
@@ -38,6 +40,7 @@
                     <button type="button" class="btn btn-secondary" data-modal-target="modal-{{ content_meta.key }}-edit" data-entry='{{ {
                         "id": entry.identifier,
                         "title": entry.title,
+                        "brief": entry.brief,
                         "summary": entry.summary,
                         "files": entry.files,
                         "updated_at": entry.updated_at
@@ -52,7 +55,7 @@
             </tr>
             {% else %}
             <tr>
-                <td colspan="6" class="muted-text">{{ content_meta.empty_message }}</td>
+                <td colspan="7" class="muted-text">{{ content_meta.empty_message }}</td>
             </tr>
             {% endfor %}
         </tbody>

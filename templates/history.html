@@ -637,6 +637,8 @@
         const selectAllCompanies = document.getElementById('selectAllCompanies');
         const deselectAllCompanies = document.getElementById('deselectAllCompanies');
         const clearCompanyFilter = document.getElementById('clearCompanyFilter');
+        const openFiltersModal = document.getElementById('openFiltersModal');
+        const activeFiltersBadge = document.getElementById('activeFiltersBadge');
         
         let allCompanies = [];
         let selectedCompanies = new Set();
@@ -1254,6 +1256,100 @@
             return true;
         };
 
+        // Функция фильтрации по компаниям
+        const filterByCompanies = (row) => {
+            if (selectedCompanies.size === 0) {
+                return true; // Нет фильтра по компаниям
+            }
+
+            const rowCompany = (row.getAttribute('data-company') || '').trim();
+            if (!rowCompany) {
+                return false; // Если у строки нет компании, скрываем при активном фильтре
+            }
+
+            return selectedCompanies.has(rowCompany);
+        };
+
+        // Функция загрузки списка компаний
+        const loadCompanies = async () => {
+            if (allCompanies.length > 0) {
+                return; // Уже загружены
+            }
+
+            try {
+                const response = await fetch('/history/companies');
+                const data = await response.json();
+                allCompanies = (data.companies || []).sort();
+                renderCompanyList();
+            } catch (error) {
+                console.error('Ошибка загрузки компаний:', error);
+                allCompanies = [];
+            }
+        };
+
+        // Функция отрисовки списка компаний
+        const renderCompanyList = (searchQuery = '') => {
+            if (!companyList) return;
+
+            const query = (searchQuery || '').toLowerCase().trim();
+            const filtered = allCompanies.filter(company => 
+                company.toLowerCase().includes(query)
+            );
+
+            if (filtered.length === 0) {
+                companyList.innerHTML = '<div class="multiselect-item text-muted">Компании не найдены</div>';
+                return;
+            }
+
+            companyList.innerHTML = filtered.map(company => {
+                const isSelected = selectedCompanies.has(company);
+                return `
+                    <label class="multiselect-item ${isSelected ? 'selected' : ''}">
+                        <input type="checkbox" value="${company.replace(/"/g, '&quot;')}" ${isSelected ? 'checked' : ''}>
+                        <span>${company}</span>
+                    </label>
+                `;
+            }).join('');
+
+            // Добавляем обработчики для чекбоксов
+            companyList.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', (e) => {
+                    const company = e.target.value;
+                    if (e.target.checked) {
+                        selectedCompanies.add(company);
+                    } else {
+                        selectedCompanies.delete(company);
+                    }
+                    updateCompanyFilterText();
+                    filterHistory();
+                    updateURLParams();
+                    
+                    // Обновляем визуальное состояние
+                    const label = e.target.closest('.multiselect-item');
+                    if (label) {
+                        label.classList.toggle('selected', e.target.checked);
+                    }
+                });
+            });
+        };
+
+        // Функция обновления текста фильтра компаний
+        const updateCompanyFilterText = () => {
+            if (!companyFilterText) return;
+
+            if (selectedCompanies.size === 0) {
+                companyFilterText.textContent = 'Выберите компании';
+            } else if (selectedCompanies.size === 1) {
+                companyFilterText.textContent = Array.from(selectedCompanies)[0];
+            } else {
+                companyFilterText.textContent = `Выбрано: ${selectedCompanies.size}`;
+            }
+
+            if (clearCompanyFilter) {
+                clearCompanyFilter.style.display = selectedCompanies.size > 0 ? 'inline-flex' : 'none';
+            }
+        };
+
         // Обновление URL параметров
         const updateURLParams = () => {
             const params = new URLSearchParams(window.location.search);
@@ -1446,7 +1542,7 @@
                             (row.getAttribute('data-product') || '').toLowerCase().includes(query) ||
                             (row.getAttribute('data-company') || '').toLowerCase().includes(query) ||
                             (row.getAttribute('data-date') || '').toLowerCase().includes(query) ||
-                            (row.getAttribute('data-manager') || '').includes(query) ||
+                            (row.getAttribute('data-manager') || '').toLowerCase().includes(query) ||
                             usernameAttr.includes(query);
                 }
 

@@ -18,6 +18,69 @@ class MultiPositionProcessor:
     
     def __init__(self, template_path: str):
         self.template_path = template_path
+    
+    def _extract_days_from_payment_terms(self, payment_terms: str) -> int | None:
+        """
+        Извлекает число дней из текста условий оплаты.
+        
+        Ищет последнее упоминание числа с "дней", "день", "дня" в тексте,
+        так как обычно срок указывается в конце условий оплаты.
+        
+        Args:
+            payment_terms: Текст условий оплаты
+            
+        Returns:
+            Число дней или None, если не найдено
+        """
+        if not payment_terms:
+            return None
+        
+        import re
+        
+        # Паттерны для поиска числа перед словами "дней", "день", "дня"
+        # Ищем все совпадения, чтобы взять последнее (обычно срок в конце)
+        patterns = [
+            r'(\d+)\s*(?:дней|день|дня|дн\.?)',  # "30 дней", "30 день", "30 дня", "30 дн."
+            r'в\s*течении\s*(\d+)\s*(?:дней|день|дня|дн\.?)',  # "в течении 30 дней"
+            r'в\s*течение\s*(\d+)\s*(?:дней|день|дня|дн\.?)',  # "в течение 30 дней"
+            r'отсрочка\s*(?:в\s*течении|в\s*течение)?\s*(\d+)\s*(?:дней|день|дня|дн\.?)',  # "отсрочка в течении 10 дней"
+            r'через\s*(\d+)\s*(?:дней|день|дня|дн\.?)',  # "через 30 дней"
+        ]
+        
+        # Ищем все совпадения по каждому паттерну
+        all_matches = []
+        for pattern in patterns:
+            matches = re.finditer(pattern, payment_terms, re.IGNORECASE)
+            for match in matches:
+                try:
+                    days = int(match.group(1))
+                    # Сохраняем позицию в тексте и значение
+                    all_matches.append((match.start(), days))
+                except (ValueError, IndexError):
+                    continue
+        
+        # Если нашли совпадения, берем последнее (самое правое в тексте)
+        if all_matches:
+            # Сортируем по позиции и берем последнее
+            all_matches.sort(key=lambda x: x[0])
+            return all_matches[-1][1]
+        
+        # Если не нашли по паттернам, ищем просто числа в тексте
+        # Но берем последнее число, так как срок обычно указывается в конце
+        numbers = re.finditer(r'\d+', payment_terms)
+        number_list = []
+        for match in numbers:
+            try:
+                number_list.append((match.start(), int(match.group())))
+            except (ValueError, IndexError):
+                continue
+        
+        if number_list:
+            # Берем последнее найденное число
+            number_list.sort(key=lambda x: x[0])
+            return number_list[-1][1]
+        
+        return None
         
     def shift_merged_cells(self, sheet, insert_row: int, rows_to_add: int) -> None:
         """Сдвигает объединенные ячейки вниз при добавлении строк."""
@@ -318,6 +381,11 @@ class MultiPositionProcessor:
         delivery_time = int(form_data.get('delivery_time', 0))
         tender_number = form_data.get('tender_number', '').strip()
         delivery_address = form_data.get('delivery_address', '').strip()
+        payment_terms = form_data.get('payment_terms', '').strip()
+        proposal_validity = form_data.get('proposal_validity', '').strip()
+        
+        # Извлекаем число дней из условий оплаты
+        payment_days = self._extract_days_from_payment_terms(payment_terms)
         
         # Заполняем общие поля
         sheet['D4'] = company  # Название компании
@@ -326,6 +394,12 @@ class MultiPositionProcessor:
         sheet['D2'] = current_date  # Дата
         sheet['D5'] = tender_number  # Номер тендера
         sheet['P4'] = delivery_address  # Адрес доставки
+        # Условия оплаты: полный текст с префиксом в B16, число дней в I16
+        if payment_terms:
+            sheet['B16'] = f"Условия оплаты: {payment_terms}"
+        if payment_days is not None:
+            sheet['I16'] = payment_days
+        # Срок действия предложения НЕ вставляется в Excel
         
         # Заполняем ФИО менеджера в ячейку N22
         if manager_fio:

@@ -47,6 +47,8 @@ class GenerationHistoryRecord(Base):
     duty_percent = Column(Float, server_default='0')  # Основная пошлина (для совместимости)
     delivery_time = Column(Integer, server_default='0')
     payment_terms = Column(Text)
+    proposal_validity = Column(Text)
+    warranty_period = Column(Text)
     comment = Column(Text)
     user_id = Column(Integer, ForeignKey('users.id'))
     

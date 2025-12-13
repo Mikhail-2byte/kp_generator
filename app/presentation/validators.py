@@ -79,6 +79,8 @@ def validate_form_data(form_data: Dict[str, Any]) -> FormValidationResult:
         'margin_percent': 'Маржа, %',
         'delivery_time': 'Срок поставки (дней)',
         'payment_terms': 'Условия оплаты',
+        'proposal_validity': 'Срок действия предложения',
+        'warranty_period': 'Гарантийный срок эксплуатации изделия',
         'comment': 'Комментарий',
         'product': 'Наименование товара',
         'drawing_number': 'Номер чертежа',
@@ -119,6 +121,18 @@ def validate_form_data(form_data: Dict[str, Any]) -> FormValidationResult:
         errors.append('Условия оплаты не должны превышать 500 символов.')
         invalid_fields.add('payment_terms')
     cleaned_data['payment_terms'] = payment_terms
+
+    proposal_validity = cleaned_data.get('proposal_validity', '') or ''
+    if proposal_validity and len(proposal_validity) > 200:
+        errors.append('Срок действия предложения не должен превышать 200 символов.')
+        invalid_fields.add('proposal_validity')
+    cleaned_data['proposal_validity'] = proposal_validity
+
+    warranty_period = cleaned_data.get('warranty_period', '') or ''
+    if warranty_period and len(warranty_period) > 200:
+        errors.append('Гарантийный срок эксплуатации изделия не должен превышать 200 символов.')
+        invalid_fields.add('warranty_period')
+    cleaned_data['warranty_period'] = warranty_period
 
     comment = cleaned_data.get('comment', '') or ''
     if comment and len(comment) > 2000:

@@ -29,6 +29,48 @@ class WordMultiPositionProcessor:
         # Форматируем с запятыми и заменяем на пробелы
         return f"{int_value:,}".replace(",", " ")
     
+    @staticmethod
+    def format_proposal_validity(value: str) -> str:
+        """
+        Форматирует срок действия предложения в зависимости от ввода пользователя.
+        
+        Если введено число (например, "30") - возвращает:
+        "Срок действия данного предложения составляет 30 календарных дней"
+        
+        Если введена дата (например, "12.01.2025") - возвращает:
+        "Предложение действительно до 12.01.2025г."
+        
+        Args:
+            value: Введенное пользователем значение
+            
+        Returns:
+            Отформатированная строка или пустая строка, если значение пустое
+        """
+        if not value or not value.strip():
+            return ''
+        
+        value = value.strip()
+        
+        # Проверяем, является ли значение числом (только цифры)
+        import re
+        if re.match(r'^\d+$', value):
+            # Это число дней
+            days = int(value)
+            return f"Срок действия данного предложения составляет {days} календарных дней"
+        
+        # Проверяем, является ли значение датой (формат DD.MM.YYYY или DD.MM.YYYYг.)
+        date_pattern = r'^(\d{1,2})\.(\d{1,2})\.(\d{4})(?:г\.?)?$'
+        date_match = re.match(date_pattern, value)
+        if date_match:
+            # Это дата, форматируем с "г." в конце
+            day, month, year = date_match.groups()
+            # Убираем возможное "г." из исходного значения и добавляем свое
+            formatted_date = f"{day}.{month}.{year}г."
+            return f"Предложение действительно до {formatted_date}"
+        
+        # Если не число и не дата, возвращаем исходное значение
+        return value
+    
     def __init__(self, template_path: str):
         """
         Инициализирует процессор.
@@ -324,6 +366,16 @@ class WordMultiPositionProcessor:
         delivery_time = int(form_data.get('delivery_time', 0))
         tender_number = form_data.get('tender_number', '').strip()
         delivery_address = form_data.get('delivery_address', '').strip()
+        payment_terms = form_data.get('payment_terms', '').strip()
+        proposal_validity_raw = form_data.get('proposal_validity', '').strip()
+        warranty_period_raw = form_data.get('warranty_period', '').strip()
+        # Если гарантийный срок не указан, используем значение по умолчанию
+        if not warranty_period_raw:
+            warranty_period_raw = '12 месяцев со дня ввода в эксплуатацию, но не более 18 месяцев со дня поставки.'
+        # Форматируем срок действия предложения (число -> текст с днями, дата -> текст с датой)
+        proposal_validity = self.format_proposal_validity(proposal_validity_raw)
+        # Форматируем гарантийный срок с префиксом
+        warranty_period = f"Гарантийный срок эксплуатации изделия - {warranty_period_raw}"
         
         word_data = {
             '{{ company }}': company,
@@ -331,6 +383,9 @@ class WordMultiPositionProcessor:
             '{{ delivery_time }}': str(delivery_time),
             '{{ tender_number }}': tender_number,
             '{{ delivery_address }}': delivery_address,
+            '{{ payment_terms }}': payment_terms,
+            '{{ proposal_validity }}': proposal_validity,
+            '{{ warranty_period }}': warranty_period,
             '{{ date }}': current_date,
         }
         

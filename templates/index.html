@@ -94,15 +94,27 @@
                     <div class="field-group">
                         <label for="delivery_time" class="field-label">Срок поставки (дней)</label>
                         <input type="number" id="delivery_time" name="delivery_time" min="1" step="1" required
-                               value="{{ form_data.delivery_time if form_data and form_data.delivery_time else '' }}"
+                               value="{{ form_data.delivery_time if form_data and form_data.delivery_time else '150' }}"
                                class="{% if invalid_fields and 'delivery_time' in invalid_fields %}is-invalid{% endif %}"
                                aria-invalid="{{ 'true' if invalid_fields and 'delivery_time' in invalid_fields else 'false' }}">
                     </div>
                     <div class="field-group">
                         <label for="payment_terms" class="field-label">Условия оплаты</label>
                         <input type="text" id="payment_terms" name="payment_terms"
-                               value="{{ form_data.payment_terms if form_data and form_data.payment_terms else '' }}"
-                               placeholder="Например: 100% предоплата, 50% предоплата + 50% по факту поставки">
+                               value="{{ form_data.payment_terms if form_data and form_data.payment_terms else '100% по факту поставки в течении 30 календарных дней' }}"
+                               placeholder="100% по факту поставки в течении 30 календарных дней">
+                    </div>
+                    <div class="field-group">
+                        <label for="proposal_validity" class="field-label">Срок действия предложения</label>
+                        <input type="text" id="proposal_validity" name="proposal_validity"
+                               value="{{ form_data.proposal_validity if form_data and form_data.proposal_validity else '30' }}"
+                               placeholder="Например: 30 дней, до 31.12.2025">
+                    </div>
+                    <div class="field-group">
+                        <label for="warranty_period" class="field-label">Гарантийный срок эксплуатации изделия</label>
+                        <input type="text" id="warranty_period" name="warranty_period"
+                               value="{{ form_data.warranty_period if form_data and form_data.warranty_period else '12 месяцев со дня ввода в эксплуатацию, но не более 18 месяцев со дня поставки.' }}"
+                               placeholder="12 месяцев со дня ввода в эксплуатацию, но не более 18 месяцев со дня поставки.">
                     </div>
                     <div class="field-group">
                         <label for="delivery_address" class="field-label">Адрес доставки</label>

@@ -21,6 +21,10 @@
                 <option value="date">Дата</option>
                 <option value="user">Автор</option>
             </select>
+            <button id="openFiltersModal" class="btn btn-outline">
+                <span>Фильтры</span>
+                <span id="activeFiltersBadge" class="filter-badge" style="display:none;">0</span>
+            </button>
             <button id="clearSearch" class="btn btn-outline" style="display:none;">Очистить поиск</button>
         </div>
 
@@ -160,6 +164,153 @@
 {% endblock %}
 
 {% block overlays %}
+<!-- Модальное окно фильтров -->
+<div class="modal" id="filtersModal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-dialog-large">
+        <div class="modal-header">
+            <div class="modal-header-content">
+                <h3 class="modal-title">
+                    <span class="modal-icon">{{ sidebar_icon('filter')|safe }}</span>
+                    Фильтры
+                </h3>
+            </div>
+            <button type="button" class="modal-close" data-close-modal="filtersModal" aria-label="Закрыть">
+                {{ sidebar_icon('x')|safe }}
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="filter-controls">
+                <div class="filter-section">
+                    <h4 class="filter-section-title">Быстрые фильтры</h4>
+                    <div class="quick-filters">
+                        <button type="button" class="quick-filter-btn" data-filter="high-margin">
+                            Высокая маржа (>20%)
+                        </button>
+                        <button type="button" class="quick-filter-btn" data-filter="recent-7days">
+                            Недавние (7 дней)
+                        </button>
+                        <button type="button" class="quick-filter-btn" data-filter="multi-position">
+                            Многопозиционные (>1)
+                        </button>
+                        <button type="button" class="quick-filter-btn" data-filter="today">
+                            Сегодня
+                        </button>
+                        <button type="button" class="quick-filter-btn" data-filter="this-week">
+                            Эта неделя
+                        </button>
+                        <button type="button" class="quick-filter-btn" data-filter="this-month">
+                            Этот месяц
+                        </button>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h4 class="filter-section-title">Дата</h4>
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label for="dateFrom" class="filter-label">Дата от:</label>
+                            <input type="date" id="dateFrom" class="filter-input date-input">
+                        </div>
+                        <div class="filter-group">
+                            <label for="dateTo" class="filter-label">Дата до:</label>
+                            <input type="date" id="dateTo" class="filter-input date-input">
+                        </div>
+                        <button id="clearDateFilter" class="btn btn-outline btn-sm" style="display:none;">Очистить</button>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h4 class="filter-section-title">Цена продажи</h4>
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label for="priceFrom" class="filter-label">Цена от, ₽:</label>
+                            <input type="number" id="priceFrom" class="filter-input price-input" min="0" step="0.01" placeholder="0.00">
+                        </div>
+                        <div class="filter-group">
+                            <label for="priceTo" class="filter-label">Цена до, ₽:</label>
+                            <input type="number" id="priceTo" class="filter-input price-input" min="0" step="0.01" placeholder="0.00">
+                        </div>
+                        <button id="clearPriceFilter" class="btn btn-outline btn-sm" style="display:none;">Очистить</button>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h4 class="filter-section-title">Маржа</h4>
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label for="marginFrom" class="filter-label">Маржа от, %:</label>
+                            <input type="number" id="marginFrom" class="filter-input margin-input" min="0" max="100" step="0.1" placeholder="0.0">
+                        </div>
+                        <div class="filter-group">
+                            <label for="marginTo" class="filter-label">Маржа до, %:</label>
+                            <input type="number" id="marginTo" class="filter-input margin-input" min="0" max="100" step="0.1" placeholder="0.0">
+                        </div>
+                        <button id="clearMarginFilter" class="btn btn-outline btn-sm" style="display:none;">Очистить</button>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h4 class="filter-section-title">Компании</h4>
+                    <div class="filter-row">
+                        <div class="filter-group filter-group-companies" style="flex: 1;">
+                            <label for="companyFilter" class="filter-label">Выберите компании:</label>
+                            <div class="multiselect-wrapper">
+                                <button type="button" id="companyFilterToggle" class="multiselect-toggle">
+                                    <span id="companyFilterText">Выберите компании</span>
+                                    <span class="multiselect-arrow">▼</span>
+                                </button>
+                                <div id="companyFilterDropdown" class="multiselect-dropdown" style="display:none;">
+                                    <input type="text" id="companySearch" class="multiselect-search" placeholder="Поиск компаний...">
+                                    <div id="companyList" class="multiselect-list"></div>
+                                    <div class="multiselect-actions">
+                                        <button type="button" id="selectAllCompanies" class="btn btn-sm btn-outline">Выбрать все</button>
+                                        <button type="button" id="deselectAllCompanies" class="btn btn-sm btn-outline">Снять все</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button id="clearCompanyFilter" class="btn btn-outline btn-sm" style="display:none;">Очистить</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <div class="modal-actions">
+                <button type="button" id="clearAllFilters" class="btn btn-outline">Очистить все</button>
+                <button type="button" class="btn btn-primary" data-close-modal="filtersModal">Применить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно сравнения версий -->
+<div class="modal" id="compareModal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-dialog-large">
+        <div class="modal-header">
+            <div class="modal-header-content">
+                <h3 class="modal-title">
+                    <span class="modal-icon">{{ sidebar_icon('layers')|safe }}</span>
+                    Сравнение версий
+                </h3>
+            </div>
+            <button type="button" class="modal-close" data-close-modal="compareModal" aria-label="Закрыть">
+                {{ sidebar_icon('x')|safe }}
+            </button>
+        </div>
+        <div class="modal-body" id="compareModalContent">
+            <div class="loading-state">
+                <div class="loading-spinner"></div>
+                <p>Загрузка данных для сравнения...</p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" data-close-modal="compareModal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal" id="detailsModal" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="modal-dialog modal-dialog-large">
         <div class="modal-header">
@@ -286,6 +437,175 @@
         font-size: 0.85rem;
         color: #6b7280;
     }
+
+    .filter-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 6px;
+        background: var(--primary);
+        color: white;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 600;
+        margin-left: 6px;
+    }
+
+    .filter-section {
+        margin-bottom: 24px;
+        padding-bottom: 24px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .filter-section:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .filter-section-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--foreground);
+        margin-bottom: 12px;
+    }
+
+    .filter-row {
+        display: flex;
+        gap: 12px;
+        align-items: flex-end;
+        flex-wrap: wrap;
+    }
+
+    .btn-sm {
+        padding: 6px 12px;
+        font-size: 12px;
+        height: auto;
+    }
+
+    .quick-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .quick-filter-btn {
+        padding: 8px 16px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        background: var(--card);
+        color: var(--foreground);
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .quick-filter-btn:hover {
+        background: rgba(17, 24, 39, 0.04);
+        border-color: var(--primary);
+    }
+
+    .quick-filter-btn.active {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+
+    .version-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+
+    .version-checkbox {
+        cursor: pointer;
+        width: 18px;
+        height: 18px;
+    }
+
+    .select-all-versions {
+        cursor: pointer;
+        width: 18px;
+        height: 18px;
+    }
+
+    .comparison-container {
+        width: 100%;
+    }
+
+    .comparison-header {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+        padding: 16px;
+        background: rgba(17, 24, 39, 0.02);
+        border-radius: var(--radius-md);
+    }
+
+    .comparison-version {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .comparison-version strong {
+        font-size: 14px;
+        color: var(--foreground);
+    }
+
+    .version-date {
+        font-size: 12px;
+        color: var(--muted-foreground);
+    }
+
+    .comparison-table-wrapper {
+        overflow-x: auto;
+    }
+
+    .comparison-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .comparison-table th {
+        text-align: left;
+        padding: 12px;
+        font-weight: 600;
+        color: var(--foreground);
+        background: rgba(17, 24, 39, 0.04);
+        border-bottom: 2px solid var(--border);
+    }
+
+    .comparison-table td {
+        padding: 12px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .comparison-table tr:hover {
+        background: rgba(17, 24, 39, 0.02);
+    }
+
+    .change-increase {
+        color: #10b981;
+        font-weight: 600;
+        margin-left: 8px;
+    }
+
+    .change-decrease {
+        color: #ef4444;
+        font-weight: 600;
+        margin-left: 8px;
+    }
+
+    .change-same {
+        color: var(--muted-foreground);
+        margin-left: 8px;
+    }
 </style>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -297,6 +617,30 @@
         const recordsCount = document.getElementById('recordsCount');
         const modal = document.getElementById('detailsModal');
         const modalContent = document.getElementById('modalDetailsContent');
+        const compareModal = document.getElementById('compareModal');
+        const compareModalContent = document.getElementById('compareModalContent');
+        const filtersModal = document.getElementById('filtersModal');
+        const dateFrom = document.getElementById('dateFrom');
+        const dateTo = document.getElementById('dateTo');
+        const clearDateFilter = document.getElementById('clearDateFilter');
+        const priceFrom = document.getElementById('priceFrom');
+        const priceTo = document.getElementById('priceTo');
+        const clearPriceFilter = document.getElementById('clearPriceFilter');
+        const marginFrom = document.getElementById('marginFrom');
+        const marginTo = document.getElementById('marginTo');
+        const clearMarginFilter = document.getElementById('clearMarginFilter');
+        const companyFilterToggle = document.getElementById('companyFilterToggle');
+        const companyFilterDropdown = document.getElementById('companyFilterDropdown');
+        const companySearch = document.getElementById('companySearch');
+        const companyList = document.getElementById('companyList');
+        const companyFilterText = document.getElementById('companyFilterText');
+        const selectAllCompanies = document.getElementById('selectAllCompanies');
+        const deselectAllCompanies = document.getElementById('deselectAllCompanies');
+        const clearCompanyFilter = document.getElementById('clearCompanyFilter');
+        
+        let allCompanies = [];
+        let selectedCompanies = new Set();
+        let activeQuickFilter = null;
 
         const openModal = () => {
             modal.classList.add('is-open');
@@ -310,23 +654,81 @@
             document.body.style.overflow = ''; // Восстанавливаем прокрутку
         };
 
-        // Обработчики закрытия модального окна
+        const openFiltersModalWindow = () => {
+            if (filtersModal) {
+                filtersModal.classList.add('is-open');
+                filtersModal.setAttribute('aria-hidden', 'false');
+                document.body.style.overflow = 'hidden';
+            }
+        };
+
+        const closeFiltersModalWindow = () => {
+            if (filtersModal) {
+                filtersModal.classList.remove('is-open');
+                filtersModal.setAttribute('aria-hidden', 'true');
+                document.body.style.overflow = '';
+            }
+        };
+
+        // Функция открытия модального окна сравнения
+        const openCompareModal = () => {
+            if (compareModal) {
+                compareModal.classList.add('is-open');
+                compareModal.setAttribute('aria-hidden', 'false');
+                document.body.style.overflow = 'hidden';
+            }
+        };
+
+        // Функция закрытия модального окна сравнения
+        const closeCompareModal = () => {
+            if (compareModal) {
+                compareModal.classList.remove('is-open');
+                compareModal.setAttribute('aria-hidden', 'true');
+                document.body.style.overflow = '';
+            }
+        };
+
+        // Обработчики закрытия модальных окон
         document.addEventListener('click', (event) => {
             if (event.target.hasAttribute('data-close-modal')) {
-                closeModal();
+                const modalId = event.target.getAttribute('data-close-modal');
+                if (modalId === 'filtersModal') {
+                    closeFiltersModalWindow();
+                } else if (modalId === 'compareModal') {
+                    closeCompareModal();
+                } else {
+                    closeModal();
+                }
             }
             // Закрытие при клике на фон модального окна
             if (event.target === modal) {
                 closeModal();
             }
+            if (event.target === filtersModal) {
+                closeFiltersModalWindow();
+            }
+            if (event.target === compareModal) {
+                closeCompareModal();
+            }
         });
 
         // Закрытие по клавише Escape
         document.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape' && modal.classList.contains('is-open')) {
-                closeModal();
+            if (event.key === 'Escape') {
+                if (filtersModal && filtersModal.classList.contains('is-open')) {
+                    closeFiltersModalWindow();
+                } else if (compareModal && compareModal.classList.contains('is-open')) {
+                    closeCompareModal();
+                } else if (modal && modal.classList.contains('is-open')) {
+                    closeModal();
+                }
             }
         });
+
+        // Открытие модального окна фильтров
+        if (openFiltersModal) {
+            openFiltersModal.addEventListener('click', openFiltersModalWindow);
+        }
 
         const renderDetails = (data) => {
             const format = (value, empty = 'Не указан') => value ? value : empty;
@@ -587,6 +989,9 @@
 
             const rows = records.map(record => `
                 <tr>
+                    <td>
+                        <input type="checkbox" class="version-checkbox" data-version-id="${record.id}" data-version-timestamp="${record.timestamp || ''}">
+                    </td>
                     <td>${record.timestamp || '—'}</td>
                     <td>${record.product || '—'}</td>
                     <td>${record.positions_count || 1}</td>
@@ -609,10 +1014,18 @@
                     {{ sidebar_icon('history')|safe }}
                     <span>Предыдущие версии (всего ${total})</span>
                 </div>
+                <div class="version-actions" style="margin-bottom: 12px;">
+                    <button type="button" class="btn btn-outline btn-sm compare-versions-btn" style="display:none;">
+                        Сравнить выбранные (<span class="selected-count">0</span>)
+                    </button>
+                </div>
                 <div class="sub-table">
                     <table>
                         <thead>
                             <tr>
+                                <th style="width: 40px;">
+                                    <input type="checkbox" class="select-all-versions" title="Выбрать все">
+                                </th>
                                 <th>Дата</th>
                                 <th>Продукт</th>
                                 <th>Позиций</th>
@@ -675,6 +1088,9 @@
                     container.innerHTML = renderVersions(records, totalVersions);
                     container.dataset.loaded = '1';
 
+                    // Инициализация обработчиков для сравнения версий
+                    initVersionComparison(container);
+
                     container.querySelectorAll('.view-details').forEach(btn => {
                         btn.addEventListener('click', (event) => {
                             event.preventDefault();
@@ -712,6 +1128,238 @@
             });
         });
 
+        // Функция для парсинга даты из формата "dd.mm.yyyy HH:MM"
+        const parseDateFromString = (dateStr) => {
+            if (!dateStr) return null;
+            try {
+                // Формат: "dd.mm.yyyy HH:MM"
+                const parts = dateStr.trim().split(' ');
+                if (parts.length < 1) return null;
+                const datePart = parts[0];
+                const [day, month, year] = datePart.split('.');
+                if (day && month && year) {
+                    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                }
+            } catch (e) {
+                console.warn('Ошибка парсинга даты:', dateStr, e);
+            }
+            return null;
+        };
+
+        // Функция фильтрации по диапазону дат
+        const filterByDateRange = (row) => {
+            const dateFromValue = dateFrom.value;
+            const dateToValue = dateTo.value;
+
+            if (!dateFromValue && !dateToValue) {
+                return true; // Нет фильтра по датам
+            }
+
+            const rowDateStr = row.getAttribute('data-date');
+            const rowDate = parseDateFromString(rowDateStr);
+
+            if (!rowDate) {
+                return false; // Если не удалось распарсить дату, скрываем
+            }
+
+            // Устанавливаем время на начало/конец дня для корректного сравнения
+            if (dateFromValue) {
+                const fromDate = new Date(dateFromValue);
+                fromDate.setHours(0, 0, 0, 0);
+                if (rowDate < fromDate) {
+                    return false;
+                }
+            }
+
+            if (dateToValue) {
+                const toDate = new Date(dateToValue);
+                toDate.setHours(23, 59, 59, 999);
+                if (rowDate > toDate) {
+                    return false;
+                }
+            }
+
+            return true;
+        };
+
+        // Функция фильтрации по диапазону цен
+        const filterByPriceRange = (row) => {
+            const priceFromValue = priceFrom.value ? parseFloat(priceFrom.value) : null;
+            const priceToValue = priceTo.value ? parseFloat(priceTo.value) : null;
+
+            if (priceFromValue === null && priceToValue === null) {
+                return true; // Нет фильтра по ценам
+            }
+
+            // Валидация: цена от должна быть меньше цены до
+            if (priceFromValue !== null && priceToValue !== null && priceFromValue > priceToValue) {
+                // Показываем предупреждение, но не блокируем фильтрацию
+                if (priceFrom.style.borderColor !== 'red') {
+                    priceFrom.style.borderColor = 'red';
+                    priceTo.style.borderColor = 'red';
+                    setTimeout(() => {
+                        priceFrom.style.borderColor = '';
+                        priceTo.style.borderColor = '';
+                    }, 2000);
+                }
+                return true; // Пропускаем валидацию, но показываем визуальное предупреждение
+            }
+
+            const rowSalePrice = parseFloat(row.getAttribute('data-sale') || '0');
+
+            if (priceFromValue !== null && rowSalePrice < priceFromValue) {
+                return false;
+            }
+
+            if (priceToValue !== null && rowSalePrice > priceToValue) {
+                return false;
+            }
+
+            return true;
+        };
+
+        // Функция фильтрации по диапазону маржи
+        const filterByMarginRange = (row) => {
+            const marginFromValue = marginFrom.value ? parseFloat(marginFrom.value) : null;
+            const marginToValue = marginTo.value ? parseFloat(marginTo.value) : null;
+
+            if (marginFromValue === null && marginToValue === null) {
+                return true; // Нет фильтра по марже
+            }
+
+            // Валидация: маржа от должна быть меньше маржи до
+            if (marginFromValue !== null && marginToValue !== null && marginFromValue > marginToValue) {
+                // Показываем предупреждение, но не блокируем фильтрацию
+                if (marginFrom.style.borderColor !== 'red') {
+                    marginFrom.style.borderColor = 'red';
+                    marginTo.style.borderColor = 'red';
+                    setTimeout(() => {
+                        marginFrom.style.borderColor = '';
+                        marginTo.style.borderColor = '';
+                    }, 2000);
+                }
+                return true; // Пропускаем валидацию, но показываем визуальное предупреждение
+            }
+
+            const rowMargin = parseFloat(row.getAttribute('data-margin') || '0');
+
+            if (marginFromValue !== null && rowMargin < marginFromValue) {
+                return false;
+            }
+
+            if (marginToValue !== null && rowMargin > marginToValue) {
+                return false;
+            }
+
+            return true;
+        };
+
+        // Обновление URL параметров
+        const updateURLParams = () => {
+            const params = new URLSearchParams(window.location.search);
+            
+            if (dateFrom.value) {
+                params.set('date_from', dateFrom.value);
+            } else {
+                params.delete('date_from');
+            }
+
+            if (dateTo.value) {
+                params.set('date_to', dateTo.value);
+            } else {
+                params.delete('date_to');
+            }
+
+            if (priceFrom.value) {
+                params.set('price_from', priceFrom.value);
+            } else {
+                params.delete('price_from');
+            }
+
+            if (priceTo.value) {
+                params.set('price_to', priceTo.value);
+            } else {
+                params.delete('price_to');
+            }
+
+            if (marginFrom.value) {
+                params.set('margin_from', marginFrom.value);
+            } else {
+                params.delete('margin_from');
+            }
+
+            if (marginTo.value) {
+                params.set('margin_to', marginTo.value);
+            } else {
+                params.delete('margin_to');
+            }
+
+            if (selectedCompanies.size > 0) {
+                params.set('companies', Array.from(selectedCompanies).join(','));
+            } else {
+                params.delete('companies');
+            }
+
+            // Обновляем URL без перезагрузки страницы
+            const newURL = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+            window.history.replaceState({}, '', newURL);
+            
+            // Обновляем счетчик активных фильтров
+            updateActiveFiltersBadge();
+        };
+
+        // Восстановление параметров из URL
+        const restoreURLParams = () => {
+            const params = new URLSearchParams(window.location.search);
+            const dateFromParam = params.get('date_from');
+            const dateToParam = params.get('date_to');
+            const priceFromParam = params.get('price_from');
+            const priceToParam = params.get('price_to');
+            const marginFromParam = params.get('margin_from');
+            const marginToParam = params.get('margin_to');
+            const companiesParam = params.get('companies');
+
+            if (dateFromParam) {
+                dateFrom.value = dateFromParam;
+            }
+            if (dateToParam) {
+                dateTo.value = dateToParam;
+            }
+            if (priceFromParam) {
+                priceFrom.value = priceFromParam;
+            }
+            if (priceToParam) {
+                priceTo.value = priceToParam;
+            }
+            if (marginFromParam) {
+                marginFrom.value = marginFromParam;
+            }
+            if (marginToParam) {
+                marginTo.value = marginToParam;
+            }
+            if (companiesParam) {
+                selectedCompanies = new Set(companiesParam.split(',').filter(c => c.trim()));
+                updateCompanyFilterText();
+            }
+
+            // Показываем кнопки очистки, если есть значения
+            if (dateFrom.value || dateTo.value) {
+                clearDateFilter.style.display = 'inline-flex';
+            }
+            if (priceFrom.value || priceTo.value) {
+                clearPriceFilter.style.display = 'inline-flex';
+            }
+            if (marginFrom.value || marginTo.value) {
+                clearMarginFilter.style.display = 'inline-flex';
+            }
+            if (selectedCompanies.size > 0) {
+                clearCompanyFilter.style.display = 'inline-flex';
+            }
+            
+            // Обновляем счетчик активных фильтров
+            updateActiveFiltersBadge();
+        };
+
         const filterHistory = () => {
             const query = (searchInput.value || '').trim().toLowerCase();
             const filter = filterSelect.value || 'all';
@@ -720,6 +1368,61 @@
             groupRows.forEach((row) => {
                 const usernameAttr = (row.getAttribute('data-username') || '').toLowerCase();
                 let matches = false;
+                
+                // Сначала проверяем фильтр по датам
+                if (!filterByDateRange(row)) {
+                    row.style.display = 'none';
+                    const detailsRow = table.querySelector(`tr.history-details-row[data-details="${row.dataset.historyGroup}"]`);
+                    if (detailsRow) {
+                        detailsRow.style.display = 'none';
+                    }
+                    return;
+                }
+
+                // Затем проверяем фильтр по ценам
+                if (!filterByPriceRange(row)) {
+                    row.style.display = 'none';
+                    const detailsRow = table.querySelector(`tr.history-details-row[data-details="${row.dataset.historyGroup}"]`);
+                    if (detailsRow) {
+                        detailsRow.style.display = 'none';
+                    }
+                    return;
+                }
+
+                // Затем проверяем фильтр по марже
+                if (!filterByMarginRange(row)) {
+                    row.style.display = 'none';
+                    const detailsRow = table.querySelector(`tr.history-details-row[data-details="${row.dataset.historyGroup}"]`);
+                    if (detailsRow) {
+                        detailsRow.style.display = 'none';
+                    }
+                    return;
+                }
+
+                // Затем проверяем фильтр по компаниям
+                if (!filterByCompanies(row)) {
+                    row.style.display = 'none';
+                    const detailsRow = table.querySelector(`tr.history-details-row[data-details="${row.dataset.historyGroup}"]`);
+                    if (detailsRow) {
+                        detailsRow.style.display = 'none';
+                    }
+                    return;
+                }
+
+                // Проверяем быстрый фильтр "Многопозиционные"
+                if (activeQuickFilter === 'multi-position') {
+                    const positionsCount = parseInt(row.getAttribute('data-positions') || '1');
+                    if (positionsCount <= 1) {
+                        row.style.display = 'none';
+                        const detailsRow = table.querySelector(`tr.history-details-row[data-details="${row.dataset.historyGroup}"]`);
+                        if (detailsRow) {
+                            detailsRow.style.display = 'none';
+                        }
+                        return;
+                    }
+                }
+
+                // Затем проверяем текстовый поиск
                 switch (filter) {
                     case 'tender':
                         matches = (row.getAttribute('data-tender') || '').toLowerCase().includes(query);
@@ -758,14 +1461,48 @@
                 }
             });
 
-            if (query) {
-                clearSearch.style.display = 'inline-flex';
+            // Обновляем счетчик и кнопки
+            const hasFilters = query || dateFrom.value || dateTo.value || priceFrom.value || priceTo.value || marginFrom.value || marginTo.value || selectedCompanies.size > 0;
+            if (hasFilters) {
+                clearSearch.style.display = query ? 'inline-flex' : 'none';
+                clearDateFilter.style.display = (dateFrom.value || dateTo.value) ? 'inline-flex' : 'none';
+                clearPriceFilter.style.display = (priceFrom.value || priceTo.value) ? 'inline-flex' : 'none';
+                clearMarginFilter.style.display = (marginFrom.value || marginTo.value) ? 'inline-flex' : 'none';
+                clearCompanyFilter.style.display = selectedCompanies.size > 0 ? 'inline-flex' : 'none';
                 recordsCount.textContent = `Найдено тендеров: ${visible}`;
             } else {
                 clearSearch.style.display = 'none';
+                clearDateFilter.style.display = 'none';
+                clearPriceFilter.style.display = 'none';
+                clearMarginFilter.style.display = 'none';
+                clearCompanyFilter.style.display = 'none';
                 recordsCount.textContent = `Всего тендеров: ${groupRows.length}`;
             }
+
+            // Обновляем URL
+            updateURLParams();
         };
+
+        // Подсчет активных фильтров
+        const updateActiveFiltersBadge = () => {
+            if (!activeFiltersBadge) return;
+            
+            let count = 0;
+            if (dateFrom && (dateFrom.value || dateTo.value)) count++;
+            if (priceFrom && (priceFrom.value || priceTo.value)) count++;
+            if (marginFrom && (marginFrom.value || marginTo.value)) count++;
+            if (selectedCompanies && selectedCompanies.size > 0) count++;
+
+            if (count > 0) {
+                activeFiltersBadge.textContent = count;
+                activeFiltersBadge.style.display = 'inline-flex';
+            } else {
+                activeFiltersBadge.style.display = 'none';
+            }
+        };
+
+        // Восстанавливаем параметры из URL при загрузке
+        restoreURLParams();
 
         if (searchInput) {
             searchInput.addEventListener('input', filterHistory);
@@ -781,6 +1518,508 @@
                 filterHistory();
             });
         }
+
+        if (dateFrom) {
+            dateFrom.addEventListener('change', filterHistory);
+        }
+
+        if (dateTo) {
+            dateTo.addEventListener('change', filterHistory);
+        }
+
+        if (clearDateFilter) {
+            clearDateFilter.addEventListener('click', () => {
+                dateFrom.value = '';
+                dateTo.value = '';
+                clearDateFilter.style.display = 'none';
+                filterHistory();
+            });
+        }
+
+        if (priceFrom) {
+            priceFrom.addEventListener('input', () => {
+                // Валидация при вводе
+                const priceFromValue = priceFrom.value ? parseFloat(priceFrom.value) : null;
+                const priceToValue = priceTo.value ? parseFloat(priceTo.value) : null;
+                
+                if (priceFromValue !== null && priceToValue !== null && priceFromValue > priceToValue) {
+                    priceFrom.style.borderColor = 'red';
+                    priceTo.style.borderColor = 'red';
+                } else {
+                    priceFrom.style.borderColor = '';
+                    priceTo.style.borderColor = '';
+                }
+                filterHistory();
+            });
+        }
+
+        if (priceTo) {
+            priceTo.addEventListener('input', () => {
+                // Валидация при вводе
+                const priceFromValue = priceFrom.value ? parseFloat(priceFrom.value) : null;
+                const priceToValue = priceTo.value ? parseFloat(priceTo.value) : null;
+                
+                if (priceFromValue !== null && priceToValue !== null && priceFromValue > priceToValue) {
+                    priceFrom.style.borderColor = 'red';
+                    priceTo.style.borderColor = 'red';
+                } else {
+                    priceFrom.style.borderColor = '';
+                    priceTo.style.borderColor = '';
+                }
+                filterHistory();
+            });
+        }
+
+        if (clearPriceFilter) {
+            clearPriceFilter.addEventListener('click', () => {
+                priceFrom.value = '';
+                priceTo.value = '';
+                priceFrom.style.borderColor = '';
+                priceTo.style.borderColor = '';
+                clearPriceFilter.style.display = 'none';
+                filterHistory();
+            });
+        }
+
+        if (marginFrom) {
+            marginFrom.addEventListener('input', () => {
+                // Валидация при вводе
+                const marginFromValue = marginFrom.value ? parseFloat(marginFrom.value) : null;
+                const marginToValue = marginTo.value ? parseFloat(marginTo.value) : null;
+                
+                if (marginFromValue !== null && marginToValue !== null && marginFromValue > marginToValue) {
+                    marginFrom.style.borderColor = 'red';
+                    marginTo.style.borderColor = 'red';
+                } else {
+                    marginFrom.style.borderColor = '';
+                    marginTo.style.borderColor = '';
+                }
+                filterHistory();
+            });
+        }
+
+        if (marginTo) {
+            marginTo.addEventListener('input', () => {
+                // Валидация при вводе
+                const marginFromValue = marginFrom.value ? parseFloat(marginFrom.value) : null;
+                const marginToValue = marginTo.value ? parseFloat(marginTo.value) : null;
+                
+                if (marginFromValue !== null && marginToValue !== null && marginFromValue > marginToValue) {
+                    marginFrom.style.borderColor = 'red';
+                    marginTo.style.borderColor = 'red';
+                } else {
+                    marginFrom.style.borderColor = '';
+                    marginTo.style.borderColor = '';
+                }
+                filterHistory();
+            });
+        }
+
+        if (clearMarginFilter) {
+            clearMarginFilter.addEventListener('click', () => {
+                marginFrom.value = '';
+                marginTo.value = '';
+                marginFrom.style.borderColor = '';
+                marginTo.style.borderColor = '';
+                clearMarginFilter.style.display = 'none';
+                filterHistory();
+            });
+        }
+
+        // Обработчики для мультиселекта компаний
+        if (companyFilterToggle) {
+            companyFilterToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isOpen = companyFilterDropdown.style.display !== 'none';
+                companyFilterDropdown.style.display = isOpen ? 'none' : 'block';
+                companyFilterToggle.classList.toggle('active', !isOpen);
+                
+                if (!isOpen && allCompanies.length === 0) {
+                    loadCompanies();
+                }
+            });
+        }
+
+        // Закрытие при клике вне
+        document.addEventListener('click', (e) => {
+            if (companyFilterDropdown && companyFilterToggle && 
+                !companyFilterDropdown.contains(e.target) && 
+                !companyFilterToggle.contains(e.target)) {
+                companyFilterDropdown.style.display = 'none';
+                companyFilterToggle.classList.remove('active');
+            }
+        });
+
+        if (companySearch) {
+            companySearch.addEventListener('input', (e) => {
+                renderCompanyList(e.target.value);
+            });
+        }
+
+        if (selectAllCompanies) {
+            selectAllCompanies.addEventListener('click', () => {
+                const query = companySearch ? companySearch.value.toLowerCase().trim() : '';
+                const filteredCompanies = allCompanies.filter(company => 
+                    company.toLowerCase().includes(query)
+                );
+                filteredCompanies.forEach(company => selectedCompanies.add(company));
+                renderCompanyList(query);
+                updateCompanyFilterText();
+                filterHistory();
+                updateURLParams();
+            });
+        }
+
+        if (deselectAllCompanies) {
+            deselectAllCompanies.addEventListener('click', () => {
+                const query = companySearch ? companySearch.value.toLowerCase().trim() : '';
+                const filteredCompanies = allCompanies.filter(company => 
+                    company.toLowerCase().includes(query)
+                );
+                filteredCompanies.forEach(company => selectedCompanies.delete(company));
+                renderCompanyList(query);
+                updateCompanyFilterText();
+                filterHistory();
+                updateURLParams();
+            });
+        }
+
+        if (clearCompanyFilter) {
+            clearCompanyFilter.addEventListener('click', () => {
+                selectedCompanies.clear();
+                updateCompanyFilterText();
+                if (companySearch) companySearch.value = '';
+                renderCompanyList();
+                clearCompanyFilter.style.display = 'none';
+                filterHistory();
+                updateURLParams();
+            });
+        }
+
+        // Функции быстрых фильтров
+        const applyQuickFilter = (filterType) => {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            // Сохраняем активный быстрый фильтр
+            activeQuickFilter = filterType;
+            
+            // Сбрасываем все фильтры перед применением быстрого
+            dateFrom.value = '';
+            dateTo.value = '';
+            priceFrom.value = '';
+            priceTo.value = '';
+            marginFrom.value = '';
+            marginTo.value = '';
+            selectedCompanies.clear();
+            
+            switch (filterType) {
+                case 'high-margin':
+                    marginFrom.value = '20';
+                    marginTo.value = '100';
+                    break;
+                    
+                case 'recent-7days':
+                    const sevenDaysAgo = new Date(today);
+                    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+                    dateFrom.value = sevenDaysAgo.toISOString().split('T')[0];
+                    dateTo.value = today.toISOString().split('T')[0];
+                    break;
+                    
+                case 'multi-position':
+                    // Фильтр по количеству позиций будет применен в filterHistory
+                    // Не нужно устанавливать даты или другие фильтры
+                    break;
+                    
+                case 'today':
+                    dateFrom.value = today.toISOString().split('T')[0];
+                    dateTo.value = today.toISOString().split('T')[0];
+                    break;
+                    
+                case 'this-week':
+                    const weekStart = new Date(today);
+                    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+                    dateFrom.value = weekStart.toISOString().split('T')[0];
+                    dateTo.value = today.toISOString().split('T')[0];
+                    break;
+                    
+                case 'this-month':
+                    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+                    dateFrom.value = monthStart.toISOString().split('T')[0];
+                    dateTo.value = today.toISOString().split('T')[0];
+                    break;
+            }
+            
+            // Обновляем UI
+            updateCompanyFilterText();
+            if (companySearch) companySearch.value = '';
+            renderCompanyList();
+            
+            // Применяем фильтры
+            filterHistory();
+            
+            // Обновляем активное состояние кнопок
+            document.querySelectorAll('.quick-filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            const activeBtn = document.querySelector(`.quick-filter-btn[data-filter="${filterType}"]`);
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+            }
+        };
+
+        // Обработчики быстрых фильтров
+        document.querySelectorAll('.quick-filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const filterType = btn.getAttribute('data-filter');
+                applyQuickFilter(filterType);
+            });
+        });
+
+        // Очистка всех фильтров
+        const clearAllFiltersBtn = document.getElementById('clearAllFilters');
+        if (clearAllFiltersBtn) {
+            clearAllFiltersBtn.addEventListener('click', () => {
+                dateFrom.value = '';
+                dateTo.value = '';
+                priceFrom.value = '';
+                priceTo.value = '';
+                marginFrom.value = '';
+                marginTo.value = '';
+                selectedCompanies.clear();
+                
+                // Сбрасываем стили
+                priceFrom.style.borderColor = '';
+                priceTo.style.borderColor = '';
+                marginFrom.style.borderColor = '';
+                marginTo.style.borderColor = '';
+                
+                // Обновляем UI
+                updateCompanyFilterText();
+                if (companySearch) companySearch.value = '';
+                renderCompanyList();
+                
+                // Скрываем кнопки очистки
+                document.getElementById('clearDateFilter').style.display = 'none';
+                document.getElementById('clearPriceFilter').style.display = 'none';
+                document.getElementById('clearMarginFilter').style.display = 'none';
+                clearCompanyFilter.style.display = 'none';
+                
+                // Сбрасываем активное состояние быстрых фильтров
+                document.querySelectorAll('.quick-filter-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                // Сбрасываем активный быстрый фильтр
+                activeQuickFilter = null;
+                
+                // Применяем фильтры
+                filterHistory();
+            });
+        }
+
+        // Инициализация сравнения версий
+        const initVersionComparison = (container) => {
+            const checkboxes = container.querySelectorAll('.version-checkbox');
+            const selectAllCheckbox = container.querySelector('.select-all-versions');
+            const compareBtn = container.querySelector('.compare-versions-btn');
+            const selectedCount = container.querySelector('.selected-count');
+            
+            if (!checkboxes.length || !compareBtn) return;
+
+            const updateCompareButton = () => {
+                const selected = Array.from(checkboxes).filter(cb => cb.checked);
+                const count = selected.length;
+                
+                if (count >= 2 && count <= 3) {
+                    compareBtn.style.display = 'inline-flex';
+                    selectedCount.textContent = count;
+                } else {
+                    compareBtn.style.display = 'none';
+                }
+                
+                if (selectAllCheckbox) {
+                    selectAllCheckbox.checked = count === checkboxes.length && count > 0;
+                    selectAllCheckbox.indeterminate = count > 0 && count < checkboxes.length;
+                }
+            };
+
+            // Обработчики для чекбоксов версий
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', updateCompareButton);
+            });
+
+            // Обработчик "Выбрать все"
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', (e) => {
+                    checkboxes.forEach(cb => cb.checked = e.target.checked);
+                    updateCompareButton();
+                });
+            }
+
+            // Обработчик кнопки сравнения
+            compareBtn.addEventListener('click', () => {
+                const selectedIds = Array.from(checkboxes)
+                    .filter(cb => cb.checked)
+                    .map(cb => cb.getAttribute('data-version-id'));
+                
+                if (selectedIds.length >= 2 && selectedIds.length <= 3) {
+                    compareVersions(selectedIds);
+                } else {
+                    alert('Выберите от 2 до 3 версий для сравнения');
+                }
+            });
+
+            updateCompareButton();
+        };
+
+        // Функция сравнения версий
+        const compareVersions = async (versionIds) => {
+            if (!compareModal || !compareModalContent) return;
+
+            compareModalContent.innerHTML = `
+                <div class="loading-state">
+                    <div class="loading-spinner"></div>
+                    <p>Загрузка данных для сравнения...</p>
+                </div>
+            `;
+
+            openCompareModal();
+
+            try {
+                // Загружаем данные всех версий
+                const versionsData = await Promise.all(
+                    versionIds.map(id => 
+                        fetch(`/history/details/${id}`)
+                            .then(res => res.json())
+                    )
+                );
+
+                renderComparison(versionsData);
+            } catch (error) {
+                compareModalContent.innerHTML = `
+                    <div class="error-state">
+                        <div class="error-icon">{{ sidebar_icon('alert-circle')|safe }}</div>
+                        <h4>Ошибка загрузки</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        };
+
+        // Функция рендеринга сравнения
+        const renderComparison = (versions) => {
+            if (!versions || versions.length < 2) {
+                compareModalContent.innerHTML = '<p>Недостаточно данных для сравнения</p>';
+                return;
+            }
+
+            const formatCurrency = (value) => Number(value || 0).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const formatNumber = (value) => Number(value || 0).toLocaleString('ru-RU');
+            const format = (value, empty = '—') => value ? value : empty;
+
+            // Функция для определения изменений
+            const getChangeIndicator = (val1, val2, isIncrease = true) => {
+                if (val1 === val2) return '<span class="change-same">—</span>';
+                const diff = isIncrease ? val2 - val1 : val1 - val2;
+                const percent = val1 !== 0 ? ((diff / val1) * 100).toFixed(1) : 0;
+                const icon = diff > 0 ? '↑' : '↓';
+                const color = diff > 0 ? 'change-increase' : 'change-decrease';
+                return `<span class="${color}">${icon} ${Math.abs(percent)}%</span>`;
+            };
+
+            const rows = [
+                { label: 'Дата', key: 'timestamp', format: (v) => new Date(v).toLocaleString('ru-RU') },
+                { label: 'Компания', key: 'company', format: format },
+                { label: 'Номер тендера', key: 'tender_number', format: format },
+                { label: 'Количество позиций', key: 'positions_count', format: formatNumber },
+                { label: 'Общий вес, кг', key: 'weight', format: formatNumber },
+                { label: 'Логистика, ₽', key: 'logistics', format: formatCurrency },
+                { label: 'Общая стоимость закупа, ₽', key: 'cost_price', format: formatCurrency, calc: (v) => {
+                    if (v.positions && v.positions.length > 0) {
+                        return v.positions.reduce((sum, pos) => sum + (Number(pos.cost_price || 0) * Number(pos.quantity || 0)), 0);
+                    }
+                    return (Number(v.cost_price || 0) * Number(v.quantity || 0));
+                }},
+                { label: 'Общая стоимость продажи, ₽', key: 'total_general_price', format: formatCurrency, calc: (v) => {
+                    if (v.total_general_price) return v.total_general_price;
+                    if (v.positions && v.positions.length > 0) {
+                        return v.positions.reduce((sum, pos) => {
+                            const quantity = Number(pos.quantity || 0);
+                            const finalPrice = Number(pos.final_price || 0) || Number(v.final_price || 0);
+                            return sum + (finalPrice * quantity);
+                        }, 0);
+                    }
+                    return (Number(v.final_price || 0) * Number(v.quantity || 1));
+                }},
+                { label: 'Маржа, %', key: 'margin_percent', format: (v) => Number(v || 0).toFixed(1) },
+                { label: 'Срок поставки, дней', key: 'delivery_time', format: formatNumber },
+            ];
+
+            const tableRows = rows.map(row => {
+                const values = versions.map(v => {
+                    if (row.calc) {
+                        return row.calc(v);
+                    }
+                    return v[row.key];
+                });
+                
+                const formattedValues = values.map(v => row.format ? row.format(v) : format(v));
+                const cells = formattedValues.map((val, idx) => {
+                    let changeIndicator = '';
+                    if (idx > 0 && typeof values[0] === 'number' && typeof values[idx] === 'number') {
+                        changeIndicator = getChangeIndicator(values[0], values[idx]);
+                    }
+                    return `<td>${val} ${changeIndicator}</td>`;
+                }).join('');
+
+                return `
+                    <tr>
+                        <th>${row.label}</th>
+                        ${cells}
+                    </tr>
+                `;
+            }).join('');
+
+            compareModalContent.innerHTML = `
+                <div class="comparison-container">
+                    <div class="comparison-header">
+                        <div class="comparison-version">
+                            <strong>Версия 1</strong>
+                            <span class="version-date">${new Date(versions[0].timestamp).toLocaleString('ru-RU')}</span>
+                        </div>
+                        ${versions.length > 2 ? `
+                        <div class="comparison-version">
+                            <strong>Версия 2</strong>
+                            <span class="version-date">${new Date(versions[1].timestamp).toLocaleString('ru-RU')}</span>
+                        </div>
+                        <div class="comparison-version">
+                            <strong>Версия 3</strong>
+                            <span class="version-date">${new Date(versions[2].timestamp).toLocaleString('ru-RU')}</span>
+                        </div>
+                        ` : `
+                        <div class="comparison-version">
+                            <strong>Версия 2</strong>
+                            <span class="version-date">${new Date(versions[1].timestamp).toLocaleString('ru-RU')}</span>
+                        </div>
+                        `}
+                    </div>
+                    <div class="comparison-table-wrapper">
+                        <table class="comparison-table">
+                            <tbody>
+                                ${tableRows}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        };
+
+        // Загружаем компании при загрузке страницы
+        loadCompanies();
+        
+        // Обновляем счетчик при загрузке
+        updateActiveFiltersBadge();
     });
 </script>
 {% endblock %}

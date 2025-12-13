@@ -139,6 +139,17 @@ def history_by_tender(tender_number):
     return jsonify({'records': records})
 
 
+@main_bp.route('/history/companies')
+def history_companies():
+    """Возвращает список уникальных компаний."""
+    try:
+        companies = generation_repository.get_unique_companies()
+        return jsonify({'companies': companies})
+    except Exception as exc:
+        current_app.logger.error('Error getting companies: %s', exc)
+        return jsonify({'companies': []}), 500
+
+
 def _build_tender_groups(items):
     groups = []
     lookup = OrderedDict()
@@ -184,7 +195,17 @@ def history():
         page = int(request.args.get('page', '1'))
     except ValueError:
         page = 1
-    history_data = generation_repository.get_history(app_config, page=page)
+    
+    # Получаем параметры фильтрации по датам
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+    
+    history_data = generation_repository.get_history(
+        app_config, 
+        page=page,
+        date_from=date_from,
+        date_to=date_to
+    )
     history_groups = _build_tender_groups(history_data['items'])
     return render_template(
         'history.html',

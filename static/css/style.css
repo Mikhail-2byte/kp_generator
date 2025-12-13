@@ -1910,6 +1910,167 @@ body[data-page="index"] .margin-field input {
   min-width: 220px;
 }
 
+.filter-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 16px 0;
+  padding: 16px;
+  background: rgba(17, 24, 39, 0.02);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 160px;
+}
+
+.filter-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted-foreground);
+}
+
+.filter-input {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  background: var(--card);
+  color: var(--foreground);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.filter-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.date-input {
+  min-width: 160px;
+}
+
+.filter-group-companies {
+  min-width: 250px;
+}
+
+.multiselect-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.multiselect-toggle {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  background: var(--card);
+  color: var(--foreground);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.multiselect-toggle:hover {
+  border-color: var(--primary);
+}
+
+.multiselect-toggle:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.multiselect-arrow {
+  font-size: 12px;
+  transition: transform 0.2s;
+}
+
+.multiselect-toggle.active .multiselect-arrow {
+  transform: rotate(180deg);
+}
+
+.multiselect-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  max-height: 300px;
+  display: flex;
+  flex-direction: column;
+}
+
+.multiselect-search {
+  padding: 8px 12px;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  font-size: 14px;
+  background: var(--card);
+  color: var(--foreground);
+}
+
+.multiselect-search:focus {
+  outline: none;
+  background: rgba(17, 24, 39, 0.02);
+}
+
+.multiselect-list {
+  overflow-y: auto;
+  max-height: 200px;
+  padding: 4px;
+}
+
+.multiselect-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.2s;
+}
+
+.multiselect-item:hover {
+  background: rgba(17, 24, 39, 0.04);
+}
+
+.multiselect-item input[type="checkbox"] {
+  margin-right: 8px;
+  cursor: pointer;
+}
+
+.multiselect-item label {
+  cursor: pointer;
+  flex: 1;
+  font-size: 14px;
+  user-select: none;
+}
+
+.multiselect-actions {
+  padding: 8px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+}
+
+.multiselect-actions .btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
 .section-divider {
   display: flex;
   align-items: center;

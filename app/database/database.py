@@ -333,19 +333,51 @@ def _normalize_pagination(config: Dict[str, object], page: int, per_page: Option
     return page, page_size
 
 
-def get_generation_history(config, *, page: int = 1, per_page: Optional[int] = None) -> Dict[str, object]:
+def get_generation_history(config, *, page: int = 1, per_page: Optional[int] = None, date_from: Optional[str] = None, date_to: Optional[str] = None) -> Dict[str, object]:
     """Возвращает историю генераций с пагинацией по тендерам (последняя версия)."""
     page, limit = _normalize_pagination(config, page, per_page)
     offset = (page - 1) * limit
     try:
+        from datetime import datetime
         with _session_scope() as session:
             tender_key_expr = func.coalesce(
                 func.lower(GenerationHistoryRecord.tender_number),
                 cast(GenerationHistoryRecord.id, String)
             )
 
-            # Общее количество уникальных тендеров (или отдельных записей, если тендер не указан)
-            total = session.query(func.count(func.distinct(tender_key_expr))).scalar() or 0
+            # Базовый запрос для фильтрации по датам
+            base_filter = session.query(GenerationHistoryRecord)
+
+            # Применяем фильтры по датам
+            if date_from:
+                try:
+                    date_from_obj = datetime.strptime(date_from, '%Y-%m-%d')
+                    base_filter = base_filter.filter(GenerationHistoryRecord.timestamp >= date_from_obj)
+                except ValueError:
+                    pass  # Игнорируем неверный формат даты
+
+            if date_to:
+                try:
+                    date_to_obj = datetime.strptime(date_to, '%Y-%m-%d')
+                    # Добавляем время до конца дня
+                    date_to_obj = date_to_obj.replace(hour=23, minute=59, second=59)
+                    base_filter = base_filter.filter(GenerationHistoryRecord.timestamp <= date_to_obj)
+                except ValueError:
+                    pass  # Игнорируем неверный формат даты
+
+            # Создаем подзапрос с фильтрацией для window функции
+            filtered_subquery = base_filter.with_entities(GenerationHistoryRecord.id).subquery()
+
+            # Общее количество уникальных тендеров с учетом фильтров
+            # Считаем только среди отфильтрованных записей
+            total = session.query(
+                func.count(func.distinct(
+                    func.coalesce(
+                        func.lower(GenerationHistoryRecord.tender_number),
+                        cast(GenerationHistoryRecord.id, String)
+                    )
+                ))
+            ).filter(GenerationHistoryRecord.id.in_(session.query(filtered_subquery.c.id))).scalar() or 0
 
             window_subquery = (
                 session.query(
@@ -358,6 +390,7 @@ def get_generation_history(config, *, page: int = 1, per_page: Optional[int] = N
                     .over(partition_by=tender_key_expr)
                     .label('version_count')
                 )
+                .filter(GenerationHistoryRecord.id.in_(session.query(filtered_subquery.c.id)))
             ).subquery()
 
             records_query = (
@@ -956,4 +989,22 @@ def get_generations_by_tender(tender_number: str) -> List[Dict[str, object]]:
             ]
     except Exception as exc:
         logging.error('Error fetching generations by tender: %s', exc)
+        return []
+
+
+def get_unique_companies() -> List[str]:
+    """Возвращает список уникальных компаний из истории генераций."""
+    try:
+        with _session_scope() as session:
+            companies = (
+                session.query(GenerationHistoryRecord.company)
+                .distinct()
+                .filter(GenerationHistoryRecord.company.isnot(None))
+                .filter(GenerationHistoryRecord.company != '')
+                .order_by(GenerationHistoryRecord.company)
+                .all()
+            )
+            return [company[0] for company in companies if company[0]]
+    except Exception as exc:
+        logging.error('Error fetching unique companies: %s', exc)
         return []

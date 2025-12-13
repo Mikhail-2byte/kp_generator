@@ -87,9 +87,9 @@ class GenerationRepository:
         """Сохраняет расчёт генерации с привязкой к пользователю."""
         return self._db.save_generation_history(payload, final_price, config, int(user_id) if user_id is not None else None)
 
-    def get_history(self, config: Dict[str, Any], *, page: int = 1, per_page: Optional[int] = None):
+    def get_history(self, config: Dict[str, Any], *, page: int = 1, per_page: Optional[int] = None, date_from: Optional[str] = None, date_to: Optional[str] = None):
         """Возвращает историю генераций с пагинацией."""
-        return self._db.get_generation_history(config, page=page, per_page=per_page)
+        return self._db.get_generation_history(config, page=page, per_page=per_page, date_from=date_from, date_to=date_to)
 
     def get_details(self, record_id: int):
         """Загружает подробности конкретной генерации по идентификатору."""
@@ -106,6 +106,10 @@ class GenerationRepository:
     def get_by_tender(self, tender_number: str):
         """Возвращает список генераций по номеру тендера."""
         return self._db.get_generations_by_tender(tender_number)
+
+    def get_unique_companies(self):
+        """Возвращает список уникальных компаний."""
+        return self._db.get_unique_companies()
 
 
 class AdminStatsRepository:

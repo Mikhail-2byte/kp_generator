@@ -19,6 +19,7 @@ from .database import (
     delete_user,
     get_generations_by_drawing,
     get_generations_by_tender,
+    get_unique_companies,
 )
 
 
@@ -81,8 +82,8 @@ class DatabaseService:
     ) -> bool:
         return save_generation_history(payload, final_price, config, user_id)
 
-    def get_generation_history(self, config: Dict[str, Any], *, page: int = 1, per_page: Optional[int] = None):
-        return get_generation_history(config, page=page, per_page=per_page)
+    def get_generation_history(self, config: Dict[str, Any], *, page: int = 1, per_page: Optional[int] = None, date_from: Optional[str] = None, date_to: Optional[str] = None):
+        return get_generation_history(config, page=page, per_page=per_page, date_from=date_from, date_to=date_to)
 
     def get_generation_details(self, record_id: int):
         return get_generation_details(record_id)
@@ -95,6 +96,9 @@ class DatabaseService:
 
     def get_generations_by_tender(self, tender_number: str):
         return get_generations_by_tender(tender_number)
+
+    def get_unique_companies(self):
+        return get_unique_companies()
 
     # --- Админская аналитика ----------------------------------------------------------
 

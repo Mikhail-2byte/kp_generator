@@ -519,6 +519,7 @@ def load_task_instructions() -> List[Dict[str, Any]]:
     normalized_instructions: List[Dict[str, Any]] = []
     for entry in data.get('instructions', []):
         files: List[Dict[str, str]] = []
+        
         for file_entry in entry.get('files', []):
             filename = str(file_entry.get('filename', '')).strip()
             if not filename:
@@ -537,6 +538,7 @@ def load_task_instructions() -> List[Dict[str, Any]]:
         normalized_instructions.append({
             'id': entry.get('id') or entry.get('identifier'),
             'title': entry.get('title') or entry.get('name') or 'Инструкция',
+            'brief': str(entry.get('brief', '')).strip(),
             'summary': str(entry.get('summary', '')).strip(),
             'files': files,
             'updated_at': entry.get('updated_at') or entry.get('date')
@@ -552,8 +554,36 @@ def refresh_task_instructions():
 
 
 def get_task_instructions() -> List[Dict[str, Any]]:
-    """Возвращает копию списка инструкций."""
-    return list(TASK_INSTRUCTIONS)
+    """
+    Возвращает список инструкций с содержимым TXT файлов.
+    Содержимое файлов загружается каждый раз при запросе (не кэшируется),
+    чтобы изменения в TXT файлах сразу отображались на сайте.
+    """
+    instructions_dir = BASE_DIR / 'static' / 'instructions'
+    result = []
+    
+    for instruction in TASK_INSTRUCTIONS:
+        # Копируем инструкцию
+        instruction_copy = dict(instruction)
+        
+        # Загружаем содержимое TXT файлов каждый раз при запросе
+        content_text: str | None = None
+        for file_entry in instruction.get('files', []):
+            filename = str(file_entry.get('filename', '')).strip()
+            if filename.lower().endswith('.txt'):
+                file_path = instructions_dir / filename
+                if file_path.exists():
+                    try:
+                        with file_path.open('r', encoding='utf-8') as txt_file:
+                            content_text = txt_file.read()
+                            break  # Берем первый найденный TXT файл
+                    except Exception as exc:
+                        _log_error(f'Failed to read instruction file {filename}: {exc}')
+        
+        instruction_copy['content_text'] = content_text
+        result.append(instruction_copy)
+    
+    return result
 
 
 def parse_composition_input(raw_text: str):

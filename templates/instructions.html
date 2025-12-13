@@ -9,17 +9,11 @@
         {% if instructions %}
             <div class="instructions-accordion mt-lg">
                 {% for instruction in instructions %}
-                    <details class="instructions-item" {% if loop.first %}open{% endif %}>
+                    <details class="instructions-item">
                         <summary class="instructions-summary">
                             <div class="order-title">
+                                <span class="instruction-title-icon">{{ sidebar_icon('file-text')|safe }}</span>
                                 <span class="order-number">{{ instruction.title }}</span>
-                                <span class="order-brief">
-                                    {% if instruction.brief %}
-                                        {{ instruction.brief }}
-                                    {% else %}
-                                        Краткое описание будет добавлено позже
-                                    {% endif %}
-                                </span>
                             </div>
                         </summary>
                         <div class="instructions-body">
@@ -27,11 +21,82 @@
                                 <p class="instructions-text">{{ instruction.summary }}</p>
                             {% endif %}
 
+                            {% if instruction.parsed %}
+                                <div class="instruction-parsed-content">
+                                    {% if instruction.parsed.get('steps') %}
+                                        <div class="instruction-section instruction-section-steps">
+                                            <div class="instruction-section-header">
+                                                <span class="instruction-icon">{{ sidebar_icon('list')|safe }}</span>
+                                                <h3 class="instruction-section-title">Порядок действий</h3>
+                                            </div>
+                                            <div class="instruction-section-content">
+                                                {% for step in instruction.parsed.get('steps', []) %}
+                                                    <div class="instruction-step">
+                                                        <div class="instruction-step-header">
+                                                            <span class="instruction-step-number">{{ step.get('number', '') }}.</span>
+                                                            <span class="instruction-step-title">{{ step.get('title', '') }}</span>
+                                                        </div>
+                                                        {% if step.get('items') %}
+                                                            <ul class="instruction-step-items">
+                                                                {% for item in step.get('items', []) %}
+                                                                    <li>{{ item }}</li>
+                                                                {% endfor %}
+                                                            </ul>
+                                                        {% endif %}
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    {% endif %}
+
+                                    {% if instruction.parsed.get('result') %}
+                                        <div class="instruction-section instruction-section-result">
+                                            <div class="instruction-section-header">
+                                                <span class="instruction-icon">{{ sidebar_icon('check-circle')|safe }}</span>
+                                                <h3 class="instruction-section-title">Результат</h3>
+                                            </div>
+                                            <div class="instruction-section-content">
+                                                <pre class="instruction-text-content">{{ instruction.parsed.get('result', '') }}</pre>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+
+                                    {% if instruction.parsed.get('errors') %}
+                                        <div class="instruction-section instruction-section-errors">
+                                            <div class="instruction-section-header">
+                                                <span class="instruction-icon">{{ sidebar_icon('alert-circle')|safe }}</span>
+                                                <h3 class="instruction-section-title">Типовые ошибки</h3>
+                                            </div>
+                                            <div class="instruction-section-content">
+                                                <pre class="instruction-text-content">{{ instruction.parsed.get('errors', '') }}</pre>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+
+                                    {% if instruction.parsed.get('checklist') %}
+                                        <div class="instruction-section instruction-section-checklist">
+                                            <div class="instruction-section-header">
+                                                <span class="instruction-icon">{{ sidebar_icon('book-open')|safe }}</span>
+                                                <h3 class="instruction-section-title">Краткий чек-лист</h3>
+                                            </div>
+                                            <div class="instruction-section-content">
+                                                <pre class="instruction-text-content">{{ instruction.parsed.get('checklist', '') }}</pre>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% elif instruction.content_text %}
+                                <div class="instruction-content">
+                                    <pre class="instruction-text-content">{{ instruction.content_text }}</pre>
+                                </div>
+                            {% endif %}
+
                             {% if instruction.files %}
                                 <div class="orders-files-container">
                                     <div class="instructions-files">
                                         {% for file in instruction.files %}
                                             <a class="btn btn-secondary" href="{{ url_for('static', filename='instructions/' ~ file.filename) }}" download>
+                                                <span class="btn-icon">{{ sidebar_icon('download')|safe }}</span>
                                                 {{ file.label }}
                                             </a>
                                         {% endfor %}

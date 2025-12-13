@@ -298,10 +298,179 @@ def templates_page():
     )
 
 
+def _parse_instruction_content(content_text: str) -> dict:
+    """
+    Парсит текст инструкции и выделяет разделы для визуального отображения.
+    
+    Returns:
+        dict с ключами: title, goal, steps, result, errors, checklist
+    """
+    if not content_text:
+        return {}
+    
+    lines = content_text.split('\n')
+    parsed = {
+        'title': '',
+        'subtitle': '',
+        'goal': '',
+        'steps': [],
+        'result': '',
+        'errors': '',
+        'checklist': ''
+    }
+    
+    current_section = None
+    current_content = []
+    current_step = None
+    separator_pattern = re.compile(r'^_{10,}$')
+    
+    for i, line in enumerate(lines):
+        original_line = line
+        line = line.strip()
+        
+        # Определяем разделы
+        if line == 'Цель':
+            if current_step:
+                parsed['steps'].append(current_step)
+                current_step = None
+            current_section = 'goal'
+            current_content = []
+            continue
+        elif line == 'Порядок действий':
+            if current_step:
+                parsed['steps'].append(current_step)
+                current_step = None
+            current_section = 'steps'
+            current_content = []
+            continue
+        elif line == 'Результат':
+            if current_step:
+                parsed['steps'].append(current_step)
+                current_step = None
+            current_section = 'result'
+            current_content = []
+            continue
+        elif line == 'Типовые ошибки':
+            if current_step:
+                parsed['steps'].append(current_step)
+                current_step = None
+            current_section = 'errors'
+            current_content = []
+            continue
+        elif line.startswith('Краткий чек-лист') or line.startswith('Чек-лист'):
+            if current_step:
+                parsed['steps'].append(current_step)
+                current_step = None
+            current_section = 'checklist'
+            current_content = []
+            continue
+        elif separator_pattern.match(line):
+            # Разделитель - сохраняем текущий контент
+            if current_section == 'goal' and current_content:
+                parsed['goal'] = '\n'.join(current_content).strip()
+                current_content = []
+            elif current_section == 'result' and current_content:
+                parsed['result'] = '\n'.join(current_content).strip()
+                current_content = []
+            elif current_section == 'errors' and current_content:
+                parsed['errors'] = '\n'.join(current_content).strip()
+                current_content = []
+            elif current_section == 'checklist' and current_content:
+                parsed['checklist'] = '\n'.join(current_content).strip()
+                current_content = []
+            elif current_section == 'steps' and current_step:
+                # Сохраняем текущий шаг при разделителе
+                parsed['steps'].append(current_step)
+                current_step = None
+            continue
+        
+        if not line:
+            # Пустая строка - добавляем в контент, если есть текущий раздел
+            if current_section and current_section != 'steps':
+                current_content.append('')
+            elif current_step and current_step.get('items'):
+                # Пустая строка в списке пунктов шага
+                pass
+            continue
+            
+        if current_section == 'steps':
+            # Обработка нумерованных шагов
+            step_match = re.match(r'^(\d+)\.\s*(.+)$', line)
+            if step_match:
+                # Новый шаг
+                if current_step:
+                    parsed['steps'].append(current_step)
+                current_step = {
+                    'number': step_match.group(1),
+                    'title': step_match.group(2).strip(),
+                    'items': []
+                }
+            elif line.startswith('•') or line.startswith('-') or (line and line[0] in '•-'):
+                # Пункт списка
+                item_text = re.sub(r'^[•\-]\s*', '', line).strip()
+                if current_step:
+                    current_step['items'].append(item_text)
+                else:
+                    current_content.append(line)
+            elif line.startswith('Определить:') or line.startswith('Скачать') or line.startswith('Кратко') or line.startswith('Понять:') or line.startswith('Оценить:') or line.startswith('Действовать'):
+                # Описательный текст шага
+                if current_step:
+                    if not current_step['items']:
+                        current_step['title'] += ' ' + line
+                    else:
+                        # Добавляем как дополнительный пункт
+                        current_step['items'].append(line)
+                else:
+                    current_content.append(line)
+            elif current_step:
+                # Продолжение текста шага
+                if current_step['items']:
+                    # Добавляем к последнему пункту или как новый пункт
+                    if current_step['items']:
+                        current_step['items'][-1] += ' ' + line
+                    else:
+                        current_step['items'].append(line)
+                else:
+                    current_step['title'] += ' ' + line
+            else:
+                current_content.append(line)
+        elif current_section:
+            # Обычный контент для других разделов
+            current_content.append(line)
+        elif i < 3:
+            # Первые строки - заголовок и подзаголовок
+            if not parsed['title']:
+                parsed['title'] = line
+            elif not parsed['subtitle'] and line != parsed['title']:
+                parsed['subtitle'] = line
+    
+    # Сохраняем последний шаг
+    if current_step:
+        parsed['steps'].append(current_step)
+    
+    # Сохраняем последний контент
+    if current_section == 'goal' and current_content:
+        parsed['goal'] = '\n'.join(current_content).strip()
+    elif current_section == 'result' and current_content:
+        parsed['result'] = '\n'.join(current_content).strip()
+    elif current_section == 'errors' and current_content:
+        parsed['errors'] = '\n'.join(current_content).strip()
+    elif current_section == 'checklist' and current_content:
+        parsed['checklist'] = '\n'.join(current_content).strip()
+    
+    return parsed
+
+
 @main_bp.route('/instructions')
 def instructions_page():
     """Содержит краткие инструкции по бизнес-процессам."""
     instructions_list = datasets.get_task_instructions()
+    
+    # Парсим содержимое каждой инструкции
+    for instruction in instructions_list:
+        if isinstance(instruction, dict) and instruction.get('content_text'):
+            instruction['parsed'] = _parse_instruction_content(instruction['content_text'])
+    
     return render_template(
         'instructions.html',
         **build_context('instructions', 'Инструкции', instructions=instructions_list)

@@ -233,6 +233,25 @@
         padding: 8px 12px;
     }
 
+    .previous-history-panel .table-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        justify-content: flex-end;
+    }
+
+    .previous-history-panel .table-actions .btn {
+        padding: 6px 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .previous-history-panel .table-actions .btn svg {
+        width: 16px;
+        height: 16px;
+    }
+
     .history-count {
         margin-left: 6px;
         background: #eef2ff;
@@ -323,164 +342,193 @@
             document.getElementById('modalSubtitle').textContent = `${format(data.company)} • ${productTitle}`;
             document.getElementById('modalTimestamp').textContent = `Создано: ${new Date(data.timestamp).toLocaleString('ru-RU')}`;
 
-            // Рендерим позиции
-            const renderPositions = () => {
-                if (data.positions && data.positions.length > 0) {
-                    return `
-                        <div class="info-section">
-                            <div class="section-header">
-                                <h4 class="section-title">
-                                    <span class="section-icon">{{ sidebar_icon('list')|safe }}</span>
-                                    Позиции (${data.positions.length})
-                                </h4>
-                            </div>
-                            <div class="positions-list">
-                                ${data.positions.map((pos, index) => `
-                                    <div class="position-item">
-                                        <div class="position-header">
-                                            <span class="position-number">Позиция ${index + 1}</span>
-                                            <span class="position-price">${formatCurrency(pos.final_price || pos.cost_price || 0)} ₽/шт</span>
-                                        </div>
-                                        <div class="position-details">
-                                            <div class="position-row">
-                                                <span class="position-label">Товар:</span>
-                                                <span class="position-value">${format(pos.product)}</span>
-                                            </div>
-                                            <div class="position-row">
-                                                <span class="position-label">Количество:</span>
-                                                <span class="position-value">${formatNumber(pos.quantity)} шт.</span>
-                                            </div>
-                                            <div class="position-row">
-                                                <span class="position-label">Вес:</span>
-                                                <span class="position-value">${formatNumber(pos.weight)} кг</span>
-                                            </div>
-                                            <div class="position-row">
-                                                <span class="position-label">Цена закупа:</span>
-                                                <span class="position-value">${formatCurrency(pos.cost_price)} ₽</span>
-                                            </div>
-                                            ${pos.drawing_number ? `
-                                            <div class="position-row">
-                                                <span class="position-label">Чертеж:</span>
-                                                <span class="position-value">${format(pos.drawing_number)}</span>
-                                            </div>
-                                            ` : ''}
-                                            ${pos.material ? `
-                                            <div class="position-row">
-                                                <span class="position-label">Материал:</span>
-                                                <span class="position-value">${format(pos.material)}</span>
-                                            </div>
-                                            ` : ''}
-                                            <div class="position-row">
-                                                <span class="position-label">Пошлина:</span>
-                                                <span class="position-value">${format(pos.duty_percent, '0')}%</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    `;
+            // Вычисляем общую стоимость закупа
+            let totalPurchasePrice = 0;
+            let totalWeight = 0;
+            let totalSalePrice = 0;
+            
+            if (data.positions && data.positions.length > 0) {
+                totalPurchasePrice = data.positions.reduce((sum, pos) => {
+                    return sum + (Number(pos.cost_price || 0) * Number(pos.quantity || 0));
+                }, 0);
+                
+                totalWeight = data.positions.reduce((sum, pos) => {
+                    return sum + Number(pos.weight || 0);
+                }, 0);
+                
+                totalSalePrice = data.positions.reduce((sum, pos) => {
+                    const quantity = Number(pos.quantity || 0);
+                    let finalPrice = Number(pos.final_price || 0);
+                    if (finalPrice === 0 && data.final_price) {
+                        finalPrice = Number(data.final_price || 0);
+                    }
+                    return sum + (finalPrice * quantity);
+                }, 0);
+            } else {
+                totalPurchasePrice = (Number(data.cost_price || 0) * Number(data.quantity || 0));
+                totalWeight = Number(data.weight || 0);
+                totalSalePrice = (Number(data.final_price || 0) * Number(data.quantity || 1));
+            }
+            
+            // Если общий вес не указан, используем из data
+            if (totalWeight === 0) {
+                totalWeight = Number(data.weight || 0);
+            }
+            
+            // Если общая стоимость продажи не указана, используем из data
+            if (totalSalePrice === 0) {
+                totalSalePrice = Number(data.total_general_price || 0);
+                if (totalSalePrice === 0) {
+                    totalSalePrice = (Number(data.final_price || 0) * Number(data.quantity || 1));
                 }
-                return '';
+            }
+
+            // Рендерим таблицу позиций
+            const renderPositionsTable = () => {
+                if (!data.positions || data.positions.length === 0) {
+                    return '';
+                }
+
+                const rows = data.positions.map((pos, index) => {
+                    const quantity = Number(pos.quantity || 0);
+                    const costPrice = Number(pos.cost_price || 0);
+                    // Если у позиции нет final_price, используем общий или вычисляем
+                    let finalPrice = Number(pos.final_price || 0);
+                    if (finalPrice === 0 && data.final_price) {
+                        // Если это первая позиция или единственная, используем общий final_price
+                        if (index === 0 || data.positions.length === 1) {
+                            finalPrice = Number(data.final_price || 0);
+                        }
+                    }
+                    const weight = Number(pos.weight || 0);
+                    const weightPerUnit = quantity > 0 ? weight / quantity : 0;
+                    // Цена закупа за кг
+                    const costPricePerKg = weightPerUnit > 0 ? costPrice / weightPerUnit : 0;
+                    // Итоговая продажная стоимость
+                    const totalSalePrice = finalPrice * quantity;
+
+                    return `
+                        <tr>
+                            <td>${format(pos.product)}</td>
+                            <td>${format(pos.drawing_number)}</td>
+                            <td>${format(pos.material)}</td>
+                            <td class="text-center">${formatNumber(quantity)}</td>
+                            <td class="text-right">${formatNumber(weightPerUnit)}</td>
+                            <td class="text-right">${formatNumber(weight)}</td>
+                            <td class="text-right">${formatCurrency(costPrice)}</td>
+                            <td class="text-right">${formatCurrency(costPricePerKg)}</td>
+                            <td class="text-center">${format(pos.duty_percent, '0')}%</td>
+                            <td class="text-right">${formatCurrency(totalSalePrice)}</td>
+                        </tr>
+                    `;
+                }).join('');
+
+                return `
+                    <div class="info-section positions-table-section">
+                        <div class="section-header">
+                            <h4 class="section-title">
+                                <span class="section-icon">{{ sidebar_icon('list')|safe }}</span>
+                                Позиции (${data.positions.length})
+                            </h4>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="positions-table">
+                                <thead>
+                                    <tr>
+                                        <th>Наименование</th>
+                                        <th>№ чертежа</th>
+                                        <th>Материал</th>
+                                        <th class="text-center">Количество</th>
+                                        <th class="text-right">Вес за шт., кг</th>
+                                        <th class="text-right">Общий вес, кг</th>
+                                        <th class="text-right">Цена закупа, ₽</th>
+                                        <th class="text-right">Цена закупа за кг, ₽</th>
+                                        <th class="text-center">Пошлина, %</th>
+                                        <th class="text-right">Итоговая продажная стоимость, ₽</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${rows}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
             };
 
             modalContent.innerHTML = `
-                <div class="modal-content-grid">
-                    <!-- Основная информация -->
-                    <div class="info-section">
+                <div class="modal-details-container">
+                    <!-- Основные показатели -->
+                    <div class="info-section main-indicators">
                         <div class="section-header">
                             <h4 class="section-title">
-                                <span class="section-icon">{{ sidebar_icon('building')|safe }}</span>
-                                Основная информация
+                                <span class="section-icon">{{ sidebar_icon('chart')|safe }}</span>
+                                Основные показатели
                             </h4>
                         </div>
-                        <div class="info-grid">
-                            <div class="info-item">
-                                <span class="info-label">Компания</span>
-                                <span class="info-value">${format(data.company)}</span>
+                        
+                        <!-- Общая информация -->
+                        <div class="indicators-group">
+                            <div class="group-title">Общая информация</div>
+                            <div class="indicators-grid">
+                                <div class="indicator-item">
+                                    <span class="indicator-label">Компания</span>
+                                    <span class="indicator-value">${format(data.company)}</span>
+                                </div>
+                                <div class="indicator-item">
+                                    <span class="indicator-label">Номер тендера</span>
+                                    <span class="indicator-value">${format(data.tender_number)}</span>
+                                </div>
+                                <div class="indicator-item">
+                                    <span class="indicator-label">Количество позиций</span>
+                                    <span class="indicator-value">${data.positions_count || 1}</span>
+                                </div>
+                                <div class="indicator-item">
+                                    <span class="indicator-label">Срок поставки</span>
+                                    <span class="indicator-value">${formatNumber(data.delivery_time)} дней</span>
+                                </div>
+                                ${data.delivery_address ? `
+                                <div class="indicator-item">
+                                    <span class="indicator-label">Адрес доставки</span>
+                                    <span class="indicator-value">${format(data.delivery_address)}</span>
+                                </div>
+                                ` : ''}
+                                <div class="indicator-item">
+                                    <span class="indicator-label">Автор</span>
+                                    <span class="indicator-value">${authorDisplay}</span>
+                                </div>
                             </div>
-                            <div class="info-item">
-                                <span class="info-label">Товар</span>
-                                <span class="info-value">${productTitle}</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Количество позиций</span>
-                                <span class="info-value">${data.positions_count || 1}</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Общий вес</span>
-                                <span class="info-value">${formatNumber(data.weight)} кг</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Срок поставки</span>
-                                <span class="info-value">${formatNumber(data.delivery_time)} дней</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Автор</span>
-                                <span class="info-value">${authorDisplay}</span>
+                        </div>
+
+                        <!-- Финансовые показатели -->
+                        <div class="indicators-group">
+                            <div class="group-title">Финансовые показатели</div>
+                            <div class="indicators-grid financial-grid">
+                                <div class="indicator-item financial-item">
+                                    <span class="indicator-label">Общий вес</span>
+                                    <span class="indicator-value">${formatNumber(totalWeight)} кг</span>
+                                </div>
+                                <div class="indicator-item financial-item">
+                                    <span class="indicator-label">Логистика</span>
+                                    <span class="indicator-value">${formatCurrency(data.logistics)} ₽</span>
+                                </div>
+                                <div class="indicator-item financial-item highlight purchase">
+                                    <span class="indicator-label">Общая стоимость закупа</span>
+                                    <span class="indicator-value">${formatCurrency(totalPurchasePrice)} ₽</span>
+                                </div>
+                                <div class="indicator-item financial-item highlight sale">
+                                    <span class="indicator-label">Общая стоимость продажи</span>
+                                    <span class="indicator-value price-final">${formatCurrency(totalSalePrice)} ₽</span>
+                                </div>
+                                <div class="indicator-item financial-item margin">
+                                    <span class="indicator-label">Маржа</span>
+                                    <span class="indicator-value margin-value ${data.margin_percent > 20 ? 'margin-good' : 'margin-warning'}">${format(data.margin_percent, '0')}%</span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    ${renderPositions()}
-
-                    <!-- Финансовые показатели -->
-                    <div class="info-section">
-                        <div class="section-header">
-                            <h4 class="section-title">
-                                <span class="section-icon">{{ sidebar_icon('dollar-sign')|safe }}</span>
-                                Финансовые показатели
-                            </h4>
-                        </div>
-                        <div class="info-grid">
-                            <div class="info-item">
-                                <span class="info-label">Логистика</span>
-                                <span class="info-value">${formatCurrency(data.logistics)} ₽</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Маржа</span>
-                                <span class="info-value margin-value ${data.margin_percent > 20 ? 'margin-good' : 'margin-warning'}">${format(data.margin_percent, '0')}%</span>
-                            </div>
-                            <div class="info-item highlight">
-                                <span class="info-label">Цена за единицу</span>
-                                <span class="info-value price-final">${formatCurrency(data.final_price)} ₽</span>
-                            </div>
-                            ${data.total_general_price ? `
-                            <div class="info-item highlight">
-                                <span class="info-label">Общая стоимость</span>
-                                <span class="info-value price-final">${formatCurrency(data.total_general_price)} ₽</span>
-                            </div>
-                            ` : ''}
-                        </div>
-                    </div>
-
-                    <!-- Дополнительные данные -->
-                    <div class="info-section">
-                        <div class="section-header">
-                            <h4 class="section-title">
-                                <span class="section-icon">{{ sidebar_icon('file-text')|safe }}</span>
-                                Дополнительные данные
-                            </h4>
-                        </div>
-                        <div class="info-grid">
-                            <div class="info-item">
-                                <span class="info-label">Номер тендера</span>
-                                <span class="info-value">${format(data.tender_number)}</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Номер чертежа</span>
-                                <span class="info-value">${format(data.drawing_number)}</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Материал</span>
-                                <span class="info-value">${format(data.material)}</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Адрес доставки</span>
-                                <span class="info-value">${format(data.delivery_address)}</span>
-                            </div>
-                        </div>
-                    </div>
+                    ${renderPositionsTable()}
 
                     <!-- Комментарий -->
                     ${data.comment ? `
@@ -545,7 +593,14 @@
                     <td>${Number(record.total_general_price || 0).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td>${Number(record.final_price || 0).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td>${Number(record.margin_percent || 0).toLocaleString('ru-RU', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</td>
-                    <td><button class="btn btn-link view-details" data-id="${record.id}">Подробнее</button></td>
+                    <td class="table-actions">
+                        <a href="/load_generation/${record.id}" class="btn btn-outline" title="Повторить генерацию">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width: 16px; height: 16px;"><path d="M3 3v5h5"></path><path d="M3.05 13A9 9 0 1 0 6 4.6L3 8"></path><path d="M12 7v5l3 3"></path></svg>
+                        </a>
+                        <button class="btn btn-outline view-details" data-id="${record.id}" title="Показать детали">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width: 16px; height: 16px;"><path d="m12 2 8 4-8 4-8-4 8-4z"></path><path d="m4 10 8 4 8-4"></path><path d="m4 18 8 4 8-4"></path></svg>
+                        </button>
+                    </td>
                 </tr>
             `).join('');
 
@@ -564,7 +619,7 @@
                                 <th>Продажа</th>
                                 <th>Цена ед.</th>
                                 <th>Маржа, %</th>
-                                <th></th>
+                                <th>Действия</th>
                             </tr>
                         </thead>
                         <tbody>${rows}</tbody>

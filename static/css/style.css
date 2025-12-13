@@ -791,9 +791,26 @@ h1 {
 .order-title {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
+  justify-content: flex-start;
+  gap: 12px;
   width: 100%;
+}
+
+.instruction-title-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: var(--primary);
+  margin-top: 2px;
+}
+
+.instruction-title-icon svg {
+  width: 100%;
+  height: 100%;
+  stroke: currentColor;
 }
 
 .order-number {
@@ -843,6 +860,181 @@ h1 {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+}
+
+.instruction-content {
+  margin: 1.5rem 0;
+  padding: 1.5rem;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.instruction-text-content {
+  margin: 0;
+  padding: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: var(--font-family);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  overflow-x: auto;
+}
+
+.instruction-parsed-content {
+  margin: 1.5rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.instruction-section {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  transition: box-shadow var(--transition), border-color var(--transition);
+}
+
+.instruction-section:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
+}
+
+.instruction-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+}
+
+.instruction-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  color: var(--primary);
+}
+
+.instruction-icon svg {
+  width: 100%;
+  height: 100%;
+  stroke: currentColor;
+}
+
+.instruction-section-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.instruction-section-content {
+  padding: 1.25rem;
+  color: var(--foreground);
+}
+
+.instruction-section-content p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.instruction-section-goal .instruction-icon {
+  color: #3b82f6;
+}
+
+.instruction-section-steps .instruction-icon {
+  color: #10b981;
+}
+
+.instruction-section-result .instruction-icon {
+  color: #22c55e;
+}
+
+.instruction-section-errors .instruction-icon {
+  color: #ef4444;
+}
+
+.instruction-section-checklist .instruction-icon {
+  color: #8b5cf6;
+}
+
+.instruction-step {
+  margin-bottom: 1.25rem;
+}
+
+.instruction-step:last-child {
+  margin-bottom: 0;
+}
+
+.instruction-step-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.instruction-step-number {
+  font-weight: 600;
+  color: var(--primary);
+  flex-shrink: 0;
+  min-width: 1.5rem;
+}
+
+.instruction-step-title {
+  font-weight: 600;
+  color: var(--foreground);
+  line-height: 1.5;
+}
+
+.instruction-step-items {
+  margin: 0.5rem 0 0 2rem;
+  padding: 0;
+  list-style: none;
+}
+
+.instruction-step-items li {
+  position: relative;
+  padding-left: 1.25rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.6;
+  color: var(--muted-foreground);
+}
+
+.instruction-step-items li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: var(--primary);
+  font-weight: bold;
+  font-size: 1.2em;
+}
+
+.instruction-step-items li:last-child {
+  margin-bottom: 0;
+}
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+.btn-icon svg {
+  width: 100%;
+  height: 100%;
+  stroke: currentColor;
 }
 
 .orders-files-container {
@@ -2074,6 +2266,243 @@ button[disabled] {
   }
 }
 
+/* Контейнер деталей модального окна */
+.modal-details-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Основные показатели */
+.main-indicators {
+  padding: 20px;
+}
+
+.indicators-group {
+  margin-bottom: 24px;
+}
+
+.indicators-group:last-child {
+  margin-bottom: 0;
+}
+
+.group-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--border);
+}
+
+.main-indicators .indicators-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.financial-grid {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.indicator-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: var(--card);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  transition: all var(--transition);
+}
+
+.indicator-item:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.indicator-item.financial-item {
+  background: linear-gradient(135deg, var(--card) 0%, var(--muted) 100%);
+}
+
+.indicator-item.highlight {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  border-color: var(--primary);
+  box-shadow: var(--shadow-md);
+}
+
+.indicator-item.highlight.purchase {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%);
+  border-left: 4px solid #3b82f6;
+}
+
+.indicator-item.highlight.sale {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%);
+  border-left: 4px solid #22c55e;
+}
+
+.indicator-item.margin {
+  background: linear-gradient(135deg, var(--card) 0%, var(--muted) 100%);
+}
+
+.indicator-label {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+}
+
+.indicator-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--foreground);
+  line-height: 1.3;
+}
+
+.indicator-item.highlight .indicator-label {
+  color: var(--foreground);
+  opacity: 0.9;
+}
+
+.indicator-item.highlight .indicator-value {
+  font-size: 1.4rem;
+  color: var(--primary);
+}
+
+.indicator-item.highlight.sale .indicator-value {
+  color: #22c55e;
+}
+
+.indicator-item.highlight.purchase .indicator-value {
+  color: #3b82f6;
+}
+
+/* Таблица позиций */
+.positions-table-section {
+  grid-column: 1 / -1;
+}
+
+.table-responsive {
+  overflow-x: auto;
+  margin-top: 12px;
+}
+
+.positions-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.9rem;
+  background: var(--card);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.positions-table thead {
+  background: linear-gradient(135deg, var(--muted) 0%, var(--card) 100%);
+  border-bottom: 2px solid var(--border);
+}
+
+.positions-table th {
+  padding: 14px 12px;
+  text-align: left;
+  font-weight: 700;
+  color: var(--foreground);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  background: inherit;
+  z-index: 1;
+}
+
+.positions-table th.text-center {
+  text-align: center;
+}
+
+.positions-table th.text-right {
+  text-align: right;
+}
+
+.positions-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--foreground);
+  background: var(--card);
+  transition: background var(--transition);
+}
+
+.positions-table tbody tr {
+  transition: all var(--transition);
+}
+
+.positions-table tbody tr:hover {
+  background: var(--muted);
+  transform: scale(1.01);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.positions-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.positions-table tbody tr:nth-child(even) {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.positions-table tbody tr:nth-child(even):hover {
+  background: var(--muted);
+}
+
+.positions-table td.text-center {
+  text-align: center;
+}
+
+.positions-table td.text-right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+
+.positions-table td.text-center {
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+
+.positions-table tbody td:last-child {
+  font-weight: 700;
+  color: var(--primary);
+  font-size: 1rem;
+}
+
+/* Адаптивность таблицы позиций */
+@media (max-width: 768px) {
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .positions-table {
+    font-size: 0.8rem;
+    min-width: 1200px;
+  }
+
+  .positions-table th,
+  .positions-table td {
+    padding: 8px 6px;
+  }
+
+  .main-indicators .indicators-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Секции информации */
 .info-section {
   background: var(--card);
@@ -2179,14 +2608,23 @@ button[disabled] {
   font-weight: 600;
 }
 
+.margin-value {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+}
+
 .margin-value.margin-good {
-  background: rgba(34, 197, 94, 0.1);
+  background: rgba(34, 197, 94, 0.15);
   color: rgb(34, 197, 94);
+  border: 1px solid rgba(34, 197, 94, 0.3);
 }
 
 .margin-value.margin-warning {
-  background: rgba(245, 158, 11, 0.1);
+  background: rgba(245, 158, 11, 0.15);
   color: rgb(245, 158, 11);
+  border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
 /* Секция комментариев */

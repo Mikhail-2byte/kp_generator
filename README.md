@@ -34,6 +34,7 @@ waitress-serve --call "app:create_app"
 - `templates/`, `static/`, `templates_docs/` — фронт, ресурсы и шаблоны документов
 - `config/` — JSON‑справочники и версии (`config/versions`)
 - `migrations/` — миграции Alembic
+- `scripts/` — утилиты управления (миграции, пользователи)
 - `tests/` — базовые тесты
 - `docs/` — документация и журнал изменений
 
@@ -63,10 +64,10 @@ waitress-serve --call "app:create_app"
 
 ## Миграции
 - Статус/применение:
-  - `python manage_migrations.py status`
-  - `python manage_migrations.py upgrade [revision]`
-  - `python manage_migrations.py downgrade <revision>`
-  - `python manage_migrations.py history [--verbose]`
+  - `python scripts/manage_migrations.py status`
+  - `python scripts/manage_migrations.py upgrade [revision]`
+  - `python scripts/manage_migrations.py downgrade <revision>`
+  - `python scripts/manage_migrations.py history [--verbose]`
 - Приложение при старте автоматически проверяет возможность применения и актуальность миграций Alembic; при несоответствии схема не запускается.
 
 ## Быстрые проверки

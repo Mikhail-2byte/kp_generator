@@ -1,5 +1,12 @@
 #!/usr/bin/env python
-"""Утилита для управления ролями пользователей в базе kp_generator.db."""
+"""
+Утилита для управления ролями пользователей в базе kp_generator.db.
+
+ВНИМАНИЕ: Этот скрипт устарел.
+Рекомендуется использовать: python scripts/manage_users.py set-role <username> <role>
+Для обратной совместимости скрипт сохранен, но новая функциональность
+добавляется только в scripts/manage_users.py
+"""
 
 from __future__ import annotations
 
@@ -10,7 +17,9 @@ from pathlib import Path
 from typing import Iterable
 
 
-DEFAULT_DB_PATH = Path(__file__).resolve().parent / "kp_generator.db"
+# Путь к базе данных относительно корня проекта (скрипт находится в scripts/)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+DEFAULT_DB_PATH = PROJECT_ROOT / "kp_generator.db"
 
 
 def get_connection(db_path: Path) -> sqlite3.Connection:

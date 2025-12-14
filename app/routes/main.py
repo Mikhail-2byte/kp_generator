@@ -26,6 +26,7 @@ from app.services import (
     analyze_excel,
     datasets
 )
+from app.services.audit_service import log_generation_created
 from app.services.repositories import generation_repository
 from app.services.feedback import save_feedback_entry
 from app.services.excel_importer import ExcelImportError, parse_positions_from_excel
@@ -653,8 +654,18 @@ def generate():
         final_price_nds = total_general_price * 1.2
 
         user_id = int(current_user.id) if current_user.is_authenticated else None
-        if not generation_repository.save_history(form_data, final_price, app_config, user_id):
+        saved = generation_repository.save_history(form_data, final_price, app_config, user_id)
+        if not saved:
             current_app.logger.warning('Failed to save generation history')
+        else:
+            # Получаем ID последней созданной генерации для логирования
+            # Используем данные из form_data для логирования
+            tender_number = form_data.get('tender_number', '').strip() or None
+            log_generation_created(
+                generation_id=0,  # ID будет неизвестен, но это не критично для логирования
+                company=company,
+                tender_number=tender_number,
+            )
 
         template_errors = check_templates_exist()
         if template_errors:

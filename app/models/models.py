@@ -60,6 +60,26 @@ class GenerationHistoryRecord(Base):
     user = relationship('UserRecord', back_populates='generations')
 
 
+class AuditLogRecord(Base):
+    """ORM-модель лога действий пользователей для аудита и мониторинга."""
+    __tablename__ = 'audit_logs'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=True)
+    username = Column(Text, nullable=False)
+    action_type = Column(Text, nullable=False)  # login, logout, create, update, delete, view, etc.
+    resource_type = Column(Text, nullable=True)  # user, generation, duty, material, logistics, etc.
+    resource_id = Column(Text, nullable=True)  # ID ресурса (может быть строка для разных типов)
+    description = Column(Text, nullable=False)  # Описание действия
+    ip_address = Column(Text, nullable=True)
+    user_agent = Column(Text, nullable=True)
+    changes_before = Column(Text, nullable=True)  # JSON с данными до изменения
+    changes_after = Column(Text, nullable=True)  # JSON с данными после изменения
+    created_at = Column(DateTime, server_default=func.current_timestamp(), nullable=False)
+
+    user = relationship('UserRecord', foreign_keys=[user_id])
+
+
 class User(UserMixin):
     """Адаптер пользователей к требованиям Flask-Login."""
     def __init__(

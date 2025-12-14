@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="content-container">
+    <div class="card page-actions">
+        <a href="{{ url_for('admin.admin_panel') }}" class="btn btn-outline">← Назад к админке</a>
+        <a href="{{ url_for('admin.audit_dashboard') }}" class="btn btn-outline">Дашборд</a>
+        <a href="{{ url_for('admin.audit_logs') }}?export=excel" class="btn btn-primary">Экспорт Excel</a>
+        <a href="{{ url_for('admin.audit_logs') }}?export=pdf" class="btn btn-primary">Экспорт PDF</a>
+    </div>
+
+    <div class="card">
+        <h2 class="section-title">Лог действий пользователей</h2>
+        
+        <!-- Фильтры -->
+        <form method="get" class="search-filters" style="margin-bottom: 20px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 10px;">
+                <div>
+                    <label for="username" class="field-label">Пользователь</label>
+                    <input type="text" id="username" name="username" value="{{ filters.username or '' }}" placeholder="Логин..." class="form-control">
+                </div>
+                <div>
+                    <label for="action_type" class="field-label">Тип действия</label>
+                    <select id="action_type" name="action_type" class="form-control">
+                        <option value="">Все</option>
+                        {% for action in action_types %}
+                        <option value="{{ action }}" {% if filters.action_type == action %}selected{% endif %}>{{ action }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="resource_type" class="field-label">Тип ресурса</label>
+                    <select id="resource_type" name="resource_type" class="form-control">
+                        <option value="">Все</option>
+                        {% for resource in resource_types %}
+                        <option value="{{ resource }}" {% if filters.resource_type == resource %}selected{% endif %}>{{ resource }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="date_from" class="field-label">Дата от</label>
+                    <input type="date" id="date_from" name="date_from" value="{{ filters.date_from or '' }}" class="form-control">
+                </div>
+                <div>
+                    <label for="date_to" class="field-label">Дата до</label>
+                    <input type="date" id="date_to" name="date_to" value="{{ filters.date_to or '' }}" class="form-control">
+                </div>
+                <div>
+                    <label for="search" class="field-label">Поиск</label>
+                    <input type="text" id="search" name="search" value="{{ filters.search or '' }}" placeholder="Описание..." class="form-control">
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button type="submit" class="btn btn-primary">Применить фильтры</button>
+                <a href="{{ url_for('admin.audit_logs') }}" class="btn btn-outline">Сбросить</a>
+            </div>
+        </form>
+
+        <!-- Таблица логов -->
+        <div class="history-table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Время</th>
+                        <th>Пользователь</th>
+                        <th>Действие</th>
+                        <th>Ресурс</th>
+                        <th>Описание</th>
+                        <th>IP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs_data['items'] %}
+                    <tr>
+                        <td>{{ log.id }}</td>
+                        <td>{{ log.created_at }}</td>
+                        <td>{{ log.username }}</td>
+                        <td>
+                            <span class="badge {% if log.action_type == 'delete' %}badge-danger{% elif log.action_type == 'create' %}badge-success{% elif log.action_type == 'update' %}badge-warning{% else %}badge-secondary{% endif %}">
+                                {{ log.action_type }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if log.resource_type %}
+                            <span class="badge badge-info">{{ log.resource_type }}</span>
+                            {% if log.resource_id %}
+                            <span class="text-muted">(ID: {{ log.resource_id }})</span>
+                            {% endif %}
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ log.description }}</td>
+                        <td>{{ log.ip_address or '—' }}</td>
+                    </tr>
+                    {% if log.changes_before or log.changes_after %}
+                    <tr class="changes-row">
+                        <td colspan="7" style="padding: 10px; background-color: #f8f9fa; font-size: 0.9em;">
+                            {% if log.changes_before %}
+                            <div><strong>До:</strong> <pre style="display: inline; margin: 0;">{{ log.changes_before | tojson(indent=2) }}</pre></div>
+                            {% endif %}
+                            {% if log.changes_after %}
+                            <div><strong>После:</strong> <pre style="display: inline; margin: 0;">{{ log.changes_after | tojson(indent=2) }}</pre></div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center muted-text">Нет записей</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Пагинация -->
+        {% if logs_data['pagination']['pages'] > 1 %}
+        <div class="pagination" style="margin-top: 20px;">
+            {% set pagination = logs_data['pagination'] %}
+            {% set current_page = pagination['page'] %}
+            {% set total_pages = pagination['pages'] %}
+            
+            {% if current_page > 1 %}
+            <a href="?page={{ current_page - 1 }}{% if filters.username %}&username={{ filters.username }}{% endif %}{% if filters.action_type %}&action_type={{ filters.action_type }}{% endif %}{% if filters.resource_type %}&resource_type={{ filters.resource_type }}{% endif %}{% if filters.date_from %}&date_from={{ filters.date_from }}{% endif %}{% if filters.date_to %}&date_to={{ filters.date_to }}{% endif %}{% if filters.search %}&search={{ filters.search }}{% endif %}" class="btn btn-outline">← Назад</a>
+            {% endif %}
+            
+            <span class="pagination-info">Страница {{ current_page }} из {{ total_pages }} (всего: {{ pagination['total'] }})</span>
+            
+            {% if current_page < total_pages %}
+            <a href="?page={{ current_page + 1 }}{% if filters.username %}&username={{ filters.username }}{% endif %}{% if filters.action_type %}&action_type={{ filters.action_type }}{% endif %}{% if filters.resource_type %}&resource_type={{ filters.resource_type }}{% endif %}{% if filters.date_from %}&date_from={{ filters.date_from }}{% endif %}{% if filters.date_to %}&date_to={{ filters.date_to }}{% endif %}{% if filters.search %}&search={{ filters.search }}{% endif %}" class="btn btn-outline">Вперед →</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

@@ -1,4 +1,6 @@
-from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
+from datetime import datetime, timedelta
+
+from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, url_for
 
 from flask_login import current_user
 from werkzeug.security import generate_password_hash
@@ -16,8 +18,15 @@ from app.presentation.forms import (
 )
 from app.auth.security import admin_required
 from app.services import datasets
+from app.services.audit_service import log_create, log_delete, log_update
 from app.services.content_manager import ContentManager, build_manager
-from app.services.repositories import admin_stats_repository, user_repository
+from app.services.export_service import (
+    create_excel_response,
+    create_pdf_response,
+    export_audit_logs_to_excel,
+    export_audit_logs_to_pdf,
+)
+from app.services.repositories import admin_stats_repository, audit_log_repository, user_repository
 from app.presentation.ui import build_context
 
 
@@ -108,6 +117,12 @@ def admin_panel():
                 duty_items.append(new_item)
                 datasets.save_duty_rates(duty_items, actor=_current_actor())
                 datasets.refresh_duty_rates()
+                log_create(
+                    resource_type='duty',
+                    resource_id=None,
+                    description=f'Добавлена позиция пошлины: {product} ({category})',
+                    data={'product': product, 'category': category, 'duty_percent': duty_percent},
+                )
                 flash('Позиция пошлины добавлена.', 'success')
                 return redirect(url_for('admin.admin_panel'))
             flash('Исправьте ошибки в разделе пошлин.', 'danger')
@@ -278,8 +293,16 @@ def manage_duty():
                         'category_search': category.lower(),
                         'duty_search': str(duty_percent).lower()
                     }
+                    old_item = duty_items[index].copy()
                     datasets.save_duty_rates(duty_items, actor=_current_actor())
                     datasets.refresh_duty_rates()
+                    log_update(
+                        resource_type='duty',
+                        resource_id=str(index),
+                        description=f'Обновлена позиция пошлины: {product}',
+                        data_before=old_item,
+                        data_after={'product': product, 'category': category, 'duty_percent': duty_percent},
+                    )
                     flash('Позиция пошлины обновлена.', 'success')
                 else:
                     flash('Не удалось найти позицию для редактирования.', 'danger')
@@ -724,6 +747,12 @@ def manage_users():
                         contact_info=user_form.contact_info.data.strip() if user_form.contact_info.data else None
                     )
                     if new_user:
+                        log_create(
+                            resource_type='user',
+                            resource_id=str(new_user.id) if new_user.id else None,
+                            description=f'Админ создал пользователя: {username} (роль: {user_form.role.data.strip().lower()})',
+                            data={'username': username, 'role': user_form.role.data.strip().lower(), 'last_name': user_form.last_name.data, 'first_name': user_form.first_name.data},
+                        )
                         flash('Пользователь успешно создан.', 'success')
                         return redirect(url_for('admin.manage_users'))
                     flash('Не удалось создать пользователя.', 'danger')
@@ -766,9 +795,19 @@ def manage_users():
                                 password_hash=password_hash
                             )
                             
+                            # Сохраняем данные до изменения для логирования
+                            data_before = {
+                                'username': user.username,
+                                'last_name': user.last_name,
+                                'first_name': user.first_name,
+                                'role': user.role,
+                                'contact_info': user.contact_info,
+                            }
+                            
                             # Обновляем роль отдельно, если нужно
                             new_role = request.form.get('user-role', 'user').strip().lower() or 'user'
-                            if new_role != user.role:
+                            role_changed = new_role != user.role
+                            if role_changed:
                                 from app.database.database import _session_scope
                                 from app.models.models import UserRecord
                                 with _session_scope() as session:
@@ -777,6 +816,21 @@ def manage_users():
                                         user_record.role = new_role
                             
                             if updated:
+                                data_after = {
+                                    'username': username,
+                                    'last_name': request.form.get('user-last_name', '').strip() or None,
+                                    'first_name': request.form.get('user-first_name', '').strip() or None,
+                                    'role': new_role,
+                                    'contact_info': request.form.get('user-contact_info', '').strip() or None,
+                                    'password_changed': bool(password),
+                                }
+                                log_update(
+                                    resource_type='user',
+                                    resource_id=str(user_id),
+                                    description=f'Админ обновил пользователя: {username}' + (f' (роль изменена: {user.role} -> {new_role})' if role_changed else ''),
+                                    data_before=data_before,
+                                    data_after=data_after,
+                                )
                                 flash('Пользователь успешно обновлён.', 'success')
                                 return redirect(url_for('admin.manage_users'))
                             flash('Не удалось обновить пользователя.', 'danger')
@@ -790,7 +844,19 @@ def manage_users():
                 elif str(user.id) == str(current_user.id):
                     flash('Нельзя удалить самого себя.', 'danger')
                 else:
+                    user_data = {
+                        'username': user.username,
+                        'last_name': user.last_name,
+                        'first_name': user.first_name,
+                        'role': user.role,
+                    }
                     if user_repository.delete(user_id):
+                        log_delete(
+                            resource_type='user',
+                            resource_id=str(user_id),
+                            description=f'Админ удалил пользователя: {user.username}',
+                            data=user_data,
+                        )
                         flash('Пользователь успешно удалён.', 'info')
                         return redirect(url_for('admin.manage_users'))
                     flash('Не удалось удалить пользователя.', 'danger')
@@ -811,6 +877,13 @@ def manage_users():
                         contact_info=user.contact_info,
                         password_hash=password_hash
                     ):
+                        log_update(
+                            resource_type='user',
+                            resource_id=str(user_id),
+                            description=f'Админ сбросил пароль пользователя: {user.username}',
+                            data_before={'password': '***'},
+                            data_after={'password': '***', 'password_reset': True},
+                        )
                         flash('Пароль успешно сброшен.', 'success')
                         return redirect(url_for('admin.manage_users'))
                     flash('Не удалось сбросить пароль.', 'danger')
@@ -832,7 +905,15 @@ def manage_users():
                     with _session_scope() as session:
                         user_record = session.query(UserRecord).filter(UserRecord.id == int(user_id)).one_or_none()
                         if user_record:
+                            old_role = user_record.role
                             user_record.role = new_role
+                            log_update(
+                                resource_type='user',
+                                resource_id=str(user_id),
+                                description=f'Админ изменил роль пользователя {user.username}: {old_role} -> {new_role}',
+                                data_before={'role': old_role},
+                                data_after={'role': new_role},
+                            )
                             flash(f'Роль пользователя изменена на "{new_role}".', 'success')
                             return redirect(url_for('admin.manage_users'))
                         flash('Не удалось изменить роль.', 'danger')
@@ -850,3 +931,221 @@ def manage_users():
             role_filter=role_filter,
         )
     )
+
+
+@admin_bp.route('/admin/audit')
+@admin_required
+def audit_dashboard():
+    """Дашборд с метриками активности пользователей."""
+    # Получаем данные для графиков
+    daily_activity = audit_log_repository.get_daily_activity(days=30)
+    action_stats = audit_log_repository.get_action_stats(days=30)
+    top_users = audit_log_repository.get_top_users(limit=10, days=30)
+    popular_actions = audit_log_repository.get_popular_actions(limit=10, days=30)
+
+    # Общая статистика
+    total_actions = sum(item['count'] for item in daily_activity)
+    unique_users = len(top_users)
+
+    return render_template(
+        'admin/audit_dashboard.html',
+        **build_context(
+            'admin_audit',
+            'Мониторинг действий',
+            daily_activity=daily_activity,
+            action_stats=action_stats,
+            top_users=top_users,
+            popular_actions=popular_actions,
+            total_actions=total_actions,
+            unique_users=unique_users,
+        )
+    )
+
+
+@admin_bp.route('/admin/audit/logs')
+@admin_required
+def audit_logs():
+    """Детальный лог действий с фильтрами и пагинацией."""
+    # Проверка экспорта
+    export_format = request.args.get('export', '').strip().lower()
+    if export_format in ('excel', 'pdf'):
+        # Применяем те же фильтры для экспорта
+        user_id = request.args.get('user_id', '').strip() or None
+        if user_id:
+            try:
+                user_id = int(user_id)
+            except ValueError:
+                user_id = None
+
+        username = request.args.get('username', '').strip() or None
+        action_type = request.args.get('action_type', '').strip() or None
+        resource_type = request.args.get('resource_type', '').strip() or None
+        date_from_str = request.args.get('date_from', '').strip() or None
+        date_to_str = request.args.get('date_to', '').strip() or None
+        search = request.args.get('search', '').strip() or None
+
+        date_from = None
+        date_to = None
+        if date_from_str:
+            try:
+                date_from = datetime.strptime(date_from_str, '%Y-%m-%d')
+            except ValueError:
+                pass
+        if date_to_str:
+            try:
+                date_to = datetime.strptime(date_to_str, '%Y-%m-%d')
+                date_to = date_to.replace(hour=23, minute=59, second=59)
+            except ValueError:
+                pass
+
+        # Получаем все логи без пагинации для экспорта
+        logs_data = audit_log_repository.get_logs(
+            page=1,
+            per_page=10000,  # Большое значение для получения всех записей
+            user_id=user_id,
+            username=username,
+            action_type=action_type,
+            resource_type=resource_type,
+            date_from=date_from,
+            date_to=date_to,
+            search=search,
+        )
+
+        if export_format == 'excel':
+            try:
+                buffer = export_audit_logs_to_excel(logs_data)
+                return create_excel_response(buffer)
+            except RuntimeError as e:
+                flash(f'Ошибка экспорта в Excel: {str(e)}', 'danger')
+                return redirect(url_for('admin.audit_logs'))
+        elif export_format == 'pdf':
+            try:
+                buffer = export_audit_logs_to_pdf(logs_data)
+                return create_pdf_response(buffer)
+            except RuntimeError as e:
+                flash(f'Ошибка экспорта в PDF: {str(e)}', 'danger')
+                return redirect(url_for('admin.audit_logs'))
+
+    # Параметры фильтрации
+    try:
+        page = int(request.args.get('page', '1'))
+    except ValueError:
+        page = 1
+
+    try:
+        per_page = int(request.args.get('per_page', '50'))
+    except ValueError:
+        per_page = 50
+
+    user_id = request.args.get('user_id', '').strip() or None
+    if user_id:
+        try:
+            user_id = int(user_id)
+        except ValueError:
+            user_id = None
+
+    username = request.args.get('username', '').strip() or None
+    action_type = request.args.get('action_type', '').strip() or None
+    resource_type = request.args.get('resource_type', '').strip() or None
+    date_from_str = request.args.get('date_from', '').strip() or None
+    date_to_str = request.args.get('date_to', '').strip() or None
+    search = request.args.get('search', '').strip() or None
+
+    # Парсинг дат
+    date_from = None
+    date_to = None
+    if date_from_str:
+        try:
+            date_from = datetime.strptime(date_from_str, '%Y-%m-%d')
+        except ValueError:
+            pass
+    if date_to_str:
+        try:
+            date_to = datetime.strptime(date_to_str, '%Y-%m-%d')
+            # Добавляем время конца дня
+            date_to = date_to.replace(hour=23, minute=59, second=59)
+        except ValueError:
+            pass
+
+    # Получаем логи
+    logs_data = audit_log_repository.get_logs(
+        page=page,
+        per_page=per_page,
+        user_id=user_id,
+        username=username,
+        action_type=action_type,
+        resource_type=resource_type,
+        date_from=date_from,
+        date_to=date_to,
+        search=search,
+    )
+
+    # Получаем список пользователей для фильтра
+    users_list = user_repository.get_users_list(page=1, per_page=1000, search=None, role_filter=None)
+    users = users_list.get('items', [])
+
+    # Уникальные типы действий и ресурсов для фильтров
+    action_types = ['login', 'logout', 'create', 'update', 'delete', 'view', 'export']
+    resource_types = ['user', 'generation', 'duty', 'material', 'logistics', 'order', 'template', 'instruction']
+
+    return render_template(
+        'admin/audit_logs.html',
+        **build_context(
+            'admin_audit_logs',
+            'Лог действий',
+            logs_data=logs_data,
+            users=users,
+            action_types=action_types,
+            resource_types=resource_types,
+            filters={
+                'user_id': user_id,
+                'username': username,
+                'action_type': action_type,
+                'resource_type': resource_type,
+                'date_from': date_from_str,
+                'date_to': date_to_str,
+                'search': search,
+            },
+        )
+    )
+
+
+@admin_bp.route('/admin/audit/api/daily-activity')
+@admin_required
+def api_daily_activity():
+    """API endpoint для данных графика активности по дням."""
+    try:
+        days = int(request.args.get('days', '30'))
+    except ValueError:
+        days = 30
+
+    daily_activity = audit_log_repository.get_daily_activity(days=days)
+    return jsonify(daily_activity)
+
+
+@admin_bp.route('/admin/audit/api/action-distribution')
+@admin_required
+def api_action_distribution():
+    """API endpoint для данных распределения по типам действий."""
+    try:
+        days = int(request.args.get('days', '30'))
+    except ValueError:
+        days = 30
+
+    action_stats = audit_log_repository.get_action_stats(days=days)
+    return jsonify(action_stats)
+
+
+@admin_bp.route('/admin/audit/api/user-activity')
+@admin_required
+def api_user_activity():
+    """API endpoint для данных активности по пользователям."""
+    try:
+        limit = int(request.args.get('limit', '10'))
+        days = int(request.args.get('days', '30'))
+    except ValueError:
+        limit = 10
+        days = 30
+
+    top_users = audit_log_repository.get_top_users(limit=limit, days=days)
+    return jsonify(top_users)

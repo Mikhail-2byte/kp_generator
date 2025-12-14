@@ -1,9 +1,14 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+import json
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
+from sqlalchemy import func, and_, or_
 
 from app.database import DatabaseService, database_service
-from app.models.models import User
+from app.database.database import _session_scope
+from app.models.models import AuditLogRecord, User
 
 
 class UserRepository:
@@ -134,15 +139,244 @@ class AdminStatsRepository:
         return self._db.get_admin_user_activity(limit)
 
 
+class AuditLogRepository:
+    """Репозиторий для работы с логами аудита действий пользователей."""
+
+    def create_log(
+        self,
+        user_id: Optional[int],
+        username: str,
+        action_type: str,
+        description: str,
+        resource_type: Optional[str] = None,
+        resource_id: Optional[str] = None,
+        ip_address: Optional[str] = None,
+        user_agent: Optional[str] = None,
+        changes_before: Optional[Dict[str, Any]] = None,
+        changes_after: Optional[Dict[str, Any]] = None,
+    ) -> bool:
+        """Создает запись в логе аудита."""
+        try:
+            with _session_scope() as session:
+                changes_before_json = json.dumps(changes_before, ensure_ascii=False) if changes_before else None
+                changes_after_json = json.dumps(changes_after, ensure_ascii=False) if changes_after else None
+
+                log_record = AuditLogRecord(
+                    user_id=user_id,
+                    username=username,
+                    action_type=action_type,
+                    resource_type=resource_type,
+                    resource_id=resource_id,
+                    description=description,
+                    ip_address=ip_address,
+                    user_agent=user_agent,
+                    changes_before=changes_before_json,
+                    changes_after=changes_after_json,
+                )
+                session.add(log_record)
+                return True
+        except Exception:
+            return False
+
+    def get_logs(
+        self,
+        *,
+        page: int = 1,
+        per_page: int = 50,
+        user_id: Optional[int] = None,
+        username: Optional[str] = None,
+        action_type: Optional[str] = None,
+        resource_type: Optional[str] = None,
+        date_from: Optional[datetime] = None,
+        date_to: Optional[datetime] = None,
+        search: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Возвращает список логов с пагинацией и фильтрами."""
+        with _session_scope() as session:
+            query = session.query(AuditLogRecord)
+
+            # Применяем фильтры
+            if user_id is not None:
+                query = query.filter(AuditLogRecord.user_id == user_id)
+            if username:
+                query = query.filter(AuditLogRecord.username.ilike(f'%{username}%'))
+            if action_type:
+                query = query.filter(AuditLogRecord.action_type == action_type)
+            if resource_type:
+                query = query.filter(AuditLogRecord.resource_type == resource_type)
+            if date_from:
+                query = query.filter(AuditLogRecord.created_at >= date_from)
+            if date_to:
+                query = query.filter(AuditLogRecord.created_at <= date_to)
+            if search:
+                search_pattern = f'%{search}%'
+                query = query.filter(
+                    or_(
+                        AuditLogRecord.description.ilike(search_pattern),
+                        AuditLogRecord.username.ilike(search_pattern),
+                    )
+                )
+
+            # Подсчет общего количества
+            total = query.count()
+
+            # Пагинация
+            offset = (page - 1) * per_page
+            logs = query.order_by(AuditLogRecord.created_at.desc()).offset(offset).limit(per_page).all()
+
+            # Форматирование результатов
+            items = []
+            for log in logs:
+                changes_before_dict = None
+                changes_after_dict = None
+                try:
+                    if log.changes_before:
+                        changes_before_dict = json.loads(log.changes_before)
+                    if log.changes_after:
+                        changes_after_dict = json.loads(log.changes_after)
+                except (json.JSONDecodeError, TypeError):
+                    pass
+
+                items.append({
+                    'id': log.id,
+                    'user_id': log.user_id,
+                    'username': log.username,
+                    'action_type': log.action_type,
+                    'resource_type': log.resource_type,
+                    'resource_id': log.resource_id,
+                    'description': log.description,
+                    'ip_address': log.ip_address,
+                    'user_agent': log.user_agent,
+                    'changes_before': changes_before_dict,
+                    'changes_after': changes_after_dict,
+                    'created_at': (
+                        log.created_at.strftime('%Y-%m-%d %H:%M:%S')
+                        if log.created_at and hasattr(log.created_at, 'strftime')
+                        else (str(log.created_at) if log.created_at else None)
+                    ),
+                })
+
+            total_pages = (total + per_page - 1) // per_page if per_page > 0 else 1
+
+            return {
+                'items': items,
+                'pagination': {
+                    'page': page,
+                    'per_page': per_page,
+                    'total': total,
+                    'pages': max(total_pages, 1),
+                },
+            }
+
+    def get_daily_activity(self, days: int = 30) -> List[Dict[str, Any]]:
+        """Возвращает активность по дням за указанный период."""
+        with _session_scope() as session:
+            date_from = datetime.now() - timedelta(days=days)
+            query = (
+                session.query(
+                    func.date(AuditLogRecord.created_at).label('date'),
+                    func.count(AuditLogRecord.id).label('count'),
+                )
+                .filter(AuditLogRecord.created_at >= date_from)
+                .group_by(func.date(AuditLogRecord.created_at))
+                .order_by(func.date(AuditLogRecord.created_at))
+            )
+            results = query.all()
+
+            return [
+                {
+                    'date': str(row.date) if row.date else None,
+                    'count': row.count,
+                }
+                for row in results
+            ]
+
+    def get_action_stats(self, days: int = 30) -> List[Dict[str, Any]]:
+        """Возвращает статистику по типам действий."""
+        with _session_scope() as session:
+            date_from = datetime.now() - timedelta(days=days)
+            query = (
+                session.query(
+                    AuditLogRecord.action_type,
+                    func.count(AuditLogRecord.id).label('count'),
+                )
+                .filter(AuditLogRecord.created_at >= date_from)
+                .group_by(AuditLogRecord.action_type)
+                .order_by(func.count(AuditLogRecord.id).desc())
+            )
+            results = query.all()
+
+            return [
+                {
+                    'action_type': row.action_type,
+                    'count': row.count,
+                }
+                for row in results
+            ]
+
+    def get_top_users(self, limit: int = 10, days: int = 30) -> List[Dict[str, Any]]:
+        """Возвращает топ активных пользователей."""
+        with _session_scope() as session:
+            date_from = datetime.now() - timedelta(days=days)
+            query = (
+                session.query(
+                    AuditLogRecord.username,
+                    func.count(AuditLogRecord.id).label('count'),
+                )
+                .filter(AuditLogRecord.created_at >= date_from)
+                .group_by(AuditLogRecord.username)
+                .order_by(func.count(AuditLogRecord.id).desc())
+                .limit(limit)
+            )
+            results = query.all()
+
+            return [
+                {
+                    'username': row.username,
+                    'count': row.count,
+                }
+                for row in results
+            ]
+
+    def get_popular_actions(self, limit: int = 10, days: int = 30) -> List[Dict[str, Any]]:
+        """Возвращает популярные операции."""
+        return self.get_action_stats(days=days)[:limit]
+
+    def get_user_activity(self, user_id: int, days: int = 30) -> Dict[str, Any]:
+        """Возвращает активность конкретного пользователя."""
+        date_from = datetime.now() - timedelta(days=days)
+        logs_data = self.get_logs(
+            user_id=user_id,
+            date_from=date_from,
+            page=1,
+            per_page=1000,  # Большое значение для получения всех записей
+        )
+
+        # Группировка по типам действий
+        action_counts = {}
+        for item in logs_data['items']:
+            action_type = item['action_type']
+            action_counts[action_type] = action_counts.get(action_type, 0) + 1
+
+        return {
+            'total_actions': logs_data['pagination']['total'],
+            'action_breakdown': action_counts,
+            'recent_logs': logs_data['items'][:10],  # Последние 10 действий
+        }
+
+
 user_repository = UserRepository()
 generation_repository = GenerationRepository()
 admin_stats_repository = AdminStatsRepository()
+audit_log_repository = AuditLogRepository()
 
 __all__ = [
     'user_repository',
     'generation_repository',
     'admin_stats_repository',
+    'audit_log_repository',
     'UserRepository',
     'GenerationRepository',
     'AdminStatsRepository',
+    'AuditLogRepository',
 ]

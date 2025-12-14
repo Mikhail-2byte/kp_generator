@@ -12,6 +12,7 @@ from app.presentation.forms import (
     RegistrationForm
 )
 from app.presentation.ui import build_context
+from app.services.audit_service import log_create, log_delete, log_login, log_logout, log_update
 from app.services.repositories import user_repository
 
 
@@ -40,6 +41,7 @@ def profile():
                     login_user(user, remember=login_form.remember_me.data)
                     user_repository.record_login(user.id)
                     user.set_last_login_now()
+                    log_login(user.username, int(user.id) if user.id else None)
                     flash('Вы успешно вошли в систему.', 'success')
                     return redirect(url_for('auth.profile'))
                 flash('Неверный логин или пароль.', 'danger')
@@ -61,6 +63,13 @@ def profile():
                         login_user(user)
                         user_repository.record_login(user.id)
                         user.set_last_login_now()
+                        log_create(
+                            resource_type='user',
+                            resource_id=str(user.id) if user.id else None,
+                            description=f'Регистрация нового пользователя: {username}',
+                            data={'username': username, 'last_name': last_name, 'first_name': first_name},
+                        )
+                        log_login(user.username, int(user.id) if user.id else None)
                         flash('Аккаунт успешно создан.', 'success')
                         return redirect(url_for('auth.profile'))
                     flash('Не удалось создать пользователя. Попробуйте позже.', 'danger')
@@ -81,6 +90,13 @@ def profile():
                 if existing_user and str(existing_user.id) != str(current_user.id):
                     update_form.username.errors.append('Пользователь с таким логином уже существует.')
                 else:
+                    # Сохраняем данные до изменения для логирования
+                    data_before = {
+                        'username': current_user.username,
+                        'last_name': current_user.last_name,
+                        'first_name': current_user.first_name,
+                    }
+                    
                     password_hash = generate_password_hash(new_password) if new_password else None
                     updated = user_repository.update_profile(
                         current_user.id,
@@ -91,6 +107,19 @@ def profile():
                         password_hash
                     )
                     if updated:
+                        data_after = {
+                            'username': username,
+                            'last_name': last_name,
+                            'first_name': first_name,
+                            'password_changed': bool(new_password),
+                        }
+                        log_update(
+                            resource_type='user',
+                            resource_id=str(current_user.id),
+                            description=f'Обновление профиля пользователя: {username}',
+                            data_before=data_before,
+                            data_after=data_after,
+                        )
                         current_user.username = username
                         current_user.last_name = last_name
                         current_user.first_name = first_name
@@ -100,7 +129,20 @@ def profile():
                     show_update_form = True
         elif current_user.is_authenticated and delete_form and delete_form.submit_delete.data:
             if delete_form.validate():
-                if user_repository.delete(current_user.id):
+                user_id = current_user.id
+                username = current_user.username
+                user_data = {
+                    'username': username,
+                    'last_name': current_user.last_name,
+                    'first_name': current_user.first_name,
+                }
+                if user_repository.delete(user_id):
+                    log_delete(
+                        resource_type='user',
+                        resource_id=str(user_id),
+                        description=f'Удаление аккаунта пользователя: {username}',
+                        data=user_data,
+                    )
                     logout_user()
                     flash('Аккаунт и связанные данные удалены.', 'info')
                     return redirect(url_for('auth.profile'))
@@ -110,6 +152,7 @@ def profile():
                 contact_info = (contact_form.contact_info.data or '').strip()
                 contact_form.contact_info.data = contact_info
 
+                data_before = {'contact_info': current_user.contact_info}
                 updated = user_repository.update_profile(
                     current_user.id,
                     current_user.username,  # сохраняем текущие значения
@@ -120,6 +163,13 @@ def profile():
                 )
                 
                 if updated:
+                    log_update(
+                        resource_type='user',
+                        resource_id=str(current_user.id),
+                        description=f'Обновление контактной информации пользователя: {current_user.username}',
+                        data_before=data_before,
+                        data_after={'contact_info': contact_info},
+                    )
                     current_user.contact_info = contact_info
                     flash('Контактная информация успешно обновлена.', 'success')
                     return redirect(url_for('auth.profile'))
@@ -222,6 +272,9 @@ def profile():
 @login_required
 def logout():
     """Завершает пользовательскую сессию и возвращает на страницу профиля."""
+    user_id = int(current_user.id) if current_user.id else None
+    username = current_user.username
     logout_user()
+    log_logout(username, user_id)
     flash('Вы вышли из системы.', 'info')
     return redirect(url_for('auth.profile'))

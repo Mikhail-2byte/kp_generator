@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="content-container">
+    <div class="card page-actions">
+        <a href="{{ url_for('admin.admin_panel') }}" class="btn btn-outline">← Назад к админке</a>
+        <a href="{{ url_for('admin.audit_logs') }}" class="btn btn-primary">Детальный лог</a>
+    </div>
+
+    <div class="card">
+        <h2 class="section-title">Общая статистика</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">{{ total_actions }}</div>
+                <div class="stat-label">Всего действий</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ unique_users }}</div>
+                <div class="stat-label">Активных пользователей</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2 class="section-title">Активность по дням (последние 30 дней)</h2>
+        <canvas id="dailyActivityChart" width="400" height="150"></canvas>
+    </div>
+
+    <div class="card">
+        <h2 class="section-title">Распределение по типам действий</h2>
+        <canvas id="actionDistributionChart" width="400" height="300"></canvas>
+    </div>
+
+    <div class="card">
+        <h2 class="section-title">Топ активных пользователей</h2>
+        <div class="stats-list">
+            {% for user in top_users %}
+            <div class="stats-row">
+                <span class="stats-name">{{ user.username }}</span>
+                <span class="stats-meta">{{ user.count }} действий</span>
+            </div>
+            {% else %}
+            <div class="muted-text">Нет данных.</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="card">
+        <h2 class="section-title">Популярные операции</h2>
+        <div class="stats-list">
+            {% for action in popular_actions %}
+            <div class="stats-row">
+                <span class="stats-name">{{ action.action_type }}</span>
+                <span class="stats-meta">{{ action.count }} раз</span>
+            </div>
+            {% else %}
+            <div class="muted-text">Нет данных.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // График активности по дням
+    const dailyData = {{ daily_activity | tojson }};
+    const dailyLabels = dailyData.map(item => item.date);
+    const dailyCounts = dailyData.map(item => item.count);
+
+    const dailyCtx = document.getElementById('dailyActivityChart').getContext('2d');
+    new Chart(dailyCtx, {
+        type: 'line',
+        data: {
+            labels: dailyLabels,
+            datasets: [{
+                label: 'Действий',
+                data: dailyCounts,
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // График распределения по типам действий
+    const actionData = {{ action_stats | tojson }};
+    const actionLabels = actionData.map(item => item.action_type);
+    const actionCounts = actionData.map(item => item.count);
+
+    const actionCtx = document.getElementById('actionDistributionChart').getContext('2d');
+    new Chart(actionCtx, {
+        type: 'doughnut',
+        data: {
+            labels: actionLabels,
+            datasets: [{
+                data: actionCounts,
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.8)',
+                    'rgba(54, 162, 235, 0.8)',
+                    'rgba(255, 206, 86, 0.8)',
+                    'rgba(75, 192, 192, 0.8)',
+                    'rgba(153, 102, 255, 0.8)',
+                    'rgba(255, 159, 64, 0.8)',
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'right',
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
+

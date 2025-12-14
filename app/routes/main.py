@@ -17,7 +17,6 @@ from flask import (
 )
 from flask_login import current_user
 
-from app.business.price_calculator import calculate_selling_price
 from app.business.document_generator import create_zip_archive, generate_excel_document, generate_word_document
 from app.presentation.helpers import check_templates_exist, extract_positions_from_form
 from app.presentation.validators import validate_form_data
@@ -36,6 +35,15 @@ from app.core.extensions import csrf
 
 main_bp = Blueprint('main', __name__)  # Основные страницы и бизнес-логика генератора КП
 FORM_TTL_HOURS = 24  # время жизни сохранённой формы в сессии
+
+
+def _load_logistics_cities_safe():
+    """Безопасно загружает список городов логистики с обработкой ошибок."""
+    try:
+        return datasets.load_logistics_cities()
+    except Exception as exc:  # pragma: no cover - defensive logging
+        current_app.logger.error('Error loading logistics data: %s', exc)
+        return []
 
 
 def _clear_form_session():
@@ -90,11 +98,7 @@ def index():
             if first_position.get(key):
                 form_data.setdefault(key, first_position[key])
 
-    try:
-        cities = datasets.load_logistics_cities()
-    except Exception as exc:  # pragma: no cover - defensive logging
-        current_app.logger.error('Error loading logistics data for index: %s', exc)
-        cities = []
+    cities = _load_logistics_cities_safe()
 
     return render_template(
         'index.html',
@@ -591,11 +595,7 @@ def generate():
         if validation.invalid_fields:
             form_data['_invalid_fields'] = validation.invalid_fields
 
-        try:
-            cities = datasets.load_logistics_cities()
-        except Exception as exc:  # pragma: no cover - defensive logging
-            current_app.logger.error('Error loading logistics data for validation errors: %s', exc)
-            cities = []
+        cities = _load_logistics_cities_safe()
 
         return render_template(
             'index.html',
@@ -640,11 +640,7 @@ def generate():
         # Проверяем, что есть хотя бы одна позиция
         if not position_prices:
             flash('Не удалось рассчитать цены для позиций.', 'danger')
-            try:
-                cities = datasets.load_logistics_cities()
-            except Exception as exc:
-                current_app.logger.error('Error loading logistics data for error page: %s', exc)
-                cities = []
+            cities = _load_logistics_cities_safe()
             return render_template(
                 'index.html',
                 **build_context('index', 'Создание коммерческого предложения', form_data=form_data, cities=cities)
@@ -665,11 +661,7 @@ def generate():
             for error in template_errors:
                 flash(f'{error}. Обратитесь к администратору.', 'danger')
                 current_app.logger.error(error)
-            try:
-                cities = datasets.load_logistics_cities()
-            except Exception as exc:
-                current_app.logger.error('Error loading logistics data for template error page: %s', exc)
-                cities = []
+            cities = _load_logistics_cities_safe()
             # Сохраняем форму, чтобы пользователь мог вернуться без потери данных
             _save_form_session(form_data, session.get('imported_positions'))
             return render_template(
@@ -724,11 +716,7 @@ def generate():
     except Exception as exc:  # pragma: no cover - defensive logging
         flash('Произошла непредвиденная ошибка. Попробуйте еще раз.', 'danger')
         current_app.logger.error('Unexpected error: %s', exc)
-        try:
-            cities = datasets.load_logistics_cities()
-        except Exception as exc2:
-            current_app.logger.error('Error loading logistics data for exception page: %s', exc2)
-            cities = []
+        cities = _load_logistics_cities_safe()
         return render_template(
             'index.html',
             **build_context('index', 'Создание коммерческого предложения', form_data=form_data, cities=cities)
@@ -801,13 +789,9 @@ def save_form_state():
 @main_bp.route('/logistics')
 def logistics():
     """Отображает справочную информацию по логистическим тарифам."""
-    try:
-        cities = datasets.load_logistics_cities()
-        if not cities:
-            current_app.logger.info('Logistics data is empty or missing')
-    except Exception as exc:  # pragma: no cover - defensive logging
-        current_app.logger.error('Error loading logistics data: %s', exc)
-        cities = []
+    cities = _load_logistics_cities_safe()
+    if not cities:
+        current_app.logger.info('Logistics data is empty or missing')
 
     return render_template(
         'logistics.html',

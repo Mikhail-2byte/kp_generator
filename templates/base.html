@@ -96,6 +96,29 @@
             const modalButtons = document.querySelectorAll('[data-modal-target]');
             const activePage = body.dataset.page;
 
+            // Обработка закрытия toast-уведомлений
+            document.querySelectorAll('[data-close-toast]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    const toast = button.closest('[data-toast]');
+                    if (toast) {
+                        toast.classList.add('toast-exit');
+                        setTimeout(() => toast.remove(), 300);
+                    }
+                });
+            });
+
+            // Автоматическое закрытие toast через 5 секунд
+            document.querySelectorAll('[data-toast]').forEach((toast) => {
+                const progressBar = toast.querySelector('[data-toast-progress]');
+                if (progressBar) {
+                    setTimeout(() => {
+                        toast.classList.add('toast-exit');
+                        setTimeout(() => toast.remove(), 300);
+                    }, 5000);
+                }
+            });
+
+            // Обработка закрытия старых flash-уведомлений (для обратной совместимости)
             document.querySelectorAll('[data-close-flash]').forEach((button) => {
                 button.addEventListener('click', () => {
                     const flash = button.closest('.flash');

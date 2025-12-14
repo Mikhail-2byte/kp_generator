@@ -128,6 +128,9 @@ def profile():
                     show_contact_form = True
 
     stats = None
+    user_created_at_formatted = None
+    user_last_login_formatted = None
+    
     if current_user.is_authenticated:
         stats = user_repository.get_statistics(current_user.id)
         last_gen = stats.get('last_generation_at')
@@ -140,6 +143,28 @@ def profile():
                 stats['last_generation_at_formatted'] = last_gen
         else:
             stats['last_generation_at_formatted'] = None
+        
+        # Форматируем дату регистрации
+        if current_user.created_at:
+            if isinstance(current_user.created_at, str):
+                try:
+                    created_dt = datetime.strptime(current_user.created_at, '%Y-%m-%d %H:%M:%S')
+                    user_created_at_formatted = created_dt.strftime('%d.%m.%Y')
+                except ValueError:
+                    user_created_at_formatted = current_user.created_at[:10] if len(current_user.created_at) >= 10 else current_user.created_at
+            else:
+                user_created_at_formatted = current_user.created_at.strftime('%d.%m.%Y')
+        
+        # Форматируем дату последнего входа
+        if current_user.last_login:
+            if isinstance(current_user.last_login, str):
+                try:
+                    login_dt = datetime.strptime(current_user.last_login, '%Y-%m-%d %H:%M:%S')
+                    user_last_login_formatted = login_dt.strftime('%d.%m.%Y %H:%M')
+                except ValueError:
+                    user_last_login_formatted = current_user.last_login[:16] if len(current_user.last_login) >= 16 else current_user.last_login
+            else:
+                user_last_login_formatted = current_user.last_login.strftime('%d.%m.%Y %H:%M')
 
         formatted_recent = []
         for record in stats.get('recent_generations', []):
@@ -186,7 +211,9 @@ def profile():
             delete_form=delete_form,
             contact_form=contact_form,
             show_update_form=show_update_form,
-            show_contact_form=show_contact_form
+            show_contact_form=show_contact_form,
+            user_created_at_formatted=user_created_at_formatted,
+            user_last_login_formatted=user_last_login_formatted
         )
     )
 

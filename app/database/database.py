@@ -276,8 +276,9 @@ def _build_generation_detail(record: Optional[GenerationHistoryRecord]):
                     'duty_percent': first_position.get('duty_percent', record.duty_percent),
                     'final_price': record.final_price,
                 })
-        except (json.JSONDecodeError, TypeError):
+        except (json.JSONDecodeError, TypeError) as exc:
             # Если не удалось распарсить JSON, используем старые поля
+            logging.warning('Failed to parse positions_data JSON for record %d: %s', record.id, exc)
             data.update({
                 'product': record.product,
                 'quantity': record.quantity,
@@ -413,7 +414,8 @@ def get_generation_history(config, *, page: int = 1, per_page: Optional[int] = N
                 if record.positions_data:
                     try:
                         positions = json.loads(record.positions_data) or []
-                    except (json.JSONDecodeError, TypeError, ValueError):  # pragma: no cover - защитное ветвление
+                    except (json.JSONDecodeError, TypeError, ValueError) as exc:  # pragma: no cover - защитное ветвление
+                        logging.warning('Failed to parse positions_data JSON for record %d in history: %s', record.id, exc)
                         positions = []
 
                 if not positions:
@@ -459,7 +461,7 @@ def get_generation_history(config, *, page: int = 1, per_page: Optional[int] = N
                 if total_sale_price is None:
                     total_sale_price = record.final_price * (record.quantity or 1)
 
-                positions_count = record.positions_count or len(positions) or 1
+                positions_count = record.positions_count if record.positions_count is not None else (len(positions) if positions else 1)
 
                 result.append({
                     'id': record.id,
@@ -566,7 +568,7 @@ def save_generation_history(form_data, final_price, config, user_id=None, total_
                 user_id=user_id,
                 # Новые поля для множественных позиций
                 positions_data=json.dumps(positions, ensure_ascii=False),
-                total_general_price=total_general_price or (final_price * quantity),
+                total_general_price=total_general_price if total_general_price is not None else (final_price * quantity),
                 positions_count=len(positions),
             )
             session.add(record)
@@ -639,8 +641,9 @@ def load_generation_data(gen_id: int) -> Optional[Dict[str, object]]:
                             for field in ['product', 'quantity', 'cost_price', 'weight', 'drawing_number', 'material', 'duty_percent']:
                                 if field in position:
                                     data[f"{field}_{i+1}"] = position[field]
-                except (json.JSONDecodeError, TypeError):
+                except (json.JSONDecodeError, TypeError) as exc:
                     # Если не удалось распарсить JSON, используем старые поля
+                    logging.warning('Failed to parse positions_data JSON for record %d in load_generation_data: %s', record.id, exc)
                     data.update({
                         'product': record.product,
                         'quantity': record.quantity,
@@ -749,6 +752,9 @@ def get_user_statistics(user_id) -> Dict[str, object]:
     """Собирает агрегированную статистику активности пользователя."""
     try:
         with _session_scope() as session:
+            from datetime import datetime, timedelta
+            
+            # Базовая статистика
             total, last_timestamp = (
                 session.query(
                     func.count(GenerationHistoryRecord.id),
@@ -756,6 +762,53 @@ def get_user_statistics(user_id) -> Dict[str, object]:
                 )
                 .filter(GenerationHistoryRecord.user_id == user_id)
                 .one()
+            )
+
+            # Статистика по ценам и марже
+            # Используем total_general_price если есть, иначе вычисляем из final_price * quantity
+            price_stats = (
+                session.query(
+                    func.avg(GenerationHistoryRecord.margin_percent).label('avg_margin'),
+                    func.sum(
+                        func.coalesce(
+                            GenerationHistoryRecord.total_general_price,
+                            GenerationHistoryRecord.final_price * func.coalesce(GenerationHistoryRecord.quantity, 1)
+                        )
+                    ).label('total_sum'),
+                    func.avg(
+                        func.coalesce(
+                            GenerationHistoryRecord.total_general_price,
+                            GenerationHistoryRecord.final_price * func.coalesce(GenerationHistoryRecord.quantity, 1)
+                        )
+                    ).label('avg_price'),
+                    func.max(
+                        func.coalesce(
+                            GenerationHistoryRecord.total_general_price,
+                            GenerationHistoryRecord.final_price * func.coalesce(GenerationHistoryRecord.quantity, 1)
+                        )
+                    ).label('max_price'),
+                )
+                .filter(GenerationHistoryRecord.user_id == user_id)
+                .one()
+            )
+
+            # Генерации за текущий месяц
+            now = datetime.now()
+            month_start = datetime(now.year, now.month, 1)
+            month_generations = (
+                session.query(func.count(GenerationHistoryRecord.id))
+                .filter(GenerationHistoryRecord.user_id == user_id)
+                .filter(GenerationHistoryRecord.timestamp >= month_start)
+                .scalar() or 0
+            )
+
+            # Генерации за последние 7 дней
+            week_ago = now - timedelta(days=7)
+            week_generations = (
+                session.query(func.count(GenerationHistoryRecord.id))
+                .filter(GenerationHistoryRecord.user_id == user_id)
+                .filter(GenerationHistoryRecord.timestamp >= week_ago)
+                .scalar() or 0
             )
 
             recent_records = (
@@ -789,6 +842,12 @@ def get_user_statistics(user_id) -> Dict[str, object]:
                 'total_generations': total or 0,
                 'last_generation_at': _format_timestamp(last_timestamp) if last_timestamp else None,
                 'recent_generations': formatted_recent,
+                'avg_margin': float(price_stats.avg_margin) if price_stats.avg_margin else 0.0,
+                'total_sum': float(price_stats.total_sum) if price_stats.total_sum else 0.0,
+                'avg_price': float(price_stats.avg_price) if price_stats.avg_price else 0.0,
+                'max_price': float(price_stats.max_price) if price_stats.max_price else 0.0,
+                'month_generations': month_generations,
+                'week_generations': week_generations,
             }
     except Exception as exc:
         logging.error('Error getting user statistics: %s', exc)
@@ -796,6 +855,12 @@ def get_user_statistics(user_id) -> Dict[str, object]:
             'total_generations': 0,
             'last_generation_at': None,
             'recent_generations': [],
+            'avg_margin': 0.0,
+            'total_sum': 0.0,
+            'avg_price': 0.0,
+            'max_price': 0.0,
+            'month_generations': 0,
+            'week_generations': 0,
         }
 
 
@@ -982,7 +1047,7 @@ def get_generations_by_tender(tender_number: str) -> List[Dict[str, object]]:
                     'product': record.product,
                     'margin_percent': record.margin_percent,
                     'final_price': record.final_price,
-                    'total_general_price': record.total_general_price or (record.final_price * (record.quantity or 1)),
+                    'total_general_price': record.total_general_price if record.total_general_price is not None else (record.final_price * (record.quantity or 1)),
                     'positions_count': record.positions_count or 1,
                 }
                 for record in records

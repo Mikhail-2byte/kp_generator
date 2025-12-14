@@ -1,11 +1,20 @@
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
-    <div class="flash-container">
+    <div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="true">
       {% for category, message in messages %}
         {% set variant = 'error' if category in ['error', 'danger'] else 'success' if category == 'success' else 'info' %}
-        <div class="flash flash-{{ variant }}" role="alert">
-          <span class="flash-message">{{ message }}</span>
-          <button type="button" class="flash-close" data-close-flash aria-label="Закрыть уведомление">{{ sidebar_icon('x')|safe }}</button>
+        {% set icon = 'check-circle' if variant == 'success' else ('alert-circle' if variant == 'error' else 'info') %}
+        <div class="toast toast-{{ variant }}" role="alert" data-toast>
+          <div class="toast-icon">
+            {{ sidebar_icon(icon)|safe }}
+          </div>
+          <div class="toast-content">
+            <div class="toast-message">{{ message }}</div>
+          </div>
+          <button type="button" class="toast-close" data-close-toast aria-label="Закрыть уведомление">
+            {{ sidebar_icon('x')|safe }}
+          </button>
+          <div class="toast-progress" data-toast-progress></div>
         </div>
       {% endfor %}
     </div>

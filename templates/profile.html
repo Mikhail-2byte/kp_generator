@@ -4,31 +4,160 @@
 <div class="content-container">
     {% if current_user.is_authenticated %}
         <div class="profile-grid">
-            <div class="card">
-                <h2 class="section-title">Добро пожаловать, {{ current_user.username }}</h2>
-                <p class="section-description">Статистика по вашим коммерческим предложениям.</p>
-                <div class="stat-list">
-                    <div class="stat-item">
-                        <span>Всего генераций</span>
-                        <strong>{{ stats.total_generations }}</strong>
+            <!-- Карточка "О пользователе" -->
+            <div class="card profile-user-card">
+                <div class="profile-header">
+                    <div class="profile-avatar">
+                        <span class="avatar-initials">{{ get_user_initials(current_user.last_name, current_user.first_name, current_user.username) }}</span>
                     </div>
-                    <div class="stat-item">
-                        <span>Последняя генерация</span>
-                        <strong>{{ stats.last_generation_at_formatted or '—' }}</strong>
-                    </div>
-                    <div class="stat-item">
-                        <span>Последний вход</span>
-                        <strong>{{ current_user.last_login or '—' }}</strong>
+                    <div class="profile-info">
+                        <h2 class="profile-name">
+                            {% if current_user.last_name or current_user.first_name %}
+                                {{ (current_user.last_name or '') + ' ' + (current_user.first_name or '') }}
+                            {% else %}
+                                {{ current_user.username }}
+                            {% endif %}
+                        </h2>
+                        <div class="profile-meta">
+                            <span class="profile-username">{{ current_user.username }}</span>
+                            <span class="role-badge role-badge-{{ current_user.role }}">
+                                {{ 'Администратор' if current_user.is_admin else 'Пользователь' }}
+                            </span>
+                        </div>
                     </div>
                 </div>
-                <a href="{{ url_for('auth.logout') }}" class="btn btn-outline" style="margin-top:24px;">Выйти из аккаунта</a>
+                <div class="profile-details">
+                    {% if user_created_at_formatted %}
+                        <div class="profile-detail-item">
+                            <span class="detail-label">{{ sidebar_icon('user')|safe }} Дата регистрации</span>
+                            <span class="detail-value">{{ user_created_at_formatted }}</span>
+                        </div>
+                    {% endif %}
+                    {% if user_last_login_formatted %}
+                        <div class="profile-detail-item">
+                            <span class="detail-label">{{ sidebar_icon('check-circle')|safe }} Последний вход</span>
+                            <span class="detail-value">{{ user_last_login_formatted }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="profile-actions">
+                    <div class="quick-actions">
+                        <button type="button" class="quick-action-btn" data-copy="username" title="Копировать логин">
+                            {{ sidebar_icon('copy')|safe }}
+                            <span>Копировать логин</span>
+                        </button>
+                        {% if current_user.contact_info %}
+                        <button type="button" class="quick-action-btn" data-copy="contact" title="Копировать контакты">
+                            {{ sidebar_icon('copy')|safe }}
+                            <span>Копировать контакты</span>
+                        </button>
+                        {% endif %}
+                    </div>
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline btn-logout">
+                        {{ sidebar_icon('x')|safe }}
+                        <span>Выйти из аккаунта</span>
+                    </a>
+                </div>
             </div>
 
-            <div class="card">
-                <h3 class="section-title">Последние генерации</h3>
+            <!-- Улучшенная статистика -->
+            <div class="card profile-stats-card">
+                <h3 class="section-title">Статистика</h3>
+                <div class="stats-grid-compact">
+                    <div class="stat-card-compact stat-card-primary">
+                        <div class="stat-icon">{{ sidebar_icon('file-text')|safe }}</div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ stats.total_generations or 0 }}</div>
+                            <div class="stat-label">Всего генераций</div>
+                        </div>
+                    </div>
+                    <div class="stat-card-compact stat-card-success">
+                        <div class="stat-icon">{{ sidebar_icon('check-circle')|safe }}</div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ stats.last_generation_at_formatted[:10] if stats.last_generation_at_formatted else '—' }}</div>
+                            <div class="stat-label">Последняя генерация</div>
+                        </div>
+                    </div>
+                    {% if stats.month_generations is defined %}
+                    <div class="stat-card-compact stat-card-info">
+                        <div class="stat-icon">{{ sidebar_icon('calendar')|safe }}</div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ stats.month_generations or 0 }}</div>
+                            <div class="stat-label">За этот месяц</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if stats.week_generations is defined %}
+                    <div class="stat-card-compact stat-card-warning">
+                        <div class="stat-icon">{{ sidebar_icon('target')|safe }}</div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ stats.week_generations or 0 }}</div>
+                            <div class="stat-label">За неделю</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if stats.avg_margin is defined and stats.avg_margin > 0 %}
+                    <div class="stat-card-compact stat-card-margin">
+                        <div class="stat-icon">{{ sidebar_icon('percent')|safe }}</div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ stats.avg_margin|format_number(1) }}%</div>
+                            <div class="stat-label">Средняя маржа</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if stats.total_sum is defined and stats.total_sum > 0 %}
+                    <div class="stat-card-compact stat-card-total">
+                        <div class="stat-icon">{{ sidebar_icon('coins')|safe }}</div>
+                        <div class="stat-content">
+                            <div class="stat-value">
+                                {% if stats.total_sum >= 1000000 %}
+                                    {{ (stats.total_sum / 1000000)|format_number(1) }}М
+                                {% elif stats.total_sum >= 1000 %}
+                                    {{ (stats.total_sum / 1000)|format_number(1) }}К
+                                {% else %}
+                                    {{ stats.total_sum|format_number(0) }}
+                                {% endif %}
+                            </div>
+                            <div class="stat-label">Общая сумма</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if stats.avg_price is defined and stats.avg_price > 0 %}
+                    <div class="stat-card-compact stat-card-avg">
+                        <div class="stat-icon">{{ sidebar_icon('chart')|safe }}</div>
+                        <div class="stat-content">
+                            <div class="stat-value">
+                                {% if stats.avg_price >= 1000000 %}
+                                    {{ (stats.avg_price / 1000000)|format_number(2) }}М
+                                {% elif stats.avg_price >= 1000 %}
+                                    {{ (stats.avg_price / 1000)|format_number(1) }}К
+                                {% else %}
+                                    {{ stats.avg_price|format_number(0) }}
+                                {% endif %}
+                            </div>
+                            <div class="stat-label">Средняя цена</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card span-full">
+                <div class="card-header">
+                    <div>
+                        <h3 class="section-title">Последние генерации</h3>
+                        <p class="section-description">Быстрый доступ к недавним коммерческим предложениям</p>
+                    </div>
+                    {% if stats.recent_generations %}
+                        <a href="{{ url_for('main.history') }}" class="btn btn-outline btn-sm">
+                            {{ sidebar_icon('history')|safe }}
+                            <span>Вся история</span>
+                        </a>
+                    {% endif %}
+                </div>
                 {% if stats.recent_generations %}
                     <div class="history-table-wrapper" style="margin-top:16px;">
-                        <table class="data-table">
+                        <table class="data-table profile-recent-table">
                             <thead>
                                 <tr>
                                     <th>Дата</th>
@@ -36,23 +165,55 @@
                                     <th>Товар</th>
                                     <th>Маржа, %</th>
                                     <th>Цена, руб</th>
+                                    <th class="text-center">Действия</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for item in stats.recent_generations %}
-                                <tr>
-                                    <td>{{ item.timestamp }}</td>
-                                    <td>{{ item.company }}</td>
-                                    <td>{{ item.product }}</td>
-                                    <td>{{ item.margin_percent }}</td>
-                                    <td>{{ item.final_price|format_number(2) }}</td>
+                                <tr class="profile-table-row" data-gen-id="{{ item.id }}">
+                                    <td class="profile-table-date">{{ item.timestamp }}</td>
+                                    <td class="profile-table-company">{{ item.company }}</td>
+                                    <td class="profile-table-product">{{ item.product }}</td>
+                                    <td class="text-center">
+                                        <span class="margin-badge margin-badge-{{ 'high' if item.margin_percent|float >= 25 else ('medium' if item.margin_percent|float >= 15 else 'low') }}">
+                                            {{ item.margin_percent|format_number(1) }}%
+                                        </span>
+                                    </td>
+                                    <td class="profile-table-price">
+                                        <strong>{{ item.final_price|format_number(2) }}</strong>
+                                    </td>
+                                    <td class="table-actions">
+                                        <div class="action-buttons">
+                                            <a href="{{ url_for('main.load_generation', gen_id=item.id) }}" 
+                                               class="btn-icon btn-icon-primary" 
+                                               title="Повторить генерацию"
+                                               data-action="reuse">
+                                                {{ sidebar_icon('history')|safe }}
+                                            </a>
+                                            <button type="button" 
+                                                    class="btn-icon btn-icon-secondary view-details-profile" 
+                                                    data-id="{{ item.id }}" 
+                                                    title="Показать детали"
+                                                    data-action="view">
+                                                {{ sidebar_icon('layers')|safe }}
+                                            </button>
+                                        </div>
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
                 {% else %}
-                    <p class="muted-text">У вас пока нет созданных коммерческих предложений.</p>
+                    <div class="empty-state-profile">
+                        <div class="empty-state-icon">{{ sidebar_icon('file-text')|safe }}</div>
+                        <h4 class="empty-state-title">Нет созданных генераций</h4>
+                        <p class="empty-state-description">Создайте ваше первое коммерческое предложение, чтобы начать работу</p>
+                        <a href="{{ url_for('main.index') }}" class="btn btn-primary">
+                            {{ sidebar_icon('plus')|safe }}
+                            <span>Создать КП</span>
+                        </a>
+                    </div>
                 {% endif %}
             </div>
             <div class="card span-full">
@@ -105,53 +266,140 @@ Email: ivanov@example.com
                 <div class="card-header">
                     <div>
                         <h3 class="section-title">Настройки профиля</h3>
-                        <p class="section-description">Обновите личные данные или смените пароль. Оставьте поля пароля пустыми, чтобы сохранить текущий.</p>
+                        <p class="section-description">Обновите личные данные или смените пароль</p>
                     </div>
                     <button type="button" class="btn btn-outline" data-toggle="profile-settings">
                         {{ 'Скрыть' if show_update_form else 'Редактировать' }}
                     </button>
                 </div>
                 <div id="profileSettings" class="collapsible" {% if not show_update_form %}hidden{% endif %}>
-                    <form method="post" action="{{ url_for('auth.profile') }}" class="form-grid">
+                    <!-- Табы для формы -->
+                    <div class="form-tabs" role="tablist" aria-label="Настройки профиля">
+                        <button type="button" class="form-tab active" data-tab="personal" role="tab" aria-selected="true" aria-controls="personal-tab" id="personal-tab-button">
+                            {{ sidebar_icon('user')|safe }}
+                            <span>Личные данные</span>
+                        </button>
+                        <button type="button" class="form-tab" data-tab="password" role="tab" aria-selected="false" aria-controls="password-tab" id="password-tab-button">
+                            {{ sidebar_icon('shield')|safe }}
+                            <span>Безопасность</span>
+                        </button>
+                    </div>
+
+                    <form method="post" action="{{ url_for('auth.profile') }}" class="form-grid" id="profileUpdateForm">
                         {{ update_form.hidden_tag() }}
-                        <div class="field-group span-3">
-                            {{ update_form.last_name.label(class_='field-label') }}
-                            {{ update_form.last_name(class_='') }}
-                            {% for error in update_form.last_name.errors %}
-                                <div class="field-error">{{ error }}</div>
-                            {% endfor %}
+                        
+                        <!-- Таб: Личные данные -->
+                        <div class="form-tab-content active" data-tab-content="personal" role="tabpanel" aria-labelledby="personal-tab-button" id="personal-tab" aria-hidden="false">
+                            <div class="field-group span-3">
+                                <label for="{{ update_form.last_name.id }}" class="field-label">
+                                    {{ update_form.last_name.label.text }}
+                                    <span class="field-required">*</span>
+                                </label>
+                                <div class="field-wrapper">
+                                    {{ update_form.last_name(class_='form-input', autocomplete='family-name') }}
+                                    <span class="field-icon field-icon-status"></span>
+                                </div>
+                                {% for error in update_form.last_name.errors %}
+                                    <div class="field-error">
+                                        {{ sidebar_icon('alert-circle')|safe }}
+                                        <span>{{ error }}</span>
+                                    </div>
+                                {% endfor %}
+                                <div class="field-helper">Ваша фамилия для отображения в системе</div>
+                            </div>
+                            <div class="field-group span-3">
+                                <label for="{{ update_form.first_name.id }}" class="field-label">
+                                    {{ update_form.first_name.label.text }}
+                                    <span class="field-required">*</span>
+                                </label>
+                                <div class="field-wrapper">
+                                    {{ update_form.first_name(class_='form-input', autocomplete='given-name') }}
+                                    <span class="field-icon field-icon-status"></span>
+                                </div>
+                                {% for error in update_form.first_name.errors %}
+                                    <div class="field-error">
+                                        {{ sidebar_icon('alert-circle')|safe }}
+                                        <span>{{ error }}</span>
+                                    </div>
+                                {% endfor %}
+                                <div class="field-helper">Ваше имя для отображения в системе</div>
+                            </div>
+                            <div class="field-group span-3">
+                                <label for="{{ update_form.username.id }}" class="field-label">
+                                    {{ update_form.username.label.text }}
+                                    <span class="field-required">*</span>
+                                </label>
+                                <div class="field-wrapper">
+                                    {{ update_form.username(class_='form-input', autocomplete='username') }}
+                                    <span class="field-icon field-icon-status"></span>
+                                </div>
+                                {% for error in update_form.username.errors %}
+                                    <div class="field-error">
+                                        {{ sidebar_icon('alert-circle')|safe }}
+                                        <span>{{ error }}</span>
+                                    </div>
+                                {% endfor %}
+                                <div class="field-helper">Уникальный логин для входа в систему (от 3 до 50 символов)</div>
+                            </div>
                         </div>
-                        <div class="field-group span-3">
-                            {{ update_form.first_name.label(class_='field-label') }}
-                            {{ update_form.first_name(class_='') }}
-                            {% for error in update_form.first_name.errors %}
-                                <div class="field-error">{{ error }}</div>
-                            {% endfor %}
+
+                        <!-- Таб: Безопасность -->
+                        <div class="form-tab-content" data-tab-content="password" role="tabpanel" aria-labelledby="password-tab-button" id="password-tab" hidden>
+                            <div class="password-change-notice">
+                                {{ sidebar_icon('help-circle')|safe }}
+                                <p>Оставьте поля пароля пустыми, если не хотите менять пароль. Новый пароль должен содержать минимум 6 символов.</p>
+                            </div>
+                            <div class="field-group span-3">
+                                <label for="{{ update_form.new_password.id }}" class="field-label">
+                                    {{ update_form.new_password.label.text }}
+                                </label>
+                                <div class="field-wrapper">
+                                    {{ update_form.new_password(class_='form-input', autocomplete='new-password', id='newPasswordInput') }}
+                                    <button type="button" class="field-icon-toggle" data-toggle-password="newPasswordInput" aria-label="Показать пароль">
+                                        {{ sidebar_icon('eye')|safe }}
+                                    </button>
+                                    <span class="field-icon field-icon-status"></span>
+                                </div>
+                                {% for error in update_form.new_password.errors %}
+                                    <div class="field-error">
+                                        {{ sidebar_icon('alert-circle')|safe }}
+                                        <span>{{ error }}</span>
+                                    </div>
+                                {% endfor %}
+                                <div class="password-strength" id="passwordStrength">
+                                    <div class="password-strength-bar">
+                                        <div class="password-strength-fill" id="passwordStrengthFill"></div>
+                                    </div>
+                                    <div class="password-strength-text" id="passwordStrengthText">Введите пароль</div>
+                                </div>
+                            </div>
+                            <div class="field-group span-3">
+                                <label for="{{ update_form.confirm_new_password.id }}" class="field-label">
+                                    {{ update_form.confirm_new_password.label.text }}
+                                </label>
+                                <div class="field-wrapper">
+                                    {{ update_form.confirm_new_password(class_='form-input', autocomplete='new-password', id='confirmPasswordInput') }}
+                                    <button type="button" class="field-icon-toggle" data-toggle-password="confirmPasswordInput" aria-label="Показать пароль">
+                                        {{ sidebar_icon('eye')|safe }}
+                                    </button>
+                                    <span class="field-icon field-icon-status"></span>
+                                </div>
+                                {% for error in update_form.confirm_new_password.errors %}
+                                    <div class="field-error">
+                                        {{ sidebar_icon('alert-circle')|safe }}
+                                        <span>{{ error }}</span>
+                                    </div>
+                                {% endfor %}
+                                <div class="field-helper">Повторите новый пароль для подтверждения</div>
+                            </div>
                         </div>
-                        <div class="field-group span-3">
-                            {{ update_form.username.label(class_='field-label') }}
-                            {{ update_form.username(class_='') }}
-                            {% for error in update_form.username.errors %}
-                                <div class="field-error">{{ error }}</div>
-                            {% endfor %}
-                        </div>
-                        <div class="field-group span-3">
-                            {{ update_form.new_password.label(class_='field-label') }}
-                            {{ update_form.new_password(class_='') }}
-                            {% for error in update_form.new_password.errors %}
-                                <div class="field-error">{{ error }}</div>
-                            {% endfor %}
-                        </div>
-                        <div class="field-group span-3">
-                            {{ update_form.confirm_new_password.label(class_='field-label') }}
-                            {{ update_form.confirm_new_password(class_='') }}
-                            {% for error in update_form.confirm_new_password.errors %}
-                                <div class="field-error">{{ error }}</div>
-                            {% endfor %}
-                        </div>
+
                         <div class="controls-row">
                             <span></span>
-                            {{ update_form.submit_update(class_='btn btn-primary') }}
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-outline" data-cancel="profile-settings">Отмена</button>
+                                {{ update_form.submit_update(class_='btn btn-primary') }}
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -289,12 +537,669 @@ Email: ivanov@example.com
                     });
                 }
             }
+
+            // Модальное окно для деталей генерации (используем то же, что и на странице истории)
+            const detailsModal = document.getElementById('detailsModal');
+            const modalDetailsContent = document.getElementById('modalDetailsContent');
+            
+            const openDetailsModal = () => {
+                if (detailsModal) {
+                    detailsModal.classList.add('is-open');
+                    detailsModal.setAttribute('aria-hidden', 'false');
+                    document.body.style.overflow = 'hidden';
+                }
+            };
+
+            const closeDetailsModal = () => {
+                if (detailsModal) {
+                    detailsModal.classList.remove('is-open');
+                    detailsModal.setAttribute('aria-hidden', 'true');
+                    document.body.style.overflow = '';
+                }
+            };
+
+            // Обработчики закрытия модального окна
+            if (detailsModal) {
+                detailsModal.addEventListener('click', (e) => {
+                    if (e.target === detailsModal || e.target.hasAttribute('data-close-modal')) {
+                        closeDetailsModal();
+                    }
+                });
+
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && detailsModal.classList.contains('is-open')) {
+                        closeDetailsModal();
+                    }
+                });
+            }
+
+            // Функция рендеринга деталей (адаптирована из history.html)
+            const renderDetails = (data) => {
+                const format = (value, empty = 'Не указан') => value ? value : empty;
+                const formatCurrency = (value) => Number(value || 0).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const formatNumber = (value) => Number(value || 0).toLocaleString('ru-RU');
+                const authorName = [data.last_name, data.first_name].filter(Boolean).join(' ').trim();
+                const authorDisplay = authorName || data.username || 'Не указан';
+                
+                // Обновляем заголовок и подзаголовок
+                const productTitle = data.positions_count > 1 ? 
+                    `${format(data.product)} (+${data.positions_count - 1} позиций)` : 
+                    format(data.product);
+                const modalSubtitle = document.getElementById('modalSubtitle');
+                const modalTimestamp = document.getElementById('modalTimestampFooter');
+                if (modalSubtitle) {
+                    modalSubtitle.textContent = `${format(data.company)} • ${productTitle}`;
+                }
+                if (modalTimestamp) {
+                    modalTimestamp.textContent = `Создано: ${new Date(data.timestamp).toLocaleString('ru-RU')}`;
+                }
+
+                // Вычисляем общую стоимость закупа
+                let totalPurchasePrice = 0;
+                let totalWeight = 0;
+                let totalSalePrice = 0;
+                
+                if (data.positions && data.positions.length > 0) {
+                    totalPurchasePrice = data.positions.reduce((sum, pos) => {
+                        return sum + (Number(pos.cost_price || 0) * Number(pos.quantity || 0));
+                    }, 0);
+                    
+                    totalWeight = data.positions.reduce((sum, pos) => {
+                        return sum + Number(pos.weight || 0);
+                    }, 0);
+                    
+                    totalSalePrice = data.positions.reduce((sum, pos) => {
+                        const quantity = Number(pos.quantity || 0);
+                        let finalPrice = Number(pos.final_price || 0);
+                        if (finalPrice === 0 && data.final_price) {
+                            finalPrice = Number(data.final_price || 0);
+                        }
+                        return sum + (finalPrice * quantity);
+                    }, 0);
+                } else {
+                    totalPurchasePrice = (Number(data.cost_price || 0) * Number(data.quantity || 0));
+                    totalWeight = Number(data.weight || 0);
+                    totalSalePrice = (Number(data.final_price || 0) * Number(data.quantity || 1));
+                }
+                
+                if (totalWeight === 0) {
+                    totalWeight = Number(data.weight || 0);
+                }
+                
+                if (totalSalePrice === 0) {
+                    totalSalePrice = Number(data.total_general_price || 0);
+                    if (totalSalePrice === 0) {
+                        totalSalePrice = (Number(data.final_price || 0) * Number(data.quantity || 1));
+                    }
+                }
+
+                // Рендерим таблицу позиций
+                const renderPositionsTable = () => {
+                    if (!data.positions || data.positions.length === 0) {
+                        return '';
+                    }
+
+                    const rows = data.positions.map((pos, index) => {
+                        const quantity = Number(pos.quantity || 0);
+                        const costPrice = Number(pos.cost_price || 0);
+                        let finalPrice = Number(pos.final_price || 0);
+                        if (finalPrice === 0 && data.final_price) {
+                            if (index === 0 || data.positions.length === 1) {
+                                finalPrice = Number(data.final_price || 0);
+                            }
+                        }
+                        const weight = Number(pos.weight || 0);
+                        const weightPerUnit = quantity > 0 ? weight / quantity : 0;
+                        const costPricePerKg = weightPerUnit > 0 ? costPrice / weightPerUnit : 0;
+                        const totalSalePrice = finalPrice * quantity;
+
+                        return `
+                            <tr>
+                                <td>${format(pos.product)}</td>
+                                <td>${format(pos.drawing_number)}</td>
+                                <td>${format(pos.material)}</td>
+                                <td class="text-center">${formatNumber(quantity)}</td>
+                                <td class="text-right">${formatNumber(weightPerUnit)}</td>
+                                <td class="text-right">${formatNumber(weight)}</td>
+                                <td class="text-right">${formatCurrency(costPrice)}</td>
+                                <td class="text-right">${formatCurrency(costPricePerKg)}</td>
+                                <td class="text-center">${format(pos.duty_percent, '0')}%</td>
+                                <td class="text-right">${formatCurrency(totalSalePrice)}</td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                    return `
+                        <div class="info-section positions-table-section">
+                            <div class="section-header">
+                                <h4 class="section-title">
+                                    <span class="section-icon">{{ sidebar_icon('list')|safe }}</span>
+                                    Позиции (${data.positions.length})
+                                </h4>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="positions-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Наименование</th>
+                                            <th>№ чертежа</th>
+                                            <th>Материал</th>
+                                            <th class="text-center">Количество</th>
+                                            <th class="text-right">Вес за шт., кг</th>
+                                            <th class="text-right">Общий вес, кг</th>
+                                            <th class="text-right">Цена закупа, ₽</th>
+                                            <th class="text-right">Цена закупа за кг, ₽</th>
+                                            <th class="text-center">Пошлина, %</th>
+                                            <th class="text-right">Итоговая продажная стоимость, ₽</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${rows}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                };
+
+                if (modalDetailsContent) {
+                    modalDetailsContent.innerHTML = `
+                        <div class="modal-details-container">
+                            <!-- Основные показатели -->
+                            <div class="info-section main-indicators">
+                                <div class="section-header">
+                                    <h4 class="section-title">
+                                        <span class="section-icon">{{ sidebar_icon('chart')|safe }}</span>
+                                        Основные показатели
+                                    </h4>
+                                </div>
+                                
+                                <!-- Общая информация -->
+                                <div class="indicators-group">
+                                    <div class="group-title">Общая информация</div>
+                                    <div class="indicators-grid">
+                                        <div class="indicator-item">
+                                            <span class="indicator-label">Компания</span>
+                                            <span class="indicator-value">${format(data.company)}</span>
+                                        </div>
+                                        <div class="indicator-item">
+                                            <span class="indicator-label">Номер тендера</span>
+                                            <span class="indicator-value">${format(data.tender_number)}</span>
+                                        </div>
+                                        <div class="indicator-item">
+                                            <span class="indicator-label">Количество позиций</span>
+                                            <span class="indicator-value">${data.positions_count || 1}</span>
+                                        </div>
+                                        <div class="indicator-item">
+                                            <span class="indicator-label">Срок поставки</span>
+                                            <span class="indicator-value">${formatNumber(data.delivery_time)} дней</span>
+                                        </div>
+                                        ${data.delivery_address ? `
+                                        <div class="indicator-item">
+                                            <span class="indicator-label">Адрес доставки</span>
+                                            <span class="indicator-value">${format(data.delivery_address)}</span>
+                                        </div>
+                                        ` : ''}
+                                        <div class="indicator-item">
+                                            <span class="indicator-label">Автор</span>
+                                            <span class="indicator-value">${authorDisplay}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Финансовые показатели -->
+                                <div class="indicators-group">
+                                    <div class="group-title">Финансовые показатели</div>
+                                    <div class="indicators-grid financial-grid">
+                                        <div class="indicator-item financial-item">
+                                            <span class="indicator-label">Общий вес</span>
+                                            <span class="indicator-value">${formatNumber(totalWeight)} кг</span>
+                                        </div>
+                                        <div class="indicator-item financial-item">
+                                            <span class="indicator-label">Логистика</span>
+                                            <span class="indicator-value">${formatCurrency(data.logistics)} ₽</span>
+                                        </div>
+                                        <div class="indicator-item financial-item highlight purchase">
+                                            <span class="indicator-label">Общая стоимость закупа</span>
+                                            <span class="indicator-value">${formatCurrency(totalPurchasePrice)} ₽</span>
+                                        </div>
+                                        <div class="indicator-item financial-item highlight sale">
+                                            <span class="indicator-label">Общая стоимость продажи</span>
+                                            <span class="indicator-value price-final">${formatCurrency(totalSalePrice)} ₽</span>
+                                        </div>
+                                        <div class="indicator-item financial-item margin">
+                                            <span class="indicator-label">Маржа</span>
+                                            <span class="indicator-value margin-value ${data.margin_percent > 20 ? 'margin-good' : 'margin-warning'}">${format(data.margin_percent, '0')}%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            ${renderPositionsTable()}
+
+                            <!-- Комментарий -->
+                            ${data.comment ? `
+                            <div class="info-section comment-section">
+                                <div class="section-header">
+                                    <h4 class="section-title">
+                                        <span class="section-icon">{{ sidebar_icon('message-square')|safe }}</span>
+                                        Комментарий
+                                    </h4>
+                                </div>
+                                <div class="comment-content">
+                                    ${data.comment.replace(/\n/g, '<br>')}
+                                </div>
+                            </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }
+            };
+
+            // Табы формы обновления профиля
+            const formTabs = document.querySelectorAll('.form-tab');
+            const formTabContents = document.querySelectorAll('.form-tab-content');
+            
+            formTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const targetTab = tab.dataset.tab;
+                    
+                    // Переключаем активные табы
+                    formTabs.forEach(t => {
+                        t.classList.remove('active');
+                        t.setAttribute('aria-selected', 'false');
+                    });
+                    tab.classList.add('active');
+                    tab.setAttribute('aria-selected', 'true');
+                    
+                    // Переключаем содержимое табов
+                    formTabContents.forEach(content => {
+                        if (content.dataset.tabContent === targetTab) {
+                            content.classList.add('active');
+                            content.removeAttribute('hidden');
+                            content.setAttribute('aria-hidden', 'false');
+                        } else {
+                            content.classList.remove('active');
+                            content.setAttribute('hidden', '');
+                            content.setAttribute('aria-hidden', 'true');
+                        }
+                    });
+                });
+
+                // Поддержка клавиатуры
+                tab.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        tab.click();
+                    }
+                });
+            });
+
+            // Показ/скрытие пароля
+            document.querySelectorAll('[data-toggle-password]').forEach(button => {
+                button.addEventListener('click', () => {
+                    const inputId = button.dataset.togglePassword;
+                    const input = document.getElementById(inputId);
+                    if (!input) return;
+                    
+                    const isPassword = input.type === 'password';
+                    input.type = isPassword ? 'text' : 'password';
+                    
+                    // Переключаем иконку
+                    const eyeIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+                    const eyeOffIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
+                    button.innerHTML = isPassword ? eyeOffIcon : eyeIcon;
+                });
+            });
+
+            // Валидация в реальном времени
+            const form = document.getElementById('profileUpdateForm');
+            if (form) {
+                const inputs = form.querySelectorAll('.form-input');
+                
+                inputs.forEach(input => {
+                    const fieldWrapper = input.closest('.field-wrapper');
+                    const statusIcon = fieldWrapper?.querySelector('.field-icon-status');
+                    
+                    input.addEventListener('blur', () => {
+                        validateField(input, statusIcon);
+                    });
+                    
+                    input.addEventListener('input', () => {
+                        if (input.id === 'newPasswordInput') {
+                            updatePasswordStrength(input.value);
+                        }
+                        if (input.id === 'confirmPasswordInput') {
+                            validatePasswordMatch();
+                        }
+                        // Очищаем статус при вводе
+                        if (statusIcon) {
+                            statusIcon.className = 'field-icon field-icon-status';
+                        }
+                    });
+                });
+            }
+
+            // Функция валидации поля
+            function validateField(input, statusIcon) {
+                if (!input || !statusIcon) return;
+                
+                const value = input.value.trim();
+                const fieldName = input.name || input.id;
+                let isValid = true;
+                let errorMessage = '';
+                
+                // Валидация по типу поля
+                if (input.hasAttribute('required') && !value) {
+                    isValid = false;
+                    errorMessage = 'Это поле обязательно для заполнения';
+                } else if (fieldName.includes('username') && value.length < 3) {
+                    isValid = false;
+                    errorMessage = 'Логин должен содержать минимум 3 символа';
+                } else if (fieldName.includes('last_name') && value.length < 2) {
+                    isValid = false;
+                    errorMessage = 'Фамилия должна содержать минимум 2 символа';
+                } else if (fieldName.includes('first_name') && value.length < 2) {
+                    isValid = false;
+                    errorMessage = 'Имя должно содержать минимум 2 символа';
+                } else if (fieldName.includes('new_password') && value && value.length < 6) {
+                    isValid = false;
+                    errorMessage = 'Пароль должен содержать минимум 6 символов';
+                }
+                
+                // Обновляем иконку статуса
+                const checkIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+                const alertIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
+                
+                statusIcon.className = 'field-icon field-icon-status';
+                if (value) {
+                    if (isValid) {
+                        statusIcon.classList.add('field-icon-success');
+                        statusIcon.innerHTML = checkIcon;
+                    } else {
+                        statusIcon.classList.add('field-icon-error');
+                        statusIcon.innerHTML = alertIcon;
+                    }
+                }
+                
+                return isValid;
+            }
+
+            // Индикатор силы пароля
+            function updatePasswordStrength(password) {
+                const strengthFill = document.getElementById('passwordStrengthFill');
+                const strengthText = document.getElementById('passwordStrengthText');
+                
+                if (!strengthFill || !strengthText) return;
+                
+                if (!password) {
+                    strengthFill.style.width = '0%';
+                    strengthText.textContent = 'Введите пароль';
+                    strengthText.className = 'password-strength-text';
+                    return;
+                }
+                
+                let strength = 0;
+                let text = 'Очень слабый';
+                let className = 'password-strength-text strength-weak';
+                
+                if (password.length >= 6) strength += 25;
+                if (password.length >= 8) strength += 15;
+                if (password.length >= 12) strength += 10;
+                if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 15;
+                if (/\d/.test(password)) strength += 15;
+                if (/[^a-zA-Z\d]/.test(password)) strength += 20;
+                
+                if (strength >= 60) {
+                    text = 'Хороший';
+                    className = 'password-strength-text strength-good';
+                } else if (strength >= 40) {
+                    text = 'Средний';
+                    className = 'password-strength-text strength-medium';
+                } else if (strength >= 20) {
+                    text = 'Слабый';
+                    className = 'password-strength-text strength-weak';
+                }
+                
+                strengthFill.style.width = Math.min(strength, 100) + '%';
+                strengthText.textContent = text;
+                strengthText.className = className;
+            }
+
+            // Проверка совпадения паролей
+            function validatePasswordMatch() {
+                const newPassword = document.getElementById('newPasswordInput');
+                const confirmPassword = document.getElementById('confirmPasswordInput');
+                const confirmWrapper = confirmPassword?.closest('.field-wrapper');
+                const confirmStatusIcon = confirmWrapper?.querySelector('.field-icon-status');
+                
+                if (!newPassword || !confirmPassword || !confirmStatusIcon) return;
+                
+                const newPassValue = newPassword.value;
+                const confirmPassValue = confirmPassword.value;
+                
+                if (!confirmPassValue) {
+                    confirmStatusIcon.className = 'field-icon field-icon-status';
+                    return;
+                }
+                
+                const checkIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+                const alertIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
+                
+                if (newPassValue === confirmPassValue && newPassValue.length >= 6) {
+                    confirmStatusIcon.className = 'field-icon field-icon-status field-icon-success';
+                    confirmStatusIcon.innerHTML = checkIcon;
+                } else {
+                    confirmStatusIcon.className = 'field-icon field-icon-status field-icon-error';
+                    confirmStatusIcon.innerHTML = alertIcon;
+                }
+            }
+
+            // Обработка кнопки отмены
+            const cancelButton = document.querySelector('[data-cancel="profile-settings"]');
+            if (cancelButton) {
+                cancelButton.addEventListener('click', () => {
+                    const settingsBlock = document.getElementById('profileSettings');
+                    if (settingsBlock) {
+                        settingsBlock.setAttribute('hidden', '');
+                        const toggleButton = document.querySelector('[data-toggle="profile-settings"]');
+                        if (toggleButton) {
+                            toggleButton.textContent = 'Редактировать';
+                        }
+                    }
+                });
+            }
+
+            // Быстрые действия: копирование данных
+            document.querySelectorAll('[data-copy]').forEach(button => {
+                button.addEventListener('click', async () => {
+                    const copyType = button.dataset.copy;
+                    let textToCopy = '';
+
+                    if (copyType === 'username') {
+                        textToCopy = '{{ current_user.username }}';
+                    } else if (copyType === 'contact') {
+                        textToCopy = `{{ current_user.contact_info or '' }}`;
+                    }
+
+                    if (!textToCopy) return;
+
+                    try {
+                        await navigator.clipboard.writeText(textToCopy);
+                        showToast('Скопировано в буфер обмена', 'success');
+                        
+                        // Визуальная обратная связь
+                        const originalText = button.querySelector('span')?.textContent;
+                        const icon = button.querySelector('svg')?.outerHTML;
+                        button.innerHTML = icon + '<span>Скопировано!</span>';
+                        button.classList.add('quick-action-success');
+                        
+                        setTimeout(() => {
+                            button.innerHTML = icon + `<span>${originalText}</span>`;
+                            button.classList.remove('quick-action-success');
+                        }, 2000);
+                    } catch (err) {
+                        showToast('Не удалось скопировать', 'error');
+                    }
+                });
+            });
+
+            // Функция показа toast-уведомления
+            function showToast(message, type = 'info') {
+                const container = document.getElementById('toastContainer') || createToastContainer();
+                
+                // Иконки для toast
+                const checkIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>';
+                const alertIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
+                const infoIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>';
+                const closeIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>';
+                
+                const icons = {
+                    success: checkIcon,
+                    error: alertIcon,
+                    info: infoIcon
+                };
+                
+                const toast = document.createElement('div');
+                toast.className = `toast toast-${type}`;
+                toast.setAttribute('role', 'alert');
+                toast.setAttribute('data-toast', '');
+                toast.innerHTML = `
+                    <div class="toast-icon">${icons[type] || icons.info}</div>
+                    <div class="toast-content">
+                        <div class="toast-message">${message}</div>
+                    </div>
+                    <button type="button" class="toast-close" data-close-toast aria-label="Закрыть уведомление">
+                        ${closeIcon}
+                    </button>
+                    <div class="toast-progress" data-toast-progress></div>
+                `;
+                
+                container.appendChild(toast);
+                
+                // Автоматическое закрытие
+                setTimeout(() => {
+                    toast.classList.add('toast-exit');
+                    setTimeout(() => toast.remove(), 300);
+                }, 5000);
+                
+                // Обработчик закрытия
+                toast.querySelector('[data-close-toast]')?.addEventListener('click', () => {
+                    toast.classList.add('toast-exit');
+                    setTimeout(() => toast.remove(), 300);
+                });
+            }
+
+            function createToastContainer() {
+                const container = document.createElement('div');
+                container.id = 'toastContainer';
+                container.className = 'toast-container';
+                container.setAttribute('aria-live', 'polite');
+                container.setAttribute('aria-atomic', 'true');
+                document.body.appendChild(container);
+                return container;
+            }
+
+            // Индикатор загрузки при отправке формы
+            const profileUpdateForm = document.getElementById('profileUpdateForm');
+            if (profileUpdateForm) {
+                profileUpdateForm.addEventListener('submit', (e) => {
+                    const submitButton = profileUpdateForm.querySelector('button[type="submit"]');
+                    if (submitButton && !submitButton.disabled) {
+                        submitButton.disabled = true;
+                        const originalText = submitButton.textContent.trim();
+                        submitButton.innerHTML = `
+                            <span class="loading-spinner-small"></span>
+                            <span>Сохранение...</span>
+                        `;
+                        submitButton.setAttribute('aria-busy', 'true');
+                        
+                        // Восстановление кнопки при ошибке (через 10 секунд на всякий случай)
+                        setTimeout(() => {
+                            if (submitButton.disabled) {
+                                submitButton.disabled = false;
+                                submitButton.textContent = originalText;
+                                submitButton.removeAttribute('aria-busy');
+                            }
+                        }, 10000);
+                    }
+                });
+            }
+
+            // Обработка просмотра деталей генерации в профиле
+            document.querySelectorAll('.view-details-profile').forEach(button => {
+                button.addEventListener('click', async function() {
+                    const recordId = this.dataset.id;
+                    if (!recordId) return;
+
+                    if (modalDetailsContent) {
+                        modalDetailsContent.innerHTML = `
+                            <div class="loading-state">
+                                <div class="loading-spinner"></div>
+                                <p>Загрузка данных...</p>
+                            </div>
+                        `;
+                    }
+                    openDetailsModal();
+
+                    try {
+                        const response = await fetch(`/history/details/${recordId}`);
+                        if (!response.ok) {
+                            throw new Error('Ошибка загрузки данных');
+                        }
+                        const data = await response.json();
+                        renderDetails(data);
+                    } catch (error) {
+                        if (modalDetailsContent) {
+                            modalDetailsContent.innerHTML = `
+                                <div class="error-state">
+                                    <div class="error-icon">{{ sidebar_icon('alert-circle')|safe }}</div>
+                                    <h4>Ошибка загрузки</h4>
+                                    <p>${error.message}</p>
+                                </div>
+                            `;
+                        }
+                    }
+                });
+            });
         });
     </script>
 {% endblock %}
 
 {% block overlays %}
     {{ super() }}
+    <!-- Модальное окно для деталей генерации -->
+    <div class="modal" id="detailsModal" aria-hidden="true" role="dialog" aria-modal="true">
+        <div class="modal-dialog modal-dialog-large">
+            <div class="modal-header">
+                <div class="modal-header-content">
+                    <h3 class="modal-title" id="detailsModalLabel">
+                        <span class="modal-icon">{{ sidebar_icon('file-text')|safe }}</span>
+                        Детали коммерческого предложения
+                    </h3>
+                    <div class="modal-subtitle" id="modalSubtitle"></div>
+                </div>
+                <button type="button" class="modal-close" data-close-modal aria-label="Закрыть">
+                    {{ sidebar_icon('x')|safe }}
+                </button>
+            </div>
+            <div class="modal-body" id="modalDetailsContent">
+                <div class="loading-state">
+                    <div class="loading-spinner"></div>
+                    <p>Загрузка данных...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="modal-footer-info">
+                    <span class="modal-timestamp" id="modalTimestampFooter"></span>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" data-close-modal>Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <div class="modal {% if show_registration_modal %}is-open{% endif %}" id="registerModal" aria-hidden="{{ 'false' if show_registration_modal else 'true' }}">
         <div class="modal-dialog">
             <div class="modal-header">

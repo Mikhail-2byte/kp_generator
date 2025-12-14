@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="content-container">
+    <div class="card page-actions">
+        <a href="{{ url_for('admin.admin_panel') }}" class="btn btn-outline">← Назад к админке</a>
+    </div>
+
+    <div class="card">
+        <h2 class="section-title">Настройки системы</h2>
+        <p class="section-description">Управление основными параметрами приложения.</p>
+        
+        <form method="post" class="form-grid">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="update_settings">
+            
+            <div class="field-group">
+                <label class="field-label">Название приложения</label>
+                <input type="text" name="app_name" value="{{ config.get('app_name', 'KP Generator') }}" class="form-control" readonly>
+                <small class="muted-text">Изменяется в конфигурационном файле</small>
+            </div>
+            
+            <div class="field-group">
+                <label class="field-label">Версия</label>
+                <input type="text" value="{{ config.get('version', '1.0.0') }}" class="form-control" readonly>
+            </div>
+            
+            <div class="field-group">
+                <label class="field-label">Режим отладки</label>
+                <input type="text" value="{{ 'Включен' if config.get('debug', False) else 'Выключен' }}" class="form-control" readonly>
+            </div>
+            
+            <div class="field-group">
+                <label class="field-label">База данных</label>
+                <input type="text" value="{{ config.get('database', {}).get('url', 'Не указана') }}" class="form-control" readonly>
+            </div>
+            
+            <div class="field-group span-2">
+                <label class="field-label">Информация о системе</label>
+                <div class="info-box">
+                    <p><strong>Путь к конфигурации:</strong> config/</p>
+                    <p><strong>Путь к шаблонам документов:</strong> templates_docs/</p>
+                    <p><strong>Путь к данным:</strong> data/</p>
+                    <p><strong>Путь к версиям:</strong> config/versions/</p>
+                </div>
+            </div>
+            
+            <div class="controls-row">
+                <span></span>
+                <button type="submit" class="btn btn-primary" disabled>Сохранить изменения</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2 class="section-title">Справочники</h2>
+        <div class="info-box">
+            <p>Управление справочниками доступно через соответствующие разделы:</p>
+            <ul>
+                <li><a href="{{ url_for('admin.manage_duty') }}">Ставки пошлин</a></li>
+                <li><a href="{{ url_for('admin.manage_materials') }}">Аналоги материалов</a></li>
+                <li><a href="{{ url_for('admin.manage_logistics') }}">Логистика</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2 class="section-title">Контент</h2>
+        <div class="info-box">
+            <p>Управление контентом доступно через соответствующие разделы:</p>
+            <ul>
+                <li><a href="{{ url_for('admin.manage_orders') }}">Распоряжения</a></li>
+                <li><a href="{{ url_for('admin.manage_templates') }}">Шаблоны</a></li>
+                <li><a href="{{ url_for('admin.manage_instructions') }}">Инструкции</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<style>
+.info-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    margin-top: 0.5rem;
+}
+
+.info-box ul {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+}
+
+.info-box li {
+    margin: 0.25rem 0;
+}
+
+.info-box a {
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.info-box a:hover {
+    text-decoration: underline;
+}
+</style>
+{% endblock %}
+

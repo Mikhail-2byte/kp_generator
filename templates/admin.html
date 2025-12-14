@@ -6,6 +6,7 @@
         <h2 class="section-title">Администрирование</h2>
         <p class="section-description">Выберите задачу для редактирования данных.</p>
         <div class="admin-task-buttons">
+            <a class="btn btn-secondary" href="{{ url_for('admin.manage_users') }}">Пользователи</a>
             <a class="btn btn-secondary" href="{{ url_for('admin.manage_duty') }}">Ставки пошлин</a>
             <a class="btn btn-secondary" href="{{ url_for('admin.manage_materials') }}">Аналоги материалов</a>
             <a class="btn btn-secondary" href="{{ url_for('admin.manage_logistics') }}">Логистика</a>
@@ -13,6 +14,7 @@
             <a class="btn btn-secondary" href="{{ url_for('admin.manage_templates') }}">Шаблоны</a>
             <a class="btn btn-secondary" href="{{ url_for('admin.manage_instructions') }}">Инструкции</a>
             <a class="btn btn-secondary" href="{{ url_for('admin.manage_stats') }}">Статистика активности</a>
+            <a class="btn btn-secondary" href="{{ url_for('admin.manage_settings') }}">Настройки системы</a>
         </div>
     </div>
 </div>

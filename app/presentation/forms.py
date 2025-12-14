@@ -6,7 +6,8 @@ from wtforms import (
     BooleanField,
     HiddenField,
     TextAreaField,
-    DecimalField
+    DecimalField,
+    SelectField
 )
 from wtforms.validators import DataRequired, Length, EqualTo, Optional, NumberRange
 
@@ -114,3 +115,39 @@ class LogisticsCityDeleteForm(FlaskForm):
     action = HiddenField(default='delete_city', validators=[DataRequired()])
     index = HiddenField(validators=[DataRequired()])
     submit = SubmitField('Удалить')
+
+
+class AdminUserForm(FlaskForm):
+    """Форма создания/редактирования пользователя администратором."""
+    username = StringField('Логин', validators=[DataRequired(), Length(min=3, max=50)])
+    last_name = StringField('Фамилия', validators=[Optional(), Length(max=100)])
+    first_name = StringField('Имя', validators=[Optional(), Length(max=100)])
+    contact_info = TextAreaField('Контактная информация', validators=[Optional(), Length(max=1000)])
+    role = SelectField('Роль', choices=[('user', 'Пользователь'), ('admin', 'Администратор')], validators=[DataRequired()])
+    password = PasswordField('Пароль', validators=[Optional(), Length(min=6, max=128)])
+    confirm_password = PasswordField(
+        'Подтвердите пароль',
+        validators=[Optional(), EqualTo('password', message='Пароли должны совпадать')]
+    )
+    submit = SubmitField('Сохранить')
+
+
+class AdminUserDeleteForm(FlaskForm):
+    """Форма удаления пользователя."""
+    user_id = HiddenField(validators=[DataRequired()])
+    confirm_delete = BooleanField(
+        'Подтвердить удаление',
+        validators=[DataRequired()]
+    )
+    submit = SubmitField('Удалить пользователя')
+
+
+class AdminResetPasswordForm(FlaskForm):
+    """Форма сброса пароля пользователя."""
+    user_id = HiddenField(validators=[DataRequired()])
+    new_password = PasswordField('Новый пароль', validators=[DataRequired(), Length(min=6, max=128)])
+    confirm_password = PasswordField(
+        'Подтвердите пароль',
+        validators=[DataRequired(), EqualTo('new_password', message='Пароли должны совпадать')]
+    )
+    submit = SubmitField('Сбросить пароль')

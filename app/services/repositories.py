@@ -76,6 +76,17 @@ class UserRepository:
             return {}
         return self._db.get_user_statistics(int(user_id)) or {}
 
+    def get_users_list(
+        self,
+        *,
+        page: int = 1,
+        per_page: int = 25,
+        search: Optional[str] = None,
+        role_filter: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Возвращает список пользователей с пагинацией, поиском и фильтрацией."""
+        return self._db.get_users_list(page=page, per_page=per_page, search=search, role_filter=role_filter)
+
 
 class GenerationRepository:
     """Сервис-обёртка для чтения и сохранения историй генераций."""

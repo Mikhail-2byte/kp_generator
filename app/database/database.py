@@ -1073,3 +1073,84 @@ def get_unique_companies() -> List[str]:
     except Exception as exc:
         logging.error('Error fetching unique companies: %s', exc)
         return []
+
+
+def get_users_list(
+    *,
+    page: int = 1,
+    per_page: int = 25,
+    search: Optional[str] = None,
+    role_filter: Optional[str] = None,
+) -> Dict[str, object]:
+    """Возвращает список пользователей с пагинацией, поиском и фильтрацией."""
+    try:
+        page = max(int(page or 1), 1)
+        per_page = max(1, min(int(per_page or 25), 100))
+        offset = (page - 1) * per_page
+
+        with _session_scope() as session:
+            query = session.query(UserRecord)
+
+            # Поиск по имени пользователя, фамилии, имени
+            if search:
+                search_term = f'%{search.strip().lower()}%'
+                query = query.filter(
+                    func.lower(UserRecord.username).like(search_term)
+                    | func.lower(func.coalesce(UserRecord.last_name, '')).like(search_term)
+                    | func.lower(func.coalesce(UserRecord.first_name, '')).like(search_term)
+                )
+
+            # Фильтр по роли
+            if role_filter and role_filter.lower() in ('admin', 'user'):
+                query = query.filter(func.lower(UserRecord.role) == role_filter.lower())
+
+            # Общее количество
+            total = query.count()
+
+            # Получаем пользователей с пагинацией
+            users = query.order_by(UserRecord.username).offset(offset).limit(per_page).all()
+
+            result = []
+            for user in users:
+                full_name = ' '.join(
+                    value for value in [user.last_name, user.first_name] if value
+                ).strip() or user.username
+
+                result.append({
+                    'id': user.id,
+                    'username': user.username,
+                    'role': user.role,
+                    'last_name': user.last_name,
+                    'first_name': user.first_name,
+                    'full_name': full_name,
+                    'contact_info': user.contact_info,
+                    'created_at': _format_timestamp(user.created_at),
+                    'last_login': _format_timestamp(user.last_login),
+                })
+
+            total_pages = math.ceil(total / per_page) if per_page else 1
+
+            return {
+                'items': result,
+                'pagination': {
+                    'page': page,
+                    'per_page': per_page,
+                    'total': total,
+                    'pages': max(total_pages, 1),
+                    'has_prev': page > 1,
+                    'has_next': page < max(total_pages, 1),
+                }
+            }
+    except Exception as exc:
+        logging.error('Error getting users list: %s', exc)
+        return {
+            'items': [],
+            'pagination': {
+                'page': page,
+                'per_page': per_page,
+                'total': 0,
+                'pages': 1,
+                'has_prev': False,
+                'has_next': False,
+            }
+        }

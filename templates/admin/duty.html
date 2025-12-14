@@ -7,34 +7,39 @@
     </div>
 
     <div class="card">
-        <h2 class="section-title">Добавление ставки пошлины</h2>
-        <p class="section-description">Заполняйте форму, чтобы добавить новую позицию в справочник пошлин.</p>
-        <form method="post" class="form-grid three-columns">
+        <h2 class="section-title" id="form-title">Добавление ставки пошлины</h2>
+        <p class="section-description" id="form-description">Заполняйте форму, чтобы добавить новую позицию в справочник пошлин.</p>
+        <form method="post" class="form-grid three-columns" id="dutyForm">
             {{ duty_form.hidden_tag() }}
+            <input type="hidden" name="action" id="form-action" value="add_duty">
+            <input type="hidden" name="index" id="form-index" value="">
             <div class="field-group">
                 {{ duty_form.product.label(class_='field-label') }}
-                {{ duty_form.product(class_='') }}
+                {{ duty_form.product(class_='', id='form-product') }}
                 {% for error in duty_form.product.errors %}
                     <div class="field-error">{{ error }}</div>
                 {% endfor %}
             </div>
             <div class="field-group">
                 {{ duty_form.category.label(class_='field-label') }}
-                {{ duty_form.category(class_='') }}
+                {{ duty_form.category(class_='', id='form-category') }}
                 {% for error in duty_form.category.errors %}
                     <div class="field-error">{{ error }}</div>
                 {% endfor %}
             </div>
             <div class="field-group">
                 {{ duty_form.duty_percent.label(class_='field-label') }}
-                {{ duty_form.duty_percent(class_='') }}
+                {{ duty_form.duty_percent(class_='', id='form-duty-percent') }}
                 {% for error in duty_form.duty_percent.errors %}
                     <div class="field-error">{{ error }}</div>
                 {% endfor %}
             </div>
             <div class="controls-row">
                 <span></span>
-                {{ duty_form.submit(class_='btn btn-primary') }}
+                <div>
+                    <button type="submit" class="btn btn-primary" id="submit-btn">Добавить позицию</button>
+                    <button type="button" class="btn btn-outline" id="cancel-btn" onclick="resetForm()" style="display:none;">Отмена</button>
+                </div>
             </div>
         </form>
     </div>
@@ -58,11 +63,12 @@
                         <td>{{ item.category }}</td>
                         <td>{{ item.duty_percent|format_number(2) }}</td>
                         <td class="table-actions">
-                            <form method="post" class="inline-form">
+                            <button type="button" class="btn btn-sm btn-secondary" onclick="showEditModal({{ loop.index0 }}, '{{ item.product|e }}', '{{ item.category|e }}', {{ item.duty_percent }})">Редактировать</button>
+                            <form method="post" class="inline-form" style="display:inline;">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <input type="hidden" name="action" value="delete_duty">
                                 <input type="hidden" name="index" value="{{ loop.index0 }}">
-                                <button type="submit" class="btn btn-danger">Удалить</button>
+                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Вы уверены, что хотите удалить эту позицию?')">Удалить</button>
                             </form>
                         </td>
                     </tr>
@@ -76,4 +82,29 @@
         </div>
     </div>
 </div>
+
+<script>
+function showEditModal(index, product, category, dutyPercent) {
+    document.getElementById('form-title').textContent = 'Редактирование ставки пошлины';
+    document.getElementById('form-description').textContent = 'Измените данные позиции в справочнике пошлин.';
+    document.getElementById('form-action').value = 'edit_duty';
+    document.getElementById('form-index').value = index;
+    document.getElementById('form-product').value = product;
+    document.getElementById('form-category').value = category;
+    document.getElementById('form-duty-percent').value = dutyPercent;
+    document.getElementById('submit-btn').textContent = 'Сохранить изменения';
+    document.getElementById('cancel-btn').style.display = 'inline-block';
+    document.getElementById('dutyForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function resetForm() {
+    document.getElementById('form-title').textContent = 'Добавление ставки пошлины';
+    document.getElementById('form-description').textContent = 'Заполняйте форму, чтобы добавить новую позицию в справочник пошлин.';
+    document.getElementById('form-action').value = 'add_duty';
+    document.getElementById('form-index').value = '';
+    document.getElementById('dutyForm').reset();
+    document.getElementById('submit-btn').textContent = 'Добавить позицию';
+    document.getElementById('cancel-btn').style.display = 'none';
+}
+</script>
 {% endblock %}

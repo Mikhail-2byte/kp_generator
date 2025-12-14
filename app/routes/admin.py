@@ -1,6 +1,12 @@
 from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
 
+from flask_login import current_user
+from werkzeug.security import generate_password_hash
+
 from app.presentation.forms import (
+    AdminResetPasswordForm,
+    AdminUserDeleteForm,
+    AdminUserForm,
     DutyDeleteForm,
     DutyItemForm,
     GBMaterialDeleteForm,
@@ -11,7 +17,7 @@ from app.presentation.forms import (
 from app.auth.security import admin_required
 from app.services import datasets
 from app.services.content_manager import ContentManager, build_manager
-from app.services.repositories import admin_stats_repository
+from app.services.repositories import admin_stats_repository, user_repository
 from app.presentation.ui import build_context
 
 
@@ -28,6 +34,31 @@ def manage_stats():
             'admin_stats',
             'Статистика активности',
             user_activity=user_activity,
+        )
+    )
+
+
+@admin_bp.route('/admin/settings', methods=['GET', 'POST'])
+@admin_required
+def manage_settings():
+    """Страница настроек системы."""
+    from flask import current_app
+    
+    config = current_app.config.get('APP_SETTINGS', {})
+    
+    if request.method == 'POST':
+        action = request.form.get('action', '')
+        if action == 'update_settings':
+            # Здесь можно добавить логику обновления настроек
+            flash('Настройки обновлены.', 'success')
+            return redirect(url_for('admin.manage_settings'))
+    
+    return render_template(
+        'admin/settings.html',
+        **build_context(
+            'admin_settings',
+            'Настройки системы',
+            config=config,
         )
     )
 
@@ -227,6 +258,35 @@ def manage_duty():
                 return redirect(url_for('admin.manage_duty'))
             flash('Исправьте ошибки в форме.', 'danger')
 
+        elif action == 'edit_duty':
+            if duty_form.validate():
+                try:
+                    index = int(request.form.get('index', '-1'))
+                except (TypeError, ValueError):
+                    index = -1
+                if 0 <= index < len(duty_items):
+                    product = duty_form.product.data.strip()
+                    category = duty_form.category.data.strip()
+                    duty_percent_value = duty_form.duty_percent.data
+                    duty_percent = float(duty_percent_value) if duty_percent_value is not None else 0.0
+
+                    duty_items[index] = {
+                        'product': product,
+                        'category': category,
+                        'duty_percent': duty_percent,
+                        'product_search': product.lower(),
+                        'category_search': category.lower(),
+                        'duty_search': str(duty_percent).lower()
+                    }
+                    datasets.save_duty_rates(duty_items, actor=_current_actor())
+                    datasets.refresh_duty_rates()
+                    flash('Позиция пошлины обновлена.', 'success')
+                else:
+                    flash('Не удалось найти позицию для редактирования.', 'danger')
+            else:
+                flash('Исправьте ошибки в форме.', 'danger')
+            return redirect(url_for('admin.manage_duty'))
+
         elif action == 'delete_duty':
             delete_form = DutyDeleteForm(formdata=request.form)
             if delete_form.validate():
@@ -293,6 +353,37 @@ def manage_materials():
                 return redirect(url_for('admin.manage_materials'))
             flash('Исправьте ошибки в форме.', 'danger')
 
+        elif action == 'edit_gb':
+            if gb_form.validate():
+                try:
+                    index = int(request.form.get('index', '-1'))
+                except (TypeError, ValueError):
+                    index = -1
+                if 0 <= index < len(gb_materials):
+                    russian_name = gb_form.russian.data.strip()
+                    gb_name = gb_form.gb.data.strip()
+                    notes_text = (gb_form.notes.data or '').strip()
+                    composition_list = datasets.parse_composition_input(gb_form.composition.data)
+                    composition_search = ' '.join(
+                        f"{comp.get('element', '')} {comp.get('content', '')}" for comp in composition_list
+                    ).lower()
+
+                    gb_materials[index] = {
+                        'russian': russian_name,
+                        'gb': gb_name,
+                        'notes': notes_text,
+                        'composition': composition_list,
+                        'composition_search': composition_search
+                    }
+                    datasets.save_gb_materials(gb_materials, actor=_current_actor())
+                    datasets.refresh_gb_analogs()
+                    flash('Материал обновлён.', 'success')
+                else:
+                    flash('Не удалось найти материал для редактирования.', 'danger')
+            else:
+                flash('Исправьте ошибки в форме.', 'danger')
+            return redirect(url_for('admin.manage_materials'))
+
         elif action == 'delete_gb':
             delete_form = GBMaterialDeleteForm(formdata=request.form)
             if delete_form.validate():
@@ -352,9 +443,39 @@ def manage_logistics():
                     'trail_price': trail_price
                 })
                 datasets.save_logistics_cities(logistics_cities, actor=_current_actor())
+                datasets.refresh_logistics_cities()
                 flash('Город добавлен.', 'success')
                 return redirect(url_for('admin.manage_logistics'))
             flash('Исправьте ошибки в форме.', 'danger')
+
+        elif action == 'edit_city':
+            if logistics_form.validate():
+                try:
+                    index = int(request.form.get('index', '-1'))
+                except (TypeError, ValueError):
+                    index = -1
+                if 0 <= index < len(logistics_cities):
+                    city_name = logistics_form.name.data.strip()
+                    region_name = (logistics_form.region.data or '').strip()
+                    truck_price_value = logistics_form.truck_price.data
+                    trail_price_value = logistics_form.trail_price.data
+                    truck_price = float(truck_price_value) if truck_price_value is not None else 0.0
+                    trail_price = float(trail_price_value) if trail_price_value is not None else 0.0
+
+                    logistics_cities[index] = {
+                        'name': city_name,
+                        'region': region_name or None,
+                        'truck_price': truck_price,
+                        'trail_price': trail_price
+                    }
+                    datasets.save_logistics_cities(logistics_cities, actor=_current_actor())
+                    datasets.refresh_logistics_cities()
+                    flash('Город обновлён.', 'success')
+                else:
+                    flash('Не удалось найти город для редактирования.', 'danger')
+            else:
+                flash('Исправьте ошибки в форме.', 'danger')
+            return redirect(url_for('admin.manage_logistics'))
 
         elif action == 'delete_city':
             delete_form = LogisticsCityDeleteForm(formdata=request.form)
@@ -553,8 +674,179 @@ def _extract_content_payload() -> dict:
 
 
 def _current_actor() -> str:
-    from flask_login import current_user
-
     if current_user.is_authenticated:
         return current_user.username or str(current_user.id)
     return 'system'
+
+
+@admin_bp.route('/admin/users', methods=['GET', 'POST'])
+@admin_required
+def manage_users():
+    """Управление пользователями: список, создание, редактирование, удаление."""
+    search = request.args.get('search', '').strip()
+    role_filter = request.args.get('role', '').strip() or None
+    try:
+        page = int(request.args.get('page', '1'))
+    except ValueError:
+        page = 1
+
+    users_data = user_repository.get_users_list(
+        page=page,
+        per_page=25,
+        search=search if search else None,
+        role_filter=role_filter
+    )
+
+    user_form = AdminUserForm(prefix='user')
+    delete_form = AdminUserDeleteForm(prefix='delete')
+    reset_password_form = AdminResetPasswordForm(prefix='reset')
+
+    if request.method == 'POST':
+        action = request.form.get('action', '')
+
+        if action == 'create_user':
+            if user_form.validate():
+                username = user_form.username.data.strip()
+                password = user_form.password.data
+                
+                if not password:
+                    flash('Пароль обязателен при создании пользователя.', 'danger')
+                elif user_repository.get_by_username(username):
+                    flash('Пользователь с таким логином уже существует.', 'danger')
+                else:
+                    password_hash = generate_password_hash(password)
+                    new_user = user_repository.create_user(
+                        username=username,
+                        password_hash=password_hash,
+                        last_name=user_form.last_name.data.strip() if user_form.last_name.data else None,
+                        first_name=user_form.first_name.data.strip() if user_form.first_name.data else None,
+                        role=user_form.role.data.strip().lower() or 'user',
+                        contact_info=user_form.contact_info.data.strip() if user_form.contact_info.data else None
+                    )
+                    if new_user:
+                        flash('Пользователь успешно создан.', 'success')
+                        return redirect(url_for('admin.manage_users'))
+                    flash('Не удалось создать пользователя.', 'danger')
+
+        elif action == 'edit_user':
+            user_id = request.form.get('user_id')
+            if not user_id:
+                flash('Не указан идентификатор пользователя.', 'danger')
+            else:
+                user = user_repository.get_by_id(user_id)
+                if not user:
+                    flash('Пользователь не найден.', 'danger')
+                else:
+                    # Валидация без пароля (пароль опционален при редактировании)
+                    username = request.form.get('user-username', '').strip()
+                    password = request.form.get('user-password', '').strip()
+                    confirm_password = request.form.get('user-confirm_password', '').strip()
+                    
+                    if not username:
+                        flash('Логин обязателен.', 'danger')
+                    elif password and password != confirm_password:
+                        flash('Пароли не совпадают.', 'danger')
+                    elif password and len(password) < 6:
+                        flash('Пароль должен содержать минимум 6 символов.', 'danger')
+                    else:
+                        existing_user = user_repository.get_by_username(username)
+                        if existing_user and str(existing_user.id) != str(user_id):
+                            flash('Пользователь с таким логином уже существует.', 'danger')
+                        else:
+                            password_hash = None
+                            if password:
+                                password_hash = generate_password_hash(password)
+                            
+                            updated = user_repository.update_profile(
+                                user_id=int(user_id),
+                                username=username,
+                                last_name=request.form.get('user-last_name', '').strip() or None,
+                                first_name=request.form.get('user-first_name', '').strip() or None,
+                                contact_info=request.form.get('user-contact_info', '').strip() or None,
+                                password_hash=password_hash
+                            )
+                            
+                            # Обновляем роль отдельно, если нужно
+                            new_role = request.form.get('user-role', 'user').strip().lower() or 'user'
+                            if new_role != user.role:
+                                from app.database.database import _session_scope
+                                from app.models.models import UserRecord
+                                with _session_scope() as session:
+                                    user_record = session.query(UserRecord).filter(UserRecord.id == int(user_id)).one_or_none()
+                                    if user_record:
+                                        user_record.role = new_role
+                            
+                            if updated:
+                                flash('Пользователь успешно обновлён.', 'success')
+                                return redirect(url_for('admin.manage_users'))
+                            flash('Не удалось обновить пользователя.', 'danger')
+
+        elif action == 'delete_user':
+            if delete_form.validate():
+                user_id = delete_form.user_id.data
+                user = user_repository.get_by_id(user_id)
+                if not user:
+                    flash('Пользователь не найден.', 'danger')
+                elif str(user.id) == str(current_user.id):
+                    flash('Нельзя удалить самого себя.', 'danger')
+                else:
+                    if user_repository.delete(user_id):
+                        flash('Пользователь успешно удалён.', 'info')
+                        return redirect(url_for('admin.manage_users'))
+                    flash('Не удалось удалить пользователя.', 'danger')
+
+        elif action == 'reset_password':
+            if reset_password_form.validate():
+                user_id = reset_password_form.user_id.data
+                user = user_repository.get_by_id(user_id)
+                if not user:
+                    flash('Пользователь не найден.', 'danger')
+                else:
+                    password_hash = generate_password_hash(reset_password_form.new_password.data)
+                    if user_repository.update_profile(
+                        user_id=int(user_id),
+                        username=user.username,
+                        last_name=user.last_name,
+                        first_name=user.first_name,
+                        contact_info=user.contact_info,
+                        password_hash=password_hash
+                    ):
+                        flash('Пароль успешно сброшен.', 'success')
+                        return redirect(url_for('admin.manage_users'))
+                    flash('Не удалось сбросить пароль.', 'danger')
+
+        elif action == 'change_role':
+            user_id = request.form.get('user_id')
+            new_role = request.form.get('role', '').strip().lower()
+            if not user_id or new_role not in ('admin', 'user'):
+                flash('Некорректные данные для изменения роли.', 'danger')
+            else:
+                user = user_repository.get_by_id(user_id)
+                if not user:
+                    flash('Пользователь не найден.', 'danger')
+                elif str(user.id) == str(current_user.id):
+                    flash('Нельзя изменить роль самому себе.', 'danger')
+                else:
+                    from app.database.database import _session_scope
+                    from app.models.models import UserRecord
+                    with _session_scope() as session:
+                        user_record = session.query(UserRecord).filter(UserRecord.id == int(user_id)).one_or_none()
+                        if user_record:
+                            user_record.role = new_role
+                            flash(f'Роль пользователя изменена на "{new_role}".', 'success')
+                            return redirect(url_for('admin.manage_users'))
+                        flash('Не удалось изменить роль.', 'danger')
+
+    return render_template(
+        'admin/users.html',
+        **build_context(
+            'admin_users',
+            'Управление пользователями',
+            users_data=users_data,
+            user_form=user_form,
+            delete_form=delete_form,
+            reset_password_form=reset_password_form,
+            search=search,
+            role_filter=role_filter,
+        )
+    )

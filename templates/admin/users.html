@@ -1,0 +1,523 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="content-container">
+    <div class="card page-actions">
+        <a href="{{ url_for('admin.admin_panel') }}" class="btn btn-outline">← Назад к админке</a>
+    </div>
+
+    <div class="card">
+        <h2 class="section-title">Управление пользователями</h2>
+        
+        <!-- Поиск и фильтры -->
+        <form method="get" class="search-filters" style="margin-bottom: 20px;">
+            <div style="display: flex; gap: 10px; align-items: flex-end;">
+                <div style="flex: 1;">
+                    <label for="search" class="field-label">Поиск</label>
+                    <input type="text" id="search" name="search" value="{{ search }}" placeholder="Логин, фамилия, имя..." class="form-control">
+                </div>
+                <div>
+                    <label for="role" class="field-label">Роль</label>
+                    <select id="role" name="role" class="form-control">
+                        <option value="">Все</option>
+                        <option value="admin" {% if role_filter == 'admin' %}selected{% endif %}>Администратор</option>
+                        <option value="user" {% if role_filter == 'user' %}selected{% endif %}>Пользователь</option>
+                    </select>
+                </div>
+                <div>
+                    <button type="submit" class="btn btn-primary">Поиск</button>
+                    <a href="{{ url_for('admin.manage_users') }}" class="btn btn-outline">Сбросить</a>
+                </div>
+            </div>
+        </form>
+
+        <!-- Кнопка создания пользователя -->
+        <div style="margin-bottom: 20px;">
+            <button type="button" class="btn btn-primary" onclick="showCreateModal()">+ Создать пользователя</button>
+        </div>
+
+        <!-- Список пользователей -->
+        <div class="history-table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Логин</th>
+                        <th>ФИО</th>
+                        <th>Роль</th>
+                        <th>Дата создания</th>
+                        <th>Последний вход</th>
+                        <th style="width:300px;">Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users_data['items'] %}
+                    <tr>
+                        <td>{{ user.id }}</td>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.full_name }}</td>
+                        <td>
+                            <span class="badge {% if user.role == 'admin' %}badge-danger{% else %}badge-secondary{% endif %}">
+                                {{ 'Администратор' if user.role == 'admin' else 'Пользователь' }}
+                            </span>
+                        </td>
+                        <td>{{ user.created_at or '—' }}</td>
+                        <td>{{ user.last_login or '—' }}</td>
+                        <td class="table-actions">
+                            <button type="button" class="btn btn-sm btn-secondary" 
+                                    data-action="edit"
+                                    data-user-id="{{ user.id }}"
+                                    data-username="{{ user.username }}"
+                                    data-last-name="{{ user.last_name or '' }}"
+                                    data-first-name="{{ user.first_name or '' }}"
+                                    data-contact-info="{{ user.contact_info or '' }}"
+                                    data-role="{{ user.role }}">Редактировать</button>
+                            <button type="button" class="btn btn-sm btn-warning" 
+                                    data-action="reset-password"
+                                    data-user-id="{{ user.id }}"
+                                    data-username="{{ user.username }}">Сброс пароля</button>
+                            {% if current_user.is_authenticated and user.id|string != current_user.id|string %}
+                            <button type="button" class="btn btn-sm btn-danger" 
+                                    data-action="delete"
+                                    data-user-id="{{ user.id }}"
+                                    data-username="{{ user.username }}">Удалить</button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="muted-text">Пользователи не найдены.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Пагинация -->
+        {% if users_data['pagination'].pages > 1 %}
+        <div class="pagination" style="margin-top: 20px;">
+            {% if users_data['pagination'].has_prev %}
+            <a href="{{ url_for('admin.manage_users', page=users_data['pagination'].page - 1, search=search, role=role_filter) }}" class="btn btn-outline">← Назад</a>
+            {% endif %}
+            <span>Страница {{ users_data['pagination'].page }} из {{ users_data['pagination'].pages }} (всего: {{ users_data['pagination'].total }})</span>
+            {% if users_data['pagination'].has_next %}
+            <a href="{{ url_for('admin.manage_users', page=users_data['pagination'].page + 1, search=search, role=role_filter) }}" class="btn btn-outline">Вперёд →</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Модальное окно создания пользователя -->
+<div id="createModal" class="modal" aria-hidden="true">
+    <div class="modal-content">
+        <span class="close" data-close-modal>&times;</span>
+        <h3>Создать пользователя</h3>
+        <form method="post" id="createUserForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="create_user">
+            {{ user_form.hidden_tag() }}
+            <div class="field-group">
+                {{ user_form.username.label(class_='field-label') }}
+                {{ user_form.username(class_='form-control') }}
+                {% for error in user_form.username.errors %}
+                    <div class="field-error">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <div class="field-group">
+                {{ user_form.password.label(class_='field-label') }}
+                {{ user_form.password(class_='form-control') }}
+                {% for error in user_form.password.errors %}
+                    <div class="field-error">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <div class="field-group">
+                {{ user_form.confirm_password.label(class_='field-label') }}
+                {{ user_form.confirm_password(class_='form-control') }}
+                {% for error in user_form.confirm_password.errors %}
+                    <div class="field-error">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <div class="field-group">
+                {{ user_form.last_name.label(class_='field-label') }}
+                {{ user_form.last_name(class_='form-control') }}
+            </div>
+            <div class="field-group">
+                {{ user_form.first_name.label(class_='field-label') }}
+                {{ user_form.first_name(class_='form-control') }}
+            </div>
+            <div class="field-group">
+                {{ user_form.contact_info.label(class_='field-label') }}
+                {{ user_form.contact_info(class_='form-control', rows=3) }}
+            </div>
+            <div class="field-group">
+                {{ user_form.role.label(class_='field-label') }}
+                {{ user_form.role(class_='form-control') }}
+                {% for error in user_form.role.errors %}
+                    <div class="field-error">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <div class="controls-row">
+                <button type="button" class="btn btn-outline" data-close-modal>Отмена</button>
+                {{ user_form.submit(class_='btn btn-primary') }}
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Модальное окно редактирования пользователя -->
+<div id="editModal" class="modal" aria-hidden="true">
+    <div class="modal-content">
+        <span class="close" data-close-modal>&times;</span>
+        <h3>Редактировать пользователя</h3>
+        <form method="post" id="editUserForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="edit_user">
+            <input type="hidden" name="user_id" id="edit_user_id">
+            <div class="field-group">
+                <label class="field-label">Логин</label>
+                <input type="text" name="user-username" id="edit_username" class="form-control" required>
+            </div>
+            <div class="field-group">
+                <label class="field-label">Пароль (оставьте пустым, чтобы не менять)</label>
+                <input type="password" name="user-password" class="form-control">
+            </div>
+            <div class="field-group">
+                <label class="field-label">Подтвердите пароль</label>
+                <input type="password" name="user-confirm_password" class="form-control">
+            </div>
+            <div class="field-group">
+                <label class="field-label">Фамилия</label>
+                <input type="text" name="user-last_name" id="edit_last_name" class="form-control">
+            </div>
+            <div class="field-group">
+                <label class="field-label">Имя</label>
+                <input type="text" name="user-first_name" id="edit_first_name" class="form-control">
+            </div>
+            <div class="field-group">
+                <label class="field-label">Контактная информация</label>
+                <textarea name="user-contact_info" id="edit_contact_info" class="form-control" rows=3></textarea>
+            </div>
+            <div class="field-group">
+                <label class="field-label">Роль</label>
+                <select name="user-role" id="edit_role" class="form-control" required>
+                    <option value="user">Пользователь</option>
+                    <option value="admin">Администратор</option>
+                </select>
+            </div>
+            <div class="controls-row">
+                <button type="button" class="btn btn-outline" data-close-modal>Отмена</button>
+                <button type="submit" class="btn btn-primary">Сохранить</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Модальное окно удаления пользователя -->
+<div id="deleteModal" class="modal" aria-hidden="true">
+    <div class="modal-content">
+        <span class="close" data-close-modal>&times;</span>
+        <h3>Удалить пользователя</h3>
+        <p>Вы уверены, что хотите удалить пользователя <strong id="delete_username"></strong>?</p>
+        <p class="text-danger">Это действие необратимо. История генераций будет отвязана от пользователя.</p>
+        <form method="post" id="deleteUserForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="delete_user">
+            <input type="hidden" name="delete-user_id" id="delete_user_id">
+            <input type="hidden" name="delete-confirm_delete" value="y">
+            <div class="controls-row">
+                <button type="button" class="btn btn-outline" data-close-modal>Отмена</button>
+                <button type="submit" class="btn btn-danger">Удалить</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Модальное окно сброса пароля -->
+<div id="resetPasswordModal" class="modal" aria-hidden="true">
+    <div class="modal-content">
+        <span class="close" data-close-modal>&times;</span>
+        <h3>Сбросить пароль</h3>
+        <p>Пользователь: <strong id="reset_username"></strong></p>
+        <form method="post" id="resetPasswordForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="reset_password">
+            <input type="hidden" name="reset-user_id" id="reset_user_id">
+            <div class="field-group">
+                <label class="field-label">Новый пароль</label>
+                <input type="password" name="reset-new_password" class="form-control" required minlength="6">
+            </div>
+            <div class="field-group">
+                <label class="field-label">Подтвердите пароль</label>
+                <input type="password" name="reset-confirm_password" class="form-control" required minlength="6">
+            </div>
+            <div class="controls-row">
+                <button type="button" class="btn btn-outline" data-close-modal>Отмена</button>
+                <button type="submit" class="btn btn-warning">Сбросить пароль</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+}
+
+.modal.is-open {
+    display: block;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 90%;
+    max-width: 600px;
+    border-radius: 8px;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+}
+
+.badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.badge-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.badge-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-sm {
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+.table-actions {
+    white-space: nowrap;
+}
+
+.table-actions .btn {
+    margin-right: 4px;
+}
+
+.search-filters {
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Функции для работы с модальными окнами - определяем сразу при загрузке скрипта
+(function() {
+    'use strict';
+    
+    // Делаем функции доступными глобально
+    window.showCreateModal = function() {
+        console.log('showCreateModal called');
+        var modal = document.getElementById('createModal');
+        console.log('Modal element:', modal);
+        if (!modal) {
+            console.error('Modal createModal not found');
+            alert('Ошибка: модальное окно не найдено. Проверьте консоль браузера.');
+            return;
+        }
+        modal.classList.add('is-open');
+        modal.setAttribute('aria-hidden', 'false');
+        var form = document.getElementById('createUserForm');
+        if (form) {
+            form.reset();
+        }
+        console.log('Modal displayed');
+    };
+
+    window.showEditModal = function(userId, username, lastName, firstName, contactInfo, role) {
+        var modal = document.getElementById('editModal');
+        if (modal) {
+            modal.classList.add('is-open');
+            modal.setAttribute('aria-hidden', 'false');
+            var userIdEl = document.getElementById('edit_user_id');
+            if (userIdEl) userIdEl.value = userId || '';
+            var usernameEl = document.getElementById('edit_username');
+            if (usernameEl) usernameEl.value = username || '';
+            var lastNameEl = document.getElementById('edit_last_name');
+            if (lastNameEl) lastNameEl.value = lastName || '';
+            var firstNameEl = document.getElementById('edit_first_name');
+            if (firstNameEl) firstNameEl.value = firstName || '';
+            var contactInfoEl = document.getElementById('edit_contact_info');
+            if (contactInfoEl) contactInfoEl.value = contactInfo || '';
+            var roleEl = document.getElementById('edit_role');
+            if (roleEl) roleEl.value = role || 'user';
+        }
+    };
+
+    window.showDeleteModal = function(userId, username) {
+        var modal = document.getElementById('deleteModal');
+        if (modal) {
+            modal.classList.add('is-open');
+            modal.setAttribute('aria-hidden', 'false');
+            var userIdEl = document.getElementById('delete_user_id');
+            if (userIdEl) userIdEl.value = userId || '';
+            var usernameEl = document.getElementById('delete_username');
+            if (usernameEl) usernameEl.textContent = username || '';
+        }
+    };
+
+    window.showResetPasswordModal = function(userId, username) {
+        var modal = document.getElementById('resetPasswordModal');
+        if (modal) {
+            modal.classList.add('is-open');
+            modal.setAttribute('aria-hidden', 'false');
+            var userIdEl = document.getElementById('reset_user_id');
+            if (userIdEl) userIdEl.value = userId || '';
+            var usernameEl = document.getElementById('reset_username');
+            if (usernameEl) usernameEl.textContent = username || '';
+            var form = document.getElementById('resetPasswordForm');
+            if (form) form.reset();
+        }
+    };
+
+    window.closeModal = function(modalId) {
+        var modal = typeof modalId === 'string' ? document.getElementById(modalId) : modalId;
+        if (modal) {
+            modal.classList.remove('is-open');
+            modal.setAttribute('aria-hidden', 'true');
+        }
+    };
+    
+    console.log('Modal functions initialized');
+    
+    // Проверка доступности функций
+    if (typeof window.showCreateModal === 'function') {
+        console.log('showCreateModal is available');
+    } else {
+        console.error('showCreateModal is NOT available');
+    }
+})();
+
+// Дополнительная проверка после загрузки DOM и альтернативные обработчики
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, checking functions...');
+    console.log('showCreateModal:', typeof window.showCreateModal);
+    console.log('showEditModal:', typeof window.showEditModal);
+    console.log('showDeleteModal:', typeof window.showDeleteModal);
+    console.log('showResetPasswordModal:', typeof window.showResetPasswordModal);
+    
+    // Альтернативный способ: делегирование событий для кнопки создания
+    var createBtn = document.querySelector('button[onclick*="showCreateModal"]');
+    if (createBtn) {
+        console.log('Create button found, adding event listener');
+        // Удаляем старый onclick и добавляем новый обработчик
+        createBtn.removeAttribute('onclick');
+        createBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Create button clicked via addEventListener');
+            if (typeof window.showCreateModal === 'function') {
+                window.showCreateModal();
+            } else {
+                alert('Функция showCreateModal не найдена. Проверьте консоль браузера.');
+            }
+        });
+    } else {
+        console.warn('Create button not found');
+    }
+    
+    // Делегирование для кнопок редактирования, удаления и сброса пароля
+    var usersTable = document.querySelector('.data-table');
+    if (usersTable) {
+        usersTable.addEventListener('click', function(e) {
+            var target = e.target;
+            if (!target || !target.closest) return;
+            
+            var btn = target.closest('button[data-action]');
+            if (!btn) return;
+            
+            var action = btn.getAttribute('data-action');
+            if (!action) return;
+            
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Обработка кнопки редактирования
+            if (action === 'edit') {
+                console.log('Edit button clicked');
+                var userId = btn.getAttribute('data-user-id');
+                var username = btn.getAttribute('data-username') || '';
+                var lastName = btn.getAttribute('data-last-name') || '';
+                var firstName = btn.getAttribute('data-first-name') || '';
+                var contactInfo = btn.getAttribute('data-contact-info') || '';
+                var role = btn.getAttribute('data-role') || 'user';
+                
+                if (typeof window.showEditModal === 'function') {
+                    window.showEditModal(userId, username, lastName, firstName, contactInfo, role);
+                } else {
+                    console.error('showEditModal function not found');
+                }
+            }
+            // Обработка кнопки удаления
+            else if (action === 'delete') {
+                console.log('Delete button clicked');
+                var userId = btn.getAttribute('data-user-id');
+                var username = btn.getAttribute('data-username') || '';
+                
+                if (typeof window.showDeleteModal === 'function') {
+                    window.showDeleteModal(userId, username);
+                } else {
+                    console.error('showDeleteModal function not found');
+                }
+            }
+            // Обработка кнопки сброса пароля
+            else if (action === 'reset-password') {
+                console.log('Reset password button clicked');
+                var userId = btn.getAttribute('data-user-id');
+                var username = btn.getAttribute('data-username') || '';
+                
+                if (typeof window.showResetPasswordModal === 'function') {
+                    window.showResetPasswordModal(userId, username);
+                } else {
+                    console.error('showResetPasswordModal function not found');
+                }
+            }
+        });
+    } else {
+        console.warn('Users table not found');
+    }
+});
+
+// Обработка закрытия модальных окон уже есть в base.html
+</script>
+{% endblock %}
+

@@ -20,6 +20,7 @@ from .database import (
     get_generations_by_drawing,
     get_generations_by_tender,
     get_unique_companies,
+    get_users_list,
 )
 
 
@@ -70,6 +71,16 @@ class DatabaseService:
 
     def get_user_statistics(self, user_id: int) -> Dict[str, Any]:
         return get_user_statistics(user_id)
+
+    def get_users_list(
+        self,
+        *,
+        page: int = 1,
+        per_page: int = 25,
+        search: Optional[str] = None,
+        role_filter: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        return get_users_list(page=page, per_page=per_page, search=search, role_filter=role_filter)
 
     # --- История генераций -------------------------------------------------------------
 

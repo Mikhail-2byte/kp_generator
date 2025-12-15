@@ -46,6 +46,10 @@ SCHEMA = ImportSchema(
         'цена закупа': 'cost_price',
         'цена закупа, руб': 'cost_price',
         'стоимость закупа': 'cost_price',
+        'цена закупа за кг': 'cost_price_per_kg',
+        'цена за кг': 'cost_price_per_kg',
+        'цена закупа за кг, руб': 'cost_price_per_kg',
+        'стоимость закупа за кг': 'cost_price_per_kg',
         'количество, шт.': 'quantity',
         'количество шт.': 'quantity',
         'количество': 'quantity',
@@ -58,8 +62,8 @@ SCHEMA = ImportSchema(
         'пошлина %': 'duty_percent',
         'пошлина': 'duty_percent',
     },
-    required_fields=('product', 'cost_price', 'quantity', 'weight'),
-    numeric_fields=('cost_price', 'quantity', 'weight', 'duty_percent'),
+    required_fields=('product', 'quantity', 'weight'),
+    numeric_fields=('cost_price', 'cost_price_per_kg', 'quantity', 'weight', 'duty_percent'),
 )
 
 
@@ -68,6 +72,7 @@ FIELD_LABELS = {
     'drawing_number': 'Номер чертежа',
     'material': 'Материал',
     'cost_price': 'Цена закупа',
+    'cost_price_per_kg': 'Цена закупа за кг',
     'quantity': 'Количество, шт.',
     'weight': 'Вес за шт. (кг)',
     'duty_percent': 'Пошлина (%)',
@@ -120,6 +125,97 @@ def _prepare_value(field: str, value: object, row_idx: int) -> str:
     if value is None:
         return ''
     return str(value).strip()
+
+
+def _validate_and_calculate_prices(
+    cost_price: str,
+    cost_price_per_kg: str,
+    weight: str,
+    quantity: str,
+    row_idx: int
+) -> tuple[str, str]:
+    """
+    Валидирует и вычисляет цены закупа.
+    
+    Возвращает кортеж (cost_price, cost_price_per_kg) с валидными значениями.
+    Выбрасывает ExcelImportError при несоответствии цен.
+    """
+    from decimal import Decimal, InvalidOperation
+    
+    # Преобразуем в Decimal для точных вычислений
+    def to_decimal(value: str) -> Decimal | None:
+        if not value or value.strip() == '':
+            return None
+        try:
+            return Decimal(str(value).replace(',', '.').strip())
+        except (InvalidOperation, ValueError):
+            return None
+    
+    cost_price_dec = to_decimal(cost_price)
+    cost_price_per_kg_dec = to_decimal(cost_price_per_kg)
+    weight_dec = to_decimal(weight)
+    quantity_dec = to_decimal(quantity)
+    
+    # Проверяем, что указана хотя бы одна цена
+    if cost_price_dec is None and cost_price_per_kg_dec is None:
+        raise ExcelImportError(
+            f"В строке {row_idx} должна быть указана либо 'Цена закупа', либо 'Цена закупа за кг'."
+        )
+    
+    # Проверяем наличие веса и количества для расчетов
+    if weight_dec is None or weight_dec <= 0:
+        raise ExcelImportError(
+            f"В строке {row_idx} должен быть указан вес для расчета цен."
+        )
+    
+    if quantity_dec is None or quantity_dec <= 0:
+        raise ExcelImportError(
+            f"В строке {row_idx} должно быть указано количество для расчета цен."
+        )
+    
+    # cost_price - это цена за единицу продукции (не за все количество!)
+    # cost_price_per_kg - это цена за кг
+    # Формула: cost_price = cost_price_per_kg * weight (цена за единицу = цена за кг * вес единицы)
+    
+    # Если указаны обе цены, проверяем их согласованность
+    if cost_price_dec is not None and cost_price_per_kg_dec is not None:
+        # Вычисляем ожидаемую цену за единицу из цены за кг
+        expected_cost_price = cost_price_per_kg_dec * weight_dec
+        
+        # Допустимое отклонение: 1% или минимум 0.01 руб
+        tolerance = max(expected_cost_price * Decimal('0.01'), Decimal('0.01'))
+        difference = abs(cost_price_dec - expected_cost_price)
+        
+        if difference > tolerance:
+            # Форматируем числа для читаемости
+            def format_decimal(d: Decimal, decimals: int = 2) -> str:
+                return f"{float(d):.{decimals}f}".rstrip('0').rstrip('.')
+            
+            raise ExcelImportError(
+                f"В строке {row_idx} обнаружено несоответствие цен:\n"
+                f"  - Цена закупа за кг: {format_decimal(cost_price_per_kg_dec)} ₽/кг\n"
+                f"  - Вес за шт.: {format_decimal(weight_dec, 3)} кг\n"
+                f"  - Количество: {int(quantity_dec)} шт.\n"
+                f"  - Ожидаемая цена закупа за единицу: {format_decimal(expected_cost_price)} ₽\n"
+                f"  - Указанная цена закупа за единицу: {format_decimal(cost_price_dec)} ₽\n"
+                f"  - Разница: {format_decimal(difference)} ₽\n"
+                f"Проверьте правильность указанных значений."
+            )
+        # Если цены согласованы, используем их как есть
+        return str(cost_price_dec), str(cost_price_per_kg_dec)
+    
+    # Если указана только цена за кг, вычисляем цену за единицу
+    if cost_price_per_kg_dec is not None:
+        calculated_cost_price = cost_price_per_kg_dec * weight_dec
+        return str(calculated_cost_price), str(cost_price_per_kg_dec)
+    
+    # Если указана только цена за единицу, вычисляем цену за кг
+    if cost_price_dec is not None:
+        calculated_cost_price_per_kg = cost_price_dec / weight_dec if weight_dec > 0 else Decimal('0')
+        return str(cost_price_dec), str(calculated_cost_price_per_kg)
+    
+    # Этот случай не должен произойти, но на всякий случай
+    raise ExcelImportError(f"В строке {row_idx} не удалось определить цены.")
 
 
 class ExcelImporterService(ExcelImporterPort):
@@ -179,6 +275,21 @@ class ExcelImporterService(ExcelImporterPort):
                     raise ExcelImportError(
                         f"В строке {row_idx} отсутствует значение в столбце '{FIELD_LABELS[field]}'."
                     )
+
+            # Валидация и расчет цен
+            cost_price = row_payload.get('cost_price', '')
+            cost_price_per_kg = row_payload.get('cost_price_per_kg', '')
+            weight = row_payload.get('weight', '')
+            quantity = row_payload.get('quantity', '')
+            
+            # Валидируем и вычисляем цены
+            validated_cost_price, validated_cost_price_per_kg = _validate_and_calculate_prices(
+                cost_price, cost_price_per_kg, weight, quantity, row_idx
+            )
+            
+            # Сохраняем вычисленные значения
+            row_payload['cost_price'] = validated_cost_price
+            row_payload['cost_price_per_kg'] = validated_cost_price_per_kg
 
             if 'duty_percent' in row_payload:
                 row_payload['duty_percent'] = row_payload.get('duty_percent') or '0'

@@ -757,17 +757,29 @@
                 }, 0);
                 
                 totalWeight = data.positions.reduce((sum, pos) => {
-                    return sum + Number(pos.weight || 0);
+                    return sum + (Number(pos.weight || 0) * Number(pos.quantity || 0));
                 }, 0);
                 
-                totalSalePrice = data.positions.reduce((sum, pos) => {
-                    const quantity = Number(pos.quantity || 0);
-                    let finalPrice = Number(pos.final_price || 0);
-                    if (finalPrice === 0 && data.final_price) {
-                        finalPrice = Number(data.final_price || 0);
+                // Используем total_general_price если он есть, иначе вычисляем
+                if (data.total_general_price && data.total_general_price > 0) {
+                    totalSalePrice = Number(data.total_general_price || 0);
+                } else {
+                    // Вычисляем из позиций, если у них есть final_price
+                    totalSalePrice = data.positions.reduce((sum, pos) => {
+                        const quantity = Number(pos.quantity || 0);
+                        let finalPrice = Number(pos.final_price || 0);
+                        if (finalPrice === 0 && data.final_price && data.positions.length === 1) {
+                            // Только для одной позиции используем общий final_price
+                            finalPrice = Number(data.final_price || 0);
+                        }
+                        return sum + (finalPrice * quantity);
+                    }, 0);
+                    
+                    // Если все еще 0, используем fallback
+                    if (totalSalePrice === 0) {
+                        totalSalePrice = (Number(data.final_price || 0) * Number(data.quantity || 1));
                     }
-                    return sum + (finalPrice * quantity);
-                }, 0);
+                }
             } else {
                 totalPurchasePrice = (Number(data.cost_price || 0) * Number(data.quantity || 0));
                 totalWeight = Number(data.weight || 0);
@@ -779,7 +791,7 @@
                 totalWeight = Number(data.weight || 0);
             }
             
-            // Если общая стоимость продажи не указана, используем из data
+            // Если общая стоимость продажи все еще не указана, используем из data
             if (totalSalePrice === 0) {
                 totalSalePrice = Number(data.total_general_price || 0);
                 if (totalSalePrice === 0) {
@@ -793,22 +805,48 @@
                     return '';
                 }
 
+                // Вычисляем общую стоимость всех позиций для распределения
+                const totalPositionsCost = data.positions.reduce((sum, pos) => {
+                    const quantity = Number(pos.quantity || 0);
+                    const costPrice = Number(pos.cost_price || 0);
+                    return sum + (costPrice * quantity);
+                }, 0);
+                
+                // Используем total_general_price если есть, иначе вычисляем из final_price
+                const totalSalePriceForDistribution = data.total_general_price && data.total_general_price > 0 
+                    ? Number(data.total_general_price) 
+                    : (Number(data.final_price || 0) * Number(data.quantity || 1));
+                
                 const rows = data.positions.map((pos, index) => {
                     const quantity = Number(pos.quantity || 0);
                     const costPrice = Number(pos.cost_price || 0);
-                    // Если у позиции нет final_price, используем общий или вычисляем
+                    
+                    // Вычисляем final_price для позиции
                     let finalPrice = Number(pos.final_price || 0);
-                    if (finalPrice === 0 && data.final_price) {
-                        // Если это первая позиция или единственная, используем общий final_price
-                        if (index === 0 || data.positions.length === 1) {
+                    
+                    if (finalPrice === 0) {
+                        // Если у позиции нет своего final_price, вычисляем пропорционально
+                        if (data.positions.length === 1) {
+                            // Для одной позиции используем общий final_price
                             finalPrice = Number(data.final_price || 0);
+                        } else if (totalPositionsCost > 0) {
+                            // Для множественных позиций распределяем пропорционально стоимости закупа
+                            const positionCost = costPrice * quantity;
+                            const costRatio = positionCost / totalPositionsCost;
+                            finalPrice = (totalSalePriceForDistribution * costRatio) / quantity;
+                        } else {
+                            // Fallback: используем общий final_price для первой позиции
+                            if (index === 0) {
+                                finalPrice = Number(data.final_price || 0);
+                            }
                         }
                     }
+                    
                     const weight = Number(pos.weight || 0);
                     const weightPerUnit = quantity > 0 ? weight / quantity : 0;
                     // Цена закупа за кг
                     const costPricePerKg = weightPerUnit > 0 ? costPrice / weightPerUnit : 0;
-                    // Итоговая продажная стоимость
+                    // Итоговая продажная стоимость позиции
                     const totalSalePrice = finalPrice * quantity;
 
                     return `
@@ -895,6 +933,18 @@
                                 <div class="indicator-item">
                                     <span class="indicator-label">Адрес доставки</span>
                                     <span class="indicator-value">${format(data.delivery_address)}</span>
+                                </div>
+                                ` : ''}
+                                ${data.payment_terms ? `
+                                <div class="indicator-item">
+                                    <span class="indicator-label">Условия оплаты</span>
+                                    <span class="indicator-value">${format(data.payment_terms)}</span>
+                                </div>
+                                ` : ''}
+                                ${data.proposal_validity ? `
+                                <div class="indicator-item">
+                                    <span class="indicator-label">Срок действия предложения</span>
+                                    <span class="indicator-value">${format(data.proposal_validity)}</span>
                                 </div>
                                 ` : ''}
                                 <div class="indicator-item">
@@ -2050,6 +2100,8 @@
                 }},
                 { label: 'Маржа, %', key: 'margin_percent', format: (v) => Number(v || 0).toFixed(1) },
                 { label: 'Срок поставки, дней', key: 'delivery_time', format: formatNumber },
+                { label: 'Условия оплаты', key: 'payment_terms', format: format },
+                { label: 'Срок действия предложения', key: 'proposal_validity', format: format },
             ];
 
             const tableRows = rows.map(row => {

@@ -799,6 +799,9 @@
                 }
             }
 
+            // Округляем общую стоимость продажи "вверх" до ближайших 10 рублей (как в бюджете Excel)
+            const roundedTotalSalePrice = totalSalePrice > 0 ? Math.ceil(totalSalePrice / 10) * 10 : totalSalePrice;
+
             // Рендерим таблицу позиций
             const renderPositionsTable = () => {
                 if (!data.positions || data.positions.length === 0) {
@@ -841,13 +844,14 @@
                             }
                         }
                     }
+
+                    // Продажная цена за единицу (как в Excel), округлённая вверх до десятков
+                    const finalPriceRounded = finalPrice > 0 ? Math.ceil(finalPrice / 10) * 10 : finalPrice;
                     
                     const weight = Number(pos.weight || 0);
                     const weightPerUnit = quantity > 0 ? weight / quantity : 0;
                     // Цена закупа за кг
                     const costPricePerKg = weightPerUnit > 0 ? costPrice / weightPerUnit : 0;
-                    // Итоговая продажная стоимость позиции
-                    const totalSalePrice = finalPrice * quantity;
 
                     return `
                         <tr>
@@ -860,7 +864,7 @@
                             <td class="text-right">${formatCurrency(costPrice)}</td>
                             <td class="text-right">${formatCurrency(costPricePerKg)}</td>
                             <td class="text-center">${format(pos.duty_percent, '0')}%</td>
-                            <td class="text-right">${formatCurrency(totalSalePrice)}</td>
+                            <td class="text-right">${formatCurrency(finalPriceRounded)}</td>
                         </tr>
                     `;
                 }).join('');
@@ -972,7 +976,7 @@
                                 </div>
                                 <div class="indicator-item financial-item highlight sale">
                                     <span class="indicator-label">Общая стоимость продажи</span>
-                                    <span class="indicator-value price-final">${formatCurrency(totalSalePrice)} ₽</span>
+                                    <span class="indicator-value price-final">${formatCurrency(roundedTotalSalePrice)} ₽</span>
                                 </div>
                                 <div class="indicator-item financial-item margin">
                                     <span class="indicator-label">Маржа</span>

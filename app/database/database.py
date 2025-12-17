@@ -1003,22 +1003,78 @@ def delete_user(user_id) -> bool:
 
 
 def get_generations_by_drawing(drawing_number: str, limit: int = 5) -> List[Dict[str, object]]:
-    """Возвращает последние генерации, созданные с указанным номером чертежа."""
+    """Возвращает последние генерации, созданные с указанным номером чертежа.
+
+    Поиск ведётся как по основному полю ``drawing_number``, так и по всем позициям
+    в JSON-поле ``positions_data`` (для множественных позиций).
+    """
     if not drawing_number:
         return []
 
     try:
+        normalized = drawing_number.strip().lower()
+        if not normalized:
+            return []
+
         with _session_scope() as session:
-            records = (
+            base_query = (
                 session.query(GenerationHistoryRecord)
                 .options(joinedload(GenerationHistoryRecord.user))
-                .filter(func.lower(GenerationHistoryRecord.drawing_number) == drawing_number.lower())
+            )
+
+            # 1. Сначала ищем по основному полю drawing_number (как раньше)
+            primary_records: Sequence[GenerationHistoryRecord] = (
+                base_query
+                .filter(func.lower(GenerationHistoryRecord.drawing_number) == normalized)
                 .order_by(GenerationHistoryRecord.timestamp.desc())
-                .limit(limit)
                 .all()
             )
 
-            return [detail for record in records if (detail := _build_generation_detail(record))]
+            records_by_id = {record.id: record for record in primary_records}
+
+            # 2. Дополнительно ищем по JSON с позициями.
+            #
+            # Для производительности сначала отфильтруем по LIKE,
+            # а затем точно проверим номер чертежа на уровне Python, распарсив JSON.
+            import json
+
+            candidates: Sequence[GenerationHistoryRecord] = (
+                base_query
+                .filter(GenerationHistoryRecord.positions_data.isnot(None))
+                .filter(GenerationHistoryRecord.positions_data != '')
+                .filter(
+                    func.lower(GenerationHistoryRecord.positions_data).like(
+                        f'%{normalized}%'
+                    )
+                )
+                .order_by(GenerationHistoryRecord.timestamp.desc())
+                .all()
+            )
+
+            for record in candidates:
+                if record.id in records_by_id:
+                    # Уже есть из основного запроса
+                    continue
+
+                try:
+                    positions = json.loads(record.positions_data or '[]') or []
+                except (TypeError, json.JSONDecodeError):
+                    continue
+
+                for pos in positions:
+                    value = (pos.get('drawing_number') or '').strip().lower()
+                    if value == normalized:
+                        records_by_id[record.id] = record
+                        break
+
+            # 3. Сортируем по дате и ограничиваем количеством
+            all_records = sorted(
+                records_by_id.values(),
+                key=lambda r: r.timestamp or datetime.min,
+                reverse=True,
+            )[:limit]
+
+            return [detail for record in all_records if (detail := _build_generation_detail(record))]
     except Exception as exc:
         logging.error('Error fetching generations by drawing: %s', exc)
         return []

@@ -1216,13 +1216,18 @@ h1 {
   position: relative;
 }
 
+.drawing-field .field-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .drawing-alert {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 32px;
   height: 32px;
-  margin-top: 6px;
   border-radius: 999px;
   border: 1px solid rgba(240, 68, 56, 0.36);
   background: rgba(240, 68, 56, 0.12);
@@ -3778,7 +3783,6 @@ body[data-page="index"] .drawing-alert {
   width: 28px;
   height: 28px;
   font-size: 14px;
-  margin-top: 4px;
 }
 
 body[data-page="index"] .logistics-panel {

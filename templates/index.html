@@ -197,13 +197,15 @@
                                 aria-invalid="{{ 'true' if invalid_fields and 'product' in invalid_fields else 'false' }}">
                             </div>
                             <div class="field-group parameter-wide drawing-field">
-                                <label for="drawing_number" class="field-label" data-label-for="drawing_number">Номер чертежа</label>
+                                <label for="drawing_number" class="field-label" data-label-for="drawing_number">
+                                    Номер чертежа
+                                    <button type="button" class="drawing-alert" data-role="drawing-alert" hidden title="Показать найденные бюджеты">
+                                        <span aria-hidden="true">!</span>
+                                        <span class="visually-hidden">Найдены ранее созданные бюджеты с этим номером чертежа</span>
+                                    </button>
+                                </label>
                                 <input type="text" id="drawing_number" name="drawing_number" data-field="drawing_number"
                                 value="{{ form_data.drawing_number if form_data and form_data.drawing_number else '' }}">
-                                <button type="button" class="drawing-alert" data-role="drawing-alert" hidden title="Показать найденные бюджеты">
-                                    <span aria-hidden="true">!</span>
-                                    <span class="visually-hidden">Найдены ранее созданные бюджеты с этим номером чертежа</span>
-                                </button>
                             </div>
                             <div class="field-group parameter-wide">
                                 <label for="material" class="field-label" data-label-for="material">Материал</label>
@@ -262,12 +264,14 @@
                                     <input type="text" data-field="product" required>
                                 </div>
                                 <div class="field-group parameter-wide drawing-field">
-                                    <label class="field-label" data-label-for="drawing_number">Номер чертежа</label>
+                                    <label class="field-label" data-label-for="drawing_number">
+                                        Номер чертежа
+                                        <button type="button" class="drawing-alert" data-role="drawing-alert" hidden title="Показать найденные бюджеты">
+                                            <span aria-hidden="true">!</span>
+                                            <span class="visually-hidden">Найдены ранее созданные бюджеты с этим номером чертежа</span>
+                                        </button>
+                                    </label>
                                     <input type="text" data-field="drawing_number">
-                                    <button type="button" class="drawing-alert" data-role="drawing-alert" hidden title="Показать найденные бюджеты">
-                                        <span aria-hidden="true">!</span>
-                                        <span class="visually-hidden">Найдены ранее созданные бюджеты с этим номером чертежа</span>
-                                    </button>
                                 </div>
                                 <div class="field-group parameter-wide">
                                     <label class="field-label" data-label-for="material">Материал</label>
@@ -390,6 +394,40 @@
         </div>
         <div class="modal-actions">
             <button type="button" class="btn btn-outline" data-close-modal>Закрыть</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="detailsModal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-dialog-large">
+        <div class="modal-header">
+            <div class="modal-header-content">
+                <h3 class="modal-title" id="detailsModalLabel">
+                    <span class="modal-icon">{{ sidebar_icon('file-text')|safe }}</span>
+                    Детали коммерческого предложения
+                </h3>
+                <div class="modal-subtitle" id="modalSubtitle"></div>
+            </div>
+            <button type="button" class="modal-close" data-close-modal aria-label="Закрыть">
+                {{ sidebar_icon('x')|safe }}
+            </button>
+        </div>
+        <div class="modal-body" id="modalDetailsContent">
+            <div class="loading-state">
+                <div class="loading-spinner"></div>
+                <p>Загрузка данных...</p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <div class="modal-footer-info">
+                <span class="modal-timestamp" id="modalTimestamp"></span>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" data-close-modal>
+                    <span>{{ sidebar_icon('x')|safe }}</span>
+                    Закрыть
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -622,6 +660,10 @@
         const drawingMatchesContent = document.getElementById('drawingMatchesContent');
         const drawingLookupCache = new Map();
         const drawingLookupPending = new Map();
+        const detailsModal = document.getElementById('detailsModal');
+        const modalDetailsContent = document.getElementById('modalDetailsContent');
+        const modalSubtitle = document.getElementById('modalSubtitle');
+        const modalTimestamp = document.getElementById('modalTimestamp');
 
         const highlightInvalidFields = (invalidFieldNames) => {
             if (!Array.isArray(invalidFieldNames) || !invalidFieldNames.length) {
@@ -721,7 +763,7 @@
         };
 
         const fetchDrawingMatches = async (drawingNumber) => {
-            const normalized = drawingNumber.toLowerCase();
+            const normalized = (drawingNumber || '').trim().toLowerCase();
 
             if (drawingLookupCache.has(normalized)) {
                 return drawingLookupCache.get(normalized);
@@ -832,6 +874,249 @@
             if (closeBtn) {
                 closeBtn.focus();
             }
+        };
+
+        const renderGenerationDetails = (data) => {
+            const format = (value, empty = 'Не указан') => value ? value : empty;
+            const formatCurrencyLocal = (value) => Number(value || 0).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const formatNumberLocal = (value) => Number(value || 0).toLocaleString('ru-RU');
+            const authorName = [data.last_name, data.first_name].filter(Boolean).join(' ').trim();
+            const authorDisplay = authorName || data.username || 'Не указан';
+
+            const productTitle = data.positions_count > 1
+                ? `${format(data.product)} (+${data.positions_count - 1} позиций)`
+                : format(data.product);
+            if (modalSubtitle) {
+                modalSubtitle.textContent = `${format(data.company)} • ${productTitle}`;
+            }
+            if (modalTimestamp) {
+                modalTimestamp.textContent = `Создано: ${new Date(data.timestamp).toLocaleString('ru-RU')}`;
+            }
+
+            let totalPurchasePrice = 0;
+            let totalWeight = 0;
+            let totalSalePrice = 0;
+
+            if (data.positions && data.positions.length > 0) {
+                totalPurchasePrice = data.positions.reduce((sum, pos) => {
+                    return sum + (Number(pos.cost_price || 0) * Number(pos.quantity || 0));
+                }, 0);
+
+                totalWeight = data.positions.reduce((sum, pos) => {
+                    return sum + (Number(pos.weight || 0) * Number(pos.quantity || 0));
+                }, 0);
+
+                if (data.total_general_price && data.total_general_price > 0) {
+                    totalSalePrice = Number(data.total_general_price || 0);
+                } else {
+                    totalSalePrice = data.positions.reduce((sum, pos) => {
+                        const quantity = Number(pos.quantity || 0);
+                        let finalPrice = Number(pos.final_price || 0);
+                        if (finalPrice === 0 && data.final_price && data.positions.length === 1) {
+                            finalPrice = Number(data.final_price || 0);
+                        }
+                        return sum + (finalPrice * quantity);
+                    }, 0);
+
+                    if (totalSalePrice === 0) {
+                        totalSalePrice = (Number(data.final_price || 0) * Number(data.quantity || 1));
+                    }
+                }
+            } else {
+                totalPurchasePrice = (Number(data.cost_price || 0) * Number(data.quantity || 0));
+                totalWeight = Number(data.weight || 0);
+                totalSalePrice = (Number(data.final_price || 0) * Number(data.quantity || 1));
+            }
+
+            if (totalWeight === 0) {
+                totalWeight = Number(data.weight || 0);
+            }
+
+            if (totalSalePrice === 0) {
+                totalSalePrice = Number(data.total_general_price || 0);
+                if (totalSalePrice === 0) {
+                    totalSalePrice = (Number(data.final_price || 0) * Number(data.quantity || 1));
+                }
+            }
+
+            // Округляем общую стоимость продажи "вверх" до ближайших 10 рублей (как в бюджете Excel)
+            const roundedTotalSalePrice = totalSalePrice > 0 ? Math.ceil(totalSalePrice / 10) * 10 : totalSalePrice;
+
+            const renderPositionsTable = () => {
+                if (!data.positions || data.positions.length === 0) {
+                    return '';
+                }
+
+                const totalPositionsCost = data.positions.reduce((sum, pos) => {
+                    const quantity = Number(pos.quantity || 0);
+                    const costPrice = Number(pos.cost_price || 0);
+                    return sum + (costPrice * quantity);
+                }, 0);
+
+                const totalSalePriceForDistribution = data.total_general_price && data.total_general_price > 0
+                    ? Number(data.total_general_price)
+                    : (Number(data.final_price || 0) * Number(data.quantity || 1));
+
+                const rows = data.positions.map((pos, index) => {
+                    const quantity = Number(pos.quantity || 0);
+                    const costPrice = Number(pos.cost_price || 0);
+
+                    // Базовая финальная цена за единицу для позиции
+                    let finalPrice = Number(pos.final_price || 0);
+                    if (finalPrice === 0) {
+                        if (data.positions.length === 1) {
+                            finalPrice = Number(data.final_price || 0);
+                        } else if (totalPositionsCost > 0 && quantity > 0) {
+                            const positionCost = costPrice * quantity;
+                            const costRatio = positionCost / totalPositionsCost;
+                            finalPrice = (totalSalePriceForDistribution * costRatio) / quantity;
+                        } else if (index === 0) {
+                            finalPrice = Number(data.final_price || 0);
+                        }
+                    }
+
+                    // Продажная цена за единицу как в Excel (округляем вверх до десятков)
+                    const finalPriceRounded = finalPrice > 0 ? Math.ceil(finalPrice / 10) * 10 : finalPrice;
+
+                    const weight = Number(pos.weight || 0);
+                    const weightPerUnit = quantity > 0 ? weight / quantity : 0;
+                    const costPricePerKg = weightPerUnit > 0 ? costPrice / weightPerUnit : 0;
+
+                    return `
+                        <tr>
+                            <td>${format(pos.product)}</td>
+                            <td>${format(pos.drawing_number)}</td>
+                            <td>${format(pos.material)}</td>
+                            <td class="text-center">${formatNumberLocal(quantity)}</td>
+                            <td class="text-right">${formatNumberLocal(weightPerUnit)}</td>
+                            <td class="text-right">${formatNumberLocal(weight)}</td>
+                            <td class="text-right">${formatCurrencyLocal(costPrice)}</td>
+                            <td class="text-right">${formatCurrencyLocal(costPricePerKg)}</td>
+                            <td class="text-center">${format(pos.duty_percent, '0')}%</td>
+                            <td class="text-right">${formatCurrencyLocal(finalPriceRounded)}</td>
+                        </tr>
+                    `;
+                }).join('');
+
+                return `
+                    <div class="info-section positions-table-section">
+                        <div class="section-header">
+                            <h4 class="section-title">
+                                <span class="section-icon">{{ sidebar_icon('list')|safe }}</span>
+                                Позиции (${data.positions.length})
+                            </h4>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="positions-table">
+                                <thead>
+                                    <tr>
+                                        <th>Наименование</th>
+                                        <th>№ чертежа</th>
+                                        <th>Материал</th>
+                                        <th class="text-center">Количество</th>
+                                        <th class="text-right">Вес за шт., кг</th>
+                                        <th class="text-right">Общий вес, кг</th>
+                                        <th class="text-right">Цена закупа, ₽</th>
+                                        <th class="text-right">Цена закупа за кг, ₽</th>
+                                        <th class="text-center">Пошлина, %</th>
+                                        <th class="text-right">Итоговая продажная стоимость, ₽</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${rows}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            };
+
+            if (!modalDetailsContent) {
+                return;
+            }
+
+            modalDetailsContent.innerHTML = `
+                <div class="modal-details-container">
+                    <div class="info-section main-indicators">
+                        <div class="section-header">
+                            <h4 class="section-title">
+                                <span class="section-icon">{{ sidebar_icon('chart')|safe }}</span>
+                                Основные показатели
+                            </h4>
+                        </div>
+                        <div class="indicators-group">
+                            <div class="group-title">Общая информация</div>
+                            <div class="indicators-grid">
+                                <div class="indicator-item">
+                                    <span class="indicator-label">Компания</span>
+                                    <span class="indicator-value">${format(data.company)}</span>
+                                </div>
+                                <div class="indicator-item">
+                                    <span class="indicator-label">Номер тендера</span>
+                                    <span class="indicator-value">${format(data.tender_number)}</span>
+                                </div>
+                                <div class="indicator-item">
+                                    <span class="indicator-label">Количество позиций</span>
+                                    <span class="indicator-value">${data.positions_count || 1}</span>
+                                </div>
+                                <div class="indicator-item">
+                                    <span class="indicator-label">Срок поставки</span>
+                                    <span class="indicator-value">${formatNumberLocal(data.delivery_time)} дней</span>
+                                </div>
+                                ${data.delivery_address ? `
+                                <div class="indicator-item">
+                                    <span class="indicator-label">Адрес доставки</span>
+                                    <span class="indicator-value">${format(data.delivery_address)}</span>
+                                </div>
+                                ` : ''}
+                                <div class="indicator-item">
+                                    <span class="indicator-label">Автор</span>
+                                    <span class="indicator-value">${authorDisplay}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="indicators-group">
+                            <div class="group-title">Финансовые показатели</div>
+                            <div class="indicators-grid financial-grid">
+                                <div class="indicator-item financial-item">
+                                    <span class="indicator-label">Общий вес</span>
+                                    <span class="indicator-value">${formatNumberLocal(totalWeight)} кг</span>
+                                </div>
+                                <div class="indicator-item financial-item">
+                                    <span class="indicator-label">Логистика</span>
+                                    <span class="indicator-value">${formatCurrencyLocal(data.logistics)} ₽</span>
+                                </div>
+                                <div class="indicator-item financial-item highlight purchase">
+                                    <span class="indicator-label">Общая стоимость закупа</span>
+                                    <span class="indicator-value">${formatCurrencyLocal(totalPurchasePrice)} ₽</span>
+                                </div>
+                                <div class="indicator-item financial-item highlight sale">
+                                    <span class="indicator-label">Общая стоимость продажи</span>
+                                    <span class="indicator-value price-final">${formatCurrencyLocal(roundedTotalSalePrice)} ₽</span>
+                                </div>
+                                <div class="indicator-item financial-item margin">
+                                    <span class="indicator-label">Маржа</span>
+                                    <span class="indicator-value margin-value ${data.margin_percent > 20 ? 'margin-good' : 'margin-warning'}">${format(data.margin_percent, '0')}%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    ${renderPositionsTable()}
+                    ${data.comment ? `
+                    <div class="info-section comment-section">
+                        <div class="section-header">
+                            <h4 class="section-title">
+                                <span class="section-icon">{{ sidebar_icon('message-square')|safe }}</span>
+                                Комментарий
+                            </h4>
+                        </div>
+                        <div class="comment-content">
+                            ${format(data.comment, '').replace(/\n/g, '<br>')}
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
         };
 
         const regionLabels = {
@@ -1049,7 +1334,7 @@
                 hideAlert();
 
                 const matches = await fetchDrawingMatches(rawValue);
-                if (drawingInput.dataset.lookupValue !== normalized) {
+                if (drawingInput.dataset.lookupValue !== normalized.toLowerCase()) {
                     return;
                 }
 
@@ -1065,11 +1350,25 @@
                 if (!drawingNumber) {
                     return;
                 }
-                const matches = drawingLookupCache.get(drawingNumber.toLowerCase()) || [];
+                const normalized = (drawingNumber || '').trim().toLowerCase();
+                const matches = drawingLookupCache.get(normalized) || [];
                 if (!matches.length) {
                     return;
                 }
-                showDrawingMatchesModal(drawingNumber, matches);
+                const latest = matches[0];
+                if (!latest) {
+                    return;
+                }
+                if (modalDetailsContent) {
+                    modalDetailsContent.innerHTML = `
+                        <div class="loading-state">
+                            <div class="loading-spinner"></div>
+                            <p>Загрузка данных...</p>
+                        </div>
+                    `;
+                }
+                openModal(detailsModal);
+                renderGenerationDetails(latest);
             });
 
             performLookup();

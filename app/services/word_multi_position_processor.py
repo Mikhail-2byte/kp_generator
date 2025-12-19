@@ -389,9 +389,11 @@ class WordMultiPositionProcessor:
             '{{ date }}': current_date,
         }
         
-        # Добавляем контактную информацию, если она передана
+        # Всегда добавляем контактную информацию (заменяем на пустоту, если пользователь не авторизован или не указал контакты)
         if contact_info:
             word_data['{{ contact_info }}'] = contact_info.strip()
+        else:
+            word_data['{{ contact_info }}'] = ''
         
         # Добавляем итоговые цены, если они переданы
         # ВАЖНО: НЕ добавляем {{ final_price }} и {{ general_prise }} в word_data,

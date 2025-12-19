@@ -629,14 +629,23 @@ def generate():
                 positions[0], logistics_rub, delivery_time, margin_percent
             )
             position_prices = [result]
-            total_general_price = result['general_price']
+            # Округляем final_price вверх до десятков, как в Excel
+            import math
+            final_price_rounded = math.ceil(result['final_price'] / 10.0) * 10.0
+            total_general_price = final_price_rounded * result['position']['quantity']
         else:
             # Для множественных позиций используем новый метод с единой маржой
             calculation_result = calculator.calculate_multi_position_prices(
                 positions, logistics_rub, delivery_time, margin_percent
             )
             position_prices = calculation_result['positions']
-            total_general_price = calculation_result['total_revenue']
+            # Пересчитываем total_general_price с округлением final_price до десятков, как в Excel
+            import math
+            total_general_price = 0
+            for pos_price in position_prices:
+                final_price_rounded = math.ceil(pos_price['final_price'] / 10.0) * 10.0
+                quantity = pos_price['position']['quantity']
+                total_general_price += final_price_rounded * quantity
         
         # Проверяем, что есть хотя бы одна позиция
         if not position_prices:
@@ -653,8 +662,18 @@ def generate():
         general_price = first_position['general_price']
         final_price_nds = total_general_price * 1.2
 
+        # Добавляем округленные final_price в позиции для сохранения в базе данных
+        # Это нужно, чтобы при отображении подробной информации цены совпадали с Excel
+        import math
+        for i, pos_price in enumerate(position_prices):
+            if i < len(positions):
+                final_price_rounded = math.ceil(pos_price['final_price'] / 10.0) * 10.0
+                positions[i]['final_price'] = final_price_rounded
+        # Обновляем form_data с позициями, содержащими округленные final_price
+        form_data['positions'] = positions
+
         user_id = int(current_user.id) if current_user.is_authenticated else None
-        saved = generation_repository.save_history(form_data, final_price, app_config, user_id)
+        saved = generation_repository.save_history(form_data, final_price, app_config, user_id, total_general_price)
         if not saved:
             current_app.logger.warning('Failed to save generation history')
         else:

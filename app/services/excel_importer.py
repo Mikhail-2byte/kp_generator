@@ -193,12 +193,12 @@ def _validate_and_calculate_prices(
             
             raise ExcelImportError(
                 f"В строке {row_idx} обнаружено несоответствие цен:\n"
-                f"  - Цена закупа за кг: {format_decimal(cost_price_per_kg_dec)} ₽/кг\n"
+                f"  - Цена закупа за кг: {format_decimal(cost_price_per_kg_dec)}/кг\n"
                 f"  - Вес за шт.: {format_decimal(weight_dec, 3)} кг\n"
                 f"  - Количество: {int(quantity_dec)} шт.\n"
-                f"  - Ожидаемая цена закупа за единицу: {format_decimal(expected_cost_price)} ₽\n"
-                f"  - Указанная цена закупа за единицу: {format_decimal(cost_price_dec)} ₽\n"
-                f"  - Разница: {format_decimal(difference)} ₽\n"
+                f"  - Ожидаемая цена закупа за единицу: {format_decimal(expected_cost_price)}\n"
+                f"  - Указанная цена закупа за единицу: {format_decimal(cost_price_dec)}\n"
+                f"  - Разница: {format_decimal(difference)}\n"
                 f"Проверьте правильность указанных значений."
             )
         # Если цены согласованы, используем их как есть

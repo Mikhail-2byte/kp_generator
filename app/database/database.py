@@ -522,8 +522,11 @@ def save_generation_history(form_data, final_price, config, user_id=None, total_
         import json
         from app.presentation.helpers import extract_positions_from_form
         
-        # Извлекаем позиции из формы
-        positions = extract_positions_from_form(form_data)
+        # Извлекаем позиции из формы (используем готовые позиции из form_data если есть)
+        if 'positions' in form_data and isinstance(form_data['positions'], list):
+            positions = form_data['positions']
+        else:
+            positions = extract_positions_from_form(form_data)
         
         # Основные данные (для совместимости)
         quantity = int(form_data.get('quantity', 0))

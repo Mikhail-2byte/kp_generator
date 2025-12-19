@@ -334,7 +334,7 @@ class MultiPositionProcessor:
         """Заполняет данные позиции в указанной строке."""
         # Маппинг полей формы на ячейки Excel
         field_mapping = {
-            'product': 'C',  # Наименование товара
+            'product': 'C',  # Наименование товара (будет заполнено отдельно с номером чертежа)
             'drawing_number': 'E',  # Номер чертежа
             'material': 'D',  # Материал
             'cost_price': 'M',  # Сумма закупа
@@ -344,7 +344,24 @@ class MultiPositionProcessor:
             'duty_percent': 'X',  # Пошлина
         }
         
+        # Сначала заполняем столбец C с объединенным форматом "продукт ч.номер чертежа"
+        product = str(position_data.get('product', '')).strip()
+        drawing_number = str(position_data.get('drawing_number', '')).strip()
+        
+        if product:
+            if drawing_number:
+                # Формируем строку в формате "продукт ч.номер чертежа"
+                product_value = f"{product} ч.{drawing_number}"
+            else:
+                product_value = product
+            sheet[f"C{row_number}"] = product_value
+        
+        # Заполняем остальные поля
         for field, column in field_mapping.items():
+            # Пропускаем product, так как он уже обработан выше
+            if field == 'product':
+                continue
+                
             if field in position_data and position_data[field]:
                 value = position_data[field]
                 if field in ['cost_price', 'cost_price_per_kg', 'weight', 'duty_percent']:

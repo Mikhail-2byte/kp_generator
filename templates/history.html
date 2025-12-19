@@ -223,11 +223,11 @@
                     <h4 class="filter-section-title">Цена продажи</h4>
                     <div class="filter-row">
                         <div class="filter-group">
-                            <label for="priceFrom" class="filter-label">Цена от, ₽:</label>
+                            <label for="priceFrom" class="filter-label">Цена от:</label>
                             <input type="number" id="priceFrom" class="filter-input price-input" min="0" step="0.01" placeholder="0.00">
                         </div>
                         <div class="filter-group">
-                            <label for="priceTo" class="filter-label">Цена до, ₽:</label>
+                            <label for="priceTo" class="filter-label">Цена до:</label>
                             <input type="number" id="priceTo" class="filter-input price-input" min="0" step="0.01" placeholder="0.00">
                         </div>
                         <button id="clearPriceFilter" class="btn btn-outline btn-sm" style="display:none;">Очистить</button>
@@ -531,6 +531,15 @@
         cursor: pointer;
         width: 18px;
         height: 18px;
+    }
+
+    .previous-history-panel table tbody tr.current-version {
+        background-color: rgba(59, 130, 246, 0.05);
+        font-weight: 500;
+    }
+
+    .previous-history-panel table tbody tr.current-version:hover {
+        background-color: rgba(59, 130, 246, 0.1);
     }
 
     .comparison-container {
@@ -843,10 +852,13 @@
                                 finalPrice = Number(data.final_price || 0);
                             }
                         }
+                        // Округляем только если final_price был пересчитан (не был сохранен в позиции)
+                        finalPrice = finalPrice > 0 ? Math.ceil(finalPrice / 10) * 10 : finalPrice;
                     }
-
-                    // Продажная цена за единицу (как в Excel), округлённая вверх до десятков
-                    const finalPriceRounded = finalPrice > 0 ? Math.ceil(finalPrice / 10) * 10 : finalPrice;
+                    // Если final_price уже есть в позиции, он уже округлен (как в Excel), используем его напрямую
+                    const finalPriceRounded = finalPrice;
+                    // Итоговая продажная стоимость позиции (цена за единицу * количество)
+                    const totalSalePrice = finalPriceRounded * quantity;
                     
                     const weight = Number(pos.weight || 0);
                     const weightPerUnit = quantity > 0 ? weight / quantity : 0;
@@ -864,7 +876,7 @@
                             <td class="text-right">${formatCurrency(costPrice)}</td>
                             <td class="text-right">${formatCurrency(costPricePerKg)}</td>
                             <td class="text-center">${format(pos.duty_percent, '0')}%</td>
-                            <td class="text-right">${formatCurrency(finalPriceRounded)}</td>
+                            <td class="text-right">${formatCurrency(totalSalePrice)}</td>
                         </tr>
                     `;
                 }).join('');
@@ -887,10 +899,10 @@
                                         <th class="text-center">Количество</th>
                                         <th class="text-right">Вес за шт., кг</th>
                                         <th class="text-right">Общий вес, кг</th>
-                                        <th class="text-right">Цена закупа, ₽</th>
-                                        <th class="text-right">Цена закупа за кг, ₽</th>
+                                        <th class="text-right">Цена закупа</th>
+                                        <th class="text-right">Цена закупа за кг</th>
                                         <th class="text-center">Пошлина, %</th>
-                                        <th class="text-right">Итоговая продажная стоимость, ₽</th>
+                                        <th class="text-right">Итоговая продажная стоимость</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -968,15 +980,15 @@
                                 </div>
                                 <div class="indicator-item financial-item">
                                     <span class="indicator-label">Логистика</span>
-                                    <span class="indicator-value">${formatCurrency(data.logistics)} ₽</span>
+                                    <span class="indicator-value">${formatCurrency(data.logistics)}</span>
                                 </div>
                                 <div class="indicator-item financial-item highlight purchase">
                                     <span class="indicator-label">Общая стоимость закупа</span>
-                                    <span class="indicator-value">${formatCurrency(totalPurchasePrice)} ₽</span>
+                                    <span class="indicator-value">${formatCurrency(totalPurchasePrice)}</span>
                                 </div>
                                 <div class="indicator-item financial-item highlight sale">
                                     <span class="indicator-label">Общая стоимость продажи</span>
-                                    <span class="indicator-value price-final">${formatCurrency(roundedTotalSalePrice)} ₽</span>
+                                    <span class="indicator-value price-final">${formatCurrency(roundedTotalSalePrice)}</span>
                                 </div>
                                 <div class="indicator-item financial-item margin">
                                     <span class="indicator-label">Маржа</span>
@@ -1038,37 +1050,48 @@
         });
 
         const toggleButtons = document.querySelectorAll('.toggle-history');
-        const renderVersions = (records, total) => {
-            if (!records || records.length === 0) {
-                return '<p class="text-muted">Предыдущие версии не найдены.</p>';
+        const renderVersions = (records, total, latestRecord = null) => {
+            if ((!records || records.length === 0) && !latestRecord) {
+                return '<p class="text-muted">Версии не найдены.</p>';
             }
 
-            const rows = records.map(record => `
-                <tr>
-                    <td>
-                        <input type="checkbox" class="version-checkbox" data-version-id="${record.id}" data-version-timestamp="${record.timestamp || ''}">
-                    </td>
-                    <td>${record.timestamp || '—'}</td>
-                    <td>${record.product || '—'}</td>
-                    <td>${record.positions_count || 1}</td>
-                    <td>${Number(record.total_general_price || 0).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                    <td>${Number(record.final_price || 0).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                    <td>${Number(record.margin_percent || 0).toLocaleString('ru-RU', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</td>
-                    <td class="table-actions">
-                        <a href="/load_generation/${record.id}" class="btn btn-outline" title="Повторить генерацию">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width: 16px; height: 16px;"><path d="M3 3v5h5"></path><path d="M3.05 13A9 9 0 1 0 6 4.6L3 8"></path><path d="M12 7v5l3 3"></path></svg>
-                        </a>
-                        <button class="btn btn-outline view-details" data-id="${record.id}" title="Показать детали">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width: 16px; height: 16px;"><path d="m12 2 8 4-8 4-8-4 8-4z"></path><path d="m4 10 8 4 8-4"></path><path d="m4 18 8 4 8-4"></path></svg>
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
+            const renderRow = (record, isCurrent = false) => {
+                const currentClass = isCurrent ? 'current-version' : '';
+                const currentLabel = isCurrent ? '<span class="badge badge-primary" style="margin-left: 8px;">Текущая</span>' : '';
+                return `
+                    <tr class="${currentClass}">
+                        <td>
+                            <input type="checkbox" class="version-checkbox" data-version-id="${record.id}" data-version-timestamp="${record.timestamp || ''}">
+                        </td>
+                        <td>${record.timestamp || '—'} ${currentLabel}</td>
+                        <td>${record.product || '—'}</td>
+                        <td>${record.positions_count || 1}</td>
+                        <td>${Number(record.total_general_price || 0).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td>${Number(record.final_price || 0).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td>${Number(record.margin_percent || 0).toLocaleString('ru-RU', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</td>
+                        <td class="table-actions">
+                            <a href="/load_generation/${record.id}" class="btn btn-outline" title="Повторить генерацию">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width: 16px; height: 16px;"><path d="M3 3v5h5"></path><path d="M3.05 13A9 9 0 1 0 6 4.6L3 8"></path><path d="M12 7v5l3 3"></path></svg>
+                            </a>
+                            <button class="btn btn-outline view-details" data-id="${record.id}" title="Показать детали">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width: 16px; height: 16px;"><path d="m12 2 8 4-8 4-8-4 8-4z"></path><path d="m4 10 8 4 8-4"></path><path d="m4 18 8 4 8-4"></path></svg>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            };
+
+            // Сначала добавляем текущую версию, затем предыдущие
+            let rows = '';
+            if (latestRecord) {
+                rows += renderRow(latestRecord, true);
+            }
+            rows += records.map(record => renderRow(record, false)).join('');
 
             return `
                 <div class="previous-history-header">
                     {{ sidebar_icon('history')|safe }}
-                    <span>Предыдущие версии (всего ${total})</span>
+                    <span>Все версии (всего ${total})</span>
                 </div>
                 <div class="version-actions" style="margin-bottom: 12px;">
                     <button type="button" class="btn btn-outline btn-sm compare-versions-btn" style="display:none;">
@@ -1116,6 +1139,8 @@
 
                 if (!container.dataset.loaded) {
                     let records = [];
+                    let latestRecord = null;
+                    
                     if (button.dataset.preloaded) {
                         try {
                             records = JSON.parse(button.dataset.preloaded) || [];
@@ -1132,16 +1157,39 @@
                             </div>
                         `;
                         try {
-                    const response = await fetch(`/history/tender/${encodeURIComponent(button.dataset.tender)}`);
+                            const response = await fetch(`/history/tender/${encodeURIComponent(button.dataset.tender)}`);
                             const payload = await response.json();
-                            records = (payload.records || []).filter(record => String(record.id) !== button.dataset.latestId);
+                            const allRecords = payload.records || [];
+                            // Находим текущую версию
+                            latestRecord = allRecords.find(record => String(record.id) === button.dataset.latestId);
+                            // Фильтруем предыдущие версии
+                            records = allRecords.filter(record => String(record.id) !== button.dataset.latestId);
                         } catch {
                             container.innerHTML = '<p class="text-danger">Не удалось загрузить историю.</p>';
+                        }
+                    } else if (button.dataset.latestId) {
+                        // Загружаем данные текущей версии, если они не были предзагружены
+                        try {
+                            const response = await fetch(`/history/details/${button.dataset.latestId}`);
+                            if (response.ok) {
+                                const data = await response.json();
+                                latestRecord = {
+                                    id: data.id,
+                                    timestamp: data.timestamp,
+                                    product: data.product,
+                                    positions_count: data.positions_count || 1,
+                                    total_general_price: data.total_general_price,
+                                    final_price: data.final_price,
+                                    margin_percent: data.margin_percent
+                                };
+                            }
+                        } catch (error) {
+                            console.warn('Не удалось загрузить данные текущей версии:', error);
                         }
                     }
 
                     const totalVersions = parseInt(button.dataset.versionCount || (records.length || 0) + 1, 10);
-                    container.innerHTML = renderVersions(records, totalVersions);
+                    container.innerHTML = renderVersions(records, totalVersions, latestRecord);
                     container.dataset.loaded = '1';
 
                     // Инициализация обработчиков для сравнения версий
@@ -2064,6 +2112,13 @@
                 return;
             }
 
+            // Сортируем версии по дате (timestamp) в порядке возрастания: более ранняя версия первой, более новая - последней
+            const sortedVersions = [...versions].sort((a, b) => {
+                const dateA = new Date(a.timestamp || 0).getTime();
+                const dateB = new Date(b.timestamp || 0).getTime();
+                return dateA - dateB;
+            });
+
             const formatCurrency = (value) => Number(value || 0).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const formatNumber = (value) => Number(value || 0).toLocaleString('ru-RU');
             const format = (value, empty = '—') => value ? value : empty;
@@ -2084,23 +2139,30 @@
                 { label: 'Номер тендера', key: 'tender_number', format: format },
                 { label: 'Количество позиций', key: 'positions_count', format: formatNumber },
                 { label: 'Общий вес, кг', key: 'weight', format: formatNumber },
-                { label: 'Логистика, ₽', key: 'logistics', format: formatCurrency },
-                { label: 'Общая стоимость закупа, ₽', key: 'cost_price', format: formatCurrency, calc: (v) => {
+                { label: 'Логистика', key: 'logistics', format: formatCurrency },
+                { label: 'Общая стоимость закупа', key: 'cost_price', format: formatCurrency, calc: (v) => {
+                    // Общая стоимость закупа (cost_price * quantity)
                     if (v.positions && v.positions.length > 0) {
                         return v.positions.reduce((sum, pos) => sum + (Number(pos.cost_price || 0) * Number(pos.quantity || 0)), 0);
                     }
                     return (Number(v.cost_price || 0) * Number(v.quantity || 0));
                 }},
-                { label: 'Общая стоимость продажи, ₽', key: 'total_general_price', format: formatCurrency, calc: (v) => {
-                    if (v.total_general_price) return v.total_general_price;
-                    if (v.positions && v.positions.length > 0) {
+                { label: 'Общая стоимость продажи', key: 'total_general_price', format: formatCurrency, calc: (v) => {
+                    // Общая стоимость продажи БЕЗ НДС (total_general_price уже без НДС, как в Excel)
+                    // Используем total_general_price из базы данных, если он есть и больше 0
+                    if (v.total_general_price != null && v.total_general_price > 0) {
+                        return v.total_general_price;
+                    } else if (v.positions && v.positions.length > 0) {
+                        // Если total_general_price нет, вычисляем из позиций
                         return v.positions.reduce((sum, pos) => {
                             const quantity = Number(pos.quantity || 0);
                             const finalPrice = Number(pos.final_price || 0) || Number(v.final_price || 0);
                             return sum + (finalPrice * quantity);
                         }, 0);
+                    } else {
+                        // Fallback для старых записей с одной позицией
+                        return (Number(v.final_price || 0) * Number(v.quantity || 1));
                     }
-                    return (Number(v.final_price || 0) * Number(v.quantity || 1));
                 }},
                 { label: 'Маржа, %', key: 'margin_percent', format: (v) => Number(v || 0).toFixed(1) },
                 { label: 'Срок поставки, дней', key: 'delivery_time', format: formatNumber },
@@ -2109,7 +2171,7 @@
             ];
 
             const tableRows = rows.map(row => {
-                const values = versions.map(v => {
+                const values = sortedVersions.map(v => {
                     if (row.calc) {
                         return row.calc(v);
                     }
@@ -2138,21 +2200,21 @@
                     <div class="comparison-header">
                         <div class="comparison-version">
                             <strong>Версия 1</strong>
-                            <span class="version-date">${new Date(versions[0].timestamp).toLocaleString('ru-RU')}</span>
+                            <span class="version-date">${new Date(sortedVersions[0].timestamp).toLocaleString('ru-RU')}</span>
                         </div>
-                        ${versions.length > 2 ? `
+                        ${sortedVersions.length > 2 ? `
                         <div class="comparison-version">
                             <strong>Версия 2</strong>
-                            <span class="version-date">${new Date(versions[1].timestamp).toLocaleString('ru-RU')}</span>
+                            <span class="version-date">${new Date(sortedVersions[1].timestamp).toLocaleString('ru-RU')}</span>
                         </div>
                         <div class="comparison-version">
                             <strong>Версия 3</strong>
-                            <span class="version-date">${new Date(versions[2].timestamp).toLocaleString('ru-RU')}</span>
+                            <span class="version-date">${new Date(sortedVersions[2].timestamp).toLocaleString('ru-RU')}</span>
                         </div>
                         ` : `
                         <div class="comparison-version">
                             <strong>Версия 2</strong>
-                            <span class="version-date">${new Date(versions[1].timestamp).toLocaleString('ru-RU')}</span>
+                            <span class="version-date">${new Date(sortedVersions[1].timestamp).toLocaleString('ru-RU')}</span>
                         </div>
                         `}
                     </div>

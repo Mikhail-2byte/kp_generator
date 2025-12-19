@@ -412,14 +412,11 @@ Email: ivanov@example.com
                 <p class="section-description">Удаление приведёт к безвозвратному удалению истории генераций и самого профиля.</p>
                 <form method="post" action="{{ url_for('auth.profile') }}" class="form-grid">
                     {{ delete_form.hidden_tag() }}
-                    <div class="controls-row">
-                        <span></span>
-                        <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
-                            {{ delete_form.submit_delete(class_='btn btn-danger') }}
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                {{ delete_form.confirm_delete(class_='') }}
-                                <label for="{{ delete_form.confirm_delete.id }}" class="muted-text" style="white-space: nowrap;">{{ delete_form.confirm_delete.label.text }}</label>
-                            </div>
+                    <div style="display: flex; align-items: center; gap: 16px; flex-wrap: nowrap;">
+                        {{ delete_form.submit_delete(class_='btn btn-danger') }}
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            {{ delete_form.confirm_delete(class_='') }}
+                            <label for="{{ delete_form.confirm_delete.id }}" class="muted-text" style="white-space: nowrap;">{{ delete_form.confirm_delete.label.text }}</label>
                         </div>
                     </div>
                     {% for error in delete_form.confirm_delete.errors %}
@@ -687,10 +684,10 @@ Email: ivanov@example.com
                                             <th class="text-center">Количество</th>
                                             <th class="text-right">Вес за шт., кг</th>
                                             <th class="text-right">Общий вес, кг</th>
-                                            <th class="text-right">Цена закупа, ₽</th>
-                                            <th class="text-right">Цена закупа за кг, ₽</th>
+                                            <th class="text-right">Цена закупа</th>
+                                            <th class="text-right">Цена закупа за кг</th>
                                             <th class="text-center">Пошлина, %</th>
-                                            <th class="text-right">Итоговая продажная стоимость, ₽</th>
+                                            <th class="text-right">Итоговая продажная стоимость</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -757,15 +754,15 @@ Email: ivanov@example.com
                                         </div>
                                         <div class="indicator-item financial-item">
                                             <span class="indicator-label">Логистика</span>
-                                            <span class="indicator-value">${formatCurrency(data.logistics)} ₽</span>
+                                            <span class="indicator-value">${formatCurrency(data.logistics)}</span>
                                         </div>
                                         <div class="indicator-item financial-item highlight purchase">
                                             <span class="indicator-label">Общая стоимость закупа</span>
-                                            <span class="indicator-value">${formatCurrency(totalPurchasePrice)} ₽</span>
+                                            <span class="indicator-value">${formatCurrency(totalPurchasePrice)}</span>
                                         </div>
                                         <div class="indicator-item financial-item highlight sale">
                                             <span class="indicator-label">Общая стоимость продажи</span>
-                                            <span class="indicator-value price-final">${formatCurrency(totalSalePrice)} ₽</span>
+                                            <span class="indicator-value price-final">${formatCurrency(totalSalePrice)}</span>
                                         </div>
                                         <div class="indicator-item financial-item margin">
                                             <span class="indicator-label">Маржа</span>

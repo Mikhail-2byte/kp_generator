@@ -90,8 +90,9 @@ class DatabaseService:
         final_price: float,
         config: Dict[str, Any],
         user_id: Optional[int],
+        total_general_price: Optional[float] = None,
     ) -> bool:
-        return save_generation_history(payload, final_price, config, user_id)
+        return save_generation_history(payload, final_price, config, user_id, total_general_price)
 
     def get_generation_history(self, config: Dict[str, Any], *, page: int = 1, per_page: Optional[int] = None, date_from: Optional[str] = None, date_to: Optional[str] = None):
         return get_generation_history(config, page=page, per_page=per_page, date_from=date_from, date_to=date_to)

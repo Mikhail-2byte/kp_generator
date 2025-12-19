@@ -337,12 +337,12 @@
                         <span class="summary-value" id="summaryTotalWeight">0 кг</span>
                     </div>
                     <div class="summary-metric">
-                        <span class="summary-label">Общая стоимость</span>
-                        <span class="summary-value" id="summaryTotalCost">0 ₽</span>
+                        <span class="summary-label">Общая стоимость закупа</span>
+                        <span class="summary-value" id="summaryTotalCost">0 ¥</span>
                     </div>
                     <div class="summary-metric">
                         <span class="summary-label">Стоимость логистики</span>
-                        <span class="summary-value" id="summaryLogistics">{{ form_data.logistics if form_data and form_data.logistics else '0' }} ₽</span>
+                        <span class="summary-value" id="summaryLogistics">{{ form_data.logistics if form_data and form_data.logistics else '0' }}</span>
                     </div>
                 </div>
             </div>
@@ -481,11 +481,11 @@
             const summaryWeight = document.getElementById('summaryTotalWeight');
             if (summaryWeight) summaryWeight.textContent = '0 кг';
             const summaryCost = document.getElementById('summaryTotalCost');
-            if (summaryCost) summaryCost.textContent = '0 ₽';
+            if (summaryCost) summaryCost.textContent = '0';
             const summaryItems = document.getElementById('summaryTotalItems');
             if (summaryItems) summaryItems.textContent = '0 позиций';
             const summaryLogistics = document.getElementById('summaryLogistics');
-            if (summaryLogistics) summaryLogistics.textContent = '0 ₽';
+            if (summaryLogistics) summaryLogistics.textContent = '0';
         } catch (err) {
             console.error('Не удалось сбросить черновик формы', err);
             alert('Не удалось сбросить форму. Попробуйте ещё раз.');
@@ -973,10 +973,13 @@
                         } else if (index === 0) {
                             finalPrice = Number(data.final_price || 0);
                         }
+                        // Округляем только если final_price был пересчитан (не был сохранен в позиции)
+                        finalPrice = finalPrice > 0 ? Math.ceil(finalPrice / 10) * 10 : finalPrice;
                     }
-
-                    // Продажная цена за единицу как в Excel (округляем вверх до десятков)
-                    const finalPriceRounded = finalPrice > 0 ? Math.ceil(finalPrice / 10) * 10 : finalPrice;
+                    // Если final_price уже есть в позиции, он уже округлен (как в Excel), используем его напрямую
+                    const finalPriceRounded = finalPrice;
+                    // Итоговая продажная стоимость позиции (цена за единицу * количество)
+                    const totalSalePrice = finalPriceRounded * quantity;
 
                     const weight = Number(pos.weight || 0);
                     const weightPerUnit = quantity > 0 ? weight / quantity : 0;
@@ -993,7 +996,7 @@
                             <td class="text-right">${formatCurrencyLocal(costPrice)}</td>
                             <td class="text-right">${formatCurrencyLocal(costPricePerKg)}</td>
                             <td class="text-center">${format(pos.duty_percent, '0')}%</td>
-                            <td class="text-right">${formatCurrencyLocal(finalPriceRounded)}</td>
+                            <td class="text-right">${formatCurrencyLocal(totalSalePrice)}</td>
                         </tr>
                     `;
                 }).join('');
@@ -1016,10 +1019,10 @@
                                         <th class="text-center">Количество</th>
                                         <th class="text-right">Вес за шт., кг</th>
                                         <th class="text-right">Общий вес, кг</th>
-                                        <th class="text-right">Цена закупа, ₽</th>
-                                        <th class="text-right">Цена закупа за кг, ₽</th>
+                                        <th class="text-right">Цена закупа</th>
+                                        <th class="text-right">Цена закупа за кг</th>
                                         <th class="text-center">Пошлина, %</th>
-                                        <th class="text-right">Итоговая продажная стоимость, ₽</th>
+                                        <th class="text-right">Итоговая продажная стоимость</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1084,15 +1087,15 @@
                                 </div>
                                 <div class="indicator-item financial-item">
                                     <span class="indicator-label">Логистика</span>
-                                    <span class="indicator-value">${formatCurrencyLocal(data.logistics)} ₽</span>
+                                    <span class="indicator-value">${formatCurrencyLocal(data.logistics)}</span>
                                 </div>
                                 <div class="indicator-item financial-item highlight purchase">
                                     <span class="indicator-label">Общая стоимость закупа</span>
-                                    <span class="indicator-value">${formatCurrencyLocal(totalPurchasePrice)} ₽</span>
+                                    <span class="indicator-value">${formatCurrencyLocal(totalPurchasePrice)}</span>
                                 </div>
                                 <div class="indicator-item financial-item highlight sale">
                                     <span class="indicator-label">Общая стоимость продажи</span>
-                                    <span class="indicator-value price-final">${formatCurrencyLocal(roundedTotalSalePrice)} ₽</span>
+                                    <span class="indicator-value price-final">${formatCurrencyLocal(roundedTotalSalePrice)}</span>
                                 </div>
                                 <div class="indicator-item financial-item margin">
                                     <span class="indicator-label">Маржа</span>
@@ -1193,7 +1196,7 @@
             }
             if (summaryTotalCost) {
                 const roundedCost = Math.round(totalCost);
-                summaryTotalCost.textContent = `${roundedCost.toLocaleString('ru-RU')} ₽`;
+                summaryTotalCost.textContent = `${roundedCost.toLocaleString('ru-RU')} ¥`;
             }
             updateSummaryStats();
         };
@@ -1205,9 +1208,9 @@
             const raw = (logisticsInput?.value || '').replace(/\s+/g, '').replace(',', '.');
             const parsed = Number.parseFloat(raw);
             if (Number.isFinite(parsed) && parsed > 0) {
-                summaryLogistics.textContent = `${Math.round(parsed).toLocaleString('ru-RU')} ₽`;
+                summaryLogistics.textContent = `${Math.round(parsed).toLocaleString('ru-RU')}`;
             } else {
-                summaryLogistics.textContent = '0 ₽';
+                summaryLogistics.textContent = '0';
             }
         };
 

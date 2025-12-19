@@ -99,9 +99,9 @@ class GenerationRepository:
     def __init__(self, db: DatabaseService = database_service) -> None:
         self._db = db
 
-    def save_history(self, payload: Dict[str, Any], final_price: float, config: Dict[str, Any], user_id: Any) -> bool:
+    def save_history(self, payload: Dict[str, Any], final_price: float, config: Dict[str, Any], user_id: Any, total_general_price: Optional[float] = None) -> bool:
         """Сохраняет расчёт генерации с привязкой к пользователю."""
-        return self._db.save_generation_history(payload, final_price, config, int(user_id) if user_id is not None else None)
+        return self._db.save_generation_history(payload, final_price, config, int(user_id) if user_id is not None else None, total_general_price)
 
     def get_history(self, config: Dict[str, Any], *, page: int = 1, per_page: Optional[int] = None, date_from: Optional[str] = None, date_to: Optional[str] = None):
         """Возвращает историю генераций с пагинацией."""

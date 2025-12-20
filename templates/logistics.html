@@ -5,19 +5,141 @@
     <div id="cities-data" class="hidden">{{ cities | tojson }}</div>
 
     <div class="card">
-        <h2 class="section-title">Справочная информация</h2>
-        <p class="section-description">Сравните типы транспорта и выберите подходящий тариф.</p>
-        <div class="pill-group mt-md">
-            <span class="pill">Фура — до 20 000 кг</span>
-            <span class="pill">Трал — до 40 000 кг</span>
-            <span class="pill">Формула: (Стоимость / Грузоподъёмность) × Вес</span>
-        </div>
-        <details class="mt-lg">
-            <summary class="muted-text">Показать доступные направления</summary>
-            <div class="pill-group mt-sm">
-                {% for city in cities %}
-                    <span class="pill">{{ city.name }}</span>
-                {% endfor %}
+        <details>
+            <summary style="cursor: pointer; user-select: none; font-size: 1.5rem; font-weight: 600; color: var(--foreground, #111827); margin-bottom: 0;">Справочная информация</summary>
+            <div class="mt-lg">
+                <p class="section-description">Основные параметры и правила расчета логистики.</p>
+
+                <div class="mt-md">
+                    <h3 class="section-subtitle" style="margin-top: 1rem; margin-bottom: 0.5rem;">Параметры транспорта</h3>
+                    <div style="background: var(--bg-secondary, #f8f9fa); padding: 1rem; border-radius: 0.5rem;">
+                        <div style="margin-bottom: 1rem;">
+                            <strong>Фура (еврофура):</strong>
+                            <ul style="margin: 0.5rem 0 0 1.5rem; padding: 0;">
+                                <li>Габариты: 13 600 × 2 450 × 2 650 мм</li>
+                                <li>Грузоподъемность: 20 000 кг</li>
+                                <li>Объем кузова: 82 м³</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <strong>Трал:</strong>
+                            <ul style="margin: 0.5rem 0 0 1.5rem; padding: 0;">
+                                <li>Грузоподъемность: 40 000 кг</li>
+                                <li>Доступен только до: Екатеринбург, Москва</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-md">
+                    <h3 class="section-subtitle" style="margin-top: 1rem; margin-bottom: 0.5rem;">Пороговые значения</h3>
+                    <div style="background: var(--bg-secondary, #f8f9fa); padding: 1rem; border-radius: 0.5rem;">
+                        <ul style="margin: 0; padding-left: 1.5rem;">
+                            <li><strong>Малый груз:</strong> до 600 кг — рекомендуется транспортная компания «Деловые линии»</li>
+                            <li><strong>Основной маршрут:</strong> грузы от 5 тонн используют прямые тарифы до города назначения</li>
+                            <li><strong>Алгоритм ЕКБ+РФ:</strong> применяется для городов из справочника ЕКБ+РФ независимо от веса</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="mt-md">
+                    <h3 class="section-subtitle" style="margin-top: 1rem; margin-bottom: 0.5rem;">Тарифная сетка РФ (за 1000 км)</h3>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table" style="width: 100%; margin-top: 0.5rem;">
+                            <thead>
+                                <tr>
+                                    <th>Вес груза</th>
+                                    <th style="text-align: right;">Тариф, руб</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1 тонна</td>
+                                    <td style="text-align: right;">30 000</td>
+                                </tr>
+                                <tr>
+                                    <td>2 тонны</td>
+                                    <td style="text-align: right;">52 000</td>
+                                </tr>
+                                <tr>
+                                    <td>3 тонны</td>
+                                    <td style="text-align: right;">69 000</td>
+                                </tr>
+                                <tr>
+                                    <td>5 тонн</td>
+                                    <td style="text-align: right;">90 000</td>
+                                </tr>
+                                <tr>
+                                    <td>7 тонн</td>
+                                    <td style="text-align: right;">105 000</td>
+                                </tr>
+                                <tr>
+                                    <td>10 тонн</td>
+                                    <td style="text-align: right;">115 000</td>
+                                </tr>
+                                <tr>
+                                    <td>15 тонн</td>
+                                    <td style="text-align: right;">118 000</td>
+                                </tr>
+                                <tr>
+                                    <td>20 тонн (полная фура)</td>
+                                    <td style="text-align: right;">120 000</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="muted-text" style="margin-top: 0.5rem; font-size: 0.875rem;">Для промежуточных весов применяется тариф для ближайшего большего веса из таблицы.</p>
+                </div>
+
+                <div class="mt-md">
+                    <h3 class="section-subtitle" style="margin-top: 1rem; margin-bottom: 0.5rem;">Алгоритмы расчета</h3>
+                    <div style="background: var(--bg-secondary, #f8f9fa); padding: 1rem; border-radius: 0.5rem;">
+                        <div style="margin-bottom: 1rem;">
+                            <strong>1. Расчет по весу:</strong>
+                            <div style="margin-top: 0.5rem; font-family: monospace; background: white; padding: 0.5rem; border-radius: 0.25rem;">
+                                (Стоимость транспорта / Грузоподъемность) × Вес груза
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <strong>2. Расчет по объему:</strong>
+                            <div style="margin-top: 0.5rem; font-family: monospace; background: white; padding: 0.5rem; border-radius: 0.25rem;">
+                                (Стоимость фуры / Объем кузова) × Объем груза
+                            </div>
+                            <p class="muted-text" style="margin-top: 0.5rem; font-size: 0.875rem;">Расчет по весу или объему выбирается автоматически (используется превалирующий параметр).</p>
+                        </div>
+                        <div>
+                            <strong>3. Алгоритм ЕКБ+РФ (для городов из справочника ЕКБ+РФ):</strong>
+                            <div style="margin-top: 0.5rem;">
+                                <div style="margin-bottom: 0.5rem;">КНР → ЕКБ:</div>
+                                <div style="font-family: monospace; background: white; padding: 0.5rem; border-radius: 0.25rem; margin-bottom: 0.5rem;">
+                                    (1 100 000 руб / 20 000 кг) × Вес груза
+                                </div>
+                                <div style="margin-bottom: 0.5rem;">ЕКБ → Город назначения:</div>
+                                <div style="font-family: monospace; background: white; padding: 0.5rem; border-radius: 0.25rem;">
+                                    (Тариф за 1000 км / 1000) × Расстояние от ЕКБ
+                                </div>
+                                <p class="muted-text" style="margin-top: 0.5rem; font-size: 0.875rem;">Итоговая стоимость = стоимость КНР→ЕКБ + стоимость ЕКБ→Город</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-md">
+                    <h3 class="section-subtitle" style="margin-top: 1rem; margin-bottom: 0.5rem;">Стоимость до Екатеринбурга</h3>
+                    <div style="background: var(--bg-secondary, #f8f9fa); padding: 1rem; border-radius: 0.5rem;">
+                        <p style="margin: 0;"><strong>1 100 000 руб</strong> за полную фуру (20 000 кг)</p>
+                        <p class="muted-text" style="margin-top: 0.5rem; font-size: 0.875rem; margin-bottom: 0;">Используется в алгоритме ЕКБ+РФ для расчета стоимости доставки от КНР до Екатеринбурга.</p>
+                    </div>
+                </div>
+
+                <details class="mt-lg">
+                    <summary class="muted-text">Показать доступные направления</summary>
+                    <div class="pill-group mt-sm">
+                        {% for city in cities %}
+                            <span class="pill">{{ city.name }}</span>
+                        {% endfor %}
+                    </div>
+                </details>
             </div>
         </details>
     </div>
@@ -27,12 +149,16 @@
         <p class="section-description">Выберите тип транспорта и укажите параметры груза. Габариты (опционально) - для расчета по объему.</p>
         <form id="logisticsForm" class="form-grid">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" id="selectedCityData">
             <div class="field-group span-3">
                 <label class="field-label">Тип транспорта</label>
-                <div class="radio-row">
-                    <label><input type="radio" name="transportType" id="truckRadio" value="truck" checked> Фура (до 20 т, 88 м³)</label>
-                    <label><input type="radio" name="transportType" id="trailRadio" value="trail"> Трал (до 40 т)</label>
+                <div class="toggle-group" role="group" aria-label="Тип транспорта">
+                    <input type="radio" name="transportType" id="truckRadio" value="truck" checked>
+                    <label for="truckRadio">Фура (до 20 т, 82 м³)</label>
+                    <input type="radio" name="transportType" id="trailRadio" value="trail">
+                    <label for="trailRadio">Трал (до 40 т)</label>
                 </div>
+                <div class="form-helper">Трал доступен только до Екатеринбурга и Москвы</div>
             </div>
             <div class="field-group span-3">
                 <label for="cityInput" class="field-label">Город доставки</label>
@@ -46,6 +172,11 @@
                 <label for="cargoWeight" class="field-label">Вес груза (кг)</label>
                 <input type="number" id="cargoWeight" min="1" step="0.01" placeholder="Введите вес" required>
                 <div class="form-helper" id="weightHelpText">Для веса более 20 000 кг будет рассчитано несколько машин</div>
+            </div>
+            <div class="field-group hidden" id="distanceFieldGroup">
+                <label for="distanceFromEkb" class="field-label">Расстояние от Екатеринбурга (км)</label>
+                <input type="number" id="distanceFromEkb" min="0" step="1" placeholder="Введите расстояние">
+                <div class="form-helper">Для грузов менее 5 тонн в города вне основного маршрута необходимо указать расстояние</div>
             </div>
             <div class="field-group span-2">
                 <label class="field-label">Габариты груза (мм) - опционально</label>
@@ -75,21 +206,36 @@
             <strong>Результаты расчёта</strong>
             <p><strong>Направление:</strong> КНР-<span id="resultCityName"></span></p>
             <p><strong>Тип транспорта:</strong> <span id="resultTransportType"></span></p>
+            <p id="resultCalculationType" class="hidden"><strong>Тип расчета:</strong> <span id="calculationTypeText"></span></p>
             <p id="resultBasis" class="hidden"><strong>Расчет:</strong> <span id="basisText"></span></p>
             <p id="resultDimensions" class="hidden"><strong>Габариты:</strong> <span id="dimensionsText"></span></p>
             <p id="resultOversized" class="hidden"><strong>⚠ Негабаритный груз</strong></p>
             <p id="resultHeavy" class="hidden"><strong>⚠ Тяжеловесный груз</strong></p>
+            <div id="resultRouteDetails" class="hidden mt-md" style="border-left: 3px solid var(--accent-color, #3b82f6); padding-left: 1rem; margin-left: 0.5rem;">
+                <p style="margin: 0.5rem 0;"><strong>Маршрут КНР → ЕКБ:</strong> <span id="chinaToEkbPrice"></span> руб</p>
+                <p style="margin: 0.5rem 0;"><strong>Маршрут ЕКБ → <span id="ekbToDestCity"></span>:</strong> <span id="ekbToDestPrice"></span> руб (<span id="ekbDistance"></span> км)</p>
+            </div>
             <p><strong>Количество машин:</strong> <span id="truckCount"></span></p>
             <p id="pricePerUnit"><strong>Стоимость за единицу:</strong> <span id="pricePerUnitText"></span></p>
             <p><strong>Итоговая стоимость:</strong> <span id="totalPrice"></span> руб</p>
             <p class="muted-text" id="calculationDetails"></p>
+            <div id="saveDistanceBlock" class="hidden mt-md">
+                <button type="button" class="btn btn-outline btn-sm" id="saveDistanceBtn">Сохранить расстояние в базу</button>
+                <p class="form-helper">Сохраните расстояние, чтобы в следующий раз оно автоматически подставлялось</p>
+            </div>
         </div>
 
         <div class="flash flash-error hidden mt-md" id="cityNotFound">
             Город не найден в базе данных. Выберите город из выпадающего списка.
         </div>
         <div class="flash flash-info hidden mt-md" id="lowWeightWarning">
-            Для грузов менее 700 кг рекомендуем транспортную компанию «Деловые линии».
+            Для грузов до 600 кг рекомендуется транспортная компания «Деловые линии» (dellin.ru).
+        </div>
+        <div class="flash flash-error hidden mt-md" id="needsDistanceWarning">
+            Для грузов менее 5 тонн в города вне основного маршрута необходимо указать расстояние от Екатеринбурга.
+        </div>
+        <div class="flash flash-error hidden mt-md" id="trailNotAvailableWarning">
+            Трал доступен только до Екатеринбурга и Москвы. Для других городов выберите фуру.
         </div>
     </div>
 
@@ -154,12 +300,18 @@
         const calculateBtn = document.getElementById('calculateLogisticsBtn');
         const lowWeightWarning = document.getElementById('lowWeightWarning');
         const resultBlock = document.getElementById('result');
+        const distanceFieldGroup = document.getElementById('distanceFieldGroup');
+        const distanceFromEkbInput = document.getElementById('distanceFromEkb');
+        const needsDistanceWarning = document.getElementById('needsDistanceWarning');
+        const trailNotAvailableWarning = document.getElementById('trailNotAvailableWarning');
 
         transportRadios.forEach(radio => {
             radio.addEventListener('change', () => {
                 updateWeightLimit();
+                checkDistanceFieldVisibility();
                 const priceInput = document.getElementById('selectedCityPrice');
                 const nameInput = document.getElementById('selectedCityName');
+                const dataInput = document.getElementById('selectedCityData');
                 const currentCityName = nameInput ? nameInput.value.trim() : '';
                 
                 // Если город уже выбран, обновляем цену для нового типа транспорта
@@ -167,6 +319,19 @@
                     const selectedCity = cities.find(c => c.name === currentCityName);
                     if (selectedCity) {
                         const newTransportType = radio.value;
+                        
+                        // Проверка доступности трала
+                        if (newTransportType === 'trail' && !selectedCity.allows_trail) {
+                            showElement(trailNotAvailableWarning);
+                            if (priceInput) priceInput.value = '';
+                            if (nameInput) nameInput.value = '';
+                            if (dataInput) dataInput.value = '';
+                            cityInput.value = '';
+                            return;
+                        } else {
+                            hideElement(trailNotAvailableWarning);
+                        }
+                        
                         const newPrice = newTransportType === 'trail' ? selectedCity.trail_price : selectedCity.truck_price;
                         if (newPrice && Number.isFinite(newPrice) && newPrice > 0) {
                             if (priceInput) {
@@ -177,18 +342,21 @@
                             // Если для нового типа транспорта нет цены, очищаем выбор
                             if (priceInput) priceInput.value = '';
                             if (nameInput) nameInput.value = '';
+                            if (dataInput) dataInput.value = '';
                             cityInput.value = '';
                         }
                     } else {
                         // Город не найден, очищаем
                         if (priceInput) priceInput.value = '';
                         if (nameInput) nameInput.value = '';
+                        if (dataInput) dataInput.value = '';
                         cityInput.value = '';
                     }
                 } else {
                     // Город не выбран, просто очищаем
                     if (priceInput) priceInput.value = '';
                     if (nameInput) nameInput.value = '';
+                    if (dataInput) dataInput.value = '';
                     if (cityInput) cityInput.value = '';
                 }
                 hideElement(resultBlock);
@@ -201,12 +369,22 @@
 
         if (cargoWeightInput) {
             cargoWeightInput.addEventListener('input', (event) => {
-                if (parseFloat(event.target.value) >= 700) {
+                checkDistanceFieldVisibility();
+                if (parseFloat(event.target.value) > 600) {
                     hideElement(lowWeightWarning);
                 }
             });
 
             cargoWeightInput.addEventListener('keypress', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    calculateLogistics();
+                }
+            });
+        }
+
+        if (distanceFromEkbInput) {
+            distanceFromEkbInput.addEventListener('keypress', (event) => {
                 if (event.key === 'Enter') {
                     event.preventDefault();
                     calculateLogistics();
@@ -221,6 +399,61 @@
             cityInput.focus();
         }
     });
+
+    function checkDistanceFieldVisibility() {
+        const dataInput = document.getElementById('selectedCityData');
+        const cargoWeightInput = document.getElementById('cargoWeight');
+        const distanceFieldGroup = document.getElementById('distanceFieldGroup');
+        const distanceFromEkbInput = document.getElementById('distanceFromEkb');
+        
+        if (!dataInput || !cargoWeightInput || !distanceFieldGroup) return;
+        
+        const cityDataRaw = dataInput.value;
+        if (!cityDataRaw) {
+            hideElement(distanceFieldGroup);
+            return;
+        }
+        
+        let cityData;
+        try {
+            cityData = JSON.parse(cityDataRaw);
+        } catch (e) {
+            hideElement(distanceFieldGroup);
+            return;
+        }
+        
+        const weight = parseFloat(cargoWeightInput.value) || 0;
+        const isMainRoute = cityData.is_main_route === true;
+        const hasDistance = cityData.distance_from_ekb_km != null && cityData.distance_from_ekb_km > 0;
+        // Проверяем, является ли город из справочника ЕКБ+РФ (truck_price = 0 и is_main_route = false)
+        const isEkbRfCity = cityData.truck_price === 0 && !isMainRoute && !cityData.allows_trail;
+        
+        // Показываем поле расстояния если:
+        // 1. Город из справочника ЕКБ+РФ И нет сохраненного расстояния, ИЛИ
+        // 2. Вес < 5 тонн И не основной маршрут И нет сохраненного расстояния
+        if (isEkbRfCity && !hasDistance) {
+            // Для городов из справочника ЕКБ+РФ всегда показываем поле, независимо от веса
+            showElement(distanceFieldGroup);
+            if (distanceFromEkbInput) {
+                distanceFromEkbInput.required = true;
+            }
+        } else if (weight > 0 && weight < 5000 && !isMainRoute && !hasDistance) {
+            // Для остальных городов показываем только для грузов < 5 тонн
+            showElement(distanceFieldGroup);
+            if (distanceFromEkbInput) {
+                distanceFromEkbInput.required = true;
+            }
+        } else {
+            hideElement(distanceFieldGroup);
+            if (distanceFromEkbInput) {
+                distanceFromEkbInput.required = false;
+                // Если расстояние есть в базе, подставляем его
+                if (hasDistance) {
+                    distanceFromEkbInput.value = cityData.distance_from_ekb_km;
+                }
+            }
+        }
+    }
 
     function updateWeightLimit() {
         const transportTypeField = document.querySelector('input[name="transportType"]:checked');
@@ -265,29 +498,65 @@
             const transportType = transportTypeField ? transportTypeField.value : 'truck';
 
             matchingCities.forEach(city => {
+                // Проверка доступности трала
+                if (transportType === 'trail' && !city.allows_trail) {
+                    return; // Не показываем города без трала если выбран трал
+                }
+                
+                // Для городов из справочника ЕКБ+РФ (truck_price = 0) используем специальную логику
+                const isEkbRfCity = city.truck_price === 0 && !city.is_main_route && !city.allows_trail;
                 const price = transportType === 'trail' ? city.trail_price : city.truck_price;
                 
-                // Пропускаем города без цены
-                if (!price || !Number.isFinite(price) || price <= 0) {
+                // Для городов ЕКБ+РФ не проверяем цену (она будет рассчитана по алгоритму)
+                // Для остальных городов пропускаем города без цены
+                if (!isEkbRfCity && (!price || !Number.isFinite(price) || price <= 0)) {
                     console.warn('City has invalid price:', city.name, price);
                     return;
                 }
                 
                 const item = document.createElement('div');
-                item.innerHTML = `<strong>${city.name}</strong> — ${city.region || ''}<br><small>${formatMoney(price)} руб</small>`;
+                let cityLabel = `<strong>${city.name}</strong> — ${city.region || ''}`;
+                
+                if (isEkbRfCity) {
+                    // Для городов ЕКБ+РФ показываем специальную метку
+                    cityLabel += `<br><small style="color: #f59e0b;">Расчет по алгоритму ЕКБ+РФ</small>`;
+                    if (city.distance_from_ekb_km) {
+                        cityLabel += ` <small>(${city.distance_from_ekb_km} км от ЕКБ)</small>`;
+                    }
+                } else {
+                    cityLabel += `<br><small>${formatMoney(price)} руб</small>`;
+                }
+                
+                // Добавляем метку если город на основном маршруте
+                if (city.is_main_route) {
+                    cityLabel += ` <span style="color: #10b981;">✓ Основной маршрут</span>`;
+                }
+                
+                item.innerHTML = cityLabel;
                 item.addEventListener('click', () => {
                     cityInput.value = city.name;
                     const priceInput = document.getElementById('selectedCityPrice');
                     const nameInput = document.getElementById('selectedCityName');
+                    const dataInput = document.getElementById('selectedCityData');
+                    
+                    // Для городов ЕКБ+РФ используем минимальную цену (она не важна, расчет по алгоритму)
+                    // Для остальных городов используем реальную цену
                     if (priceInput) {
-                        priceInput.value = price;
+                        priceInput.value = isEkbRfCity ? 1 : price;
                     }
                     if (nameInput) {
                         nameInput.value = city.name;
                     }
+                    if (dataInput) {
+                        // Сохраняем полные данные о городе
+                        dataInput.value = JSON.stringify(city);
+                    }
+                    
                     hideElement(document.getElementById('cityNotFound'));
+                    hideElement(document.getElementById('trailNotAvailableWarning'));
                     closeAllLists();
-                    console.log('City selected:', city.name, 'Price:', price);
+                    checkDistanceFieldVisibility();
+                    console.log('City selected:', city.name, 'Price:', price, 'Main route:', city.is_main_route, 'EKB+RF:', isEkbRfCity);
                 });
                 list.appendChild(item);
             });
@@ -345,21 +614,27 @@
     async function calculateLogistics() {
         const priceInput = document.getElementById('selectedCityPrice');
         const nameInput = document.getElementById('selectedCityName');
+        const dataInput = document.getElementById('selectedCityData');
         const logisticsCost = priceInput ? parseFloat(priceInput.value) : NaN;
         const cityName = nameInput ? nameInput.value.trim() : '';
         const cargoWeightInput = document.getElementById('cargoWeight');
         const cargoLengthInput = document.getElementById('cargoLength');
         const cargoWidthInput = document.getElementById('cargoWidth');
         const cargoHeightInput = document.getElementById('cargoHeight');
+        const distanceFromEkbInput = document.getElementById('distanceFromEkb');
         const transportTypeField = document.querySelector('input[name="transportType"]:checked');
         const transportType = transportTypeField ? transportTypeField.value : 'truck';
         const transportName = transportType === 'trail' ? 'Трал' : 'Фура';
         const resultBlock = document.getElementById('result');
         const cityNotFound = document.getElementById('cityNotFound');
         const lowWeightWarning = document.getElementById('lowWeightWarning');
+        const needsDistanceWarning = document.getElementById('needsDistanceWarning');
+        const trailNotAvailableWarning = document.getElementById('trailNotAvailableWarning');
 
         hideElement(cityNotFound);
         hideElement(lowWeightWarning);
+        hideElement(needsDistanceWarning);
+        hideElement(trailNotAvailableWarning);
         hideElement(resultBlock);
 
         const cargoWeight = parseFloat(cargoWeightInput ? cargoWeightInput.value : '');
@@ -369,14 +644,36 @@
             return;
         }
 
-        if (cargoWeight < 700) {
+        if (cargoWeight <= 600) {
             showElement(lowWeightWarning);
             return;
         }
 
-        if (!logisticsCost || !cityName || !Number.isFinite(logisticsCost) || logisticsCost <= 0) {
+        // Получаем данные о городе
+        let cityData = null;
+        try {
+            cityData = dataInput ? JSON.parse(dataInput.value) : null;
+        } catch (e) {
+            console.error('Failed to parse city data:', e);
+        }
+        
+        // Проверяем, является ли город из справочника ЕКБ+РФ
+        let isEkbRfCity = false;
+        if (cityData) {
+            isEkbRfCity = cityData.truck_price === 0 && !cityData.is_main_route && !cityData.allows_trail;
+        }
+        
+        // Для городов ЕКБ+РФ не проверяем цену (она будет рассчитана по алгоритму)
+        // Для остальных городов проверяем валидность цены
+        if (!isEkbRfCity && (!logisticsCost || !Number.isFinite(logisticsCost) || logisticsCost <= 0)) {
             showElement(cityNotFound);
             console.error('Invalid city data:', { logisticsCost, cityName });
+            return;
+        }
+        
+        if (!cityName) {
+            showElement(cityNotFound);
+            console.error('City name is required');
             return;
         }
 
@@ -385,27 +682,32 @@
             weight_kg: cargoWeight,
             city_price: parseFloat(logisticsCost),
             transport_type: transportType,
+            city_name: cityName,
+            is_main_route: cityData ? (cityData.is_main_route === true) : true,
         };
+
+        // Добавляем расстояние от ЕКБ если есть
+        const distanceValue = distanceFromEkbInput ? parseInt(distanceFromEkbInput.value) : null;
+        if (distanceValue && Number.isFinite(distanceValue) && distanceValue > 0) {
+            requestData.distance_from_ekb_km = distanceValue;
+        } else if (cityData && cityData.distance_from_ekb_km) {
+            requestData.distance_from_ekb_km = cityData.distance_from_ekb_km;
+        }
 
         // Добавляем габариты, если указаны
         const length = cargoLengthInput ? parseFloat(cargoLengthInput.value) : null;
         const width = cargoWidthInput ? parseFloat(cargoWidthInput.value) : null;
         const height = cargoHeightInput ? parseFloat(cargoHeightInput.value) : null;
 
-        // Проверяем, что все три габарита указаны и валидны
-        console.log('Raw dimensions:', { length, width, height });
         if (length && width && height && 
             Number.isFinite(length) && Number.isFinite(width) && Number.isFinite(height) &&
             length > 0 && width > 0 && height > 0) {
             requestData.length_mm = length;
             requestData.width_mm = width;
             requestData.height_mm = height;
-            console.log('Dimensions added to request');
-        } else {
-            console.log('Dimensions not added (incomplete or invalid)');
         }
 
-        // Получаем CSRF токен из формы
+        // Получаем CSRF токен
         const form = document.getElementById('logisticsForm');
         const csrfTokenInput = form ? form.querySelector('input[name="csrf_token"]') : null;
         const csrfToken = csrfTokenInput ? csrfTokenInput.value : '';
@@ -426,24 +728,40 @@
                 let errorData;
                 try {
                     const text = await response.text();
-                    console.error('Server response (not OK):', text);
                     try {
                         errorData = JSON.parse(text);
                     } catch (e) {
                         errorData = { error: `Ошибка ${response.status}: ${text || 'Неизвестная ошибка'}` };
                     }
                 } catch (e) {
-                    console.error('Failed to read error response:', e);
                     errorData = { error: `Ошибка ${response.status}: Не удалось прочитать ответ сервера` };
                 }
-                console.error('Logistics calculation error:', errorData, 'Status:', response.status);
-                alert(errorData.error || `Ошибка при расчете логистики (код ${response.status})`);
+                console.error('Logistics calculation error:', errorData);
+                
+                if (errorData.error) {
+                    alert(errorData.error);
+                }
                 return;
             }
 
             const result = await response.json();
+            console.log('Logistics calculation result:', result);
 
-            // Обработка мелкогабаритного груза
+            // Обработка ошибок из результата
+            if (result.error) {
+                if (result.needs_distance) {
+                    showElement(needsDistanceWarning);
+                    needsDistanceWarning.textContent = result.error;
+                } else if (result.trail_not_available) {
+                    showElement(trailNotAvailableWarning);
+                    trailNotAvailableWarning.textContent = result.error;
+                } else {
+                    alert(result.error);
+                }
+                return;
+            }
+
+            // Обработка рекомендации Деловых линий
             if (result.recommendation === 'dellin') {
                 showElement(lowWeightWarning);
                 lowWeightWarning.textContent = result.message;
@@ -451,62 +769,168 @@
             }
 
             // Отображаем результаты
-            document.getElementById('resultCityName').textContent = cityName;
-            document.getElementById('resultTransportType').textContent = transportName;
+            displayResults(result, cityName, transportName, requestData.distance_from_ekb_km);
 
-            // Базис расчета
-            const basisText = result.basis === 'weight' ? 'по весу' : 'по объему';
-            document.getElementById('basisText').textContent = basisText;
-            showElement(document.getElementById('resultBasis'));
-
-            // Габариты
-            if (result.dimensions && result.dimensions.length_mm) {
-                const dims = result.dimensions;
-                document.getElementById('dimensionsText').textContent = 
-                    `${formatNumber(dims.length_mm)} × ${formatNumber(dims.width_mm)} × ${formatNumber(dims.height_mm)} мм (${result.volume_m3.toFixed(2)} м³)`;
-                showElement(document.getElementById('resultDimensions'));
-            } else {
-                hideElement(document.getElementById('resultDimensions'));
-            }
-
-            // Предупреждения
-            if (result.oversized) {
-                showElement(document.getElementById('resultOversized'));
-            } else {
-                hideElement(document.getElementById('resultOversized'));
-            }
-
-            if (result.heavy) {
-                showElement(document.getElementById('resultHeavy'));
-            } else {
-                hideElement(document.getElementById('resultHeavy'));
-            }
-
-            // Количество машин
-            const trucksCount = result.trucks_count || 1;
-            document.getElementById('truckCount').textContent = 
-                trucksCount === 1 ? '1 машина' : `${trucksCount} ${getTruckWord(trucksCount, transportName)}`;
-
-            // Стоимость за единицу
-            if (result.basis === 'weight') {
-                document.getElementById('pricePerUnitText').textContent = 
-                    `${formatMoney(result.price_per_kg)} руб/кг`;
-            } else {
-                document.getElementById('pricePerUnitText').textContent = 
-                    `${formatMoney(result.price_per_m3)} руб/м³`;
-            }
-
-            // Итоговая стоимость
-            document.getElementById('totalPrice').textContent = formatMoney(result.total_price);
-
-            // Детали расчета
-            document.getElementById('calculationDetails').textContent = result.calculation_formula || '';
-
-            showElement(resultBlock);
-            resultBlock.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         } catch (error) {
             console.error('Error calculating logistics:', error);
             alert('Ошибка при расчете логистики. Попробуйте еще раз.');
+        }
+    }
+
+    function displayResults(result, cityName, transportName, userProvidedDistance) {
+        const resultBlock = document.getElementById('result');
+        
+        document.getElementById('resultCityName').textContent = cityName;
+        document.getElementById('resultTransportType').textContent = transportName;
+
+        // Тип расчета
+        const calculationType = result.calculation_type;
+        if (calculationType) {
+            const typeText = calculationType === 'ekb_plus_rf' ? 'Через Екатеринбург (КНР → ЕКБ + ЕКБ → Город)' : 'Прямой расчет';
+            document.getElementById('calculationTypeText').textContent = typeText;
+            showElement(document.getElementById('resultCalculationType'));
+        } else {
+            hideElement(document.getElementById('resultCalculationType'));
+        }
+
+        // Базис расчета
+        if (result.basis) {
+            const basisText = result.basis === 'weight' ? 'по весу' : 'по объему';
+            document.getElementById('basisText').textContent = basisText;
+            showElement(document.getElementById('resultBasis'));
+        }
+
+        // Габариты
+        if (result.dimensions && result.dimensions.length_mm) {
+            const dims = result.dimensions;
+            document.getElementById('dimensionsText').textContent = 
+                `${formatNumber(dims.length_mm)} × ${formatNumber(dims.width_mm)} × ${formatNumber(dims.height_mm)} мм (${result.volume_m3.toFixed(2)} м³)`;
+            showElement(document.getElementById('resultDimensions'));
+        } else {
+            hideElement(document.getElementById('resultDimensions'));
+        }
+
+        // Предупреждения
+        if (result.oversized) {
+            showElement(document.getElementById('resultOversized'));
+        } else {
+            hideElement(document.getElementById('resultOversized'));
+        }
+
+        if (result.heavy) {
+            showElement(document.getElementById('resultHeavy'));
+        } else {
+            hideElement(document.getElementById('resultHeavy'));
+        }
+
+        // Детали маршрута (для расчета через ЕКБ)
+        if (result.route_details) {
+            const chinaToEkb = result.route_details.china_to_ekb;
+            const ekbToDest = result.route_details.ekb_to_destination;
+            
+            document.getElementById('chinaToEkbPrice').textContent = formatMoney(chinaToEkb.price);
+            document.getElementById('ekbToDestCity').textContent = cityName;
+            document.getElementById('ekbToDestPrice').textContent = formatMoney(ekbToDest.price);
+            document.getElementById('ekbDistance').textContent = formatNumber(ekbToDest.distance_km);
+            showElement(document.getElementById('resultRouteDetails'));
+        } else {
+            hideElement(document.getElementById('resultRouteDetails'));
+        }
+
+        // Количество машин
+        const trucksCount = result.trucks_count || 1;
+        document.getElementById('truckCount').textContent = 
+            trucksCount === 1 ? '1 машина' : `${trucksCount} ${getTruckWord(trucksCount, transportName)}`;
+
+        // Стоимость за единицу
+        if (result.basis === 'weight' && result.price_per_kg) {
+            document.getElementById('pricePerUnitText').textContent = 
+                `${formatMoney(result.price_per_kg)} руб/кг`;
+            showElement(document.getElementById('pricePerUnit'));
+        } else if (result.basis === 'volume' && result.price_per_m3) {
+            document.getElementById('pricePerUnitText').textContent = 
+                `${formatMoney(result.price_per_m3)} руб/м³`;
+            showElement(document.getElementById('pricePerUnit'));
+        } else {
+            hideElement(document.getElementById('pricePerUnit'));
+        }
+
+        // Итоговая стоимость
+        document.getElementById('totalPrice').textContent = formatMoney(result.total_price);
+
+        // Детали расчета
+        document.getElementById('calculationDetails').textContent = result.calculation_formula || '';
+
+        // Кнопка сохранения расстояния
+        const saveDistanceBlock = document.getElementById('saveDistanceBlock');
+        const saveDistanceBtn = document.getElementById('saveDistanceBtn');
+        
+        if (result.can_save_distance && userProvidedDistance && userProvidedDistance > 0) {
+            showElement(saveDistanceBlock);
+            // Добавляем обработчик для сохранения
+            saveDistanceBtn.onclick = () => saveDistance(cityName, userProvidedDistance);
+        } else {
+            hideElement(saveDistanceBlock);
+        }
+
+        showElement(resultBlock);
+        resultBlock.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    async function saveDistance(cityName, distanceKm) {
+        const saveDistanceBtn = document.getElementById('saveDistanceBtn');
+        const form = document.getElementById('logisticsForm');
+        const csrfTokenInput = form ? form.querySelector('input[name="csrf_token"]') : null;
+        const csrfToken = csrfTokenInput ? csrfTokenInput.value : '';
+
+        if (!saveDistanceBtn) return;
+
+        saveDistanceBtn.disabled = true;
+        saveDistanceBtn.textContent = 'Сохранение...';
+
+        try {
+            const response = await fetch('/api/logistics/save-distance', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                },
+                body: JSON.stringify({
+                    city_name: cityName,
+                    distance_km: distanceKm
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Ошибка сохранения');
+            }
+
+            const result = await response.json();
+            saveDistanceBtn.textContent = '✓ Сохранено';
+            saveDistanceBtn.classList.add('btn-success');
+            
+            // Обновляем данные города в памяти
+            const dataInput = document.getElementById('selectedCityData');
+            if (dataInput) {
+                try {
+                    const cityData = JSON.parse(dataInput.value);
+                    cityData.distance_from_ekb_km = distanceKm;
+                    dataInput.value = JSON.stringify(cityData);
+                } catch (e) {
+                    console.error('Failed to update city data:', e);
+                }
+            }
+
+            setTimeout(() => {
+                hideElement(document.getElementById('saveDistanceBlock'));
+            }, 2000);
+
+        } catch (error) {
+            console.error('Error saving distance:', error);
+            alert('Ошибка при сохранении расстояния: ' + error.message);
+            saveDistanceBtn.disabled = false;
+            saveDistanceBtn.textContent = 'Сохранить расстояние в базу';
         }
     }
 </script>

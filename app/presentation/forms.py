@@ -7,6 +7,7 @@ from wtforms import (
     HiddenField,
     TextAreaField,
     DecimalField,
+    IntegerField,
     SelectField
 )
 from wtforms.validators import DataRequired, Length, EqualTo, Optional, NumberRange
@@ -104,15 +105,80 @@ class LogisticsCityForm(FlaskForm):
         'Цена фуры, руб', places=2, rounding=None, validators=[DataRequired(), NumberRange(min=0)]
     )
     trail_price = DecimalField(
-        'Цена трала, руб', places=2, rounding=None, validators=[DataRequired(), NumberRange(min=0)]
+        'Цена трала, руб', places=2, rounding=None, validators=[Optional(), NumberRange(min=0)]
+    )
+    is_main_route = BooleanField('Основной маршрут', default=False)
+    allows_trail = BooleanField('Доступен трал', default=False)
+    distance_from_ekb_km = IntegerField(
+        'Расстояние от ЕКБ, км', validators=[Optional(), NumberRange(min=0)]
     )
     action = HiddenField(default='add_city')
+    submit = SubmitField('Добавить город')
+
+
+class MainCityForm(FlaskForm):
+    """Форма для основных городов и городов в радиусе 300км."""
+    name = StringField('Город', validators=[DataRequired(), Length(min=1, max=200)])
+    region = StringField('Регион', validators=[Optional(), Length(max=200)])
+    truck_price = DecimalField(
+        'Цена фуры, руб', places=2, rounding=None, validators=[DataRequired(), NumberRange(min=0)]
+    )
+    is_main_route = BooleanField('Основной город', default=False)
+    main_city = StringField(
+        'Привязан к основному городу', 
+        validators=[Optional(), Length(max=200)],
+        description='Укажите название основного города, если это город в радиусе 300км'
+    )
+    action = HiddenField(default='add_main_city')
+    submit = SubmitField('Добавить город')
+
+
+class EkbRfCityForm(FlaskForm):
+    """Форма для городов за 300км (алгоритм ЕКБ+РФ)."""
+    name = StringField('Город', validators=[DataRequired(), Length(min=1, max=200)])
+    region = StringField('Регион', validators=[Optional(), Length(max=200)])
+    distance_from_ekb_km = IntegerField(
+        'Расстояние от ЕКБ, км', validators=[Optional(), NumberRange(min=0)]
+    )
+    action = HiddenField(default='add_ekb_rf_city')
+    submit = SubmitField('Добавить город')
+
+
+class TrailCityForm(FlaskForm):
+    """Форма для справочника трала."""
+    name = StringField('Город', validators=[DataRequired(), Length(min=1, max=200)])
+    region = StringField('Регион', validators=[Optional(), Length(max=200)])
+    trail_price = DecimalField(
+        'Цена трала, руб', places=2, rounding=None, validators=[DataRequired(), NumberRange(min=0)]
+    )
+    action = HiddenField(default='add_trail_city')
     submit = SubmitField('Добавить город')
 
 
 class LogisticsCityDeleteForm(FlaskForm):
     """Удаление города из справочника логистики."""
     action = HiddenField(default='delete_city', validators=[DataRequired()])
+    index = HiddenField(validators=[DataRequired()])
+    submit = SubmitField('Удалить')
+
+
+class MainCityDeleteForm(FlaskForm):
+    """Удаление города из справочника основных городов."""
+    action = HiddenField(default='delete_main_city', validators=[DataRequired()])
+    index = HiddenField(validators=[DataRequired()])
+    submit = SubmitField('Удалить')
+
+
+class EkbRfCityDeleteForm(FlaskForm):
+    """Удаление города из справочника ЕКБ+РФ."""
+    action = HiddenField(default='delete_ekb_rf_city', validators=[DataRequired()])
+    index = HiddenField(validators=[DataRequired()])
+    submit = SubmitField('Удалить')
+
+
+class TrailCityDeleteForm(FlaskForm):
+    """Удаление города из справочника трала."""
+    action = HiddenField(default='delete_trail_city', validators=[DataRequired()])
     index = HiddenField(validators=[DataRequired()])
     submit = SubmitField('Удалить')
 

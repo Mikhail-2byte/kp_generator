@@ -2,11 +2,12 @@
 Модуль расчета логистики по правилам ООО ТД РИНАКО.
 
 Основные правила:
-- Стандартная еврофура: 13600×2450×2650 мм, 20 тонн, 88 м³
-- Трал 40 тонн: для тяжеловесных и негабаритных грузов
+- Стандартная еврофура: 13600×2450×2650 мм, 20 тонн, 82 м³
+- Трал 40 тонн: для тяжеловесных и негабаритных грузов (только до Екатеринбурга и Москвы)
 - Расчет по весу или объему (выбирается превалирующий параметр)
 - Для грузов >5 тонн используются цены основных городов
 - Для грузов до 600кг рекомендуется Деловые линии
+- Для грузов <5 тонн в города вне основного маршрута: алгоритм "До ЕКБ + по РФ"
 """
 
 import math
@@ -18,14 +19,33 @@ EURO_TRUCK_LENGTH_MM = 13600
 EURO_TRUCK_WIDTH_MM = 2450
 EURO_TRUCK_HEIGHT_MM = 2650
 EURO_TRUCK_CAPACITY_KG = 20000
-EURO_TRUCK_VOLUME_M3 = 88
+EURO_TRUCK_VOLUME_M3 = 82  # Обновлено согласно новым правилам
 
 TRAIL_CAPACITY_KG = 40000
 
 # Пороговые значения
 MIN_WEIGHT_FOR_MAIN_CITIES_KG = 5000
+WEIGHT_THRESHOLD_FOR_300KM_RULE_KG = 5000  # 5 тонн для применения правила 300км
 SMALL_CARGO_THRESHOLD_KG = 600
-SMALL_CARGO_RECOMMENDATION_KG = 700
+SMALL_CARGO_RECOMMENDATION_KG = 800  # Обновлено с 700 на 800 кг
+
+# Города, куда доступен трал
+TRAIL_AVAILABLE_CITIES = ['Екатеринбург', 'Москва']
+
+# Тарифная сетка для перевозки по РФ от Екатеринбурга (руб за 1000 км)
+RF_TARIFF_TABLE = {
+    1000: 30000,    # 1 тонна за 1000 км
+    2000: 52000,    # 2 тонны
+    3000: 69000,    # 3 тонны
+    5000: 90000,    # 5 тонн
+    7000: 105000,   # 7 тонн
+    10000: 115000,  # 10 тонн
+    15000: 118000,  # 15 тонн
+    20000: 120000   # 20 тонн (полная фура)
+}
+
+# Стоимость фуры до Екатеринбурга (для расчета по алгоритму "До ЕКБ + по РФ")
+EKB_TRUCK_PRICE = 1100000
 
 
 def calculate_cargo_volume(length_mm: float, width_mm: float, height_mm: float) -> float:
@@ -120,13 +140,92 @@ def calculate_logistics_by_volume(
     }
 
 
+def get_rf_tariff_per_1000km(weight_kg: float) -> float:
+    """
+    Возвращает тариф за 1000 км для указанного веса по таблице РФ.
+    
+    Для промежуточных весов возвращается ставка для ближайшего большего веса.
+    """
+    if weight_kg <= 0:
+        return 0.0
+    
+    # Находим ближайший больший или равный вес в таблице
+    sorted_weights = sorted(RF_TARIFF_TABLE.keys())
+    
+    for table_weight in sorted_weights:
+        if weight_kg <= table_weight:
+            return RF_TARIFF_TABLE[table_weight]
+    
+    # Если вес превышает максимальный в таблице, используем ставку для 20 тонн
+    return RF_TARIFF_TABLE[20000]
+
+
+def calculate_ekb_plus_rf_route(
+    weight_kg: float,
+    distance_from_ekb_km: int,
+    truck_capacity_kg: int = EURO_TRUCK_CAPACITY_KG
+) -> Dict[str, any]:
+    """
+    Рассчитывает стоимость по алгоритму: КНР → ЕКБ + ЕКБ → Город.
+    
+    Используется для грузов < 5 тонн в города вне основного маршрута
+    и вне радиуса 300 км от основных городов.
+    
+    Args:
+        weight_kg: Вес груза в кг
+        distance_from_ekb_km: Расстояние от Екатеринбурга до города назначения в км
+        truck_capacity_kg: Грузоподъемность транспорта
+    
+    Returns:
+        Словарь с результатами расчета
+    """
+    # Шаг 1: Рассчитать стоимость от КНР до ЕКБ
+    china_to_ekb_result = calculate_logistics_by_weight(weight_kg, EKB_TRUCK_PRICE, truck_capacity_kg)
+    china_to_ekb_price = china_to_ekb_result['total_price']
+    
+    # Шаг 2: Рассчитать стоимость от ЕКБ до города назначения по РФ
+    tariff_per_1000km = get_rf_tariff_per_1000km(weight_kg)
+    ekb_to_destination_price = (tariff_per_1000km / 1000) * distance_from_ekb_km
+    
+    # Итоговая стоимость
+    total_price = china_to_ekb_price + ekb_to_destination_price
+    
+    # Количество машин берем из расчета КНР → ЕКБ
+    trucks_count = china_to_ekb_result['trucks_count']
+    
+    return {
+        'basis': 'weight',
+        'calculation_type': 'ekb_plus_rf',
+        'price_per_kg': china_to_ekb_result['price_per_kg'],
+        'total_price': total_price,
+        'trucks_count': trucks_count,
+        'route_details': {
+            'china_to_ekb': {
+                'price': china_to_ekb_price,
+                'formula': china_to_ekb_result['calculation_formula'],
+            },
+            'ekb_to_destination': {
+                'price': ekb_to_destination_price,
+                'distance_km': distance_from_ekb_km,
+                'tariff_per_1000km': tariff_per_1000km,
+                'formula': f'({tariff_per_1000km:,.0f} руб / 1000 км) × {distance_from_ekb_km:,} км',
+            }
+        },
+        'calculation_formula': f'КНР→ЕКБ: {china_to_ekb_price:,.0f} руб + ЕКБ→Город: {ekb_to_destination_price:,.0f} руб',
+    }
+
+
 def calculate_logistics(
     weight_kg: float,
     city_price: float,
     transport_type: str = 'truck',
+    city_name: Optional[str] = None,
+    is_main_route: bool = True,
+    distance_from_ekb_km: Optional[int] = None,
     length_mm: Optional[float] = None,
     width_mm: Optional[float] = None,
     height_mm: Optional[float] = None,
+    city_in_ekb_rf_catalog: Optional[bool] = None,
 ) -> Dict[str, any]:
     """
     Основная функция расчета логистики.
@@ -135,9 +234,13 @@ def calculate_logistics(
         weight_kg: Вес груза в кг
         city_price: Стоимость доставки полной фуры/трала до города
         transport_type: 'truck' (фура) или 'trail' (трал)
+        city_name: Название города назначения (для проверки доступности трала)
+        is_main_route: Город находится на основном маршруте или в радиусе 300км
+        distance_from_ekb_km: Расстояние от Екатеринбурга (для алгоритма "До ЕКБ + по РФ")
         length_mm: Длина груза в мм (опционально)
         width_mm: Ширина груза в мм (опционально)
         height_mm: Высота груза в мм (опционально)
+        city_in_ekb_rf_catalog: Явное указание, что город в справочнике ЕКБ+РФ (если None, проверяется автоматически)
     
     Returns:
         Словарь с результатами расчета
@@ -145,18 +248,87 @@ def calculate_logistics(
     truck_capacity = TRAIL_CAPACITY_KG if transport_type == 'trail' else EURO_TRUCK_CAPACITY_KG
     truck_volume = EURO_TRUCK_VOLUME_M3  # Объем одинаковый для фуры и трала
     
-    # Для мелкогабаритных грузов
-    if weight_kg < SMALL_CARGO_THRESHOLD_KG:
+    # Для мелкогабаритных грузов (≤ 600 кг)
+    if weight_kg <= SMALL_CARGO_THRESHOLD_KG:
         return {
             'basis': 'small_cargo',
             'total_price': None,
             'recommendation': 'dellin',
-            'message': f'Для грузов менее {SMALL_CARGO_THRESHOLD_KG} кг рекомендуется транспортная компания «Деловые линии» (dellin.ru). Логистика по Китаю + 30% к стоимости из просчета.',
+            'message': f'Для грузов до {SMALL_CARGO_THRESHOLD_KG} кг рекомендуется транспортная компания «Деловые линии» (dellin.ru). Расчет от Забайкальска (погранпереход) до точки назначения. Логистика по Китаю + 30% к стоимости из просчета.',
         }
     
+    # Проверка доступности трала для города
+    if transport_type == 'trail':
+        if city_name and city_name not in TRAIL_AVAILABLE_CITIES:
+            return {
+                'error': f'Трал доступен только до городов: {", ".join(TRAIL_AVAILABLE_CITIES)}. Для города {city_name} трал недоступен.',
+                'trail_not_available': True,
+            }
+    
+    # Проверяем, находится ли город в справочнике ЕКБ+РФ
+    from app.services.datasets import is_city_in_ekb_rf_catalog, get_ekb_rf_city_distance
+    
+    if city_in_ekb_rf_catalog is None:
+        # Автоматическая проверка, если не указано явно
+        city_in_ekb_rf_catalog = city_name is not None and is_city_in_ekb_rf_catalog(city_name)
+    
+    # Если город в справочнике ЕКБ+РФ, получаем расстояние из справочника если не указано
+    if city_in_ekb_rf_catalog and distance_from_ekb_km is None and city_name:
+        distance_from_ekb_km = get_ekb_rf_city_distance(city_name)
+    
+    # Определяем, нужен ли расчет по алгоритму "До ЕКБ + по РФ"
+    # Условия:
+    # 1. Город в справочнике ЕКБ+РФ ИЛИ
+    # 2. (вес < 5 тонн И не основной маршрут) И есть расстояние от ЕКБ
+    use_ekb_plus_rf = False
+    if city_in_ekb_rf_catalog:
+        # Для городов из справочника ЕКБ+РФ всегда используем алгоритм, независимо от веса
+        if distance_from_ekb_km is not None and distance_from_ekb_km > 0:
+            use_ekb_plus_rf = True
+        else:
+            # Если расстояние не указано, запрашиваем его
+            return {
+                'error': f'Для города {city_name} из справочника ЕКБ+РФ необходимо указать расстояние от Екатеринбурга.',
+                'needs_distance': True,
+                'weight_kg': weight_kg,
+                'city_in_ekb_rf_catalog': True,
+            }
+    elif (
+        weight_kg < WEIGHT_THRESHOLD_FOR_300KM_RULE_KG
+        and not is_main_route
+        and distance_from_ekb_km is not None
+        and distance_from_ekb_km > 0
+    ):
+        # Для городов вне справочника ЕКБ+РФ используем старую логику (только для грузов < 5 тонн)
+        use_ekb_plus_rf = True
+    
+    if use_ekb_plus_rf:
+        # Используем алгоритм "До ЕКБ + по РФ"
+        result = calculate_ekb_plus_rf_route(weight_kg, distance_from_ekb_km, truck_capacity)
+        result['weight_kg'] = weight_kg
+        result['transport_type'] = transport_type
+        result['distance_from_ekb_provided'] = True
+        result['can_save_distance'] = False  # Расстояние уже сохранено
+        result['city_in_ekb_rf_catalog'] = city_in_ekb_rf_catalog
+        return result
+    
+    # Проверка: если груз < 5 тонн, не основной маршрут и расстояние не указано
+    if weight_kg < WEIGHT_THRESHOLD_FOR_300KM_RULE_KG and not is_main_route and distance_from_ekb_km is None:
+        return {
+            'error': 'Для грузов менее 5 тонн в города вне основного маршрута необходимо указать расстояние от Екатеринбурга.',
+            'needs_distance': True,
+            'weight_kg': weight_kg,
+        }
+    
+    # Стандартный расчет (прямой расчет по формуле 5.2)
     # Если габариты не указаны (None), считаем только по весу
     if length_mm is None or width_mm is None or height_mm is None:
-        return calculate_logistics_by_weight(weight_kg, city_price, truck_capacity)
+        result = calculate_logistics_by_weight(weight_kg, city_price, truck_capacity)
+        result['calculation_type'] = 'direct'
+        result['transport_type'] = transport_type
+        result['distance_from_ekb_provided'] = False
+        result['can_save_distance'] = distance_from_ekb_km is None and not is_main_route
+        return result
     
     # Вычисляем объем
     volume_m3 = calculate_cargo_volume(length_mm, width_mm, height_mm)
@@ -184,6 +356,7 @@ def calculate_logistics(
     
     # Добавляем информацию о габаритах
     result.update({
+        'calculation_type': 'direct',
         'weight_kg': weight_kg,
         'volume_m3': volume_m3,
         'dimensions': {
@@ -194,6 +367,8 @@ def calculate_logistics(
         'oversized': oversized,
         'heavy': heavy,
         'transport_type': transport_type,
+        'distance_from_ekb_provided': False,
+        'can_save_distance': distance_from_ekb_km is None and not is_main_route,
     })
     
     return result

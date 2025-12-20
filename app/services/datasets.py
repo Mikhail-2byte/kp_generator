@@ -354,17 +354,13 @@ def get_duty_catalog() -> List[Dict[str, Any]]:
 
 
 def load_logistics_cities() -> List[Dict[str, Any]]:
-    """Загружает справочник городов и тарифов логистики."""
-    logistics_path = CONFIG_DIR / 'logistics_cities.json'
-    try:
-        with logistics_path.open('r', encoding='utf-8') as file:
-            data = json.load(file)
-        return data.get('cities', [])
-    except FileNotFoundError:
-        _log_error(f'Logistics file not found at {logistics_path.as_posix()}')
-    except json.JSONDecodeError as exc:
-        _log_error(f'Failed to parse logistics file: {exc}')
-    return []
+    """
+    Загружает справочник городов и тарифов логистики.
+    Объединяет все три справочника (основные города, ЕКБ+РФ, трал).
+    """
+    # Всегда используем объединение новых справочников
+    # Старый файл logistics_cities.json больше не используется напрямую
+    return load_all_logistics_cities()
 
 
 def save_logistics_cities(cities: List[Dict[str, Any]], *, actor: Optional[str] = None):
@@ -374,9 +370,15 @@ def save_logistics_cities(cities: List[Dict[str, Any]], *, actor: Optional[str] 
 
     def _coerce_float(value):
         try:
-            return float(value)
+            return float(value) if value is not None else None
         except (TypeError, ValueError):
-            return 0.0
+            return None
+    
+    def _coerce_int(value):
+        try:
+            return int(value) if value is not None else None
+        except (TypeError, ValueError):
+            return None
 
     payload = {
         'cities': [
@@ -384,7 +386,11 @@ def save_logistics_cities(cities: List[Dict[str, Any]], *, actor: Optional[str] 
                 'name': city.get('name', ''),
                 'region': city.get('region', ''),
                 'truck_price': _coerce_float(city.get('truck_price', 0)),
-                'trail_price': _coerce_float(city.get('trail_price', 0))
+                'trail_price': _coerce_float(city.get('trail_price')),
+                'is_main_route': bool(city.get('is_main_route', False)),
+                'allows_trail': bool(city.get('allows_trail', False)),
+                'distance_from_ekb_km': _coerce_int(city.get('distance_from_ekb_km')),
+                **({'main_city': city['main_city']} if 'main_city' in city else {})
             }
             for city in cities
         ]
@@ -394,6 +400,249 @@ def save_logistics_cities(cities: List[Dict[str, Any]], *, actor: Optional[str] 
 
     with logistics_path.open('w', encoding='utf-8') as file:
         json.dump(payload, file, ensure_ascii=False, indent=2)
+
+
+def load_main_cities() -> List[Dict[str, Any]]:
+    """
+    Загружает справочник основных городов и городов в радиусе 300км.
+    Включает основные города (is_main_route=True) и города с полем main_city.
+    """
+    main_cities_path = CONFIG_DIR / 'logistics_main_cities.json'
+    try:
+        with main_cities_path.open('r', encoding='utf-8') as file:
+            data = json.load(file)
+        return data.get('cities', [])
+    except FileNotFoundError:
+        _log_error(f'Main cities file not found at {main_cities_path.as_posix()}')
+    except json.JSONDecodeError as exc:
+        _log_error(f'Failed to parse main cities file: {exc}')
+    return []
+
+
+def save_main_cities(cities: List[Dict[str, Any]], *, actor: Optional[str] = None):
+    """Сохраняет справочник основных городов и городов в радиусе 300км."""
+    main_cities_path = CONFIG_DIR / 'logistics_main_cities.json'
+    main_cities_path.parent.mkdir(parents=True, exist_ok=True)
+
+    def _coerce_float(value):
+        try:
+            return float(value) if value is not None else None
+        except (TypeError, ValueError):
+            return None
+
+    payload = {
+        'cities': [
+            {
+                'name': city.get('name', ''),
+                'region': city.get('region', ''),
+                'truck_price': _coerce_float(city.get('truck_price', 0)),
+                'is_main_route': bool(city.get('is_main_route', False)),
+                'main_city': city.get('main_city')  # Для городов в радиусе 300км
+            }
+            for city in cities
+        ]
+    }
+
+    _snapshot_version('logistics_main_cities', payload, actor)
+
+    with main_cities_path.open('w', encoding='utf-8') as file:
+        json.dump(payload, file, ensure_ascii=False, indent=2)
+
+
+def load_ekb_rf_cities() -> List[Dict[str, Any]]:
+    """
+    Загружает справочник городов за пределами 300км (используется алгоритм ЕКБ+РФ).
+    """
+    ekb_rf_path = CONFIG_DIR / 'logistics_ekb_rf_cities.json'
+    try:
+        with ekb_rf_path.open('r', encoding='utf-8') as file:
+            data = json.load(file)
+        return data.get('cities', [])
+    except FileNotFoundError:
+        _log_error(f'EKB+RF cities file not found at {ekb_rf_path.as_posix()}')
+    except json.JSONDecodeError as exc:
+        _log_error(f'Failed to parse EKB+RF cities file: {exc}')
+    return []
+
+
+def save_ekb_rf_cities(cities: List[Dict[str, Any]], *, actor: Optional[str] = None):
+    """Сохраняет справочник городов для алгоритма ЕКБ+РФ."""
+    ekb_rf_path = CONFIG_DIR / 'logistics_ekb_rf_cities.json'
+    ekb_rf_path.parent.mkdir(parents=True, exist_ok=True)
+
+    def _coerce_int(value):
+        try:
+            return int(value) if value is not None else None
+        except (TypeError, ValueError):
+            return None
+
+    payload = {
+        'cities': [
+            {
+                'name': city.get('name', ''),
+                'region': city.get('region', ''),
+                'distance_from_ekb_km': _coerce_int(city.get('distance_from_ekb_km'))
+            }
+            for city in cities
+        ]
+    }
+
+    _snapshot_version('logistics_ekb_rf_cities', payload, actor)
+
+    with ekb_rf_path.open('w', encoding='utf-8') as file:
+        json.dump(payload, file, ensure_ascii=False, indent=2)
+
+
+def load_trail_cities() -> List[Dict[str, Any]]:
+    """Загружает справочник городов для трала."""
+    trail_path = CONFIG_DIR / 'logistics_trail_cities.json'
+    try:
+        with trail_path.open('r', encoding='utf-8') as file:
+            data = json.load(file)
+        return data.get('cities', [])
+    except FileNotFoundError:
+        _log_error(f'Trail cities file not found at {trail_path.as_posix()}')
+    except json.JSONDecodeError as exc:
+        _log_error(f'Failed to parse trail cities file: {exc}')
+    return []
+
+
+def save_trail_cities(cities: List[Dict[str, Any]], *, actor: Optional[str] = None):
+    """Сохраняет справочник городов для трала."""
+    trail_path = CONFIG_DIR / 'logistics_trail_cities.json'
+    trail_path.parent.mkdir(parents=True, exist_ok=True)
+
+    def _coerce_float(value):
+        try:
+            return float(value) if value is not None else None
+        except (TypeError, ValueError):
+            return None
+
+    payload = {
+        'cities': [
+            {
+                'name': city.get('name', ''),
+                'region': city.get('region', ''),
+                'trail_price': _coerce_float(city.get('trail_price', 0))
+            }
+            for city in cities
+        ]
+    }
+
+    _snapshot_version('logistics_trail_cities', payload, actor)
+
+    with trail_path.open('w', encoding='utf-8') as file:
+        json.dump(payload, file, ensure_ascii=False, indent=2)
+
+
+def load_all_logistics_cities() -> List[Dict[str, Any]]:
+    """
+    Объединяет все три справочника логистики в один список для обратной совместимости.
+    Используется в основном приложении для работы с логистикой.
+    """
+    all_cities = []
+    
+    # Основные города
+    main_cities = load_main_cities()
+    for city in main_cities:
+        all_cities.append({
+            'name': city.get('name', ''),
+            'region': city.get('region', ''),
+            'truck_price': city.get('truck_price', 0),
+            'trail_price': None,
+            'is_main_route': city.get('is_main_route', False),
+            'allows_trail': False,
+            'distance_from_ekb_km': None,
+            **({'main_city': city['main_city']} if 'main_city' in city else {})
+        })
+    
+    # ЕКБ+РФ города
+    ekb_rf_cities = load_ekb_rf_cities()
+    for city in ekb_rf_cities:
+        all_cities.append({
+            'name': city.get('name', ''),
+            'region': city.get('region', ''),
+            'truck_price': 0,  # Для ЕКБ+РФ используется алгоритм, а не прямая цена
+            'trail_price': None,
+            'is_main_route': False,
+            'allows_trail': False,
+            'distance_from_ekb_km': city.get('distance_from_ekb_km')
+        })
+    
+    # Трал города
+    trail_cities = load_trail_cities()
+    for city in trail_cities:
+        all_cities.append({
+            'name': city.get('name', ''),
+            'region': city.get('region', ''),
+            'truck_price': 0,  # Для трала используется отдельная цена
+            'trail_price': city.get('trail_price', 0),
+            'is_main_route': False,
+            'allows_trail': True,
+            'distance_from_ekb_km': None
+        })
+    
+    return all_cities
+
+
+def is_city_in_ekb_rf_catalog(city_name: str) -> bool:
+    """
+    Проверяет, находится ли город в справочнике ЕКБ+РФ.
+    
+    Args:
+        city_name: Название города для проверки
+    
+    Returns:
+        True если город найден в справочнике ЕКБ+РФ, False иначе
+    """
+    ekb_rf_cities = load_ekb_rf_cities()
+    for city in ekb_rf_cities:
+        if city.get('name', '').strip() == city_name.strip():
+            return True
+    return False
+
+
+def get_ekb_rf_city_distance(city_name: str) -> Optional[int]:
+    """
+    Получает расстояние от ЕКБ для города из справочника ЕКБ+РФ.
+    
+    Args:
+        city_name: Название города
+    
+    Returns:
+        Расстояние от ЕКБ в километрах или None если город не найден
+    """
+    ekb_rf_cities = load_ekb_rf_cities()
+    for city in ekb_rf_cities:
+        if city.get('name', '').strip() == city_name.strip():
+            return city.get('distance_from_ekb_km')
+    return None
+
+
+def update_city_distance(city_name: str, distance_km: int, actor: Optional[str] = None) -> bool:
+    """
+    Обновляет расстояние от ЕКБ для указанного города.
+    Ищет город во всех трех справочниках и обновляет в соответствующем.
+    
+    Args:
+        city_name: Название города
+        distance_km: Расстояние от Екатеринбурга в километрах
+        actor: Кто вносит изменение (username или None)
+    
+    Returns:
+        True если город найден и обновлен, False иначе
+    """
+    # Ищем в справочнике ЕКБ+РФ (там хранится distance_from_ekb_km)
+    ekb_rf_cities = load_ekb_rf_cities()
+    for city in ekb_rf_cities:
+        if city.get('name') == city_name:
+            city['distance_from_ekb_km'] = distance_km
+            save_ekb_rf_cities(ekb_rf_cities, actor=actor)
+            return True
+    
+    # Если город не найден в ЕКБ+РФ, но есть расстояние, возможно нужно переместить город
+    # или добавить его в справочник ЕКБ+РФ. Для простоты просто возвращаем False.
+    return False
 
 
 def load_orders_documents() -> List[Dict[str, Any]]:

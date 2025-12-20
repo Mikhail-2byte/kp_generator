@@ -53,3 +53,29 @@ def app(tmp_path) -> Iterator[Flask]:
 def client(app):
     return app.test_client()
 
+
+@pytest.fixture
+def admin_user(app):
+    """Создает тестового администратора."""
+    from app.models.models import User
+    from app.database.service import DatabaseService
+    
+    with app.app_context():
+        db_service = DatabaseService()
+        
+        # Проверяем, существует ли уже пользователь
+        existing_user = db_service.get_user_by_username('testadmin')
+        if existing_user:
+            return existing_user
+        
+        # Создаем нового администратора
+        user = User(
+            username='testadmin',
+            is_admin=True
+        )
+        user.set_password('admin123')
+        
+        db_service.session.add(user)
+        db_service.session.commit()
+        
+        return user

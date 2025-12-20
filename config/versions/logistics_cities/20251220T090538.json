@@ -1,0 +1,5059 @@
+{
+  "saved_at": "20251220T090538",
+  "actor": "anonymous",
+  "data": {
+    "cities": [
+      {
+        "name": "Чита",
+        "region": "Забайкальский край",
+        "truck_price": 400000.0,
+        "trail_price": null,
+        "is_main_route": true,
+        "allows_trail": false,
+        "distance_from_ekb_km": 1234
+      },
+      {
+        "name": "Агинское",
+        "region": "Забайкальский край",
+        "truck_price": 400000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Чита"
+      },
+      {
+        "name": "Шилка",
+        "region": "Забайкальский край",
+        "truck_price": 400000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Чита"
+      },
+      {
+        "name": "Оловянная",
+        "region": "Забайкальский край",
+        "truck_price": 400000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Чита"
+      },
+      {
+        "name": "Нерчинск",
+        "region": "Забайкальский край",
+        "truck_price": 400000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Чита"
+      },
+      {
+        "name": "Карымская",
+        "region": "Забайкальский край",
+        "truck_price": 400000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Чита"
+      },
+      {
+        "name": "Дарасун",
+        "region": "Забайкальский край",
+        "truck_price": 400000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Чита"
+      },
+      {
+        "name": "Чернышевск",
+        "region": "Забайкальский край",
+        "truck_price": 400000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Чита"
+      },
+      {
+        "name": "Хилок",
+        "region": "Забайкальский край",
+        "truck_price": 400000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Чита"
+      },
+      {
+        "name": "Бада",
+        "region": "Забайкальский край",
+        "truck_price": 400000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Чита"
+      },
+      {
+        "name": "Дулурга",
+        "region": "Забайкальский край",
+        "truck_price": 400000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Чита"
+      },
+      {
+        "name": "Атамановка",
+        "region": "Забайкальский край",
+        "truck_price": 400000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Чита"
+      },
+      {
+        "name": "Могойтуй",
+        "region": "Забайкальский край",
+        "truck_price": 400000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Чита"
+      },
+      {
+        "name": "Красный Чикой",
+        "region": "Забайкальский край",
+        "truck_price": 400000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Чита"
+      },
+      {
+        "name": "Петровск-Забайкальский",
+        "region": "Забайкальский край",
+        "truck_price": 400000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Чита"
+      },
+      {
+        "name": "Сретенск",
+        "region": "Забайкальский край",
+        "truck_price": 400000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Чита"
+      },
+      {
+        "name": "Приаргунск",
+        "region": "Забайкальский край",
+        "truck_price": 400000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Чита"
+      },
+      {
+        "name": "Борзя",
+        "region": "Забайкальский край",
+        "truck_price": 400000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Чита"
+      },
+      {
+        "name": "Забайкальск",
+        "region": "Забайкальский край",
+        "truck_price": 400000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Чита"
+      },
+      {
+        "name": "Улан-Удэ",
+        "region": "Республика Бурятия",
+        "truck_price": 500000.0,
+        "trail_price": null,
+        "is_main_route": true,
+        "allows_trail": false,
+        "distance_from_ekb_km": null
+      },
+      {
+        "name": "Гусиноозёрск",
+        "region": "Республика Бурятия",
+        "truck_price": 500000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Улан-Удэ"
+      },
+      {
+        "name": "Кяхта",
+        "region": "Республика Бурятия",
+        "truck_price": 500000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Улан-Удэ"
+      },
+      {
+        "name": "Бабушкин",
+        "region": "Республика Бурятия",
+        "truck_price": 500000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Улан-Удэ"
+      },
+      {
+        "name": "Селенгинск",
+        "region": "Республика Бурятия",
+        "truck_price": 500000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Улан-Удэ"
+      },
+      {
+        "name": "Закаменск",
+        "region": "Республика Бурятия",
+        "truck_price": 500000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Улан-Удэ"
+      },
+      {
+        "name": "Иволгинск",
+        "region": "Республика Бурятия",
+        "truck_price": 500000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Улан-Удэ"
+      },
+      {
+        "name": "Таксимо",
+        "region": "Республика Бурятия",
+        "truck_price": 500000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Улан-Удэ"
+      },
+      {
+        "name": "Усть-Баргузин",
+        "region": "Республика Бурятия",
+        "truck_price": 500000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Улан-Удэ"
+      },
+      {
+        "name": "Каменск",
+        "region": "Республика Бурятия",
+        "truck_price": 500000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Улан-Удэ"
+      },
+      {
+        "name": "Онохой",
+        "region": "Республика Бурятия",
+        "truck_price": 500000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Улан-Удэ"
+      },
+      {
+        "name": "Тарбагатай",
+        "region": "Республика Бурятия",
+        "truck_price": 500000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Улан-Удэ"
+      },
+      {
+        "name": "Мухоршибирь",
+        "region": "Республика Бурятия",
+        "truck_price": 500000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Улан-Удэ"
+      },
+      {
+        "name": "Бичура",
+        "region": "Республика Бурятия",
+        "truck_price": 500000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Улан-Удэ"
+      },
+      {
+        "name": "Петровск-Забайкальский",
+        "region": "Республика Бурятия",
+        "truck_price": 500000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Улан-Удэ"
+      },
+      {
+        "name": "Хоринск",
+        "region": "Республика Бурятия",
+        "truck_price": 500000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Улан-Удэ"
+      },
+      {
+        "name": "Кижинга",
+        "region": "Республика Бурятия",
+        "truck_price": 500000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Улан-Удэ"
+      },
+      {
+        "name": "Турунтаево",
+        "region": "Республика Бурятия",
+        "truck_price": 500000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Улан-Удэ"
+      },
+      {
+        "name": "Нижнеангарск",
+        "region": "Республика Бурятия",
+        "truck_price": 500000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Улан-Удэ"
+      },
+      {
+        "name": "Иркутск",
+        "region": "Иркутская область",
+        "truck_price": 600000.0,
+        "trail_price": null,
+        "is_main_route": true,
+        "allows_trail": false,
+        "distance_from_ekb_km": null
+      },
+      {
+        "name": "Ангарск",
+        "region": "Иркутская область",
+        "truck_price": 600000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Иркутск"
+      },
+      {
+        "name": "Шелехов",
+        "region": "Иркутская область",
+        "truck_price": 600000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Иркутск"
+      },
+      {
+        "name": "Усолье-Сибирское",
+        "region": "Иркутская область",
+        "truck_price": 600000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Иркутск"
+      },
+      {
+        "name": "Черемхово",
+        "region": "Иркутская область",
+        "truck_price": 600000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Иркутск"
+      },
+      {
+        "name": "Свирск",
+        "region": "Иркутская область",
+        "truck_price": 600000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Иркутск"
+      },
+      {
+        "name": "Усть-Кут",
+        "region": "Иркутская область",
+        "truck_price": 600000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Иркутск"
+      },
+      {
+        "name": "Зима",
+        "region": "Иркутская область",
+        "truck_price": 600000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Иркутск"
+      },
+      {
+        "name": "Саянск",
+        "region": "Иркутская область",
+        "truck_price": 600000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Иркутск"
+      },
+      {
+        "name": "Тулун",
+        "region": "Иркутская область",
+        "truck_price": 600000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Иркутск"
+      },
+      {
+        "name": "Култук",
+        "region": "Иркутская область",
+        "truck_price": 600000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Иркутск"
+      },
+      {
+        "name": "Слюдянка",
+        "region": "Иркутская область",
+        "truck_price": 600000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Иркутск"
+      },
+      {
+        "name": "Балаганск",
+        "region": "Иркутская область",
+        "truck_price": 600000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Иркутск"
+      },
+      {
+        "name": "Баяндай",
+        "region": "Иркутская область",
+        "truck_price": 600000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Иркутск"
+      },
+      {
+        "name": "Бохан",
+        "region": "Иркутская область",
+        "truck_price": 600000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Иркутск"
+      },
+      {
+        "name": "Усть-Ордынский",
+        "region": "Иркутская область",
+        "truck_price": 600000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Иркутск"
+      },
+      {
+        "name": "Оса",
+        "region": "Иркутская область",
+        "truck_price": 600000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Иркутск"
+      },
+      {
+        "name": "Еланцы",
+        "region": "Иркутская область",
+        "truck_price": 600000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Иркутск"
+      },
+      {
+        "name": "Железногорск-Илимский",
+        "region": "Иркутская область",
+        "truck_price": 600000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Иркутск"
+      },
+      {
+        "name": "Тайшет",
+        "region": "Иркутская область",
+        "truck_price": 600000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Иркутск"
+      },
+      {
+        "name": "Нижнеудинск",
+        "region": "Иркутская область",
+        "truck_price": 600000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Иркутск"
+      },
+      {
+        "name": "Байкальск",
+        "region": "Иркутская область",
+        "truck_price": 600000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Иркутск"
+      },
+      {
+        "name": "Листвянка",
+        "region": "Иркутская область",
+        "truck_price": 600000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Иркутск"
+      },
+      {
+        "name": "Маркова",
+        "region": "Иркутская область",
+        "truck_price": 600000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Иркутск"
+      },
+      {
+        "name": "Хомутово",
+        "region": "Иркутская область",
+        "truck_price": 600000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Иркутск"
+      },
+      {
+        "name": "Оёк",
+        "region": "Иркутская область",
+        "truck_price": 600000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Иркутск"
+      },
+      {
+        "name": "Усть-Илимск",
+        "region": "Иркутская область",
+        "truck_price": 600000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Иркутск"
+      },
+      {
+        "name": "Шестаково",
+        "region": "Иркутская область",
+        "truck_price": 600000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Иркутск"
+      },
+      {
+        "name": "Качуг",
+        "region": "Иркутская область",
+        "truck_price": 600000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Иркутск"
+      },
+      {
+        "name": "Вихоревка",
+        "region": "Иркутская область",
+        "truck_price": 600000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Иркутск"
+      },
+      {
+        "name": "Тыреть",
+        "region": "Иркутская область",
+        "truck_price": 600000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Иркутск"
+      },
+      {
+        "name": "Красноярск",
+        "region": "Красноярский край",
+        "truck_price": 800000.0,
+        "trail_price": null,
+        "is_main_route": true,
+        "allows_trail": false,
+        "distance_from_ekb_km": null
+      },
+      {
+        "name": "Ачинск",
+        "region": "Красноярский край",
+        "truck_price": 800000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Красноярск"
+      },
+      {
+        "name": "Канск",
+        "region": "Красноярский край",
+        "truck_price": 800000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Красноярск"
+      },
+      {
+        "name": "Дивногорск",
+        "region": "Красноярский край",
+        "truck_price": 800000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Красноярск"
+      },
+      {
+        "name": "Заозёрный",
+        "region": "Красноярский край",
+        "truck_price": 800000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Красноярск"
+      },
+      {
+        "name": "Лесосибирск",
+        "region": "Красноярский край",
+        "truck_price": 800000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Красноярск"
+      },
+      {
+        "name": "Сосновоборск",
+        "region": "Красноярский край",
+        "truck_price": 800000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Красноярск"
+      },
+      {
+        "name": "Минусинск",
+        "region": "Красноярский край",
+        "truck_price": 800000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Красноярск"
+      },
+      {
+        "name": "Шарыпово",
+        "region": "Красноярский край",
+        "truck_price": 800000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Красноярск"
+      },
+      {
+        "name": "Берёзовка",
+        "region": "Красноярский край",
+        "truck_price": 800000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Красноярск"
+      },
+      {
+        "name": "Емельяново",
+        "region": "Красноярский край",
+        "truck_price": 800000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Красноярск"
+      },
+      {
+        "name": "Уяр",
+        "region": "Красноярский край",
+        "truck_price": 800000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Красноярск"
+      },
+      {
+        "name": "Ужур",
+        "region": "Красноярский край",
+        "truck_price": 800000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Красноярск"
+      },
+      {
+        "name": "Назарово",
+        "region": "Красноярский край",
+        "truck_price": 800000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Красноярск"
+      },
+      {
+        "name": "Иланский",
+        "region": "Красноярский край",
+        "truck_price": 800000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Красноярск"
+      },
+      {
+        "name": "Боготол",
+        "region": "Красноярский край",
+        "truck_price": 800000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Красноярск"
+      },
+      {
+        "name": "Зеленогорск",
+        "region": "Красноярский край",
+        "truck_price": 800000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Красноярск"
+      },
+      {
+        "name": "Железногорск",
+        "region": "Красноярский край",
+        "truck_price": 800000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Красноярск"
+      },
+      {
+        "name": "Бородино",
+        "region": "Красноярский край",
+        "truck_price": 800000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Красноярск"
+      },
+      {
+        "name": "Ирбейское",
+        "region": "Красноярский край",
+        "truck_price": 800000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Красноярск"
+      },
+      {
+        "name": "Кодинск",
+        "region": "Красноярский край",
+        "truck_price": 800000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Красноярск"
+      },
+      {
+        "name": "Дудинка",
+        "region": "Красноярский край",
+        "truck_price": 800000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Красноярск"
+      },
+      {
+        "name": "Игарка",
+        "region": "Красноярский край",
+        "truck_price": 800000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Красноярск"
+      },
+      {
+        "name": "Шушенское",
+        "region": "Красноярский край",
+        "truck_price": 800000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Красноярск"
+      },
+      {
+        "name": "Казачинское",
+        "region": "Красноярский край",
+        "truck_price": 800000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Красноярск"
+      },
+      {
+        "name": "Туруханск",
+        "region": "Красноярский край",
+        "truck_price": 800000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Красноярск"
+      },
+      {
+        "name": "Большая Мурта",
+        "region": "Красноярский край",
+        "truck_price": 800000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Красноярск"
+      },
+      {
+        "name": "Дзержинское",
+        "region": "Красноярский край",
+        "truck_price": 800000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Красноярск"
+      },
+      {
+        "name": "Таёжный",
+        "region": "Красноярский край",
+        "truck_price": 800000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Красноярск"
+      },
+      {
+        "name": "Нижний Куранах",
+        "region": "Красноярский край",
+        "truck_price": 800000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Красноярск"
+      },
+      {
+        "name": "Курагино",
+        "region": "Красноярский край",
+        "truck_price": 800000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Красноярск"
+      },
+      {
+        "name": "Новосибирск",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": true,
+        "allows_trail": false,
+        "distance_from_ekb_km": null
+      },
+      {
+        "name": "Бердск",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Искитим",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Черепаново",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Сузун",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Маслянино",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Ордынское",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Коченёво",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Болотное",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Тогучин",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Чулым",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Колывань",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Карасук",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Купино",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Баган",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Каргат",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Барабинск",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Куйбышев",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Чаны",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Убинское",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Чистоозёрное",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Татарск",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Венгерово",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Кыштовка",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Северное",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Томск",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Юрга",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Кемерово",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Анжеро-Судженск",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Тайга",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Мариинск",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Яшкино",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Промышленная",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Топки",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Ленинск-Кузнецкий",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Белово",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Гурьевск",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Салаир",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Барнаул",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Новоалтайск",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Заринск",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Камень-на-Оби",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Павлодар",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Экибастуз",
+        "region": "Новосибирская область",
+        "truck_price": 900000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Новосибирск"
+      },
+      {
+        "name": "Омск",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": true,
+        "allows_trail": false,
+        "distance_from_ekb_km": null
+      },
+      {
+        "name": "Тара",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Исилькуль",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Называевск",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Калачинск",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Тюкалинск",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Большие Уки",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Таврическое",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Черлак",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Лузино",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Горьковское",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Муромцево",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Полтавка",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Павлоградка",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Русская Поляна",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Кормиловка",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Азово",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Тевриз",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Усть-Ишим",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Большеречье",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Саргатское",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Колосовка",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Знаменское",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Седельниково",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Тобольск",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Вагай",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Ялуторовск",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Заводоуковск",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Ишим",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Ярково",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Казанское",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Сладково",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Петухово",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Мокроусово",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Чаны",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Барабинск",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Куйбышев",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Венгерово",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Усть-Тарка",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Татарск",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Чистоозёрное",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Каргат",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Довольное",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Коченёво",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Чулым",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Колывань",
+        "region": "Омская область",
+        "truck_price": 1000000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Омск"
+      },
+      {
+        "name": "Екатеринбург",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": 2000000.0,
+        "is_main_route": true,
+        "allows_trail": true,
+        "distance_from_ekb_km": null
+      },
+      {
+        "name": "Челябинск",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Пермь",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Тюмень",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Курган",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Нижний Тагил",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Каменск-Уральский",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Миасс",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Златоуст",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Копейск",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Снежинск",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Озёрск",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Тобольск",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Асбест",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Полевской",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Ревда",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Первоуральск",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Краснотурьинск",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Серов",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Алапаевск",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Верхняя Пышма",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Березовский",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Новоуральск",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Кушва",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Красноуфимск",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Ирбит",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Шадринск",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Далматово",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Камышлов",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Богданович",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Сухой Лог",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Талица",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Туринск",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Верхняя Салда",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Невьянск",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Кировград",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Реж",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Артемовский",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Карпинск",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Североуральск",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Верхотурье",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Лысьва",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Чусовой",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Кунгур",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Лангепас",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Когалым",
+        "region": "Свердловская область",
+        "truck_price": 1100000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Екатеринбург"
+      },
+      {
+        "name": "Москва",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": 2100000.0,
+        "is_main_route": true,
+        "allows_trail": true,
+        "distance_from_ekb_km": null
+      },
+      {
+        "name": "Тверь",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Ярославль",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Владимир",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Рязань",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Тула",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Калуга",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Смоленск",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Иваново",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Кострома",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Брянск",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Орел",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Сергиев Посад",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Коломна",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Обнинск",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Дмитров",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Можайск",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Серпухов",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Электросталь",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Ногинск",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Орехово-Зуево",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Павловский Посад",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Егорьевск",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Воскресенск",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Раменское",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Жуковский",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Люберцы",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Пушкино",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Королев",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Мытищи",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Химки",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Красногорск",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Одинцово",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Подольск",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Щелково",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Балашиха",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Чехов",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Наро-Фоминск",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Алексин",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Клин",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Дубна",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Кимры",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Бежецк",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Углич",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Рыбинск",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Переславль-Залесский",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Галич",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Суздаль",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Александров",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Гусь-Хрустальный",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Муром",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Ковров",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Вязьма",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Ржев",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Великие Луки",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Касимов",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Ефремов",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Ливны",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Карачев",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Железногорск",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Лобня",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Дедовск",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Истра",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Солнечногорск",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Звенигород",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Долгопрудный",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Лыткарино",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Видное",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Ступино",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Кашира",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Новомосковск",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Венев",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Щекино",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Таруса",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Козельск",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Малоярославец",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Боровск",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Верея",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Мценск",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Болхов",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Ликино-Дулево",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Озеры",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Луховицы",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Серебряные Пруды",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Зарайск",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Спас-Клепики",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Ростов Великий",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Борисоглебский",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Гаврилов-Ям",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Тутаев",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Данилов",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Нерехта",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Волгореченск",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Приволжск",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Фурманов",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Тейково",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Шуя",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Родники",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Вичуга",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Кинешма",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Заволжск",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Юрьевец",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Пучеж",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Семеновский",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Чкаловск",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Городец",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Балахна",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Заволжье",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Богородск",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Палех",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Вязники",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Гороховец",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Судогда",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Кольчугино",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Юрьев-Польский",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Киржач",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Покров",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Собинка",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Лакинск",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Костерево",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Петушки",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Курлово",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Меленки",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Спас-Деменск",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Медынь",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Кондрово",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Людиново",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Жиздра",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Киров",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Спутник",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Десногорск",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Рославль",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Сафоново",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Ярцево",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Гагарин",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Волоколамск",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Шаховская",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Лотошино",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Селижарово",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Осташков",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Кувшиново",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Кашин",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Калязин",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Талдом",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Вербилки",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Запрудня",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Конаково",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Новозавидовский",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Куженкино",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Фирово",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Вышний Волочек",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Удомля",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Белый",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Нелидово",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Западная Двина",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Андреаполь",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Торопец",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Холм-Жирковский",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Духовщина",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Демидов",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Велиж",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Красный",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Монастырщина",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Починок",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Ельня",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Дорогобуж",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Глинка",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Сычевка",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Зубцов",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Старица",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Лихославль",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Рамешки",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Максатиха",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Оленино",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Пено",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Зубцов",
+        "region": "Московская область",
+        "truck_price": 1200000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Москва"
+      },
+      {
+        "name": "Санкт-Петербург",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": true,
+        "allows_trail": false,
+        "distance_from_ekb_km": null
+      },
+      {
+        "name": "Великий Новгород",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Тверь",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Псков",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Выборг",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Петрозаводск",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Котлас",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Сортавала",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Великие Луки",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Вологда",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Череповец",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Боровичи",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Старая Русса",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Тихвин",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Сосновый Бор",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Гатчина",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Луга",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Кингисепп",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Лодейное Поле",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Подпорожье",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Пикалёво",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Бокситогорск",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Кириши",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Сланцы",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Волхов",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Всеволожск",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Тосно",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Кировск",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Никольское",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Отрадное",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Сясьстрой",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Новая Ладога",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Шлиссельбург",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Приозерск",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Приморск",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Высоцк",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Усть-Луга",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Ивангород",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Нарва",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Силламяэ",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Йыхви",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Раквере",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Таллин",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Хельсинки",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Коувола",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Лаппеэнранта",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Иматра",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Йоэнсуу",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Мурмаши",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Кандалакша",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Апатиты",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Олонец",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Питкяранта",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Лахденпохья",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Суоярви",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Медвежьегорск",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Пудож",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Беломорск",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Сегежа",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Новодвинск",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Мирный",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Каргополь",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Няндома",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Коноша",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Вельск",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Сольвычегодск",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Коряжма",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Красноборск",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Вытегра",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Бабаево",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Харовск",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Кадуй",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Весьегонск",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Устюжна",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Пестово",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Окуловка",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Малая Вишера",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Крестцы",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Валдай",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Дно",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Порхов",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Остров",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Невель",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Новосокольники",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Себеж",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Опочка",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Пустошка",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Новоржев",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Бежаницы",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Сольцы",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Славковичи",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Плюсса",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Струги Красные",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      },
+      {
+        "name": "Гдов",
+        "region": "Ленинградская область",
+        "truck_price": 1300000.0,
+        "trail_price": null,
+        "is_main_route": false,
+        "allows_trail": false,
+        "distance_from_ekb_km": null,
+        "main_city": "Санкт-Петербург"
+      }
+    ]
+  }
+}

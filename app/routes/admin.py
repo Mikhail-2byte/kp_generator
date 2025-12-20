@@ -14,7 +14,13 @@ from app.presentation.forms import (
     GBMaterialDeleteForm,
     GBMaterialForm,
     LogisticsCityDeleteForm,
-    LogisticsCityForm
+    LogisticsCityForm,
+    MainCityForm,
+    MainCityDeleteForm,
+    EkbRfCityForm,
+    EkbRfCityDeleteForm,
+    TrailCityForm,
+    TrailCityDeleteForm
 )
 from app.auth.security import admin_required
 from app.services import datasets
@@ -443,91 +449,274 @@ def manage_materials():
 @admin_bp.route('/admin/logistics', methods=['GET', 'POST'])
 @admin_required
 def manage_logistics():
-    logistics_cities = datasets.load_logistics_cities()
-    logistics_form = LogisticsCityForm(prefix='logistics')
-    logistics_form.action.data = 'add_city'
+    """Управление справочниками логистики (3 справочника: основные, ЕКБ+РФ, трал)."""
+    active_tab = request.args.get('tab', 'main')
+    
+    # Загружаем данные для всех справочников
+    main_cities = datasets.load_main_cities()
+    ekb_rf_cities = datasets.load_ekb_rf_cities()
+    trail_cities = datasets.load_trail_cities()
+    
+    # Группируем основные города по разделам
+    main_cities_groups = []
+    # Словарь для быстрого доступа к группам по имени основного города
+    groups_dict = {}
+    
+    # Сначала создаем группы для основных городов
+    for idx, city in enumerate(main_cities):
+        if city.get('is_main_route'):
+            main_city_name = city.get('name', '')
+            groups_dict[main_city_name] = {
+                'main_city_name': main_city_name,
+                'main_city_index': idx,
+                'main_city_data': city,
+                'related_cities': []
+            }
+    
+    # Теперь добавляем города в соответствующие группы
+    for idx, city in enumerate(main_cities):
+        if not city.get('is_main_route'):
+            main_city_name = city.get('main_city')
+            if main_city_name and main_city_name in groups_dict:
+                groups_dict[main_city_name]['related_cities'].append({
+                    'index': idx,
+                    'data': city
+                })
+    
+    # Порядок отображения основных городов
+    MAIN_CITIES_DISPLAY_ORDER = [
+        'Чита',
+        'Улан-Удэ',
+        'Иркутск',
+        'Красноярск',
+        'Новосибирск',
+        'Омск',
+        'Екатеринбург',
+        'Москва',
+        'Санкт-Петербург'
+    ]
+    
+    # Преобразуем словарь в список и сортируем по заданному порядку
+    def get_city_order(city_group):
+        city_name = city_group['main_city_name']
+        if city_name in MAIN_CITIES_DISPLAY_ORDER:
+            return MAIN_CITIES_DISPLAY_ORDER.index(city_name)
+        # Если город не в списке, добавляем в конец
+        return len(MAIN_CITIES_DISPLAY_ORDER)
+    
+    main_cities_groups = sorted(groups_dict.values(), key=get_city_order)
+    
+    # Инициализируем формы
+    main_form = MainCityForm(prefix='main')
+    main_form.action.data = 'add_main_city'
+    ekb_rf_form = EkbRfCityForm(prefix='ekb_rf')
+    ekb_rf_form.action.data = 'add_ekb_rf_city'
+    trail_form = TrailCityForm(prefix='trail')
+    trail_form.action.data = 'add_trail_city'
 
     if request.method == 'POST':
         action = request.form.get('action', '')
+        tab = request.form.get('tab', 'main')
 
-        if action == 'add_city':
-            if logistics_form.validate():
-                name = logistics_form.name.data.strip()
-                region = (logistics_form.region.data or '').strip()
-                truck_price_value = logistics_form.truck_price.data
-                trail_price_value = logistics_form.trail_price.data
-                truck_price = float(truck_price_value) if truck_price_value is not None else 0.0
-                trail_price = float(trail_price_value) if trail_price_value is not None else 0.0
+        # Обработка основных городов
+        if action == 'add_main_city':
+            if main_form.validate():
+                name = main_form.name.data.strip()
+                region = (main_form.region.data or '').strip()
+                truck_price = float(main_form.truck_price.data) if main_form.truck_price.data is not None else 0.0
+                is_main_route = bool(main_form.is_main_route.data)
+                main_city = (main_form.main_city.data or '').strip() or None
 
-                logistics_cities.append({
+                main_cities.append({
                     'name': name,
                     'region': region,
                     'truck_price': truck_price,
-                    'trail_price': trail_price
+                    'is_main_route': is_main_route,
+                    'main_city': main_city
                 })
-                datasets.save_logistics_cities(logistics_cities, actor=_current_actor())
-                datasets.refresh_logistics_cities()
-                flash('Город добавлен.', 'success')
-                return redirect(url_for('admin.manage_logistics'))
+                datasets.save_main_cities(main_cities, actor=_current_actor())
+                flash('Город добавлен в справочник основных городов.', 'success')
+                return redirect(url_for('admin.manage_logistics', tab='main'))
             flash('Исправьте ошибки в форме.', 'danger')
 
-        elif action == 'edit_city':
-            if logistics_form.validate():
+        elif action == 'edit_main_city':
+            if main_form.validate():
                 try:
                     index = int(request.form.get('index', '-1'))
                 except (TypeError, ValueError):
                     index = -1
-                if 0 <= index < len(logistics_cities):
-                    city_name = logistics_form.name.data.strip()
-                    region_name = (logistics_form.region.data or '').strip()
-                    truck_price_value = logistics_form.truck_price.data
-                    trail_price_value = logistics_form.trail_price.data
-                    truck_price = float(truck_price_value) if truck_price_value is not None else 0.0
-                    trail_price = float(trail_price_value) if trail_price_value is not None else 0.0
+                if 0 <= index < len(main_cities):
+                    name = main_form.name.data.strip()
+                    region = (main_form.region.data or '').strip()
+                    truck_price = float(main_form.truck_price.data) if main_form.truck_price.data is not None else 0.0
+                    is_main_route = bool(main_form.is_main_route.data)
+                    main_city = (main_form.main_city.data or '').strip() or None
 
-                    logistics_cities[index] = {
-                        'name': city_name,
-                        'region': region_name or None,
+                    main_cities[index] = {
+                        'name': name,
+                        'region': region,
                         'truck_price': truck_price,
-                        'trail_price': trail_price
+                        'is_main_route': is_main_route,
+                        'main_city': main_city
                     }
-                    datasets.save_logistics_cities(logistics_cities, actor=_current_actor())
-                    datasets.refresh_logistics_cities()
+                    datasets.save_main_cities(main_cities, actor=_current_actor())
                     flash('Город обновлён.', 'success')
                 else:
                     flash('Не удалось найти город для редактирования.', 'danger')
             else:
                 flash('Исправьте ошибки в форме.', 'danger')
-            return redirect(url_for('admin.manage_logistics'))
+            return redirect(url_for('admin.manage_logistics', tab='main'))
 
-        elif action == 'delete_city':
-            delete_form = LogisticsCityDeleteForm(formdata=request.form)
+        elif action == 'delete_main_city':
+            delete_form = MainCityDeleteForm(formdata=request.form)
             if delete_form.validate():
                 try:
                     index = int(delete_form.index.data)
                 except (TypeError, ValueError):
                     index = -1
-                if 0 <= index < len(logistics_cities):
-                    logistics_cities.pop(index)
-                    datasets.save_logistics_cities(logistics_cities, actor=_current_actor())
+                if 0 <= index < len(main_cities):
+                    main_cities.pop(index)
+                    datasets.save_main_cities(main_cities, actor=_current_actor())
                     flash('Город удалён.', 'info')
                 else:
                     flash('Не удалось найти город для удаления.', 'danger')
             else:
                 flash('Не удалось подтвердить удаление.', 'danger')
-            return redirect(url_for('admin.manage_logistics'))
+            return redirect(url_for('admin.manage_logistics', tab='main'))
+
+        # Обработка городов ЕКБ+РФ
+        elif action == 'add_ekb_rf_city':
+            if ekb_rf_form.validate():
+                name = ekb_rf_form.name.data.strip()
+                region = (ekb_rf_form.region.data or '').strip()
+                distance_from_ekb_km = ekb_rf_form.distance_from_ekb_km.data
+
+                ekb_rf_cities.append({
+                    'name': name,
+                    'region': region,
+                    'distance_from_ekb_km': distance_from_ekb_km
+                })
+                datasets.save_ekb_rf_cities(ekb_rf_cities, actor=_current_actor())
+                flash('Город добавлен в справочник ЕКБ+РФ.', 'success')
+                return redirect(url_for('admin.manage_logistics', tab='ekb_rf'))
+            flash('Исправьте ошибки в форме.', 'danger')
+
+        elif action == 'edit_ekb_rf_city':
+            if ekb_rf_form.validate():
+                try:
+                    index = int(request.form.get('index', '-1'))
+                except (TypeError, ValueError):
+                    index = -1
+                if 0 <= index < len(ekb_rf_cities):
+                    name = ekb_rf_form.name.data.strip()
+                    region = (ekb_rf_form.region.data or '').strip()
+                    distance_from_ekb_km = ekb_rf_form.distance_from_ekb_km.data
+
+                    ekb_rf_cities[index] = {
+                        'name': name,
+                        'region': region,
+                        'distance_from_ekb_km': distance_from_ekb_km
+                    }
+                    datasets.save_ekb_rf_cities(ekb_rf_cities, actor=_current_actor())
+                    flash('Город обновлён.', 'success')
+                else:
+                    flash('Не удалось найти город для редактирования.', 'danger')
+            else:
+                flash('Исправьте ошибки в форме.', 'danger')
+            return redirect(url_for('admin.manage_logistics', tab='ekb_rf'))
+
+        elif action == 'delete_ekb_rf_city':
+            delete_form = EkbRfCityDeleteForm(formdata=request.form)
+            if delete_form.validate():
+                try:
+                    index = int(delete_form.index.data)
+                except (TypeError, ValueError):
+                    index = -1
+                if 0 <= index < len(ekb_rf_cities):
+                    ekb_rf_cities.pop(index)
+                    datasets.save_ekb_rf_cities(ekb_rf_cities, actor=_current_actor())
+                    flash('Город удалён.', 'info')
+                else:
+                    flash('Не удалось найти город для удаления.', 'danger')
+            else:
+                flash('Не удалось подтвердить удаление.', 'danger')
+            return redirect(url_for('admin.manage_logistics', tab='ekb_rf'))
+
+        # Обработка городов трала
+        elif action == 'add_trail_city':
+            if trail_form.validate():
+                name = trail_form.name.data.strip()
+                region = (trail_form.region.data or '').strip()
+                trail_price = float(trail_form.trail_price.data) if trail_form.trail_price.data is not None else 0.0
+
+                trail_cities.append({
+                    'name': name,
+                    'region': region,
+                    'trail_price': trail_price
+                })
+                datasets.save_trail_cities(trail_cities, actor=_current_actor())
+                flash('Город добавлен в справочник трала.', 'success')
+                return redirect(url_for('admin.manage_logistics', tab='trail'))
+            flash('Исправьте ошибки в форме.', 'danger')
+
+        elif action == 'edit_trail_city':
+            if trail_form.validate():
+                try:
+                    index = int(request.form.get('index', '-1'))
+                except (TypeError, ValueError):
+                    index = -1
+                if 0 <= index < len(trail_cities):
+                    name = trail_form.name.data.strip()
+                    region = (trail_form.region.data or '').strip()
+                    trail_price = float(trail_form.trail_price.data) if trail_form.trail_price.data is not None else 0.0
+
+                    trail_cities[index] = {
+                        'name': name,
+                        'region': region,
+                        'trail_price': trail_price
+                    }
+                    datasets.save_trail_cities(trail_cities, actor=_current_actor())
+                    flash('Город обновлён.', 'success')
+                else:
+                    flash('Не удалось найти город для редактирования.', 'danger')
+            else:
+                flash('Исправьте ошибки в форме.', 'danger')
+            return redirect(url_for('admin.manage_logistics', tab='trail'))
+
+        elif action == 'delete_trail_city':
+            delete_form = TrailCityDeleteForm(formdata=request.form)
+            if delete_form.validate():
+                try:
+                    index = int(delete_form.index.data)
+                except (TypeError, ValueError):
+                    index = -1
+                if 0 <= index < len(trail_cities):
+                    trail_cities.pop(index)
+                    datasets.save_trail_cities(trail_cities, actor=_current_actor())
+                    flash('Город удалён.', 'info')
+                else:
+                    flash('Не удалось найти город для удаления.', 'danger')
+            else:
+                flash('Не удалось подтвердить удаление.', 'danger')
+            return redirect(url_for('admin.manage_logistics', tab='trail'))
 
         else:
             flash('Неизвестное действие.', 'danger')
-            return redirect(url_for('admin.manage_logistics'))
+            return redirect(url_for('admin.manage_logistics', tab=tab))
 
     return render_template(
         'admin/logistics.html',
         **build_context(
             'admin_logistics',
             'Логистика',
-            logistics_cities=logistics_cities,
-            logistics_form=logistics_form,
+            active_tab=active_tab,
+            main_cities=main_cities,
+            main_cities_groups=main_cities_groups,
+            ekb_rf_cities=ekb_rf_cities,
+            trail_cities=trail_cities,
+            main_form=main_form,
+            ekb_rf_form=ekb_rf_form,
+            trail_form=trail_form,
         )
     )
 

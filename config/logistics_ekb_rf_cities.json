@@ -1,0 +1,9 @@
+{
+  "cities": [
+    {
+      "name": "Самара",
+      "region": "Самарской области",
+      "distance_from_ekb_km": 900
+    }
+  ]
+}

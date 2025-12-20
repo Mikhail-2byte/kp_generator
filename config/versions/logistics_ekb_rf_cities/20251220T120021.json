@@ -1,0 +1,13 @@
+{
+  "saved_at": "20251220T120021",
+  "actor": "tsc_perm@mail.ru",
+  "data": {
+    "cities": [
+      {
+        "name": "Самара",
+        "region": "Самарской области",
+        "distance_from_ekb_km": 900
+      }
+    ]
+  }
+}

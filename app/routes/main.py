@@ -832,7 +832,7 @@ def logistics():
 @main_bp.route('/api/logistics/calculate', methods=['POST'])
 @csrf.exempt
 def calculate_logistics_api():
-    """API endpoint для расчета логистики с учетом габаритов."""
+    """API endpoint для расчета логистики с учетом габаритов и новой логики."""
     from app.services.logistics_calculator import calculate_logistics
     
     try:
@@ -861,7 +861,11 @@ def calculate_logistics_api():
                 'error': 'Некорректные числовые значения для веса или стоимости города'
             }), 400
         
+        # Новые параметры
         transport_type = data.get('transport_type', 'truck')
+        city_name = data.get('city_name')
+        is_main_route = data.get('is_main_route', True)
+        distance_from_ekb_km_raw = data.get('distance_from_ekb_km')
         length_mm = data.get('length_mm')
         width_mm = data.get('width_mm')
         height_mm = data.get('height_mm')
@@ -872,8 +876,32 @@ def calculate_logistics_api():
         if city_price <= 0:
             return jsonify({'error': 'Стоимость города должна быть положительным числом'}), 400
         
+        # Автоматическое определение типа города из справочников
+        city_in_ekb_rf_catalog = False
+        if city_name:
+            from app.services.datasets import is_city_in_ekb_rf_catalog, get_ekb_rf_city_distance
+            city_in_ekb_rf_catalog = is_city_in_ekb_rf_catalog(city_name)
+            
+            # Если город в справочнике ЕКБ+РФ, автоматически устанавливаем is_main_route=False
+            if city_in_ekb_rf_catalog:
+                is_main_route = False
+                # Получаем расстояние из справочника, если не указано в запросе
+                if distance_from_ekb_km_raw is None or distance_from_ekb_km_raw == '':
+                    catalog_distance = get_ekb_rf_city_distance(city_name)
+                    if catalog_distance is not None:
+                        distance_from_ekb_km_raw = catalog_distance
+        
+        # Обрабатываем расстояние от ЕКБ
+        distance_from_ekb_km = None
+        if distance_from_ekb_km_raw is not None and distance_from_ekb_km_raw != '':
+            try:
+                distance_from_ekb_km = int(distance_from_ekb_km_raw)
+                if distance_from_ekb_km < 0:
+                    return jsonify({'error': 'Расстояние не может быть отрицательным'}), 400
+            except (ValueError, TypeError):
+                return jsonify({'error': 'Некорректное значение расстояния'}), 400
+        
         # Преобразуем габариты в float, если они указаны
-        # Обрабатываем случаи: None, пустая строка, 0, или валидное число
         length_mm_float = None
         width_mm_float = None
         height_mm_float = None
@@ -909,17 +937,22 @@ def calculate_logistics_api():
             height_mm_float = None
         
         current_app.logger.debug(
-            'Calculating logistics: weight=%.2f, city_price=%.2f, transport=%s, dims=%sx%sx%s',
-            weight_kg, city_price, transport_type, length_mm_float, width_mm_float, height_mm_float
+            'Calculating logistics: weight=%.2f, city_price=%.2f, transport=%s, city=%s, is_main_route=%s, distance_ekb=%s, dims=%sx%sx%s',
+            weight_kg, city_price, transport_type, city_name, is_main_route, distance_from_ekb_km, 
+            length_mm_float, width_mm_float, height_mm_float
         )
         
         result = calculate_logistics(
             weight_kg=weight_kg,
             city_price=city_price,
             transport_type=transport_type,
+            city_name=city_name,
+            is_main_route=is_main_route,
+            distance_from_ekb_km=distance_from_ekb_km,
             length_mm=length_mm_float,
             width_mm=width_mm_float,
             height_mm=height_mm_float,
+            city_in_ekb_rf_catalog=city_in_ekb_rf_catalog if city_name else None,
         )
         
         current_app.logger.debug('Logistics calculation result: %s', result)
@@ -927,3 +960,59 @@ def calculate_logistics_api():
     except Exception as exc:
         current_app.logger.exception('Error calculating logistics: %s', exc)
         return jsonify({'error': f'Ошибка при расчете логистики: {str(exc)}'}), 500
+
+
+@main_bp.route('/api/logistics/save-distance', methods=['POST'])
+@csrf.exempt
+def save_distance_from_ekb():
+    """
+    Сохраняет введенное пользователем расстояние от ЕКБ до города.
+    Обновляет logistics_cities.json.
+    """
+    from app.services.datasets import update_city_distance
+    
+    try:
+        data = request.get_json()
+        if data is None:
+            return jsonify({'error': 'Не получены данные запроса'}), 400
+        
+        city_name = data.get('city_name')
+        # Поддерживаем оба варианта названия параметра для обратной совместимости
+        distance_km_raw = data.get('distance_from_ekb_km') or data.get('distance_km')
+        
+        if not city_name:
+            return jsonify({'error': 'Не указано название города'}), 400
+        
+        if distance_km_raw is None:
+            return jsonify({'error': 'Не указано расстояние'}), 400
+        
+        try:
+            distance_km = int(distance_km_raw)
+            if distance_km < 0:
+                return jsonify({'error': 'Расстояние не может быть отрицательным'}), 400
+        except (ValueError, TypeError):
+            return jsonify({'error': 'Некорректное значение расстояния'}), 400
+        
+        # Получаем информацию о пользователе для логирования
+        actor = current_user.username if current_user.is_authenticated else 'anonymous'
+        
+        # Обновляем расстояние
+        success = update_city_distance(city_name, distance_km, actor=actor)
+        
+        if success:
+            current_app.logger.info(
+                'Distance updated for city %s: %d km (by %s)', 
+                city_name, distance_km, actor
+            )
+            return jsonify({
+                'success': True,
+                'message': f'Расстояние для города {city_name} успешно сохранено: {distance_km} км'
+            })
+        else:
+            return jsonify({
+                'error': f'Город {city_name} не найден в базе данных'
+            }), 404
+    
+    except Exception as exc:
+        current_app.logger.exception('Error saving distance: %s', exc)
+        return jsonify({'error': f'Ошибка при сохранении расстояния: {str(exc)}'}), 500

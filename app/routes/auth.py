@@ -1,6 +1,7 @@
 from datetime import datetime
+from typing import Union
 
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, Response, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -20,7 +21,7 @@ auth_bp = Blueprint('auth', __name__)  # Блюпринт для операци�
 
 
 @auth_bp.route('/profile', methods=['GET', 'POST'])
-def profile():
+def profile() -> Union[str, Response]:
     """Обрабатывает авторизацию, регистрацию и управление профилем пользователя."""
     login_form = LoginForm(prefix='login')
     register_form = RegistrationForm(prefix='register')
@@ -270,7 +271,7 @@ def profile():
 
 @auth_bp.route('/logout')
 @login_required
-def logout():
+def logout() -> Response:
     """Завершает пользовательскую сессию и возвращает на страницу профиля."""
     user_id = int(current_user.id) if current_user.id else None
     username = current_user.username

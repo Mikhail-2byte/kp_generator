@@ -11,7 +11,7 @@
 """
 
 import math
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 
 # Стандартные параметры транспорта
@@ -95,7 +95,7 @@ def calculate_logistics_by_weight(
     weight_kg: float,
     city_price: float,
     truck_capacity_kg: int = EURO_TRUCK_CAPACITY_KG
-) -> Dict[str, any]:
+) -> Dict[str, Any]:
     """
     Рассчитывает логистику по весу.
     
@@ -119,7 +119,7 @@ def calculate_logistics_by_volume(
     volume_m3: float,
     city_price: float,
     truck_volume_m3: float = EURO_TRUCK_VOLUME_M3
-) -> Dict[str, any]:
+) -> Dict[str, Any]:
     """
     Рассчитывает логистику по объему.
     
@@ -164,12 +164,12 @@ def calculate_ekb_plus_rf_route(
     weight_kg: float,
     distance_from_ekb_km: int,
     truck_capacity_kg: int = EURO_TRUCK_CAPACITY_KG
-) -> Dict[str, any]:
+) -> Dict[str, Any]:
     """
     Рассчитывает стоимость по алгоритму: КНР → ЕКБ + ЕКБ → Город.
     
-    Используется для грузов < 5 тонн в города вне основного маршрута
-    и вне радиуса 300 км от основных городов.
+    Используется для грузов в города из справочника ЕКБ+РФ.
+    Расчет от ЕКБ до города выполняется отдельно для каждой фуры.
     
     Args:
         weight_kg: Вес груза в кг
@@ -182,16 +182,47 @@ def calculate_ekb_plus_rf_route(
     # Шаг 1: Рассчитать стоимость от КНР до ЕКБ
     china_to_ekb_result = calculate_logistics_by_weight(weight_kg, EKB_TRUCK_PRICE, truck_capacity_kg)
     china_to_ekb_price = china_to_ekb_result['total_price']
+    trucks_count = int(china_to_ekb_result['trucks_count'])  # Преобразуем в int для range()
     
     # Шаг 2: Рассчитать стоимость от ЕКБ до города назначения по РФ
-    tariff_per_1000km = get_rf_tariff_per_1000km(weight_kg)
-    ekb_to_destination_price = (tariff_per_1000km / 1000) * distance_from_ekb_km
+    # Для каждой фуры рассчитываем отдельно
+    remaining_weight = weight_kg
+    ekb_to_destination_price = 0.0
+    truck_details = []
+    
+    # Преобразуем distance_from_ekb_km в int для форматирования
+    distance_km_int = int(distance_from_ekb_km)
+    
+    for truck_num in range(trucks_count):
+        # Определяем вес для текущей фуры
+        if remaining_weight >= truck_capacity_kg:
+            truck_weight = truck_capacity_kg
+            remaining_weight -= truck_capacity_kg
+        else:
+            truck_weight = remaining_weight
+            remaining_weight = 0
+        
+        # Получаем тариф для веса этой фуры
+        tariff_per_1000km = get_rf_tariff_per_1000km(truck_weight)
+        truck_price = (tariff_per_1000km / 1000) * distance_from_ekb_km
+        ekb_to_destination_price += truck_price
+        
+        truck_details.append({
+            'truck_number': truck_num + 1,
+            'weight_kg': truck_weight,
+            'tariff_per_1000km': tariff_per_1000km,
+            'price': truck_price,
+            'formula': f'({tariff_per_1000km:,.0f} руб / 1000 км) × {distance_km_int:,} км'
+        })
     
     # Итоговая стоимость
     total_price = china_to_ekb_price + ekb_to_destination_price
     
-    # Количество машин берем из расчета КНР → ЕКБ
-    trucks_count = china_to_ekb_result['trucks_count']
+    # Формируем формулу для отображения
+    if len(truck_details) == 1:
+        ekb_formula = truck_details[0]['formula']
+    else:
+        ekb_formula = ' + '.join([f'Фура {td["truck_number"]}: {td["formula"]}' for td in truck_details])
     
     return {
         'basis': 'weight',
@@ -206,9 +237,9 @@ def calculate_ekb_plus_rf_route(
             },
             'ekb_to_destination': {
                 'price': ekb_to_destination_price,
-                'distance_km': distance_from_ekb_km,
-                'tariff_per_1000km': tariff_per_1000km,
-                'formula': f'({tariff_per_1000km:,.0f} руб / 1000 км) × {distance_from_ekb_km:,} км',
+                'distance_km': distance_km_int,
+                'trucks': truck_details,
+                'formula': ekb_formula,
             }
         },
         'calculation_formula': f'КНР→ЕКБ: {china_to_ekb_price:,.0f} руб + ЕКБ→Город: {ekb_to_destination_price:,.0f} руб',
@@ -226,7 +257,7 @@ def calculate_logistics(
     width_mm: Optional[float] = None,
     height_mm: Optional[float] = None,
     city_in_ekb_rf_catalog: Optional[bool] = None,
-) -> Dict[str, any]:
+) -> Dict[str, Any]:
     """
     Основная функция расчета логистики.
     
@@ -304,7 +335,9 @@ def calculate_logistics(
     
     if use_ekb_plus_rf:
         # Используем алгоритм "До ЕКБ + по РФ"
-        result = calculate_ekb_plus_rf_route(weight_kg, distance_from_ekb_km, truck_capacity)
+        # Преобразуем distance_from_ekb_km в int если он float
+        distance_int = int(distance_from_ekb_km) if distance_from_ekb_km is not None else None
+        result = calculate_ekb_plus_rf_route(weight_kg, distance_int, truck_capacity)
         result['weight_kg'] = weight_kg
         result['transport_type'] = transport_type
         result['distance_from_ekb_provided'] = True

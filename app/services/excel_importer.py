@@ -8,6 +8,7 @@ from openpyxl import load_workbook
 from openpyxl.utils.exceptions import InvalidFileException
 
 from app.business.interfaces import ExcelImporterPort
+from app.core.exceptions import ImportError as KPImportError
 
 
 HeaderMap = Dict[str, str]
@@ -231,6 +232,11 @@ class ExcelImporterService(ExcelImporterPort):
             workbook = load_workbook(stream, data_only=True)
         except InvalidFileException as exc:
             raise ExcelImportError('Не удалось прочитать файл Excel. Убедитесь, что используется формат .xlsx.') from exc
+        except (IOError, OSError) as exc:
+            raise KPImportError(
+                'Ошибка чтения файла. Проверьте, что файл не поврежден и доступен для чтения.',
+                file_type='xlsx'
+            ) from exc
         except Exception as exc:  # pragma: no cover - делегирование неожиданных ошибок
             raise ExcelImportError('Файл повреждён или имеет неподдерживаемый формат.') from exc
 

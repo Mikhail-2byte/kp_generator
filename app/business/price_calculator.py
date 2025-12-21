@@ -1,10 +1,58 @@
-def calculate_selling_price(quantity, purchase_cost, logistics_rub, duty_percent, weight, delivery_time, margin_percent=30, config=None):
-    """Выполняет расчет продажной цены с учетом всех параметров бюджета"""
+from typing import Dict, Any, Optional
+
+from app.core.exceptions import ValidationError
+
+
+def calculate_selling_price(
+    quantity: int,
+    purchase_cost: float,
+    logistics_rub: float,
+    duty_percent: float,
+    weight: float,
+    delivery_time: int,
+    margin_percent: float = 30,
+    config: Optional[Dict[str, Any]] = None
+) -> float:
+    """
+    Выполняет расчет продажной цены с учетом всех параметров бюджета.
+    
+    Рассчитывает финальную цену за единицу товара с учетом:
+    - стоимости закупа
+    - логистики (КНР и РФ)
+    - пошлины
+    - комиссии за конвертацию валюты
+    - кредитных затрат
+    - целевой маржинальности
+    
+    Args:
+        quantity: Количество единиц товара
+        purchase_cost: Стоимость закупа за единицу товара (в юанях)
+        logistics_rub: Общая стоимость логистики (в рублях)
+        duty_percent: Процент пошлины
+        weight: Вес одной единицы товара (в кг)
+        delivery_time: Время доставки (в днях)
+        margin_percent: Целевая маржа в процентах (по умолчанию 30%)
+        config: Словарь с конфигурацией расчета (курсы, коэффициенты и т.д.)
+    
+    Returns:
+        Продажная цена за единицу товара (в рублях)
+    
+    Raises:
+        ValidationError: Если quantity <= 0 или weight <= 0
+    """
     # Проверка на нулевые значения
     if quantity <= 0:
-        raise ValueError("Количество должно быть положительным числом")
+        raise ValidationError(
+            "Количество должно быть положительным числом",
+            field='quantity',
+            value=quantity
+        )
     if weight <= 0:
-        raise ValueError("Вес должен быть положительным числом")
+        raise ValidationError(
+            "Вес должен быть положительным числом",
+            field='weight',
+            value=weight
+        )
     
     # Получаем константы из конфига или используем значения по умолчанию
     calc_config = config.get('calculation_constants', {}) if config else {}

@@ -12,9 +12,10 @@ from alembic.config import Config
 from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
 from sqlalchemy import create_engine, func, String, cast
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import joinedload
 
+from app.core.exceptions import DatabaseError, NotFoundError
 from app.core.extensions import SessionLocal, get_database_url
 from app.models.models import GenerationHistoryRecord, UserRecord
 
@@ -501,19 +502,19 @@ def get_generation_history(config, *, page: int = 1, per_page: Optional[int] = N
                     'has_next': page < max(total_pages, 1),
                 }
             }
+    except SQLAlchemyError as exc:
+        logging.error('Database error getting generation history: %s', exc)
+        raise DatabaseError(
+            'Ошибка при получении истории генераций',
+            operation='get_generation_history',
+            details={'page': page, 'per_page': limit}
+        ) from exc
     except Exception as exc:
-        logging.error('Error getting generation history: %s', exc)
-        return {
-            'items': [],
-            'pagination': {
-                'page': page,
-                'per_page': limit,
-                'total': 0,
-                'pages': 1,
-                'has_prev': False,
-                'has_next': False,
-            }
-        }
+        logging.error('Unexpected error getting generation history: %s', exc)
+        raise DatabaseError(
+            'Неожиданная ошибка при получении истории генераций',
+            operation='get_generation_history'
+        ) from exc
 
 
 def save_generation_history(form_data, final_price, config, user_id=None, total_general_price=None) -> bool:
@@ -576,9 +577,18 @@ def save_generation_history(form_data, final_price, config, user_id=None, total_
             )
             session.add(record)
         return True
+    except SQLAlchemyError as exc:
+        logging.error('Database error saving generation history: %s', exc)
+        raise DatabaseError(
+            'Ошибка при сохранении истории генерации',
+            operation='save_generation_history'
+        ) from exc
     except Exception as exc:
-        logging.error('Error saving generation history: %s', exc)
-        return False
+        logging.error('Unexpected error saving generation history: %s', exc)
+        raise DatabaseError(
+            'Неожиданная ошибка при сохранении истории генерации',
+            operation='save_generation_history'
+        ) from exc
 
 
 def get_generation_details(record_id: int) -> Optional[Dict[str, object]]:
@@ -596,9 +606,19 @@ def get_generation_details(record_id: int) -> Optional[Dict[str, object]]:
                 return None
 
             return _build_generation_detail(record)
+    except SQLAlchemyError as exc:
+        logging.error('Database error getting generation details: %s', exc)
+        raise DatabaseError(
+            'Ошибка при получении деталей генерации',
+            operation='get_generation_details',
+            details={'record_id': record_id}
+        ) from exc
     except Exception as exc:
-        logging.error('Error getting generation details: %s', exc)
-        return None
+        logging.error('Unexpected error getting generation details: %s', exc)
+        raise DatabaseError(
+            'Неожиданная ошибка при получении деталей генерации',
+            operation='get_generation_details'
+        ) from exc
 
 
 def load_generation_data(gen_id: int) -> Optional[Dict[str, object]]:
@@ -607,9 +627,19 @@ def load_generation_data(gen_id: int) -> Optional[Dict[str, object]]:
         import json
         
         with _session_scope() as session:
-            record = session.query(GenerationHistoryRecord).filter(GenerationHistoryRecord.id == gen_id).one_or_none()
+            # Используем joinedload для оптимизации загрузки связанных данных
+            record = (
+                session.query(GenerationHistoryRecord)
+                .options(joinedload(GenerationHistoryRecord.user))
+                .filter(GenerationHistoryRecord.id == gen_id)
+                .one_or_none()
+            )
             if record is None:
-                return None
+                raise NotFoundError(
+                    f'Генерация с ID {gen_id} не найдена',
+                    resource_type='generation',
+                    resource_id=str(gen_id)
+                )
 
             # Базовые данные
             data = {
@@ -671,9 +701,21 @@ def load_generation_data(gen_id: int) -> Optional[Dict[str, object]]:
                 })
             
             return data
+    except NotFoundError:
+        raise
+    except SQLAlchemyError as exc:
+        logging.error('Database error loading generation data: %s', exc)
+        raise DatabaseError(
+            'Ошибка при загрузке данных генерации',
+            operation='load_generation_data',
+            details={'gen_id': gen_id}
+        ) from exc
     except Exception as exc:
-        logging.error('Error loading generation data: %s', exc)
-        return None
+        logging.error('Unexpected error loading generation data: %s', exc)
+        raise DatabaseError(
+            'Неожиданная ошибка при загрузке данных генерации',
+            operation='load_generation_data'
+        ) from exc
 
 
 def create_user(
@@ -757,7 +799,7 @@ def get_user_statistics(user_id) -> Dict[str, object]:
         with _session_scope() as session:
             from datetime import datetime, timedelta
             
-            # Базовая статистика
+            # Базовая статистика с использованием индекса по user_id
             total, last_timestamp = (
                 session.query(
                     func.count(GenerationHistoryRecord.id),

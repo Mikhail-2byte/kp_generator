@@ -39,6 +39,7 @@ waitress-serve --call "app:create_app"
 - `docs/` — документация и журнал изменений
 
 ## Документация
+- 📖 **[Полное руководство](docs/COMPLETE_GUIDE.md)** — подробная документация по всем функциям проекта (REST API, аналитика, справочник контактов и др.)
 - Руководство по установке: `docs/SETUP.md`
 - Интеграция множественных позиций: `docs/MULTI_POSITION_INTEGRATION.md`
 - Журнал изменений: `docs/CHANGELOG.md`

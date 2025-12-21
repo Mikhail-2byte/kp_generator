@@ -1,0 +1,212 @@
+"""Тесты для GenerationOrchestrator."""
+
+import pytest
+from unittest.mock import Mock, patch, MagicMock
+
+from app.core.exceptions import CalculationError, DocumentGenerationError, ValidationError
+from app.services.generation_orchestrator import GenerationOrchestrator
+
+
+@pytest.fixture
+def app_config():
+    """Конфигурация приложения для тестов."""
+    return {
+        'calculation_constants': {
+            'conversion_rate': 12,
+            'logistics_cnr_ratio': 0.3,
+            'logistics_rf_ratio': 0.7,
+            'conversion_fee_rate': 0.032,
+            'credit_rate': 0.16,
+        }
+    }
+
+
+@pytest.fixture
+def orchestrator(app_config):
+    """Создает экземпляр оркестратора для тестов."""
+    return GenerationOrchestrator(app_config)
+
+
+@pytest.fixture
+def valid_form_data():
+    """Валидные данные формы для тестов."""
+    return {
+        'company': 'Тестовая компания',
+        'product': 'Товар',
+        'quantity': '10',
+        'cost_price': '100',
+        'weight': '5',
+        'logistics': '50000',
+        'margin_percent': '30',
+        'delivery_time': '30',
+        'duty_percent': '5',
+        'drawing_number': 'Ч-001',
+        'material': 'Сталь',
+        'delivery_address': 'Москва',
+    }
+
+
+class TestGenerationOrchestrator:
+    """Тесты для GenerationOrchestrator."""
+    
+    def test_init(self, app_config):
+        """Тест инициализации оркестратора."""
+        orchestrator = GenerationOrchestrator(app_config)
+        assert orchestrator.app_config == app_config
+        assert orchestrator.calculator is not None
+    
+    def test_validate_request_success(self, orchestrator, valid_form_data):
+        """Тест успешной валидации запроса."""
+        with patch('app.services.generation_orchestrator.validate_form_data') as mock_validate:
+            mock_validation = Mock()
+            mock_validation.cleaned_data = valid_form_data
+            mock_validation.positions = None
+            mock_validation.errors = []
+            mock_validate.return_value = mock_validation
+            
+            with patch('app.services.generation_orchestrator.extract_positions_from_form') as mock_extract:
+                mock_extract.return_value = [{'quantity': 10, 'cost_price': 100}]
+                
+                cleaned_data, positions, errors = orchestrator.validate_request(valid_form_data)
+                
+                assert errors == []
+                assert len(positions) > 0
+    
+    def test_validate_request_with_errors(self, orchestrator, valid_form_data):
+        """Тест валидации с ошибками."""
+        with patch('app.services.generation_orchestrator.validate_form_data') as mock_validate:
+            mock_validation = Mock()
+            mock_validation.cleaned_data = valid_form_data
+            mock_validation.positions = None
+            mock_validation.errors = ['Ошибка валидации']
+            mock_validate.return_value = mock_validation
+            
+            cleaned_data, positions, errors = orchestrator.validate_request(valid_form_data)
+            
+            assert len(errors) > 0
+    
+    def test_calculate_prices_single_position(self, orchestrator):
+        """Тест расчета цен для одной позиции."""
+        positions = [{
+            'quantity': 10,
+            'cost_price': 100,
+            'weight': 5,
+            'duty_percent': 5
+        }]
+        
+        with patch.object(orchestrator.calculator, 'calculate_legacy_single_position') as mock_calc:
+            mock_calc.return_value = {
+                'position': positions[0],
+                'final_price': 150.0,
+                'general_price': 1500.0,
+                'margin': 30.0
+            }
+            
+            position_prices, total_general_price = orchestrator.calculate_prices(
+                positions, 50000, 30, 30
+            )
+            
+            assert len(position_prices) == 1
+            assert total_general_price > 0
+    
+    def test_calculate_prices_multi_position(self, orchestrator):
+        """Тест расчета цен для множественных позиций."""
+        positions = [
+            {'quantity': 10, 'cost_price': 100, 'weight': 5, 'duty_percent': 5},
+            {'quantity': 5, 'cost_price': 200, 'weight': 3, 'duty_percent': 5}
+        ]
+        
+        with patch.object(orchestrator.calculator, 'calculate_multi_position_prices') as mock_calc:
+            mock_calc.return_value = {
+                'positions': [
+                    {
+                        'position': positions[0],
+                        'final_price': 150.0,
+                        'general_price': 1500.0,
+                        'costs': {'cost_per_unit': 115.0}
+                    },
+                    {
+                        'position': positions[1],
+                        'final_price': 300.0,
+                        'general_price': 1500.0,
+                        'costs': {'cost_per_unit': 230.0}
+                    }
+                ],
+                'total_costs': 2300.0,
+                'total_revenue': 3000.0,
+                'target_margin': 30.0,
+                'actual_margin': 30.0,
+                'price_coefficient': 1.3
+            }
+            
+            position_prices, total_general_price = orchestrator.calculate_prices(
+                positions, 50000, 30, 30
+            )
+            
+            assert len(position_prices) == 2
+            assert total_general_price > 0
+    
+    def test_orchestrate_success(self, orchestrator, valid_form_data):
+        """Тест успешной оркестрации генерации."""
+        with patch.object(orchestrator, 'validate_request') as mock_validate:
+            mock_validate.return_value = (valid_form_data, [{'quantity': 10}], [])
+            
+            with patch.object(orchestrator, 'calculate_prices') as mock_calc:
+                mock_calc.return_value = ([{'final_price': 150.0}], 1500.0)
+                
+                with patch.object(orchestrator, 'save_history') as mock_save:
+                    mock_save.return_value = True
+                    
+                    with patch.object(orchestrator, 'generate_documents') as mock_gen:
+                        mock_zip = MagicMock()
+                        mock_zip.seek = Mock()
+                        mock_gen.return_value = (mock_zip, 'test_prefix')
+                        
+                        with patch('app.services.generation_orchestrator.check_templates_exist') as mock_check:
+                            mock_check.return_value = []
+                            
+                            zip_buffer, file_prefix = orchestrator.orchestrate(
+                                valid_form_data, None
+                            )
+                            
+                            assert file_prefix == 'test_prefix'
+    
+    def test_orchestrate_validation_error(self, orchestrator, valid_form_data):
+        """Тест обработки ошибок валидации."""
+        with patch.object(orchestrator, 'validate_request') as mock_validate:
+            mock_validate.return_value = (valid_form_data, [], ['Ошибка валидации'])
+            
+            with pytest.raises(ValidationError):
+                orchestrator.orchestrate(valid_form_data, None)
+    
+    def test_orchestrate_calculation_error(self, orchestrator, valid_form_data):
+        """Тест обработки ошибок расчета."""
+        with patch.object(orchestrator, 'validate_request') as mock_validate:
+            mock_validate.return_value = (valid_form_data, [{'quantity': 10}], [])
+            
+            with patch.object(orchestrator, 'calculate_prices') as mock_calc:
+                mock_calc.side_effect = Exception('Ошибка расчета')
+                
+                with pytest.raises(CalculationError):
+                    orchestrator.orchestrate(valid_form_data, None)
+    
+    def test_orchestrate_document_error(self, orchestrator, valid_form_data):
+        """Тест обработки ошибок генерации документов."""
+        with patch.object(orchestrator, 'validate_request') as mock_validate:
+            mock_validate.return_value = (valid_form_data, [{'quantity': 10}], [])
+            
+            with patch.object(orchestrator, 'calculate_prices') as mock_calc:
+                mock_calc.return_value = ([{'final_price': 150.0}], 1500.0)
+                
+                with patch.object(orchestrator, 'save_history') as mock_save:
+                    mock_save.return_value = True
+                    
+                    with patch.object(orchestrator, 'generate_documents') as mock_gen:
+                        mock_gen.side_effect = Exception('Ошибка генерации')
+                        
+                        with patch('app.services.generation_orchestrator.check_templates_exist') as mock_check:
+                            mock_check.return_value = []
+                            
+                            with pytest.raises(DocumentGenerationError):
+                                orchestrator.orchestrate(valid_form_data, None)
+

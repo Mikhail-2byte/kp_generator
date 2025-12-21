@@ -2,9 +2,11 @@ import json
 import re
 from collections import OrderedDict
 from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from flask import (
     Blueprint,
+    Response,
     current_app,
     flash,
     jsonify,
@@ -21,10 +23,16 @@ from app.business.document_generator import create_zip_archive, generate_excel_d
 from app.presentation.helpers import check_templates_exist, extract_positions_from_form
 from app.presentation.validators import validate_form_data
 from app.services.multi_position_calculator import MultiPositionCalculator
+from app.services.generation_orchestrator import GenerationOrchestrator
 from app.services import (
     AnalyticsProcessingError,
     analyze_excel,
     datasets
+)
+from app.services.analytics_enhancements import (
+    generate_exchange_rate_analysis,
+    generate_interactive_report,
+    generate_margin_analysis,
 )
 from app.services.audit_service import log_generation_created
 from app.services.repositories import generation_repository
@@ -32,13 +40,14 @@ from app.services.feedback import save_feedback_entry
 from app.services.excel_importer import ExcelImportError, parse_positions_from_excel
 from app.presentation.ui import build_context
 from app.core.extensions import csrf
+from app.core.exceptions import CalculationError, DocumentGenerationError, ValidationError
 
 
 main_bp = Blueprint('main', __name__)  # Основные страницы и бизнес-логика генератора КП
 FORM_TTL_HOURS = 24  # время жизни сохранённой формы в сессии
 
 
-def _load_logistics_cities_safe():
+def _load_logistics_cities_safe() -> List[Dict[str, Any]]:
     """Безопасно загружает список городов логистики с обработкой ошибок."""
     try:
         return datasets.load_logistics_cities()
@@ -47,14 +56,16 @@ def _load_logistics_cities_safe():
         return []
 
 
-def _clear_form_session():
+def _clear_form_session() -> None:
     """Очищает сохранённые данные формы и импортированные позиции в сессии."""
     session.pop('form_data', None)
     session.pop('form_saved_at', None)
     session.pop('imported_positions', None)
 
 
-def _save_form_session(form_data, imported_positions=None):
+def _save_form_session(
+    form_data: Dict[str, Any], imported_positions: Optional[List[Dict[str, Any]]] = None
+) -> None:
     """Сохраняет состояние формы и (опционально) импортированные позиции в сессии с отметкой времени."""
     session['form_data'] = form_data or {}
     if imported_positions is not None:
@@ -62,7 +73,7 @@ def _save_form_session(form_data, imported_positions=None):
     session['form_saved_at'] = datetime.now(timezone.utc).isoformat()
 
 
-def _load_form_session():
+def _load_form_session() -> Tuple[Dict[str, Any], Optional[List[Dict[str, Any]]]]:
     """Возвращает сохранённое состояние формы, если оно не устарело."""
     saved_at_raw = session.get('form_saved_at')
     form_data = session.get('form_data') or {}
@@ -85,7 +96,7 @@ def _load_form_session():
 
 
 @main_bp.route('/')
-def index():
+def index() -> str:
     """Показывает форму расчёта коммерческого предложения и заполняет справочники."""
     # Забираем сохранённое состояние формы, но не удаляем — чтобы после навигации данные оставались
     form_data, imported_positions = _load_form_session()
@@ -108,7 +119,7 @@ def index():
 
 
 @main_bp.route('/history/details/<int:record_id>')
-def history_details(record_id):
+def history_details(record_id: int) -> Response:
     """Возвращает детальную информацию о сохранённой генерации в формате JSON."""
     try:
         record = generation_repository.get_details(record_id)
@@ -121,7 +132,7 @@ def history_details(record_id):
 
 
 @main_bp.route('/history/drawing')
-def history_by_drawing():
+def history_by_drawing() -> Response:
     """Возвращает генерации с указанным номером чертежа."""
     drawing_number = request.args.get('number', '').strip()
     if not drawing_number:
@@ -136,7 +147,7 @@ def history_by_drawing():
 
 
 @main_bp.route('/history/tender/<string:tender_number>')
-def history_by_tender(tender_number):
+def history_by_tender(tender_number: str) -> Response:
     """Возвращает все версии генераций по номеру тендера."""
     if not tender_number:
         return jsonify({'records': []})
@@ -155,7 +166,7 @@ def history_companies():
         return jsonify({'companies': []}), 500
 
 
-def _build_tender_groups(items):
+def _build_tender_groups(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     groups = []
     lookup = OrderedDict()
 
@@ -193,7 +204,7 @@ def _build_tender_groups(items):
 
 
 @main_bp.route('/history')
-def history():
+def history() -> str:
     """Отображает список последних генераций пользователя."""
     app_config = current_app.config['APP_SETTINGS']
     try:
@@ -224,7 +235,7 @@ def history():
 
 
 @main_bp.route('/feedback', methods=['GET', 'POST'])
-def feedback():
+def feedback() -> Union[str, Response]:
     """Принимает обратную связь от пользователей и сохраняет её локально."""
     form_data = {}
 
@@ -272,7 +283,7 @@ def feedback():
 
 
 @main_bp.route('/gb-analogs')
-def gb_analogs():
+def gb_analogs() -> str:
     """Показывает таблицу аналогов материалов по китайскому стандарту GB."""
     query = request.args.get('q', '').strip()
     normalized_query = query.lower()
@@ -305,7 +316,7 @@ def gb_analogs():
 
 
 @main_bp.route('/orders')
-def orders_page():
+def orders_page() -> str:
     """Отображает раздел с распоряжениями и внутренними документами."""
     orders = datasets.get_orders_documents()
     return render_template(
@@ -315,7 +326,7 @@ def orders_page():
 
 
 @main_bp.route('/templates-library')
-def templates_page():
+def templates_page() -> str:
     """Выводит список шаблонов документов."""
     templates_list = datasets.get_task_templates()
     return render_template(
@@ -324,7 +335,7 @@ def templates_page():
     )
 
 
-def _parse_instruction_content(content_text: str) -> dict:
+def _parse_instruction_content(content_text: str) -> Dict[str, Any]:
     """
     Парсит текст инструкции и выделяет разделы для визуального отображения.
     
@@ -488,7 +499,7 @@ def _parse_instruction_content(content_text: str) -> dict:
 
 
 @main_bp.route('/instructions')
-def instructions_page():
+def instructions_page() -> str:
     """Содержит краткие инструкции по бизнес-процессам."""
     instructions_list = datasets.get_task_instructions()
     
@@ -504,10 +515,23 @@ def instructions_page():
 
 
 @main_bp.route('/analytics', methods=['GET', 'POST'])
-def analytics_page():
+def analytics_page() -> str:
     """Отображает раздел аналитики и обрабатывает загрузку файлов."""
     analysis_result = None
     error_message = None
+    margin_analysis = None
+    exchange_analysis = None
+    interactive_report = None
+
+    # Получаем параметры для расширенной аналитики
+    show_margin = request.args.get('margin', 'false').lower() == 'true'
+    show_exchange = request.args.get('exchange', 'false').lower() == 'true'
+    show_report = request.args.get('report', 'false').lower() == 'true'
+    
+    user_id = int(current_user.id) if current_user.is_authenticated else None
+    days = int(request.args.get('days', 30))
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
 
     if request.method == 'POST':
         uploaded_file = request.files.get('analytics_file')
@@ -521,15 +545,52 @@ def analytics_page():
             except Exception as exc:  # pragma: no cover - логирование неожиданных ошибок
                 current_app.logger.exception('Ошибка обработки аналитики: ')  # noqa: TRY401
                 error_message = 'Не удалось обработать файл. Попробуйте позже.'
+    
+    # Генерируем расширенную аналитику при запросе
+    if show_margin:
+        try:
+            margin_analysis = generate_margin_analysis(user_id=user_id, days=days)
+        except Exception as exc:
+            current_app.logger.error(f'Ошибка генерации анализа маржи: {exc}')
+    
+    if show_exchange:
+        try:
+            exchange_analysis = generate_exchange_rate_analysis(days=days)
+        except Exception as exc:
+            current_app.logger.error(f'Ошибка генерации анализа курсов: {exc}')
+    
+    if show_report:
+        try:
+            interactive_report = generate_interactive_report(
+                user_id=user_id,
+                date_from=date_from,
+                date_to=date_to
+            )
+        except Exception as exc:
+            current_app.logger.error(f'Ошибка генерации отчета: {exc}')
 
     return render_template(
         'analytics.html',
-        **build_context('analytics', 'Аналитика', analysis=analysis_result, error_message=error_message)
+        **build_context(
+            'analytics',
+            'Аналитика',
+            analysis=analysis_result,
+            error_message=error_message,
+            margin_analysis=margin_analysis,
+            exchange_analysis=exchange_analysis,
+            interactive_report=interactive_report,
+            show_margin=show_margin,
+            show_exchange=show_exchange,
+            show_report=show_report,
+            days=days,
+            date_from=date_from,
+            date_to=date_to
+        )
     )
 
 
 @main_bp.route('/duty')
-def duty():
+def duty() -> str:
     """Предоставляет поиск по ставкам пошлин и категориям товаров."""
     query = request.args.get('q', '').strip()
     normalized_query = query.lower()
@@ -550,7 +611,7 @@ def duty():
 
 
 @main_bp.route('/load_generation/<int:gen_id>')
-def load_generation(gen_id):
+def load_generation(gen_id: int) -> Response:
     """Загружает ранее рассчитанную генерацию в форму для повторного использования."""
     try:
         generation_dict = generation_repository.load_generation(gen_id)
@@ -566,140 +627,17 @@ def load_generation(gen_id):
 
 
 @main_bp.route('/generate', methods=['POST'])
-def generate():
+def generate() -> Union[str, Response]:
     """Выполняет расчёт КП, сохраняет историю и формирует пакет документов."""
     form_data = request.form.to_dict()
     form_data['comment'] = form_data.get('comment', '').strip()
 
-    if not form_data.get('cost_price', '').strip():
-        raw_per_kg = (form_data.get('cost_price_per_kg') or '').replace(',', '.').strip()
-        raw_weight = (form_data.get('weight') or '').replace(',', '.').strip()
-        try:
-            per_kg_value = float(raw_per_kg) if raw_per_kg else None
-            weight_value = float(raw_weight) if raw_weight else None
-        except ValueError:
-            per_kg_value = None
-            weight_value = None
-
-        if per_kg_value is not None and weight_value is not None and weight_value > 0:
-            form_data['cost_price'] = str(per_kg_value * weight_value)
-
-    validation = validate_form_data(form_data)
-    form_data = validation.cleaned_data
-
-    if validation.errors:
-        for error in validation.errors:
-            flash(error, 'danger')
-
-        # Сохраняем состояние формы и ошибки в сессии, чтобы пользователь не потерял данные при переходах
-        _save_form_session(form_data, validation.positions or session.get('imported_positions'))
-        if validation.invalid_fields:
-            form_data['_invalid_fields'] = validation.invalid_fields
-
-        cities = _load_logistics_cities_safe()
-
-        return render_template(
-            'index.html',
-            **build_context(
-                'index',
-                'Создание коммерческого предложения',
-                form_data=form_data,
-                cities=cities
-            )
-        )
+    app_config = current_app.config['APP_SETTINGS']
+    orchestrator = GenerationOrchestrator(app_config)
 
     try:
-        company = form_data['company'].strip()
-        logistics_rub = float(form_data['logistics'])
-        margin_percent = float(form_data['margin_percent'])
-        delivery_time = int(form_data['delivery_time'])
-        
-        positions = validation.positions or extract_positions_from_form(form_data)
-        form_data.pop('_invalid_fields', None)
-        
-        app_config = current_app.config['APP_SETTINGS']
-        
-        # Создаем калькулятор для множественных позиций
-        calculator = MultiPositionCalculator(app_config)
-        
-        # Рассчитываем цены с единой итоговой маржой
-        if len(positions) == 1:
-            # Для одной позиции используем старый метод
-            result = calculator.calculate_legacy_single_position(
-                positions[0], logistics_rub, delivery_time, margin_percent
-            )
-            position_prices = [result]
-            # Округляем final_price вверх до десятков, как в Excel
-            import math
-            final_price_rounded = math.ceil(result['final_price'] / 10.0) * 10.0
-            total_general_price = final_price_rounded * result['position']['quantity']
-        else:
-            # Для множественных позиций используем новый метод с единой маржой
-            calculation_result = calculator.calculate_multi_position_prices(
-                positions, logistics_rub, delivery_time, margin_percent
-            )
-            position_prices = calculation_result['positions']
-            # Пересчитываем total_general_price с округлением final_price до десятков, как в Excel
-            import math
-            total_general_price = 0
-            for pos_price in position_prices:
-                final_price_rounded = math.ceil(pos_price['final_price'] / 10.0) * 10.0
-                quantity = pos_price['position']['quantity']
-                total_general_price += final_price_rounded * quantity
-        
-        # Проверяем, что есть хотя бы одна позиция
-        if not position_prices:
-            flash('Не удалось рассчитать цены для позиций.', 'danger')
-            cities = _load_logistics_cities_safe()
-            return render_template(
-                'index.html',
-                **build_context('index', 'Создание коммерческого предложения', form_data=form_data, cities=cities)
-            )
-        
-        # Для совместимости с существующим кодом используем первую позицию
-        first_position = position_prices[0]
-        final_price = first_position['final_price']
-        general_price = first_position['general_price']
-        final_price_nds = total_general_price * 1.2
-
-        # Добавляем округленные final_price в позиции для сохранения в базе данных
-        # Это нужно, чтобы при отображении подробной информации цены совпадали с Excel
-        import math
-        for i, pos_price in enumerate(position_prices):
-            if i < len(positions):
-                final_price_rounded = math.ceil(pos_price['final_price'] / 10.0) * 10.0
-                positions[i]['final_price'] = final_price_rounded
-        # Обновляем form_data с позициями, содержащими округленные final_price
-        form_data['positions'] = positions
-
+        # Подготовка данных пользователя
         user_id = int(current_user.id) if current_user.is_authenticated else None
-        saved = generation_repository.save_history(form_data, final_price, app_config, user_id, total_general_price)
-        if not saved:
-            current_app.logger.warning('Failed to save generation history')
-        else:
-            # Получаем ID последней созданной генерации для логирования
-            # Используем данные из form_data для логирования
-            tender_number = form_data.get('tender_number', '').strip() or None
-            log_generation_created(
-                generation_id=0,  # ID будет неизвестен, но это не критично для логирования
-                company=company,
-                tender_number=tender_number,
-            )
-
-        template_errors = check_templates_exist()
-        if template_errors:
-            for error in template_errors:
-                flash(f'{error}. Обратитесь к администратору.', 'danger')
-                current_app.logger.error(error)
-            cities = _load_logistics_cities_safe()
-            # Сохраняем форму, чтобы пользователь мог вернуться без потери данных
-            _save_form_session(form_data, session.get('imported_positions'))
-            return render_template(
-                'index.html',
-                **build_context('index', 'Создание коммерческого предложения', form_data=form_data, cities=cities)
-            )
-
-        # Формируем ФИО менеджера для заполнения в шаблоне
         manager_fio = None
         contact_info = None
         if current_user.is_authenticated:
@@ -707,31 +645,12 @@ def generate():
             first_name = current_user.first_name or ''
             if last_name or first_name:
                 manager_fio = f"{last_name} {first_name}".strip()
-            # Получаем контактную информацию из профиля пользователя
             contact_info = current_user.contact_info or None
 
-        excel_template_path = 'templates_docs/template.xlsx'
-        word_template_path = 'templates_docs/template.docx'
-
-        excel_file = generate_excel_document(
-            excel_template_path,
-            form_data,
-            final_price,
-            total_general_price,
-            position_prices=position_prices,
-            manager_fio=manager_fio,
+        # Используем оркестратор для генерации
+        zip_buffer, file_prefix = orchestrator.orchestrate(
+            form_data, user_id, manager_fio, contact_info
         )
-        word_file = generate_word_document(
-            word_template_path,
-            form_data,
-            final_price,
-            total_general_price,
-            final_price_nds,
-            positions=positions,
-            position_prices=position_prices,
-            contact_info=contact_info,
-        )
-        zip_buffer, file_prefix = create_zip_archive(excel_file, word_file, company)
 
         # Успешная генерация — очищаем сохранённую форму/импорт
         _clear_form_session()
@@ -743,10 +662,41 @@ def generate():
             mimetype='application/zip'
         )
 
+    except ValidationError as exc:
+        # Обработка ошибок валидации с сохранением формы
+        for error in exc.details.get('errors', [exc.message]):
+            flash(error if isinstance(error, str) else exc.message, 'danger')
+        
+        cleaned_data = exc.details.get('invalid_fields', {})
+        _save_form_session(cleaned_data, session.get('imported_positions'))
+        if exc.details.get('invalid_fields'):
+            cleaned_data['_invalid_fields'] = exc.details['invalid_fields']
+        
+        cities = _load_logistics_cities_safe()
+        return render_template(
+            'index.html',
+            **build_context(
+                'index',
+                'Создание коммерческого предложения',
+                form_data=cleaned_data,
+                cities=cities
+            )
+        )
+
+    except (CalculationError, DocumentGenerationError) as exc:
+        flash(f'Ошибка: {exc.message}', 'danger')
+        cities = _load_logistics_cities_safe()
+        _save_form_session(form_data, session.get('imported_positions'))
+        return render_template(
+            'index.html',
+            **build_context('index', 'Создание коммерческого предложения', form_data=form_data, cities=cities)
+        )
+
     except Exception as exc:  # pragma: no cover - defensive logging
         flash('Произошла непредвиденная ошибка. Попробуйте еще раз.', 'danger')
-        current_app.logger.error('Unexpected error: %s', exc)
+        current_app.logger.error('Unexpected error: %s', exc, exc_info=True)
         cities = _load_logistics_cities_safe()
+        _save_form_session(form_data, session.get('imported_positions'))
         return render_template(
             'index.html',
             **build_context('index', 'Создание коммерческого предложения', form_data=form_data, cities=cities)
@@ -754,7 +704,7 @@ def generate():
 
 
 @main_bp.route('/import-positions', methods=['POST'])
-def import_positions():
+def import_positions() -> Response:
     """Импортирует позиции из Excel шаблона и возвращает их в формате JSON."""
 
     uploaded_file = request.files.get('positions_file')
@@ -782,7 +732,7 @@ def import_positions():
 
 @main_bp.route('/form/reset', methods=['POST'])
 @csrf.exempt
-def reset_form_state():
+def reset_form_state() -> Response:
     """Очищает сохранённый черновик формы и импортированные позиции в сессии."""
     _clear_form_session()
     return jsonify({'status': 'ok'})
@@ -790,7 +740,7 @@ def reset_form_state():
 
 @main_bp.route('/form/save', methods=['POST'])
 @csrf.exempt
-def save_form_state():
+def save_form_state() -> Response:
     """
     Сохраняет черновик формы из JSON-пейлоада.
     Ожидает тело вида:
@@ -817,7 +767,7 @@ def save_form_state():
 
 
 @main_bp.route('/logistics')
-def logistics():
+def logistics() -> str:
     """Отображает справочную информацию по логистическим тарифам."""
     cities = _load_logistics_cities_safe()
     if not cities:
@@ -831,7 +781,7 @@ def logistics():
 
 @main_bp.route('/api/logistics/calculate', methods=['POST'])
 @csrf.exempt
-def calculate_logistics_api():
+def calculate_logistics_api() -> Response:
     """API endpoint для расчета логистики с учетом габаритов и новой логики."""
     from app.services.logistics_calculator import calculate_logistics
     
@@ -964,7 +914,7 @@ def calculate_logistics_api():
 
 @main_bp.route('/api/logistics/save-distance', methods=['POST'])
 @csrf.exempt
-def save_distance_from_ekb():
+def save_distance_from_ekb() -> Response:
     """
     Сохраняет введенное пользователем расстояние от ЕКБ до города.
     Обновляет logistics_cities.json.

@@ -1,14 +1,31 @@
 # app/services/multi_position_calculator.py
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Optional
 
 from app.business.interfaces import PriceCalculatorPort
 from app.business.price_calculator import calculate_selling_price
 
 
 class MultiPositionCalculator(PriceCalculatorPort):
-    """Калькулятор для множественных позиций с единой итоговой маржой"""
+    """
+    Калькулятор для множественных позиций с единой итоговой маржой.
     
-    def __init__(self, config=None):
+    Поддерживает два режима ценообразования:
+    - 'global': общий коэффициент по целевой суммарной марже
+    - 'per_position': каждая позиция достигает целевой маржи
+    
+    Attributes:
+        config: Конфигурация приложения с параметрами расчета
+        calc_config: Параметры расчета из конфигурации
+        pricing_mode: Режим ценообразования ('global' или 'per_position')
+    """
+    
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
+        """
+        Инициализирует калькулятор.
+        
+        Args:
+            config: Словарь конфигурации приложения
+        """
         self.config = config or {}
         self.calc_config = self.config.get('calculation_constants', {})
         pricing_cfg = (self.config or {}).get('pricing', {})
@@ -22,9 +39,29 @@ class MultiPositionCalculator(PriceCalculatorPort):
         self.CONVERSION_FEE_RATE = self.calc_config.get('conversion_fee_rate', 0.032)
         self.CREDIT_RATE = self.calc_config.get('credit_rate', 0.16)
     
-    def calculate_position_costs(self, position: Dict[str, Any], logistics_rub: float, 
-                               delivery_time: int, total_weight: float) -> Dict[str, float]:
-        """Рассчитывает все затраты для одной позиции"""
+    def calculate_position_costs(
+        self, position: Dict[str, Any], logistics_rub: float, 
+        delivery_time: int, total_weight: float
+    ) -> Dict[str, float]:
+        """
+        Рассчитывает все затраты для одной позиции.
+        
+        Args:
+            position: Словарь с данными позиции (quantity, cost_price, weight, duty_percent)
+            logistics_rub: Общая стоимость логистики (в рублях)
+            delivery_time: Время доставки (в днях)
+            total_weight: Общий вес всех позиций (в кг)
+        
+        Returns:
+            Словарь с рассчитанными затратами:
+            - cost_per_unit: Общие затраты на единицу товара
+            - total_cost: Общие затраты на всю позицию
+            - logistics_cnr_per_unit: Логистика КНР на единицу
+            - logistics_rf_per_unit: Логистика РФ на единицу
+            - duty_per_unit: Пошлина на единицу
+            - conversion_fee_per_unit: Комиссия за конвертацию на единицу
+            - credit_cost_per_unit: Кредитные затраты на единицу
+        """
         quantity = int(position['quantity'])
         cost_price = float(position['cost_price'])
         weight = float(position['weight'])
@@ -93,10 +130,29 @@ class MultiPositionCalculator(PriceCalculatorPort):
             margin_percent,
         )
 
-    def calculate_multi_position_prices(self, positions: List[Dict[str, Any]],
-                                      logistics_rub: float, delivery_time: int,
-                                      target_margin_percent: float) -> Dict[str, Any]:
-        """Рассчитывает цены для множественных позиций с единой итоговой маржой"""
+    def calculate_multi_position_prices(
+        self, positions: List[Dict[str, Any]],
+        logistics_rub: float, delivery_time: int,
+        target_margin_percent: float
+    ) -> Dict[str, Any]:
+        """
+        Рассчитывает цены для множественных позиций с единой итоговой маржой.
+        
+        Args:
+            positions: Список позиций для расчета
+            logistics_rub: Общая стоимость логистики (в рублях)
+            delivery_time: Время доставки (в днях)
+            target_margin_percent: Целевая маржа в процентах
+        
+        Returns:
+            Словарь с результатами расчета:
+            - positions: Список позиций с рассчитанными ценами
+            - total_costs: Общие затраты на все позиции
+            - total_revenue: Общая выручка
+            - target_margin: Целевая маржа
+            - actual_margin: Фактическая маржа
+            - price_coefficient: Коэффициент ценообразования (для режима 'global')
+        """
         
         if not positions:
             return {
@@ -178,10 +234,29 @@ class MultiPositionCalculator(PriceCalculatorPort):
             'price_coefficient': price_coefficient
         }
     
-    def calculate_legacy_single_position(self, position: Dict[str, Any], 
-                                       logistics_rub: float, delivery_time: int, 
-                                       margin_percent: float) -> Dict[str, Any]:
-        """Рассчитывает цену для одной позиции (старый метод для совместимости)"""
+    def calculate_legacy_single_position(
+        self, position: Dict[str, Any], 
+        logistics_rub: float, delivery_time: int, 
+        margin_percent: float
+    ) -> Dict[str, Any]:
+        """
+        Рассчитывает цену для одной позиции (старый метод для совместимости).
+        
+        Использует старую логику расчета через calculate_selling_price.
+        
+        Args:
+            position: Словарь с данными позиции
+            logistics_rub: Общая стоимость логистики (в рублях)
+            delivery_time: Время доставки (в днях)
+            margin_percent: Целевая маржа в процентах
+        
+        Returns:
+            Словарь с результатами:
+            - position: Исходные данные позиции
+            - final_price: Финальная цена за единицу
+            - general_price: Общая цена позиции
+            - margin: Фактическая маржа
+        """
         
         quantity = int(position['quantity'])
         cost_price = float(position['cost_price'])

@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Union
 
-from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, url_for
+from flask import Blueprint, Response, abort, flash, jsonify, redirect, render_template, request, url_for
 
 from flask_login import current_user
 from werkzeug.security import generate_password_hash
@@ -32,7 +33,7 @@ from app.services.export_service import (
     export_audit_logs_to_excel,
     export_audit_logs_to_pdf,
 )
-from app.services.repositories import admin_stats_repository, audit_log_repository, user_repository
+from app.services.repositories import admin_stats_repository, audit_log_repository, customer_contact_repository, user_repository
 from app.presentation.ui import build_context
 
 
@@ -41,7 +42,7 @@ admin_bp = Blueprint('admin', __name__)  # Управление справочн
 
 @admin_bp.route('/admin/stats')
 @admin_required
-def manage_stats():
+def manage_stats() -> str:
     user_activity = admin_stats_repository.get_user_activity()
     return render_template(
         'admin/stats.html',
@@ -55,7 +56,7 @@ def manage_stats():
 
 @admin_bp.route('/admin/settings', methods=['GET', 'POST'])
 @admin_required
-def manage_settings():
+def manage_settings() -> Union[str, Response]:
     """Страница настроек системы."""
     from flask import current_app
     
@@ -80,7 +81,7 @@ def manage_settings():
 
 @admin_bp.route('/admin', methods=['GET', 'POST'])
 @admin_required
-def admin_panel():
+def admin_panel() -> Union[str, Response]:
     duty_items = datasets.load_duty_rates()
     gb_materials = datasets.load_gb_materials()
     logistics_cities = datasets.load_logistics_cities()
@@ -250,7 +251,7 @@ def admin_panel():
 
 @admin_bp.route('/admin/duty', methods=['GET', 'POST'])
 @admin_required
-def manage_duty():
+def manage_duty() -> Union[str, Response]:
     duty_items = datasets.load_duty_rates()
     duty_form = DutyItemForm(prefix='duty')
     duty_form.action.data = 'add_duty'
@@ -351,7 +352,7 @@ def manage_duty():
 
 @admin_bp.route('/admin/materials', methods=['GET', 'POST'])
 @admin_required
-def manage_materials():
+def manage_materials() -> Union[str, Response]:
     gb_materials = datasets.load_gb_materials()
     gb_form = GBMaterialForm(prefix='gb')
     gb_form.action.data = 'add_gb'
@@ -448,7 +449,7 @@ def manage_materials():
 
 @admin_bp.route('/admin/logistics', methods=['GET', 'POST'])
 @admin_required
-def manage_logistics():
+def manage_logistics() -> Union[str, Response]:
     """Управление справочниками логистики (3 справочника: основные, ЕКБ+РФ, трал)."""
     active_tab = request.args.get('tab', 'main')
     
@@ -723,23 +724,23 @@ def manage_logistics():
 
 @admin_bp.route('/admin/orders', methods=['GET', 'POST'])
 @admin_required
-def manage_orders():
+def manage_orders() -> Union[str, Response]:
     return _manage_content_section('orders')
 
 
 @admin_bp.route('/admin/templates', methods=['GET', 'POST'])
 @admin_required
-def manage_templates():
+def manage_templates() -> Union[str, Response]:
     return _manage_content_section('templates')
 
 
 @admin_bp.route('/admin/instructions', methods=['GET', 'POST'])
 @admin_required
-def manage_instructions():
+def manage_instructions() -> Union[str, Response]:
     return _manage_content_section('instructions')
 
 
-def _handle_content_action(action: str, manager: ContentManager, redirect_endpoint: str):
+def _handle_content_action(action: str, manager: ContentManager, redirect_endpoint: str) -> Response:
     mapping = {
         'orders': 'orders',
         'templates': 'task_templates',
@@ -792,7 +793,7 @@ def _handle_content_action(action: str, manager: ContentManager, redirect_endpoi
     return redirect(url_for(redirect_endpoint))
 
 
-def _manage_content_section(section: str):
+def _manage_content_section(section: str) -> Union[str, Response]:
     manager = build_manager(actor=_current_actor())
 
     if section == 'orders':
@@ -871,7 +872,7 @@ def _manage_content_section(section: str):
     )
 
 
-def _extract_content_payload() -> dict:
+def _extract_content_payload() -> Dict[str, Any]:
     files_raw = request.form.get('files', '')
     files = datasets.parse_files_input(files_raw)
     payload = {
@@ -893,7 +894,7 @@ def _current_actor() -> str:
 
 @admin_bp.route('/admin/users', methods=['GET', 'POST'])
 @admin_required
-def manage_users():
+def manage_users() -> Union[str, Response]:
     """Управление пользователями: список, создание, редактирование, удаление."""
     search = request.args.get('search', '').strip()
     role_filter = request.args.get('role', '').strip() or None
@@ -1124,7 +1125,7 @@ def manage_users():
 
 @admin_bp.route('/admin/audit')
 @admin_required
-def audit_dashboard():
+def audit_dashboard() -> str:
     """Дашборд с метриками активности пользователей."""
     # Получаем данные для графиков
     daily_activity = audit_log_repository.get_daily_activity(days=30)
@@ -1153,7 +1154,7 @@ def audit_dashboard():
 
 @admin_bp.route('/admin/audit/logs')
 @admin_required
-def audit_logs():
+def audit_logs() -> Union[str, Response]:
     """Детальный лог действий с фильтрами и пагинацией."""
     # Проверка экспорта
     export_format = request.args.get('export', '').strip().lower()
@@ -1301,7 +1302,7 @@ def audit_logs():
 
 @admin_bp.route('/admin/audit/api/daily-activity')
 @admin_required
-def api_daily_activity():
+def api_daily_activity() -> Response:
     """API endpoint для данных графика активности по дням."""
     try:
         days = int(request.args.get('days', '30'))
@@ -1314,7 +1315,7 @@ def api_daily_activity():
 
 @admin_bp.route('/admin/audit/api/action-distribution')
 @admin_required
-def api_action_distribution():
+def api_action_distribution() -> Response:
     """API endpoint для данных распределения по типам действий."""
     try:
         days = int(request.args.get('days', '30'))
@@ -1325,10 +1326,97 @@ def api_action_distribution():
     return jsonify(action_stats)
 
 
-@admin_bp.route('/admin/audit/api/user-activity')
+@admin_bp.route('/admin/customers', methods=['GET', 'POST'])
 @admin_required
-def api_user_activity():
-    """API endpoint для данных активности по пользователям."""
+def manage_customers() -> Union[str, Response]:
+    """Управление контактами заказчиков: список, создание, редактирование, удаление."""
+    form = CustomerContactForm(prefix='customer')
+    delete_form = CustomerContactDeleteForm(prefix='delete')
+    search_query = request.args.get('search', '').strip()
+    
+    if request.method == 'POST':
+        if form.submit.data and form.validate():
+            contact_id = request.form.get('customer-contact_id')
+            if contact_id:
+                # Редактирование
+                success = customer_contact_repository.update(
+                    int(contact_id),
+                    company_name=form.company_name.data,
+                    contact_person=form.contact_person.data or None,
+                    phone=form.phone.data or None,
+                    email=form.email.data or None,
+                    address=form.address.data or None,
+                    notes=form.notes.data or None
+                )
+                if success:
+                    log_update('customer_contact', contact_id, data_after={
+                        'company_name': form.company_name.data,
+                        'contact_person': form.contact_person.data,
+                    })
+                    flash('Контакт успешно обновлен.', 'success')
+                else:
+                    flash('Ошибка при обновлении контакта.', 'danger')
+            else:
+                # Создание
+                contact_id = customer_contact_repository.create(
+                    company_name=form.company_name.data,
+                    contact_person=form.contact_person.data or None,
+                    phone=form.phone.data or None,
+                    email=form.email.data or None,
+                    address=form.address.data or None,
+                    notes=form.notes.data or None
+                )
+                if contact_id:
+                    log_create('customer_contact', str(contact_id), data={
+                        'company_name': form.company_name.data,
+                    })
+                    flash('Контакт успешно создан.', 'success')
+                else:
+                    flash('Ошибка при создании контакта.', 'danger')
+            return redirect(url_for('admin.manage_customers'))
+        
+        if delete_form.submit.data and delete_form.validate():
+            contact_id = delete_form.contact_id.data
+            contact = customer_contact_repository.get_by_id(int(contact_id))
+            if contact:
+                success = customer_contact_repository.delete(int(contact_id))
+                if success:
+                    log_delete('customer_contact', contact_id, data=contact)
+                    flash('Контакт успешно удален.', 'success')
+                else:
+                    flash('Ошибка при удалении контакта.', 'danger')
+            else:
+                flash('Контакт не найден.', 'danger')
+            return redirect(url_for('admin.manage_customers'))
+    
+    # Получение списка контактов
+    contacts = customer_contact_repository.get_all(search=search_query if search_query else None)
+    
+    # Получение контакта для редактирования
+    edit_id = request.args.get('edit')
+    edit_contact = None
+    if edit_id:
+        edit_contact = customer_contact_repository.get_by_id(int(edit_id))
+        if edit_contact:
+            form.company_name.data = edit_contact['company_name']
+            form.contact_person.data = edit_contact.get('contact_person', '')
+            form.phone.data = edit_contact.get('phone', '')
+            form.email.data = edit_contact.get('email', '')
+            form.address.data = edit_contact.get('address', '')
+            form.notes.data = edit_contact.get('notes', '')
+    
+    return render_template(
+        'admin/customers.html',
+        **build_context(
+            'admin_customers',
+            'Управление контактами заказчиков',
+            contacts=contacts,
+            form=form,
+            delete_form=delete_form,
+            edit_contact=edit_contact,
+            search_query=search_query
+        )
+    )
     try:
         limit = int(request.args.get('limit', '10'))
         days = int(request.args.get('days', '30'))

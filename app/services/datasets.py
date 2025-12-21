@@ -11,6 +11,8 @@ from uuid import uuid4
 
 from flask import current_app
 
+from app.core.cache import cached_dataset
+
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 CONFIG_DIR = BASE_DIR / 'config'
@@ -31,6 +33,7 @@ def _log_error(message: str):
         logger.error(message)
 
 
+@cached_dataset(maxsize=1)
 def load_gb_materials() -> List[Dict[str, Any]]:
     """Читает аналоги материалов из конфигурационного JSON."""
     materials_path = CONFIG_DIR / 'gb_materials.json'
@@ -54,7 +57,7 @@ def load_gb_materials() -> List[Dict[str, Any]]:
     return []
 
 
-def save_gb_materials(materials: List[Dict[str, Any]], *, actor: Optional[str] = None):
+def save_gb_materials(materials: List[Dict[str, Any]], *, actor: Optional[str] = None) -> None:
     """Сохраняет список аналогов материалов обратно в файл."""
     materials_path = CONFIG_DIR / 'gb_materials.json'
     materials_path.parent.mkdir(parents=True, exist_ok=True)
@@ -79,9 +82,12 @@ def save_gb_materials(materials: List[Dict[str, Any]], *, actor: Optional[str] =
 
     with materials_path.open('w', encoding='utf-8') as file:
         json.dump(payload, file, ensure_ascii=False, indent=2)
+    
+    # Инвалидируем кэш после сохранения
+    load_gb_materials.cache_clear()  # type: ignore
 
 
-def refresh_gb_analogs():
+def refresh_gb_analogs() -> None:
     """Перечитывает аналоги материалов в память для быстрого доступа."""
     global GB_ANALOGS
     GB_ANALOGS = load_gb_materials()
@@ -92,6 +98,7 @@ def get_gb_materials() -> List[Dict[str, Any]]:
     return list(GB_ANALOGS)
 
 
+@cached_dataset(maxsize=1)
 def load_duty_rates() -> List[Dict[str, Any]]:
     """Загружает ставки пошлин из JSON и готовит поля для поиска."""
     duty_path = CONFIG_DIR / 'duty_rates.json'
@@ -178,6 +185,7 @@ def _format_percent_display(value: Optional[float]) -> str:
     return f'{formatted}%'
 
 
+@cached_dataset(maxsize=1)
 def load_tnved_catalog() -> List[Dict[str, Any]]:
     """Загружает расширенный каталог ставок пошлин из CSV."""
     catalog_path = _tnved_catalog_path()
@@ -241,7 +249,7 @@ def load_tnved_catalog() -> List[Dict[str, Any]]:
     return items
 
 
-def save_duty_rates(items: List[Dict[str, Any]], *, actor: Optional[str] = None):
+def save_duty_rates(items: List[Dict[str, Any]], *, actor: Optional[str] = None) -> None:
     """Сохраняет изменённый список ставок пошлин в конфигурационный файл."""
     duty_path = CONFIG_DIR / 'duty_rates.json'
     duty_path.parent.mkdir(parents=True, exist_ok=True)
@@ -267,9 +275,12 @@ def save_duty_rates(items: List[Dict[str, Any]], *, actor: Optional[str] = None)
 
     with duty_path.open('w', encoding='utf-8') as file:
         json.dump(payload, file, ensure_ascii=False, indent=2)
+    
+    # Инвалидируем кэш после сохранения
+    load_duty_rates.cache_clear()  # type: ignore
 
 
-def refresh_duty_rates():
+def refresh_duty_rates() -> None:
     """Обновляет кэш ставок пошлин после изменения файлов."""
     global DUTY_RATES
     DUTY_RATES = load_duty_rates()
@@ -280,7 +291,7 @@ def get_duty_rates() -> List[Dict[str, Any]]:
     return list(DUTY_RATES)
 
 
-def refresh_tnved_catalog():
+def refresh_tnved_catalog() -> None:
     """Обновляет кэш расширенного каталога ставок пошлин."""
     global TNVED_CATALOG
     TNVED_CATALOG = load_tnved_catalog()
@@ -353,6 +364,7 @@ def get_duty_catalog() -> List[Dict[str, Any]]:
     return sorted(combined, key=_duty_catalog_sort_key)
 
 
+@cached_dataset(maxsize=1)
 def load_logistics_cities() -> List[Dict[str, Any]]:
     """
     Загружает справочник городов и тарифов логистики.
@@ -400,8 +412,13 @@ def save_logistics_cities(cities: List[Dict[str, Any]], *, actor: Optional[str] 
 
     with logistics_path.open('w', encoding='utf-8') as file:
         json.dump(payload, file, ensure_ascii=False, indent=2)
+    
+    # Инвалидируем кэш после сохранения
+    load_logistics_cities.cache_clear()  # type: ignore
+    load_all_logistics_cities.cache_clear()  # type: ignore
 
 
+@cached_dataset(maxsize=1)
 def load_main_cities() -> List[Dict[str, Any]]:
     """
     Загружает справочник основных городов и городов в радиусе 300км.
@@ -419,7 +436,7 @@ def load_main_cities() -> List[Dict[str, Any]]:
     return []
 
 
-def save_main_cities(cities: List[Dict[str, Any]], *, actor: Optional[str] = None):
+def save_main_cities(cities: List[Dict[str, Any]], *, actor: Optional[str] = None) -> None:
     """Сохраняет справочник основных городов и городов в радиусе 300км."""
     main_cities_path = CONFIG_DIR / 'logistics_main_cities.json'
     main_cities_path.parent.mkdir(parents=True, exist_ok=True)
@@ -447,8 +464,14 @@ def save_main_cities(cities: List[Dict[str, Any]], *, actor: Optional[str] = Non
 
     with main_cities_path.open('w', encoding='utf-8') as file:
         json.dump(payload, file, ensure_ascii=False, indent=2)
+    
+    # Инвалидируем кэш после сохранения
+    load_main_cities.cache_clear()  # type: ignore
+    load_all_logistics_cities.cache_clear()  # type: ignore
+    load_logistics_cities.cache_clear()  # type: ignore
 
 
+@cached_dataset(maxsize=1)
 def load_ekb_rf_cities() -> List[Dict[str, Any]]:
     """
     Загружает справочник городов за пределами 300км (используется алгоритм ЕКБ+РФ).
@@ -465,7 +488,7 @@ def load_ekb_rf_cities() -> List[Dict[str, Any]]:
     return []
 
 
-def save_ekb_rf_cities(cities: List[Dict[str, Any]], *, actor: Optional[str] = None):
+def save_ekb_rf_cities(cities: List[Dict[str, Any]], *, actor: Optional[str] = None) -> None:
     """Сохраняет справочник городов для алгоритма ЕКБ+РФ."""
     ekb_rf_path = CONFIG_DIR / 'logistics_ekb_rf_cities.json'
     ekb_rf_path.parent.mkdir(parents=True, exist_ok=True)
@@ -491,8 +514,14 @@ def save_ekb_rf_cities(cities: List[Dict[str, Any]], *, actor: Optional[str] = N
 
     with ekb_rf_path.open('w', encoding='utf-8') as file:
         json.dump(payload, file, ensure_ascii=False, indent=2)
+    
+    # Инвалидируем кэш после сохранения
+    load_ekb_rf_cities.cache_clear()  # type: ignore
+    load_all_logistics_cities.cache_clear()  # type: ignore
+    load_logistics_cities.cache_clear()  # type: ignore
 
 
+@cached_dataset(maxsize=1)
 def load_trail_cities() -> List[Dict[str, Any]]:
     """Загружает справочник городов для трала."""
     trail_path = CONFIG_DIR / 'logistics_trail_cities.json'
@@ -507,7 +536,7 @@ def load_trail_cities() -> List[Dict[str, Any]]:
     return []
 
 
-def save_trail_cities(cities: List[Dict[str, Any]], *, actor: Optional[str] = None):
+def save_trail_cities(cities: List[Dict[str, Any]], *, actor: Optional[str] = None) -> None:
     """Сохраняет справочник городов для трала."""
     trail_path = CONFIG_DIR / 'logistics_trail_cities.json'
     trail_path.parent.mkdir(parents=True, exist_ok=True)
@@ -533,8 +562,14 @@ def save_trail_cities(cities: List[Dict[str, Any]], *, actor: Optional[str] = No
 
     with trail_path.open('w', encoding='utf-8') as file:
         json.dump(payload, file, ensure_ascii=False, indent=2)
+    
+    # Инвалидируем кэш после сохранения
+    load_trail_cities.cache_clear()  # type: ignore
+    load_all_logistics_cities.cache_clear()  # type: ignore
+    load_logistics_cities.cache_clear()  # type: ignore
 
 
+@cached_dataset(maxsize=1)
 def load_all_logistics_cities() -> List[Dict[str, Any]]:
     """
     Объединяет все три справочника логистики в один список для обратной совместимости.
@@ -645,6 +680,7 @@ def update_city_distance(city_name: str, distance_km: int, actor: Optional[str] 
     return False
 
 
+@cached_dataset(maxsize=1)
 def load_orders_documents() -> List[Dict[str, Any]]:
     """Читает список распоряжений и нормализует структуру файлов."""
     orders_path = CONFIG_DIR / 'orders_documents.json'
@@ -699,6 +735,7 @@ def get_orders_documents() -> List[Dict[str, Any]]:
     return list(ORDERS_REGISTRY)
 
 
+@cached_dataset(maxsize=1)
 def load_task_templates() -> List[Dict[str, Any]]:
     """Читает список шаблонов задач из конфигурационного файла."""
     templates_path = CONFIG_DIR / 'task_templates.json'
@@ -752,6 +789,7 @@ def get_task_templates() -> List[Dict[str, Any]]:
     return list(TASK_TEMPLATES)
 
 
+@cached_dataset(maxsize=1)
 def load_task_instructions() -> List[Dict[str, Any]]:
     """Читает список инструкций из конфигурационного файла."""
     instructions_path = CONFIG_DIR / 'instructions_tasks.json'
@@ -869,6 +907,8 @@ def save_orders_documents(orders: List[Dict[str, Any]], *, actor: Optional[str] 
         json.dump(payload, file, ensure_ascii=False, indent=2)
 
     refresh_orders_documents()
+    # Инвалидируем кэш после сохранения
+    load_orders_documents.cache_clear()  # type: ignore
 
 
 def save_task_templates(templates: List[Dict[str, Any]], *, actor: Optional[str] = None):
@@ -882,6 +922,8 @@ def save_task_templates(templates: List[Dict[str, Any]], *, actor: Optional[str]
         json.dump(payload, file, ensure_ascii=False, indent=2)
 
     refresh_task_templates()
+    # Инвалидируем кэш после сохранения
+    load_task_templates.cache_clear()  # type: ignore
 
 
 def save_task_instructions(instructions: List[Dict[str, Any]], *, actor: Optional[str] = None):
@@ -895,6 +937,8 @@ def save_task_instructions(instructions: List[Dict[str, Any]], *, actor: Optiona
         json.dump(payload, file, ensure_ascii=False, indent=2)
 
     refresh_task_instructions()
+    # Инвалидируем кэш после сохранения
+    load_task_instructions.cache_clear()  # type: ignore
 
 
 def save_with_version(collection: str, data: Dict[str, Any], *, actor: Optional[str] = None):

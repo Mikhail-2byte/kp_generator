@@ -66,3 +66,60 @@ def test_calculate_legacy_single_position():
     assert math.isclose(result['general_price'], result['final_price'] * 4, rel_tol=1e-6)
     assert result['margin'] == 25
 
+
+def test_calculate_position_costs():
+    """Тест расчета затрат для позиции."""
+    calculator = MultiPositionCalculator({
+        'calculation_constants': {
+            'conversion_rate': 12,
+            'logistics_cnr_ratio': 0.3,
+            'logistics_rf_ratio': 0.7,
+            'conversion_fee_rate': 0.032,
+            'credit_rate': 0.16,
+        }
+    })
+    
+    position = {
+        'quantity': 10,
+        'cost_price': 1000,
+        'weight': 5,
+        'duty_percent': 5
+    }
+    
+    costs = calculator.calculate_position_costs(position, 50000, 30, 50)
+    
+    assert 'cost_per_unit' in costs
+    assert 'total_cost' in costs
+    assert 'logistics_cnr_per_unit' in costs
+    assert 'logistics_rf_per_unit' in costs
+    assert 'duty_per_unit' in costs
+    assert costs['total_cost'] == costs['cost_per_unit'] * position['quantity']
+
+
+def test_calculate_multi_position_empty_list():
+    """Тест расчета для пустого списка позиций."""
+    calculator = MultiPositionCalculator()
+    
+    result = calculator.calculate_multi_position_prices([], 50000, 30, 30)
+    
+    assert result['positions'] == []
+    assert result['total_costs'] == 0
+    assert result['total_revenue'] == 0
+    assert result['actual_margin'] == 0
+
+
+def test_calculate_multi_position_zero_weight():
+    """Тест расчета с нулевым весом."""
+    calculator = MultiPositionCalculator()
+    
+    positions = [{
+        'quantity': 10,
+        'cost_price': 1000,
+        'weight': 0,
+        'duty_percent': 5
+    }]
+    
+    # Должен обработать нулевой вес без ошибок
+    result = calculator.calculate_multi_position_prices(positions, 50000, 30, 30)
+    
+    assert len(result['positions']) == 1

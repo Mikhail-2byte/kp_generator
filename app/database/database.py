@@ -386,7 +386,13 @@ def get_generation_history(config, *, page: int = 1, per_page: Optional[int] = N
                     GenerationHistoryRecord.id.label('id'),
                     tender_key_expr.label('tender_key'),
                     func.row_number()
-                    .over(partition_by=tender_key_expr, order_by=GenerationHistoryRecord.timestamp.desc())
+                    .over(
+                        partition_by=tender_key_expr,
+                        order_by=(
+                            GenerationHistoryRecord.timestamp.desc(),
+                            GenerationHistoryRecord.id.desc(),
+                        ),
+                    )
                     .label('row_number'),
                     func.count()
                     .over(partition_by=tender_key_expr)
@@ -396,11 +402,21 @@ def get_generation_history(config, *, page: int = 1, per_page: Optional[int] = N
             ).subquery()
 
             records_query = (
-                session.query(GenerationHistoryRecord, window_subquery.c.tender_key, window_subquery.c.version_count)
+                session.query(
+                    GenerationHistoryRecord,
+                    window_subquery.c.tender_key,
+                    window_subquery.c.version_count,
+                )
                 .options(joinedload(GenerationHistoryRecord.user))
                 .join(window_subquery, GenerationHistoryRecord.id == window_subquery.c.id)
                 .filter(window_subquery.c.row_number == 1)
-                .order_by(GenerationHistoryRecord.timestamp.desc())
+                # Для детерминированного порядка добавляем сортировку по id,
+                # чтобы при одинаковом timestamp последняя созданная запись
+                # (с максимальным id) шла первой.
+                .order_by(
+                    GenerationHistoryRecord.timestamp.desc(),
+                    GenerationHistoryRecord.id.desc(),
+                )
                 .offset(offset)
                 .limit(limit)
             )
@@ -741,7 +757,14 @@ def create_user(
             session.flush()
             return user.id
     except IntegrityError:
-        logging.error('User with username %s already exists', username)
+        # Пользователь с таким логином уже существует.
+        # Для идемпотентности возвращаем его идентификатор, чтобы верхний уровень
+        # мог решить, считать это ошибкой или использовать существующего пользователя.
+        logging.warning('User with username %s already exists, returning existing user_id', username)
+        existing_user = get_user_by_username(username)
+        if existing_user:
+            # get_user_by_username возвращает кортеж, где [0] — ID пользователя
+            return existing_user[0]
         return None
     except Exception as exc:
         logging.error('Error creating user: %s', exc)

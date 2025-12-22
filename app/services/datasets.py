@@ -121,11 +121,20 @@ def load_duty_rates() -> List[Dict[str, Any]]:
 
 
 def _tnved_catalog_path() -> Optional[Path]:
-    """Определяет путь к CSV каталогу ТН ВЭД."""
+    """Определяет путь к CSV каталогу ТН ВЭД.
+
+    Предпочтительно используем файл из статических ресурсов проекта,
+    если он присутствует, чтобы не требовать ручного копирования в корень.
+    """
     data_dir = BASE_DIR / 'data'
+    static_dir = BASE_DIR / 'static'
     candidates = [
+        # Основные, “официальные” пути
         data_dir / 'tnved_catalog.csv',
         CONFIG_DIR / 'tnved_catalog.csv',
+        # Файл, который обычно лежит в репозитории (static/)
+        static_dir / 'ТН-ВЭД-ТД-для-менеджеров-с-ключевыми-словами.csv',
+        # Исторический путь в корне проекта
         BASE_DIR / 'ТН-ВЭД-ТД-для-менеджеров-с-ключевыми-словами.csv',
     ]
 
@@ -133,19 +142,15 @@ def _tnved_catalog_path() -> Optional[Path]:
         if candidate.exists():
             return candidate
 
+    # На всякий случай пытаемся найти файл по маске, включая подкаталоги static/
     try:
-        match = next(
-            (
-                path
-                for path in BASE_DIR.glob('*ТН*ВЭД*csv')
-                if path.is_file()
-            ),
-            None,
-        )
+        for path in BASE_DIR.rglob('*ТН*ВЭД*csv'):
+            if path.is_file():
+                return path
     except OSError:
-        match = None
+        return None
 
-    return match
+    return None
 
 
 def _split_keywords(raw_text: str) -> List[str]:
@@ -580,13 +585,17 @@ def load_all_logistics_cities() -> List[Dict[str, Any]]:
     # Основные города
     main_cities = load_main_cities()
     for city in main_cities:
+        # Проверяем наличие трала в исходных данных
+        allows_trail = city.get('allows_trail', False)
+        trail_price = city.get('trail_price')
+        
         all_cities.append({
             'name': city.get('name', ''),
             'region': city.get('region', ''),
             'truck_price': city.get('truck_price', 0),
-            'trail_price': None,
+            'trail_price': trail_price,
             'is_main_route': city.get('is_main_route', False),
-            'allows_trail': False,
+            'allows_trail': allows_trail,
             'distance_from_ekb_km': None,
             **({'main_city': city['main_city']} if 'main_city' in city else {})
         })

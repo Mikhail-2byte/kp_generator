@@ -221,8 +221,12 @@ def calculate_ekb_plus_rf_route(
     # Формируем формулу для отображения
     if len(truck_details) == 1:
         ekb_formula = truck_details[0]['formula']
+        # Для одной фуры используем её тариф
+        ekb_tariff_per_1000km = truck_details[0]['tariff_per_1000km']
     else:
         ekb_formula = ' + '.join([f'Фура {td["truck_number"]}: {td["formula"]}' for td in truck_details])
+        # Для нескольких фур используем тариф для общего веса груза
+        ekb_tariff_per_1000km = get_rf_tariff_per_1000km(weight_kg)
     
     return {
         'basis': 'weight',
@@ -238,6 +242,7 @@ def calculate_ekb_plus_rf_route(
             'ekb_to_destination': {
                 'price': ekb_to_destination_price,
                 'distance_km': distance_km_int,
+                'tariff_per_1000km': ekb_tariff_per_1000km,
                 'trucks': truck_details,
                 'formula': ekb_formula,
             }

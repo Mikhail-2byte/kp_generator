@@ -416,7 +416,8 @@ class CustomerContactRepository:
         with _session_scope() as session:
             query = session.query(CustomerContactRecord)
             if search:
-                search_term = f'%{search.lower()}%'
+                # ilike уже case-insensitive, но для SQLite может потребоваться явное приведение
+                search_term = f'%{search}%'
                 query = query.filter(
                     or_(
                         CustomerContactRecord.company_name.ilike(search_term),

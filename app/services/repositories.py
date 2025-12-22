@@ -103,9 +103,39 @@ class GenerationRepository:
         """Сохраняет расчёт генерации с привязкой к пользователю."""
         return self._db.save_generation_history(payload, final_price, config, int(user_id) if user_id is not None else None, total_general_price)
 
-    def get_history(self, config: Dict[str, Any], *, page: int = 1, per_page: Optional[int] = None, date_from: Optional[str] = None, date_to: Optional[str] = None):
-        """Возвращает историю генераций с пагинацией."""
-        return self._db.get_generation_history(config, page=page, per_page=per_page, date_from=date_from, date_to=date_to)
+    def get_history(
+        self,
+        config: Dict[str, Any],
+        *,
+        page: int = 1,
+        per_page: Optional[int] = None,
+        date_from: Optional[str] = None,
+        date_to: Optional[str] = None,
+        price_from: Optional[float] = None,
+        price_to: Optional[float] = None,
+        margin_from: Optional[float] = None,
+        margin_to: Optional[float] = None,
+        companies: Optional[List[str]] = None,
+        search: Optional[str] = None,
+        sort_by: Optional[str] = None,
+        sort_order: Optional[str] = None,
+    ):
+        """Возвращает историю генераций с пагинацией, серверной фильтрацией и сортировкой."""
+        return self._db.get_generation_history(
+            config,
+            page=page,
+            per_page=per_page,
+            date_from=date_from,
+            date_to=date_to,
+            price_from=price_from,
+            price_to=price_to,
+            margin_from=margin_from,
+            margin_to=margin_to,
+            companies=companies,
+            search=search,
+            sort_by=sort_by,
+            sort_order=sort_order,
+        )
 
     def get_details(self, record_id: int):
         """Загружает подробности конкретной генерации по идентификатору."""

@@ -18,5 +18,77 @@
             <a class="btn btn-secondary" href="{{ url_for('admin.manage_settings') }}">Настройки системы</a>
         </div>
     </div>
+
+    {% if datasets_health %}
+    <div class="card mt-3">
+        <h3 class="section-title">Состояние справочников</h3>
+        <p class="section-description">
+            Краткая проверка JSON/CSV-справочников. Статусы основаны на тех же правилах, что и CLI-валидатор.
+        </p>
+        <div class="table-responsive">
+            <table class="table table-hover table-sm align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th style="width: 35%;">Справочник</th>
+                        <th style="width: 15%;">Статус</th>
+                        <th style="width: 10%;" class="text-end">Записей</th>
+                        <th style="width: 40%;">Пояснение</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in datasets_health %}
+                    <tr
+                        {% if item.status == 'ok' %}
+                            class="table-success-subtle"
+                        {% elif item.status == 'warning' %}
+                            class="table-warning-subtle"
+                        {% else %}
+                            class="table-danger-subtle"
+                        {% endif %}
+                    >
+                        <td>
+                            <div class="fw-semibold">{{ item.label or item.name }}</div>
+                            <div class="text-muted small">
+                                {% if item.name == 'duty_catalog_combined' %}
+                                    Объединённый каталог ручных ставок и ТН ВЭД.
+                                {% elif item.name == 'logistics_cities_combined' %}
+                                    Объединённый список городов (основные, ЕКБ+РФ, трал).
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if item.status == 'ok' %}
+                                <span class="badge bg-success">Все в порядке</span>
+                            {% elif item.status == 'warning' %}
+                                <span class="badge bg-warning text-dark">Есть замечания</span>
+                            {% else %}
+                                <span class="badge bg-danger">Требует внимания</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <span class="fw-semibold">{{ item.records }}</span>
+                        </td>
+                        <td>
+                            {% if item.issues %}
+                                {% set first_issue = item.issues[0] %}
+                                <div class="small">
+                                    {{ first_issue }}
+                                    {% if item.issues|length > 1 %}
+                                        <span class="text-muted">
+                                            (и ещё {{ item.issues|length - 1 }})
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            {% else %}
+                                <span class="text-muted small">Проблем не обнаружено.</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

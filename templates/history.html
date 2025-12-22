@@ -26,6 +26,16 @@
                 <span id="activeFiltersBadge" class="filter-badge" style="display:none;">0</span>
             </button>
             <button id="clearSearch" class="btn btn-outline" style="display:none;">Очистить поиск</button>
+            <div class="export-controls" style="margin-left: auto; display: flex; gap: 8px;">
+                <button id="exportExcel" class="btn btn-outline" title="Экспорт в Excel">
+                    <span>{{ sidebar_icon('download')|safe }}</span>
+                    <span>Excel</span>
+                </button>
+                <button id="exportCsv" class="btn btn-outline" title="Экспорт в CSV">
+                    <span>{{ sidebar_icon('download')|safe }}</span>
+                    <span>CSV</span>
+                </button>
+            </div>
         </div>
 
         {% if history_groups %}
@@ -33,14 +43,35 @@
             <table class="data-table" id="historyTable">
                 <thead>
                     <tr>
-                        <th>Дата и время</th>
-                        <th>Номер тендера</th>
+                        <th class="sortable" data-sort="timestamp">
+                            Дата и время
+                            <span class="sort-indicator"></span>
+                        </th>
+                        <th class="sortable" data-sort="tender_number">
+                            Номер тендера
+                            <span class="sort-indicator"></span>
+                        </th>
                         <th>Позиций</th>
-                        <th>Продажа</th>
-                        <th>Закуп</th>
-                        <th>Вес, кг</th>
-                        <th class="col-duty">Средняя пошлина, %</th>
-                        <th>Маржа, %</th>
+                        <th class="sortable" data-sort="price_sale">
+                            Продажа
+                            <span class="sort-indicator"></span>
+                        </th>
+                        <th class="sortable" data-sort="price_purchase">
+                            Закуп
+                            <span class="sort-indicator"></span>
+                        </th>
+                        <th class="sortable" data-sort="weight">
+                            Вес, кг
+                            <span class="sort-indicator"></span>
+                        </th>
+                        <th class="col-duty sortable" data-sort="duty_percent">
+                            Средняя пошлина, %
+                            <span class="sort-indicator"></span>
+                        </th>
+                        <th class="sortable" data-sort="margin_percent">
+                            Маржа, %
+                            <span class="sort-indicator"></span>
+                        </th>
                         <th>Менеджер</th>
                         <th>Действия</th>
                     </tr>
@@ -139,12 +170,16 @@
             </div>
             <div class="pagination-buttons">
                 {% if pagination.has_prev %}
-                <a class="btn btn-outline" href="{{ url_for('main.history', page=pagination.page - 1) }}">Предыдущая</a>
+                {% set prev_params = request.args.copy() %}
+                {% set _ = prev_params.update({'page': pagination.page - 1}) %}
+                <a class="btn btn-outline" href="{{ url_for('main.history', **prev_params) }}">Предыдущая</a>
                 {% else %}
                 <button class="btn btn-outline" disabled>Предыдущая</button>
                 {% endif %}
                 {% if pagination.has_next %}
-                <a class="btn btn-outline" href="{{ url_for('main.history', page=pagination.page + 1) }}">Следующая</a>
+                {% set next_params = request.args.copy() %}
+                {% set _ = next_params.update({'page': pagination.page + 1}) %}
+                <a class="btn btn-outline" href="{{ url_for('main.history', **next_params) }}">Следующая</a>
                 {% else %}
                 <button class="btn btn-outline" disabled>Следующая</button>
                 {% endif %}
@@ -436,6 +471,34 @@
     .tender-number {
         font-size: 0.85rem;
         color: #6b7280;
+    }
+
+    /* Стили для сортируемых заголовков */
+    th.sortable {
+        cursor: pointer;
+        user-select: none;
+        position: relative;
+        padding-right: 24px;
+    }
+
+    th.sortable:hover {
+        background-color: rgba(95, 107, 122, 0.05);
+    }
+
+    th.sortable .sort-indicator {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 0.75rem;
+        color: #5f6b7a;
+        opacity: 0.5;
+    }
+
+    th.sortable.sorted .sort-indicator {
+        opacity: 1;
+        color: #1f2a44;
+        font-weight: 600;
     }
 
     .filter-badge {
@@ -1423,8 +1486,7 @@
                         selectedCompanies.delete(company);
                     }
                     updateCompanyFilterText();
-                    filterHistory();
-                    updateURLParams();
+                    updateFiltersUI();
                     
                     // Обновляем визуальное состояние
                     const label = e.target.closest('.multiselect-item');
@@ -1452,47 +1514,122 @@
             }
         };
 
-        // Обновление URL параметров
-        const updateURLParams = () => {
+        // Обновление URL параметров и перезагрузка страницы
+        const applyFilters = () => {
             const params = new URLSearchParams(window.location.search);
             
-            if (dateFrom.value) {
+            // Удаляем параметр page при изменении фильтров (возвращаемся на первую страницу)
+            params.delete('page');
+            
+            // Параметр поиска
+            const searchQuery = (searchInput?.value || '').trim();
+            if (searchQuery) {
+                params.set('search', searchQuery);
+            } else {
+                params.delete('search');
+                params.delete('q'); // Удаляем старый параметр q если есть
+            }
+            
+            // Фильтры по датам
+            if (dateFrom?.value) {
                 params.set('date_from', dateFrom.value);
             } else {
                 params.delete('date_from');
             }
 
-            if (dateTo.value) {
+            if (dateTo?.value) {
                 params.set('date_to', dateTo.value);
             } else {
                 params.delete('date_to');
             }
 
-            if (priceFrom.value) {
+            // Фильтры по цене
+            if (priceFrom?.value) {
                 params.set('price_from', priceFrom.value);
             } else {
                 params.delete('price_from');
             }
 
-            if (priceTo.value) {
+            if (priceTo?.value) {
                 params.set('price_to', priceTo.value);
             } else {
                 params.delete('price_to');
             }
 
-            if (marginFrom.value) {
+            // Фильтры по марже
+            if (marginFrom?.value) {
                 params.set('margin_from', marginFrom.value);
             } else {
                 params.delete('margin_from');
             }
 
-            if (marginTo.value) {
+            if (marginTo?.value) {
                 params.set('margin_to', marginTo.value);
             } else {
                 params.delete('margin_to');
             }
 
-            if (selectedCompanies.size > 0) {
+            // Фильтр по компаниям
+            if (selectedCompanies && selectedCompanies.size > 0) {
+                params.set('companies', Array.from(selectedCompanies).join(','));
+            } else {
+                params.delete('companies');
+            }
+
+            // Перезагружаем страницу с новыми параметрами
+            const newURL = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+            window.location.href = newURL;
+        };
+
+        // Обновление URL без перезагрузки (для обновления счетчика)
+        const updateURLParams = () => {
+            const params = new URLSearchParams(window.location.search);
+            
+            const searchQuery = (searchInput?.value || '').trim();
+            if (searchQuery) {
+                params.set('search', searchQuery);
+            } else {
+                params.delete('search');
+                params.delete('q');
+            }
+            
+            if (dateFrom?.value) {
+                params.set('date_from', dateFrom.value);
+            } else {
+                params.delete('date_from');
+            }
+
+            if (dateTo?.value) {
+                params.set('date_to', dateTo.value);
+            } else {
+                params.delete('date_to');
+            }
+
+            if (priceFrom?.value) {
+                params.set('price_from', priceFrom.value);
+            } else {
+                params.delete('price_from');
+            }
+
+            if (priceTo?.value) {
+                params.set('price_to', priceTo.value);
+            } else {
+                params.delete('price_to');
+            }
+
+            if (marginFrom?.value) {
+                params.set('margin_from', marginFrom.value);
+            } else {
+                params.delete('margin_from');
+            }
+
+            if (marginTo?.value) {
+                params.set('margin_to', marginTo.value);
+            } else {
+                params.delete('margin_to');
+            }
+
+            if (selectedCompanies && selectedCompanies.size > 0) {
                 params.set('companies', Array.from(selectedCompanies).join(','));
             } else {
                 params.delete('companies');
@@ -1516,23 +1653,30 @@
             const marginFromParam = params.get('margin_from');
             const marginToParam = params.get('margin_to');
             const companiesParam = params.get('companies');
+            const searchParam = params.get('search') || params.get('q'); // Поддержка старого параметра q
 
-            if (dateFromParam) {
+            // Восстанавливаем поиск
+            if (searchParam && searchInput) {
+                searchInput.value = searchParam;
+            }
+
+            // Восстанавливаем фильтры
+            if (dateFromParam && dateFrom) {
                 dateFrom.value = dateFromParam;
             }
-            if (dateToParam) {
+            if (dateToParam && dateTo) {
                 dateTo.value = dateToParam;
             }
-            if (priceFromParam) {
+            if (priceFromParam && priceFrom) {
                 priceFrom.value = priceFromParam;
             }
-            if (priceToParam) {
+            if (priceToParam && priceTo) {
                 priceTo.value = priceToParam;
             }
-            if (marginFromParam) {
+            if (marginFromParam && marginFrom) {
                 marginFrom.value = marginFromParam;
             }
-            if (marginToParam) {
+            if (marginToParam && marginTo) {
                 marginTo.value = marginToParam;
             }
             if (companiesParam) {
@@ -1541,144 +1685,83 @@
             }
 
             // Показываем кнопки очистки, если есть значения
-            if (dateFrom.value || dateTo.value) {
-                clearDateFilter.style.display = 'inline-flex';
+            if (dateFrom && (dateFrom.value || dateTo?.value)) {
+                if (clearDateFilter) clearDateFilter.style.display = 'inline-flex';
             }
-            if (priceFrom.value || priceTo.value) {
-                clearPriceFilter.style.display = 'inline-flex';
+            if (priceFrom && (priceFrom.value || priceTo?.value)) {
+                if (clearPriceFilter) clearPriceFilter.style.display = 'inline-flex';
             }
-            if (marginFrom.value || marginTo.value) {
-                clearMarginFilter.style.display = 'inline-flex';
+            if (marginFrom && (marginFrom.value || marginTo?.value)) {
+                if (clearMarginFilter) clearMarginFilter.style.display = 'inline-flex';
             }
-            if (selectedCompanies.size > 0) {
-                clearCompanyFilter.style.display = 'inline-flex';
+            if (selectedCompanies && selectedCompanies.size > 0) {
+                if (clearCompanyFilter) clearCompanyFilter.style.display = 'inline-flex';
             }
             
             // Обновляем счетчик активных фильтров
             updateActiveFiltersBadge();
         };
 
-        const filterHistory = () => {
-            const query = (searchInput.value || '').trim().toLowerCase();
-            const filter = filterSelect.value || 'all';
-            let visible = 0;
-
-            groupRows.forEach((row) => {
-                const usernameAttr = (row.getAttribute('data-username') || '').toLowerCase();
-                let matches = false;
-                
-                // Сначала проверяем фильтр по датам
-                if (!filterByDateRange(row)) {
-                    row.style.display = 'none';
-                    const detailsRow = table.querySelector(`tr.history-details-row[data-details="${row.dataset.historyGroup}"]`);
-                    if (detailsRow) {
-                        detailsRow.style.display = 'none';
-                    }
-                    return;
+        // Функция для валидации фильтров (без применения)
+        const validateFilters = () => {
+            // Валидация диапазона цен
+            if (priceFrom && priceTo && priceFrom.value && priceTo.value) {
+                const priceFromValue = parseFloat(priceFrom.value);
+                const priceToValue = parseFloat(priceTo.value);
+                if (priceFromValue > priceToValue) {
+                    priceFrom.style.borderColor = 'red';
+                    priceTo.style.borderColor = 'red';
+                    return false;
+                } else {
+                    priceFrom.style.borderColor = '';
+                    priceTo.style.borderColor = '';
                 }
-
-                // Затем проверяем фильтр по ценам
-                if (!filterByPriceRange(row)) {
-                    row.style.display = 'none';
-                    const detailsRow = table.querySelector(`tr.history-details-row[data-details="${row.dataset.historyGroup}"]`);
-                    if (detailsRow) {
-                        detailsRow.style.display = 'none';
-                    }
-                    return;
-                }
-
-                // Затем проверяем фильтр по марже
-                if (!filterByMarginRange(row)) {
-                    row.style.display = 'none';
-                    const detailsRow = table.querySelector(`tr.history-details-row[data-details="${row.dataset.historyGroup}"]`);
-                    if (detailsRow) {
-                        detailsRow.style.display = 'none';
-                    }
-                    return;
-                }
-
-                // Затем проверяем фильтр по компаниям
-                if (!filterByCompanies(row)) {
-                    row.style.display = 'none';
-                    const detailsRow = table.querySelector(`tr.history-details-row[data-details="${row.dataset.historyGroup}"]`);
-                    if (detailsRow) {
-                        detailsRow.style.display = 'none';
-                    }
-                    return;
-                }
-
-                // Проверяем быстрый фильтр "Многопозиционные"
-                if (activeQuickFilter === 'multi-position') {
-                    const positionsCount = parseInt(row.getAttribute('data-positions') || '1');
-                    if (positionsCount <= 1) {
-                        row.style.display = 'none';
-                        const detailsRow = table.querySelector(`tr.history-details-row[data-details="${row.dataset.historyGroup}"]`);
-                        if (detailsRow) {
-                            detailsRow.style.display = 'none';
-                        }
-                        return;
-                    }
-                }
-
-                // Затем проверяем текстовый поиск
-                switch (filter) {
-                    case 'tender':
-                        matches = (row.getAttribute('data-tender') || '').toLowerCase().includes(query);
-                        break;
-                    case 'drawing':
-                        matches = (row.getAttribute('data-drawing') || '').toLowerCase().includes(query);
-                        break;
-                    case 'product':
-                        matches = (row.getAttribute('data-product') || '').toLowerCase().includes(query);
-                        break;
-                    case 'date':
-                        matches = (row.getAttribute('data-date') || '').toLowerCase().includes(query);
-                        break;
-                    case 'user':
-                        matches = usernameAttr.includes(query);
-                        break;
-                    default:
-                        matches =
-                            (row.getAttribute('data-tender') || '').toLowerCase().includes(query) ||
-                            (row.getAttribute('data-drawing') || '').toLowerCase().includes(query) ||
-                            (row.getAttribute('data-product') || '').toLowerCase().includes(query) ||
-                            (row.getAttribute('data-company') || '').toLowerCase().includes(query) ||
-                            (row.getAttribute('data-date') || '').toLowerCase().includes(query) ||
-                            (row.getAttribute('data-manager') || '').toLowerCase().includes(query) ||
-                            usernameAttr.includes(query);
-                }
-
-                row.style.display = matches ? '' : 'none';
-                const detailsRow = table.querySelector(`tr.history-details-row[data-details="${row.dataset.historyGroup}"]`);
-                if (detailsRow) {
-                    detailsRow.style.display = matches ? '' : 'none';
-                }
-
-                if (matches) {
-                    visible += 1;
-                }
-            });
-
-            // Обновляем счетчик и кнопки
-            const hasFilters = query || dateFrom.value || dateTo.value || priceFrom.value || priceTo.value || marginFrom.value || marginTo.value || selectedCompanies.size > 0;
-            if (hasFilters) {
-                clearSearch.style.display = query ? 'inline-flex' : 'none';
-                clearDateFilter.style.display = (dateFrom.value || dateTo.value) ? 'inline-flex' : 'none';
-                clearPriceFilter.style.display = (priceFrom.value || priceTo.value) ? 'inline-flex' : 'none';
-                clearMarginFilter.style.display = (marginFrom.value || marginTo.value) ? 'inline-flex' : 'none';
-                clearCompanyFilter.style.display = selectedCompanies.size > 0 ? 'inline-flex' : 'none';
-                recordsCount.textContent = `Найдено тендеров: ${visible}`;
-            } else {
-                clearSearch.style.display = 'none';
-                clearDateFilter.style.display = 'none';
-                clearPriceFilter.style.display = 'none';
-                clearMarginFilter.style.display = 'none';
-                clearCompanyFilter.style.display = 'none';
-                recordsCount.textContent = `Всего тендеров: ${groupRows.length}`;
             }
 
-            // Обновляем URL
-            updateURLParams();
+            // Валидация диапазона маржи
+            if (marginFrom && marginTo && marginFrom.value && marginTo.value) {
+                const marginFromValue = parseFloat(marginFrom.value);
+                const marginToValue = parseFloat(marginTo.value);
+                if (marginFromValue > marginToValue) {
+                    marginFrom.style.borderColor = 'red';
+                    marginTo.style.borderColor = 'red';
+                    return false;
+                } else {
+                    marginFrom.style.borderColor = '';
+                    marginTo.style.borderColor = '';
+                }
+            }
+
+            return true;
+        };
+
+        // Обновление счетчика активных фильтров и кнопок очистки
+        const updateFiltersUI = () => {
+            const hasFilters = 
+                (searchInput?.value?.trim()) ||
+                (dateFrom?.value) ||
+                (dateTo?.value) ||
+                (priceFrom?.value) ||
+                (priceTo?.value) ||
+                (marginFrom?.value) ||
+                (marginTo?.value) ||
+                (selectedCompanies && selectedCompanies.size > 0);
+
+            if (hasFilters) {
+                if (clearSearch) clearSearch.style.display = (searchInput?.value?.trim()) ? 'inline-flex' : 'none';
+                if (clearDateFilter) clearDateFilter.style.display = ((dateFrom?.value) || (dateTo?.value)) ? 'inline-flex' : 'none';
+                if (clearPriceFilter) clearPriceFilter.style.display = ((priceFrom?.value) || (priceTo?.value)) ? 'inline-flex' : 'none';
+                if (clearMarginFilter) clearMarginFilter.style.display = ((marginFrom?.value) || (marginTo?.value)) ? 'inline-flex' : 'none';
+                if (clearCompanyFilter) clearCompanyFilter.style.display = (selectedCompanies && selectedCompanies.size > 0) ? 'inline-flex' : 'none';
+            } else {
+                if (clearSearch) clearSearch.style.display = 'none';
+                if (clearDateFilter) clearDateFilter.style.display = 'none';
+                if (clearPriceFilter) clearPriceFilter.style.display = 'none';
+                if (clearMarginFilter) clearMarginFilter.style.display = 'none';
+                if (clearCompanyFilter) clearCompanyFilter.style.display = 'none';
+            }
+
+            updateActiveFiltersBadge();
         };
 
         // Подсчет активных фильтров
@@ -1701,126 +1784,107 @@
 
         // Восстанавливаем параметры из URL при загрузке
         restoreURLParams();
+        updateFiltersUI();
 
+        // Обработчик поиска с задержкой (debounce)
+        let searchTimeout = null;
         if (searchInput) {
-            searchInput.addEventListener('input', filterHistory);
+            searchInput.addEventListener('input', () => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    updateFiltersUI();
+                }, 300);
+            });
+            // Применяем фильтры при нажатии Enter
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (validateFilters()) {
+                        applyFilters();
+                    }
+                }
+            });
         }
 
         if (filterSelect) {
-            filterSelect.addEventListener('change', filterHistory);
+            // Фильтр по типу поля больше не используется, так как поиск универсальный
+            // Оставляем для совместимости, но не применяем фильтрацию
         }
 
         if (clearSearch) {
             clearSearch.addEventListener('click', () => {
-                searchInput.value = '';
-                filterHistory();
+                if (searchInput) searchInput.value = '';
+                applyFilters();
             });
         }
 
+        // Для фильтров в модальном окне используем кнопку "Применить"
+        // Обработчики для валидации в реальном времени
         if (dateFrom) {
-            dateFrom.addEventListener('change', filterHistory);
+            dateFrom.addEventListener('change', () => {
+                updateFiltersUI();
+            });
         }
 
         if (dateTo) {
-            dateTo.addEventListener('change', filterHistory);
+            dateTo.addEventListener('change', () => {
+                updateFiltersUI();
+            });
         }
 
         if (clearDateFilter) {
             clearDateFilter.addEventListener('click', () => {
-                dateFrom.value = '';
-                dateTo.value = '';
-                clearDateFilter.style.display = 'none';
-                filterHistory();
+                if (dateFrom) dateFrom.value = '';
+                if (dateTo) dateTo.value = '';
+                applyFilters();
             });
         }
 
         if (priceFrom) {
             priceFrom.addEventListener('input', () => {
-                // Валидация при вводе
-                const priceFromValue = priceFrom.value ? parseFloat(priceFrom.value) : null;
-                const priceToValue = priceTo.value ? parseFloat(priceTo.value) : null;
-                
-                if (priceFromValue !== null && priceToValue !== null && priceFromValue > priceToValue) {
-                    priceFrom.style.borderColor = 'red';
-                    priceTo.style.borderColor = 'red';
-                } else {
-                    priceFrom.style.borderColor = '';
-                    priceTo.style.borderColor = '';
-                }
-                filterHistory();
+                validateFilters();
+                updateFiltersUI();
             });
         }
 
         if (priceTo) {
             priceTo.addEventListener('input', () => {
-                // Валидация при вводе
-                const priceFromValue = priceFrom.value ? parseFloat(priceFrom.value) : null;
-                const priceToValue = priceTo.value ? parseFloat(priceTo.value) : null;
-                
-                if (priceFromValue !== null && priceToValue !== null && priceFromValue > priceToValue) {
-                    priceFrom.style.borderColor = 'red';
-                    priceTo.style.borderColor = 'red';
-                } else {
-                    priceFrom.style.borderColor = '';
-                    priceTo.style.borderColor = '';
-                }
-                filterHistory();
+                validateFilters();
+                updateFiltersUI();
             });
         }
 
         if (clearPriceFilter) {
             clearPriceFilter.addEventListener('click', () => {
-                priceFrom.value = '';
-                priceTo.value = '';
-                priceFrom.style.borderColor = '';
-                priceTo.style.borderColor = '';
-                clearPriceFilter.style.display = 'none';
-                filterHistory();
+                if (priceFrom) priceFrom.value = '';
+                if (priceTo) priceTo.value = '';
+                if (priceFrom) priceFrom.style.borderColor = '';
+                if (priceTo) priceTo.style.borderColor = '';
+                applyFilters();
             });
         }
 
         if (marginFrom) {
             marginFrom.addEventListener('input', () => {
-                // Валидация при вводе
-                const marginFromValue = marginFrom.value ? parseFloat(marginFrom.value) : null;
-                const marginToValue = marginTo.value ? parseFloat(marginTo.value) : null;
-                
-                if (marginFromValue !== null && marginToValue !== null && marginFromValue > marginToValue) {
-                    marginFrom.style.borderColor = 'red';
-                    marginTo.style.borderColor = 'red';
-                } else {
-                    marginFrom.style.borderColor = '';
-                    marginTo.style.borderColor = '';
-                }
-                filterHistory();
+                validateFilters();
+                updateFiltersUI();
             });
         }
 
         if (marginTo) {
             marginTo.addEventListener('input', () => {
-                // Валидация при вводе
-                const marginFromValue = marginFrom.value ? parseFloat(marginFrom.value) : null;
-                const marginToValue = marginTo.value ? parseFloat(marginTo.value) : null;
-                
-                if (marginFromValue !== null && marginToValue !== null && marginFromValue > marginToValue) {
-                    marginFrom.style.borderColor = 'red';
-                    marginTo.style.borderColor = 'red';
-                } else {
-                    marginFrom.style.borderColor = '';
-                    marginTo.style.borderColor = '';
-                }
-                filterHistory();
+                validateFilters();
+                updateFiltersUI();
             });
         }
 
         if (clearMarginFilter) {
             clearMarginFilter.addEventListener('click', () => {
-                marginFrom.value = '';
-                marginTo.value = '';
-                marginFrom.style.borderColor = '';
-                marginTo.style.borderColor = '';
-                clearMarginFilter.style.display = 'none';
-                filterHistory();
+                if (marginFrom) marginFrom.value = '';
+                if (marginTo) marginTo.value = '';
+                if (marginFrom) marginFrom.style.borderColor = '';
+                if (marginTo) marginTo.style.borderColor = '';
+                applyFilters();
             });
         }
 
@@ -1863,8 +1927,7 @@
                 filteredCompanies.forEach(company => selectedCompanies.add(company));
                 renderCompanyList(query);
                 updateCompanyFilterText();
-                filterHistory();
-                updateURLParams();
+                updateFiltersUI();
             });
         }
 
@@ -1877,8 +1940,7 @@
                 filteredCompanies.forEach(company => selectedCompanies.delete(company));
                 renderCompanyList(query);
                 updateCompanyFilterText();
-                filterHistory();
-                updateURLParams();
+                updateFiltersUI();
             });
         }
 
@@ -1888,9 +1950,7 @@
                 updateCompanyFilterText();
                 if (companySearch) companySearch.value = '';
                 renderCompanyList();
-                clearCompanyFilter.style.display = 'none';
-                filterHistory();
-                updateURLParams();
+                applyFilters();
             });
         }
 
@@ -1953,17 +2013,8 @@
             if (companySearch) companySearch.value = '';
             renderCompanyList();
             
-            // Применяем фильтры
-            filterHistory();
-            
-            // Обновляем активное состояние кнопок
-            document.querySelectorAll('.quick-filter-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            const activeBtn = document.querySelector(`.quick-filter-btn[data-filter="${filterType}"]`);
-            if (activeBtn) {
-                activeBtn.classList.add('active');
-            }
+            // Применяем фильтры (перезагружаем страницу)
+            applyFilters();
         };
 
         // Обработчики быстрых фильтров
@@ -2011,8 +2062,97 @@
                 // Сбрасываем активный быстрый фильтр
                 activeQuickFilter = null;
                 
+                // Применяем фильтры (перезагружаем страницу)
+                applyFilters();
+            });
+        }
+
+        // Обработчик кнопки "Применить" в модальном окне фильтров
+        const applyFiltersBtn = document.querySelector('[data-close-modal="filtersModal"]');
+        if (applyFiltersBtn) {
+            applyFiltersBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                // Закрываем модальное окно
+                const modal = document.getElementById('filtersModal');
+                if (modal) {
+                    modal.setAttribute('aria-hidden', 'true');
+                    modal.style.display = 'none';
+                }
                 // Применяем фильтры
-                filterHistory();
+                if (validateFilters()) {
+                    applyFilters();
+                }
+            });
+        }
+
+        // Инициализация сортировки
+        const initSorting = () => {
+            const sortableHeaders = document.querySelectorAll('th.sortable');
+            const currentSortBy = new URLSearchParams(window.location.search).get('sort_by');
+            const currentSortOrder = new URLSearchParams(window.location.search).get('sort_order') || 'desc';
+
+            // Визуально отмечаем текущую сортировку
+            sortableHeaders.forEach(header => {
+                const sortField = header.getAttribute('data-sort');
+                const indicator = header.querySelector('.sort-indicator');
+                
+                if (sortField === currentSortBy && indicator) {
+                    header.classList.add('sorted', currentSortOrder);
+                    // Устанавливаем текст индикатора
+                    indicator.textContent = currentSortOrder === 'asc' ? '↑' : '↓';
+                }
+            });
+
+            // Обработчики кликов на заголовки
+            sortableHeaders.forEach(header => {
+                header.style.cursor = 'pointer';
+                header.addEventListener('click', () => {
+                    const sortField = header.getAttribute('data-sort');
+                    if (!sortField) return;
+
+                    const params = new URLSearchParams(window.location.search);
+                    const currentSort = params.get('sort_by');
+                    let newSortOrder = 'desc';
+
+                    // Если кликнули по той же колонке, меняем порядок сортировки
+                    if (currentSort === sortField) {
+                        const currentOrder = params.get('sort_order') || 'desc';
+                        newSortOrder = currentOrder === 'desc' ? 'asc' : 'desc';
+                    }
+
+                    params.set('sort_by', sortField);
+                    params.set('sort_order', newSortOrder);
+                    // Сбрасываем страницу при изменении сортировки
+                    params.delete('page');
+
+                    // Перезагружаем страницу с новыми параметрами
+                    window.location.href = window.location.pathname + '?' + params.toString();
+                });
+            });
+        };
+
+        // Инициализируем сортировку при загрузке
+        initSorting();
+
+        // Обработчики экспорта
+        const exportExcelBtn = document.getElementById('exportExcel');
+        const exportCsvBtn = document.getElementById('exportCsv');
+
+        const buildExportUrl = (format) => {
+            const params = new URLSearchParams(window.location.search);
+            params.set('format', format);
+            return `/history/export?${params.toString()}`;
+        };
+
+        if (exportExcelBtn) {
+            exportExcelBtn.addEventListener('click', () => {
+                window.location.href = buildExportUrl('excel');
+            });
+        }
+
+        if (exportCsvBtn) {
+            exportCsvBtn.addEventListener('click', () => {
+                window.location.href = buildExportUrl('csv');
             });
         }
 

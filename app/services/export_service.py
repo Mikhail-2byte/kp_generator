@@ -190,3 +190,176 @@ def create_pdf_response(buffer: BytesIO, filename: Optional[str] = None) -> Resp
         headers={'Content-Disposition': f'attachment; filename="{filename}"'}
     )
 
+
+def export_generation_history_to_excel(history_data: Dict[str, Any]) -> BytesIO:
+    """
+    Экспортирует историю генераций в Excel.
+
+    Args:
+        history_data: Словарь с данными истории (из GenerationRepository.get_history)
+
+    Returns:
+        BytesIO буфер с Excel файлом
+    """
+    if not OPENPYXL_AVAILABLE:
+        raise RuntimeError('openpyxl не установлен. Установите: pip install openpyxl')
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'История генераций'
+
+    # Заголовки
+    headers = [
+        'ID',
+        'Дата и время',
+        'Номер тендера',
+        'Компания',
+        'Товар',
+        'Позиций',
+        'Цена продажи',
+        'Цена закупки',
+        'Вес, кг',
+        'Пошлина, %',
+        'Маржа, %',
+        'Номер чертежа',
+        'Менеджер',
+        'Версий',
+    ]
+    ws.append(headers)
+
+    # Стили для заголовков
+    header_fill = PatternFill(start_color='366092', end_color='366092', fill_type='solid')
+    header_font = Font(bold=True, color='FFFFFF')
+
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+
+    # Данные
+    for item in history_data.get('items', []):
+        # Формируем имя менеджера
+        manager_name = ''
+        if item.get('last_name') or item.get('first_name'):
+            manager_name = f"{item.get('last_name', '')} {item.get('first_name', '')}".strip()
+        if not manager_name and item.get('username'):
+            manager_name = item.get('username', '')
+
+        row = [
+            item.get('id', ''),
+            item.get('timestamp', ''),
+            item.get('tender_number', ''),
+            item.get('company', ''),
+            item.get('product', ''),
+            item.get('positions_count', 1),
+            item.get('total_general_price', 0),
+            item.get('total_purchase_price', 0),
+            item.get('total_weight', 0),
+            item.get('avg_duty_percent', 0),
+            item.get('margin_percent', 0),
+            item.get('drawing_number', ''),
+            manager_name,
+            item.get('version_count', 1),
+        ]
+        ws.append(row)
+
+    # Автоподбор ширины колонок
+    for col_num, header in enumerate(headers, 1):
+        column_letter = get_column_letter(col_num)
+        max_length = len(str(header))
+        for row in ws[column_letter]:
+            try:
+                if row.value and len(str(row.value)) > max_length:
+                    max_length = len(str(row.value))
+            except:
+                pass
+        adjusted_width = min(max_length + 2, 50)
+        ws.column_dimensions[column_letter].width = adjusted_width
+
+    # Сохранение в буфер
+    buffer = BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    return buffer
+
+
+def export_generation_history_to_csv(history_data: Dict[str, Any]) -> BytesIO:
+    """
+    Экспортирует историю генераций в CSV.
+
+    Args:
+        history_data: Словарь с данными истории (из GenerationRepository.get_history)
+
+    Returns:
+        BytesIO буфер с CSV файлом
+    """
+    import csv
+    import io
+
+    buffer = BytesIO()
+    # Используем UTF-8 с BOM для корректного отображения в Excel
+    buffer.write('\ufeff'.encode('utf-8'))
+    
+    writer = csv.writer(io.TextIOWrapper(buffer, encoding='utf-8-sig', newline=''), delimiter=';')
+
+    # Заголовки
+    headers = [
+        'ID',
+        'Дата и время',
+        'Номер тендера',
+        'Компания',
+        'Товар',
+        'Позиций',
+        'Цена продажи',
+        'Цена закупки',
+        'Вес, кг',
+        'Пошлина, %',
+        'Маржа, %',
+        'Номер чертежа',
+        'Менеджер',
+        'Версий',
+    ]
+    writer.writerow(headers)
+
+    # Данные
+    for item in history_data.get('items', []):
+        # Формируем имя менеджера
+        manager_name = ''
+        if item.get('last_name') or item.get('first_name'):
+            manager_name = f"{item.get('last_name', '')} {item.get('first_name', '')}".strip()
+        if not manager_name and item.get('username'):
+            manager_name = item.get('username', '')
+
+        row = [
+            item.get('id', ''),
+            item.get('timestamp', ''),
+            item.get('tender_number', ''),
+            item.get('company', ''),
+            item.get('product', ''),
+            item.get('positions_count', 1),
+            item.get('total_general_price', 0),
+            item.get('total_purchase_price', 0),
+            item.get('total_weight', 0),
+            item.get('avg_duty_percent', 0),
+            item.get('margin_percent', 0),
+            item.get('drawing_number', ''),
+            manager_name,
+            item.get('version_count', 1),
+        ]
+        writer.writerow(row)
+
+    buffer.seek(0)
+    return buffer
+
+
+def create_csv_response(buffer: BytesIO, filename: Optional[str] = None) -> Response:
+    """Создает Flask Response для CSV файла."""
+    if filename is None:
+        filename = f'generation_history_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+
+    return Response(
+        buffer.getvalue(),
+        mimetype='text/csv; charset=utf-8',
+        headers={'Content-Disposition': f'attachment; filename="{filename}"'}
+    )

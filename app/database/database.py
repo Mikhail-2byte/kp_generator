@@ -11,7 +11,7 @@ from alembic import command
 from alembic.config import Config
 from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
-from sqlalchemy import create_engine, func, String, cast
+from sqlalchemy import create_engine, func, String, cast, or_
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import joinedload
 
@@ -335,8 +335,27 @@ def _normalize_pagination(config: Dict[str, object], page: int, per_page: Option
     return page, page_size
 
 
-def get_generation_history(config, *, page: int = 1, per_page: Optional[int] = None, date_from: Optional[str] = None, date_to: Optional[str] = None) -> Dict[str, object]:
-    """Возвращает историю генераций с пагинацией по тендерам (последняя версия)."""
+def get_generation_history(
+    config,
+    *,
+    page: int = 1,
+    per_page: Optional[int] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    price_from: Optional[float] = None,
+    price_to: Optional[float] = None,
+    margin_from: Optional[float] = None,
+    margin_to: Optional[float] = None,
+    companies: Optional[List[str]] = None,
+    search: Optional[str] = None,
+    sort_by: Optional[str] = None,
+    sort_order: Optional[str] = None,
+) -> Dict[str, object]:
+    """Возвращает историю генераций с пагинацией по тендерам (последняя версия).
+
+    Поддерживает серверную фильтрацию по датам, цене продажи, марже,
+    компаниям и текстовому поиску.
+    """
     page, limit = _normalize_pagination(config, page, per_page)
     offset = (page - 1) * limit
     try:
@@ -347,7 +366,7 @@ def get_generation_history(config, *, page: int = 1, per_page: Optional[int] = N
                 cast(GenerationHistoryRecord.id, String)
             )
 
-            # Базовый запрос для фильтрации по датам
+            # Базовый запрос для фильтрации
             base_filter = session.query(GenerationHistoryRecord)
 
             # Применяем фильтры по датам
@@ -366,6 +385,44 @@ def get_generation_history(config, *, page: int = 1, per_page: Optional[int] = N
                     base_filter = base_filter.filter(GenerationHistoryRecord.timestamp <= date_to_obj)
                 except ValueError:
                     pass  # Игнорируем неверный формат даты
+
+            # Фильтр по цене продажи (используем общую цену, если есть)
+            sale_price_expr = func.coalesce(
+                GenerationHistoryRecord.total_general_price,
+                GenerationHistoryRecord.final_price * func.coalesce(GenerationHistoryRecord.quantity, 1),
+            )
+
+            if price_from is not None:
+                base_filter = base_filter.filter(sale_price_expr >= float(price_from))
+
+            if price_to is not None:
+                base_filter = base_filter.filter(sale_price_expr <= float(price_to))
+
+            # Фильтр по марже
+            if margin_from is not None:
+                base_filter = base_filter.filter(GenerationHistoryRecord.margin_percent >= float(margin_from))
+
+            if margin_to is not None:
+                base_filter = base_filter.filter(GenerationHistoryRecord.margin_percent <= float(margin_to))
+
+            # Фильтр по компаниям
+            if companies:
+                # Нормализуем список компаний, отбрасывая пустые значения
+                normalized_companies = [c.strip() for c in companies if c and c.strip()]
+                if normalized_companies:
+                    base_filter = base_filter.filter(GenerationHistoryRecord.company.in_(normalized_companies))
+
+            # Текстовый поиск по нескольким полям
+            if search:
+                search_pattern = f"%{search.lower()}%"
+                base_filter = base_filter.filter(
+                    or_(
+                        func.lower(GenerationHistoryRecord.tender_number).like(search_pattern),
+                        func.lower(GenerationHistoryRecord.product).like(search_pattern),
+                        func.lower(GenerationHistoryRecord.drawing_number).like(search_pattern),
+                        func.lower(GenerationHistoryRecord.company).like(search_pattern),
+                    )
+                )
 
             # Создаем подзапрос с фильтрацией для window функции
             filtered_subquery = base_filter.with_entities(GenerationHistoryRecord.id).subquery()
@@ -401,6 +458,53 @@ def get_generation_history(config, *, page: int = 1, per_page: Optional[int] = N
                 .filter(GenerationHistoryRecord.id.in_(session.query(filtered_subquery.c.id)))
             ).subquery()
 
+            # Определяем сортировку
+            order_by_clauses = []
+            
+            # Валидация и нормализация параметров сортировки
+            valid_sort_fields = {
+                'timestamp': GenerationHistoryRecord.timestamp,
+                'tender_number': GenerationHistoryRecord.tender_number,
+                'company': GenerationHistoryRecord.company,
+                'margin_percent': GenerationHistoryRecord.margin_percent,
+                'weight': GenerationHistoryRecord.weight,
+                'duty_percent': GenerationHistoryRecord.duty_percent,
+            }
+            
+            # Для цены продажи используем вычисляемое выражение
+            sale_price_expr = func.coalesce(
+                GenerationHistoryRecord.total_general_price,
+                GenerationHistoryRecord.final_price * func.coalesce(GenerationHistoryRecord.quantity, 1),
+            )
+            
+            # Для цены закупки нужно вычислять из позиций, но для простоты используем cost_price
+            purchase_price_expr = GenerationHistoryRecord.cost_price * func.coalesce(GenerationHistoryRecord.quantity, 1)
+            
+            if sort_by:
+                sort_by_lower = sort_by.lower()
+                sort_order_lower = (sort_order or 'desc').lower() if sort_order else 'desc'
+                
+                if sort_order_lower not in ('asc', 'desc'):
+                    sort_order_lower = 'desc'
+                
+                if sort_by_lower == 'price_sale' or sort_by_lower == 'total_general_price':
+                    order_by_clauses.append(sale_price_expr.desc() if sort_order_lower == 'desc' else sale_price_expr.asc())
+                elif sort_by_lower == 'price_purchase' or sort_by_lower == 'total_purchase_price':
+                    order_by_clauses.append(purchase_price_expr.desc() if sort_order_lower == 'desc' else purchase_price_expr.asc())
+                elif sort_by_lower in valid_sort_fields:
+                    field = valid_sort_fields[sort_by_lower]
+                    order_by_clauses.append(field.desc() if sort_order_lower == 'desc' else field.asc())
+            
+            # Если сортировка не указана или невалидна, используем сортировку по умолчанию
+            if not order_by_clauses:
+                order_by_clauses = [
+                    GenerationHistoryRecord.timestamp.desc(),
+                    GenerationHistoryRecord.id.desc(),
+                ]
+            else:
+                # Добавляем сортировку по id для детерминированного порядка
+                order_by_clauses.append(GenerationHistoryRecord.id.desc())
+            
             records_query = (
                 session.query(
                     GenerationHistoryRecord,
@@ -410,13 +514,7 @@ def get_generation_history(config, *, page: int = 1, per_page: Optional[int] = N
                 .options(joinedload(GenerationHistoryRecord.user))
                 .join(window_subquery, GenerationHistoryRecord.id == window_subquery.c.id)
                 .filter(window_subquery.c.row_number == 1)
-                # Для детерминированного порядка добавляем сортировку по id,
-                # чтобы при одинаковом timestamp последняя созданная запись
-                # (с максимальным id) шла первой.
-                .order_by(
-                    GenerationHistoryRecord.timestamp.desc(),
-                    GenerationHistoryRecord.id.desc(),
-                )
+                .order_by(*order_by_clauses)
                 .offset(offset)
                 .limit(limit)
             )

@@ -50,20 +50,50 @@ def list_generations() -> Dict[str, Any]:
         Словарь со списком генераций и информацией о пагинации
     """
     from flask import current_app
-    
-    page = int(request.args.get('page', 1))
-    per_page = int(request.args.get('per_page', 25))
+
+    def _safe_int(value: Optional[str], default: int) -> int:
+        try:
+            return int(value) if value is not None else default
+        except (TypeError, ValueError):
+            return default
+
+    def _safe_float(value: Optional[str]) -> Optional[float]:
+        if value is None or value == '':
+            return None
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return None
+
+    page = _safe_int(request.args.get('page'), 1)
+    per_page = _safe_int(request.args.get('per_page'), 25)
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
-    
+    price_from = _safe_float(request.args.get('price_from'))
+    price_to = _safe_float(request.args.get('price_to'))
+    margin_from = _safe_float(request.args.get('margin_from'))
+    margin_to = _safe_float(request.args.get('margin_to'))
+    companies_raw = request.args.get('companies')
+    search = request.args.get('search') or request.args.get('q')
+
+    companies: Optional[List[str]] = None
+    if companies_raw:
+        companies = [c.strip() for c in companies_raw.split(',') if c.strip()]
+
     history = generation_repository.get_history(
         current_app.config['APP_SETTINGS'],
         page=page,
         per_page=per_page,
         date_from=date_from,
-        date_to=date_to
+        date_to=date_to,
+        price_from=price_from,
+        price_to=price_to,
+        margin_from=margin_from,
+        margin_to=margin_to,
+        companies=companies,
+        search=search,
     )
-    
+
     return jsonify(history)
 
 

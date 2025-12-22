@@ -17,9 +17,15 @@ from flask import (
     session,
     url_for
 )
-from flask_login import current_user
+from flask_login import current_user, login_required
 
 from app.business.document_generator import create_zip_archive, generate_excel_document, generate_word_document
+from app.services.export_service import (
+    export_generation_history_to_excel,
+    export_generation_history_to_csv,
+    create_excel_response,
+    create_csv_response,
+)
 from app.presentation.helpers import check_templates_exist, extract_positions_from_form
 from app.presentation.validators import validate_form_data
 from app.services.multi_position_calculator import MultiPositionCalculator
@@ -212,15 +218,54 @@ def history() -> str:
     except ValueError:
         page = 1
     
-    # Получаем параметры фильтрации по датам
+    # Получаем параметры фильтрации
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
+    price_from_raw = request.args.get('price_from')
+    price_to_raw = request.args.get('price_to')
+    margin_from_raw = request.args.get('margin_from')
+    margin_to_raw = request.args.get('margin_to')
+    companies_raw = request.args.get('companies')
+    search = request.args.get('search') or request.args.get('q')
+
+    def _safe_float(value: str | None) -> Optional[float]:
+        if value is None or value == '':
+            return None
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return None
+
+    price_from = _safe_float(price_from_raw)
+    price_to = _safe_float(price_to_raw)
+    margin_from = _safe_float(margin_from_raw)
+    margin_to = _safe_float(margin_to_raw)
+
+    companies: Optional[list[str]] = None
+    if companies_raw:
+        companies = [c.strip() for c in companies_raw.split(',') if c.strip()]
+    
+    # Параметры сортировки
+    sort_by = request.args.get('sort_by')
+    sort_order = request.args.get('sort_order')
+    
+    # Валидация sort_order
+    if sort_order and sort_order.lower() not in ('asc', 'desc'):
+        sort_order = None
     
     history_data = generation_repository.get_history(
         app_config, 
         page=page,
         date_from=date_from,
-        date_to=date_to
+        date_to=date_to,
+        price_from=price_from,
+        price_to=price_to,
+        margin_from=margin_from,
+        margin_to=margin_to,
+        companies=companies,
+        search=search,
+        sort_by=sort_by,
+        sort_order=sort_order,
     )
     history_groups = _build_tender_groups(history_data['items'])
     return render_template(
@@ -232,6 +277,85 @@ def history() -> str:
             pagination=history_data['pagination']
         )
     )
+
+
+@main_bp.route('/history/export')
+@login_required
+def export_history() -> Response:
+    """Экспортирует историю генераций в Excel или CSV с применением текущих фильтров."""
+    app_config = current_app.config['APP_SETTINGS']
+    export_format = request.args.get('format', 'excel').lower()
+    
+    if export_format not in ('excel', 'csv'):
+        flash('Неподдерживаемый формат экспорта. Используйте excel или csv.', 'danger')
+        return redirect(url_for('main.history'))
+    
+    try:
+        # Получаем те же параметры фильтрации, что и на странице
+        date_from = request.args.get('date_from')
+        date_to = request.args.get('date_to')
+        price_from_raw = request.args.get('price_from')
+        price_to_raw = request.args.get('price_to')
+        margin_from_raw = request.args.get('margin_from')
+        margin_to_raw = request.args.get('margin_to')
+        companies_raw = request.args.get('companies')
+        search = request.args.get('search') or request.args.get('q')
+        sort_by = request.args.get('sort_by')
+        sort_order = request.args.get('sort_order')
+
+        def _safe_float(value: str | None) -> Optional[float]:
+            if value is None or value == '':
+                return None
+            try:
+                return float(value)
+            except (TypeError, ValueError):
+                return None
+
+        price_from = _safe_float(price_from_raw)
+        price_to = _safe_float(price_to_raw)
+        margin_from = _safe_float(margin_from_raw)
+        margin_to = _safe_float(margin_to_raw)
+
+        companies: Optional[list[str]] = None
+        if companies_raw:
+            companies = [c.strip() for c in companies_raw.split(',') if c.strip()]
+
+        # Валидация sort_order
+        if sort_order and sort_order.lower() not in ('asc', 'desc'):
+            sort_order = None
+
+        # Получаем ВСЕ записи без пагинации (используем большой per_page)
+        history_data = generation_repository.get_history(
+            app_config,
+            page=1,
+            per_page=10000,  # Большое значение для получения всех записей
+            date_from=date_from,
+            date_to=date_to,
+            price_from=price_from,
+            price_to=price_to,
+            margin_from=margin_from,
+            margin_to=margin_to,
+            companies=companies,
+            search=search,
+            sort_by=sort_by,
+            sort_order=sort_order,
+        )
+
+        # Генерируем имя файла с датой и временем
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f'generation_history_{timestamp}'
+
+        if export_format == 'excel':
+            buffer = export_generation_history_to_excel(history_data)
+            return create_excel_response(buffer, f'{filename}.xlsx')
+        else:  # csv
+            buffer = export_generation_history_to_csv(history_data)
+            return create_csv_response(buffer, f'{filename}.csv')
+
+    except Exception as exc:
+        current_app.logger.error('Error exporting history: %s', exc)
+        flash('Произошла ошибка при экспорте данных.', 'danger')
+        return redirect(url_for('main.history'))
 
 
 @main_bp.route('/feedback', methods=['GET', 'POST'])
@@ -319,6 +443,12 @@ def gb_analogs() -> str:
 def orders_page() -> str:
     """Отображает раздел с распоряжениями и внутренними документами."""
     orders = datasets.get_orders_documents()
+    if not orders:
+        flash(
+            'Справочник распоряжений пуст или недоступен. '
+            'Добавьте записи в разделе «Администрирование → Распоряжения».',
+            'warning',
+        )
     return render_template(
         'orders.html',
         **build_context('orders', 'Распоряжения', orders=orders)
@@ -329,6 +459,12 @@ def orders_page() -> str:
 def templates_page() -> str:
     """Выводит список шаблонов документов."""
     templates_list = datasets.get_task_templates()
+    if not templates_list:
+        flash(
+            'Справочник шаблонов пуст или недоступен. '
+            'Добавьте шаблоны в разделе «Администрирование → Шаблоны».',
+            'warning',
+        )
     return render_template(
         'templates_page.html',
         **build_context('templates', 'Шаблоны', templates=templates_list)
@@ -502,6 +638,12 @@ def _parse_instruction_content(content_text: str) -> Dict[str, Any]:
 def instructions_page() -> str:
     """Содержит краткие инструкции по бизнес-процессам."""
     instructions_list = datasets.get_task_instructions()
+    if not instructions_list:
+        flash(
+            'Справочник инструкций пуст или недоступен. '
+            'Добавьте инструкции в разделе «Администрирование → Инструкции».',
+            'warning',
+        )
     
     # Парсим содержимое каждой инструкции
     for instruction in instructions_list:
@@ -595,6 +737,13 @@ def duty() -> str:
     query = request.args.get('q', '').strip()
     normalized_query = query.lower()
     catalog = datasets.get_duty_catalog()
+
+    if not catalog:
+        flash(
+            'Справочник ставок пошлин пуст или недоступен. '
+            'Обратитесь к администратору для настройки раздела «Ставки пошлин».',
+            'warning',
+        )
 
     if normalized_query:
         filtered_items = [
@@ -772,6 +921,11 @@ def logistics() -> str:
     cities = _load_logistics_cities_safe()
     if not cities:
         current_app.logger.info('Logistics data is empty or missing')
+        flash(
+            'Справочник логистики пуст или недоступен. '
+            'Проверьте настройки справочников логистики в административном разделе.',
+            'warning',
+        )
 
     return render_template(
         'logistics.html',
@@ -823,14 +977,16 @@ def calculate_logistics_api() -> Response:
         if weight_kg <= 0:
             return jsonify({'error': 'Вес должен быть положительным числом'}), 400
         
-        if city_price <= 0:
-            return jsonify({'error': 'Стоимость города должна быть положительным числом'}), 400
-        
         # Автоматическое определение типа города из справочников
         city_in_ekb_rf_catalog = False
         if city_name:
             from app.services.datasets import is_city_in_ekb_rf_catalog, get_ekb_rf_city_distance
             city_in_ekb_rf_catalog = is_city_in_ekb_rf_catalog(city_name)
+        
+        # Для городов ЕКБ+РФ city_price может быть 0 (расчет по алгоритму)
+        # Для остальных городов проверяем, что цена положительная
+        if not city_in_ekb_rf_catalog and city_price <= 0:
+            return jsonify({'error': 'Стоимость города должна быть положительным числом'}), 400
             
             # Если город в справочнике ЕКБ+РФ, автоматически устанавливаем is_main_route=False
             if city_in_ekb_rf_catalog:

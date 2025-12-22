@@ -24,7 +24,7 @@ from app.presentation.forms import (
     TrailCityDeleteForm
 )
 from app.auth.security import admin_required
-from app.services import datasets
+from app.services import datasets, datasets_validator
 from app.services.audit_service import log_create, log_delete, log_update
 from app.services.content_manager import ContentManager, build_manager
 from app.services.export_service import (
@@ -240,11 +240,17 @@ def admin_panel() -> Union[str, Response]:
             flash('Неизвестное действие.', 'danger')
             return redirect(url_for('admin.admin_panel'))
 
+    # Сводка по справочникам для health-виджета
+    datasets_health = [
+        result.to_dict() for result in datasets_validator.run_all_validations()
+    ]
+
     return render_template(
         'admin.html',
         **build_context(
             'admin',
             'Администрирование',
+            datasets_health=datasets_health,
         )
     )
 

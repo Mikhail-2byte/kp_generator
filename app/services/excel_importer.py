@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from typing import BinaryIO, Dict, Iterable, List
 
 from openpyxl import load_workbook
+from openpyxl.worksheet.worksheet import Worksheet
 from openpyxl.utils.exceptions import InvalidFileException
 
 from app.business.interfaces import ExcelImporterPort
@@ -242,6 +244,35 @@ class ExcelImporterService(ExcelImporterPort):
 
         sheet = workbook.active
 
+        # Сначала пытаемся распарсить как старый формат (по заголовкам)
+        try:
+            return self._parse_with_headers(sheet)
+        except ExcelImportError as header_exc:
+            # Если не получилось (нет заголовков или обязательных колонок), пробуем новый формат
+            # Проверяем, что ошибка связана именно с отсутствием заголовков/колонок
+            error_msg = str(header_exc).lower()
+            if (
+                'заголовков' in error_msg
+                or 'обязательные столбцы' in error_msg
+                or 'отсутствуют обязательные столбцы' in error_msg
+            ):
+                try:
+                    return self._parse_fixed_template(sheet)
+                except ExcelImportError as fixed_exc:
+                    # Если и новый формат не подошел, сообщаем подробную информацию по обоим вариантам
+                    detailed_message = (
+                        "Не удалось импортировать файл ни как таблицу с заголовками, "
+                        "ни как шаблон запроса с фиксированными ячейками.\n\n"
+                        f"Попытка 1 (формат с заголовками): {header_exc}\n"
+                        f"Попытка 2 (формат шаблона запроса): {fixed_exc}"
+                    )
+                    raise ExcelImportError(detailed_message) from fixed_exc
+            # Если ошибка не связана с форматом, пробрасываем её как есть
+            raise header_exc
+
+    def _parse_with_headers(self, sheet: Worksheet) -> List[Dict[str, str]]:
+        """Парсит Excel файл со старой схемой (по заголовкам в первой строке)."""
+
         header_row = None
         for row in sheet.iter_rows(min_row=1, max_row=sheet.max_row):
             if any(str(cell.value).strip() for cell in row if cell.value is not None):
@@ -287,12 +318,12 @@ class ExcelImporterService(ExcelImporterPort):
             cost_price_per_kg = row_payload.get('cost_price_per_kg', '')
             weight = row_payload.get('weight', '')
             quantity = row_payload.get('quantity', '')
-            
+
             # Валидируем и вычисляем цены
             validated_cost_price, validated_cost_price_per_kg = _validate_and_calculate_prices(
                 cost_price, cost_price_per_kg, weight, quantity, row_idx
             )
-            
+
             # Сохраняем вычисленные значения
             row_payload['cost_price'] = validated_cost_price
             row_payload['cost_price_per_kg'] = validated_cost_price_per_kg
@@ -301,6 +332,122 @@ class ExcelImporterService(ExcelImporterPort):
                 row_payload['duty_percent'] = row_payload.get('duty_percent') or '0'
             else:
                 row_payload['duty_percent'] = '0'
+            positions.append(row_payload)
+
+        if not positions:
+            raise ExcelImportError('Файл не содержит позиций для импорта.')
+
+        return positions
+
+    def _parse_fixed_template(self, sheet: Worksheet) -> List[Dict[str, str]]:
+        """
+        Парсит Excel файл с новой схемой (фиксированные ячейки начиная с 7-й строки).
+
+        Маппинг:
+        - B (колонка 2) -> product (Наименование)
+        - D (колонка 4) -> material (Материал)
+        - E (колонка 5) -> drawing_number (Номер чертежа)
+        - K (колонка 11) -> quantity (Количество)
+        - L (колонка 12) -> cost_price (Цена закупа за шт.)
+        - M (колонка 13) -> total_cost (общая цена закупа, только для валидации)
+        - N (колонка 14) -> weight (Вес за шт.)
+        - P (колонка 16) -> duty_percent (Пошлина, %)
+        - S (колонка 19) -> cost_price_per_kg (Цена закупа за кг)
+        """
+
+        positions: List[Dict[str, str]] = []
+        start_row = 7
+        max_row = sheet.max_row
+
+        for row_idx in range(start_row, max_row + 1):
+            # Читаем значения из фиксированных ячеек
+            # openpyxl использует 1-based индексацию для строк и колонок
+            product_cell = sheet.cell(row=row_idx, column=2)  # B
+            material_cell = sheet.cell(row=row_idx, column=4)  # D
+            drawing_number_cell = sheet.cell(row=row_idx, column=5)  # E
+            quantity_cell = sheet.cell(row=row_idx, column=11)  # K
+            cost_price_cell = sheet.cell(row=row_idx, column=12)  # L
+            total_cost_cell = sheet.cell(row=row_idx, column=13)  # M (для валидации)
+            weight_cell = sheet.cell(row=row_idx, column=14)  # N
+            duty_percent_cell = sheet.cell(row=row_idx, column=16)  # P
+            cost_price_per_kg_cell = sheet.cell(row=row_idx, column=19)  # S
+
+            # Формируем row_payload
+            row_payload: Dict[str, str] = {}
+
+            # Обязательные поля
+            row_payload['product'] = _prepare_value('product', product_cell.value, row_idx)
+            row_payload['quantity'] = _prepare_value('quantity', quantity_cell.value, row_idx)
+            row_payload['weight'] = _prepare_value('weight', weight_cell.value, row_idx)
+
+            # Строки без количества считаем не позициями:
+            # - до первой считанной позиции просто пропускаем их (могут быть пустые/служебные строки),
+            # - после того как уже были считаны позиции — считаем концом списка и прекращаем чтение.
+            if not row_payload['quantity']:
+                if positions:
+                    break
+                continue
+
+            # Опциональные поля
+            row_payload['drawing_number'] = _prepare_value('drawing_number', drawing_number_cell.value, row_idx)
+            row_payload['material'] = _prepare_value('material', material_cell.value, row_idx)
+            row_payload['cost_price'] = _prepare_value('cost_price', cost_price_cell.value, row_idx)
+            # Цена за кг может быть указана отдельно в колонке S
+            row_payload['cost_price_per_kg'] = _prepare_value(
+                'cost_price_per_kg',
+                cost_price_per_kg_cell.value,
+                row_idx,
+            )
+            row_payload['duty_percent'] = _prepare_value('duty_percent', duty_percent_cell.value, row_idx) or '0'
+
+            # Проверяем обязательные поля
+            for field in SCHEMA.required_fields:
+                if not row_payload.get(field):
+                    raise ExcelImportError(
+                        f"В строке {row_idx} отсутствует значение в столбце '{FIELD_LABELS[field]}'."
+                    )
+
+            # Валидация общей суммы (M) - мягкая проверка с логированием
+            total_cost_value = total_cost_cell.value
+            if total_cost_value is not None:
+                try:
+                    total_cost_dec = Decimal(str(total_cost_value).replace(',', '.').strip())
+                    cost_price_dec = Decimal(row_payload['cost_price']) if row_payload['cost_price'] else None
+                    quantity_dec = Decimal(row_payload['quantity']) if row_payload['quantity'] else None
+
+                    if cost_price_dec and quantity_dec:
+                        expected_total = cost_price_dec * quantity_dec
+                        tolerance = max(expected_total * Decimal('0.01'), Decimal('0.01'))
+                        difference = abs(total_cost_dec - expected_total)
+
+                        if difference > tolerance:
+                            # Логируем предупреждение, но не падаем
+                            logger = logging.getLogger(__name__)
+                            logger.warning(
+                                f"В строке {row_idx} обнаружено несоответствие общей суммы закупа:\n"
+                                f"  - Указанная общая сумма: {total_cost_dec}\n"
+                                f"  - Ожидаемая (цена × количество): {expected_total}\n"
+                                f"  - Разница: {difference}"
+                            )
+                except (ValueError, InvalidOperation):
+                    # Игнорируем ошибки парсинга общей суммы
+                    pass
+
+            # Валидация и расчет цен
+            cost_price = row_payload.get('cost_price', '')
+            cost_price_per_kg = row_payload.get('cost_price_per_kg', '')
+            weight = row_payload.get('weight', '')
+            quantity = row_payload.get('quantity', '')
+
+            # Валидируем и вычисляем цены
+            validated_cost_price, validated_cost_price_per_kg = _validate_and_calculate_prices(
+                cost_price, cost_price_per_kg, weight, quantity, row_idx
+            )
+
+            # Сохраняем вычисленные значения
+            row_payload['cost_price'] = validated_cost_price
+            row_payload['cost_price_per_kg'] = validated_cost_price_per_kg
+
             positions.append(row_payload)
 
         if not positions:

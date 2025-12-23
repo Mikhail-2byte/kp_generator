@@ -4,6 +4,16 @@
       "name": "Самара",
       "region": "Самарской области",
       "distance_from_ekb_km": 900
+    },
+    {
+      "name": "Сыктывкар",
+      "region": "Республика Коми",
+      "distance_from_ekb_km": 1270
+    },
+    {
+      "name": "Таганрог",
+      "region": "Ростовская область",
+      "distance_from_ekb_km": 2320
     }
   ]
 }

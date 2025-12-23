@@ -1,0 +1,18 @@
+{
+  "saved_at": "20251223T075808",
+  "actor": "tsc_perm@mail.ru",
+  "data": {
+    "cities": [
+      {
+        "name": "Самара",
+        "region": "Самарской области",
+        "distance_from_ekb_km": 900
+      },
+      {
+        "name": "Сыктывкар",
+        "region": "Республика Коми",
+        "distance_from_ekb_km": 1270
+      }
+    ]
+  }
+}

@@ -2496,7 +2496,7 @@
             }
         }
 
-        form.addEventListener('submit', function (event) {
+        form.addEventListener('submit', async function (event) {
             let isValid = true;
             Array.from(form.querySelectorAll(requiredSelector)).forEach(input => {
                 if (!validateField(input)) {
@@ -2513,8 +2513,82 @@
                 return;
             }
 
+            // Перехватываем отправку формы и выполняем её через fetch,
+            // чтобы можно было повторно генерировать КП без перезагрузки страницы.
+            event.preventDefault();
+
+            if (!generateBtn || !generateText) {
+                form.submit();
+                return;
+            }
+
+            const originalText = generateText.textContent;
             generateText.textContent = 'Генерация...';
             generateBtn.disabled = true;
+
+            try {
+                const formData = new FormData(form);
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const contentDisposition = response.headers.get('Content-Disposition') || '';
+                const contentType = (response.headers.get('Content-Type') || '').toLowerCase();
+
+                // Успешная генерация ZIP-файла
+                if (response.ok && (contentDisposition.includes('attachment') || contentType.startsWith('application/zip'))) {
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+
+                    // Пытаемся вытащить имя файла из заголовка, иначе используем дефолт
+                    let filename = 'kp_package.zip';
+                    const filenameMatch = contentDisposition.match(/filename=\"?([^\";]+)\"?/i);
+                    if (filenameMatch && filenameMatch[1]) {
+                        filename = filenameMatch[1];
+                    }
+
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+
+                    // Короткий индикатор успеха
+                    generateText.textContent = 'КП сгенерировано';
+                    setTimeout(() => {
+                        generateText.textContent = originalText;
+                    }, 2000);
+                    return;
+                }
+
+                // Если сервер вернул HTML (например, с ошибками валидации),
+                // проще всего перезагрузить страницу, чтобы отобразить сообщения.
+                if (contentType.startsWith('text/html')) {
+                    window.location.reload();
+                    return;
+                }
+
+                // Для прочих ответов (JSON/ошибка) пробуем показать сообщение
+                let errorMessage = 'Не удалось сгенерировать КП. Попробуйте ещё раз.';
+                try {
+                    const data = await response.json();
+                    if (data && (data.error || data.message)) {
+                        errorMessage = data.error || data.message;
+                    }
+                } catch (_) {
+                    // Ответ не JSON — оставляем дефолтное сообщение
+                }
+                alert(errorMessage);
+            } catch (err) {
+                console.error('Generation request failed', err);
+                alert('Произошла ошибка при обращении к серверу. Проверьте подключение к сети и попробуйте ещё раз.');
+            } finally {
+                generateBtn.disabled = false;
+                generateText.textContent = originalText;
+            }
         });
 
         const firstField = form.querySelector('input:not([type="hidden"])');

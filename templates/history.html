@@ -1735,6 +1735,78 @@
             return true;
         };
 
+        // Клиентский (динамический) поиск по таблице истории
+        const applyClientSearch = () => {
+            if (!table || !groupRows.length) return;
+
+            const query = (searchInput?.value || '').trim().toLowerCase();
+            const filter = filterSelect ? (filterSelect.value || 'all') : 'all';
+            let visible = 0;
+
+            groupRows.forEach((row) => {
+                const tender = (row.getAttribute('data-tender') || '').toLowerCase();
+                const drawing = (row.getAttribute('data-drawing') || '').toLowerCase();
+                const product = (row.getAttribute('data-product') || '').toLowerCase();
+                const company = (row.getAttribute('data-company') || '').toLowerCase();
+                const date = (row.getAttribute('data-date') || '').toLowerCase();
+                const manager = (row.getAttribute('data-manager') || '').toLowerCase();
+                const usernameAttr = (row.getAttribute('data-username') || '').toLowerCase();
+
+                let matches = true;
+
+                if (query) {
+                    switch (filter) {
+                        case 'tender':
+                            matches = tender.includes(query);
+                            break;
+                        case 'drawing':
+                            matches = drawing.includes(query);
+                            break;
+                        case 'product':
+                            matches = product.includes(query);
+                            break;
+                        case 'date':
+                            matches = date.includes(query);
+                            break;
+                        case 'user':
+                            matches = manager.includes(query) || usernameAttr.includes(query);
+                            break;
+                        default:
+                            matches =
+                                tender.includes(query) ||
+                                drawing.includes(query) ||
+                                product.includes(query) ||
+                                company.includes(query) ||
+                                date.includes(query) ||
+                                manager.includes(query) ||
+                                usernameAttr.includes(query);
+                    }
+                }
+
+                row.style.display = matches ? '' : 'none';
+                const detailsRow = table.querySelector(`tr.history-details-row[data-details="${row.dataset.historyGroup}"]`);
+                if (detailsRow) {
+                    detailsRow.style.display = matches ? '' : 'none';
+                }
+
+                if (matches) {
+                    visible += 1;
+                }
+            });
+
+            if (recordsCount) {
+                if ((searchInput?.value || '').trim()) {
+                    recordsCount.textContent = `Найдено тендеров: ${visible}`;
+                } else {
+                    recordsCount.textContent = `Всего тендеров: ${groupRows.length}`;
+                }
+            }
+
+            if (clearSearch) {
+                clearSearch.style.display = (searchInput?.value || '').trim() ? 'inline-flex' : 'none';
+            }
+        };
+
         // Обновление счетчика активных фильтров и кнопок очистки
         const updateFiltersUI = () => {
             const hasFilters = 
@@ -1785,11 +1857,16 @@
         // Восстанавливаем параметры из URL при загрузке
         restoreURLParams();
         updateFiltersUI();
+        // Применяем клиентский поиск, если search уже есть в URL
+        applyClientSearch();
 
-        // Обработчик поиска с задержкой (debounce)
+        // Обработчик поиска: динамический поиск + debounce для обновления UI
         let searchTimeout = null;
         if (searchInput) {
             searchInput.addEventListener('input', () => {
+                // Мгновенный клиентский поиск по текущей странице
+                applyClientSearch();
+
                 clearTimeout(searchTimeout);
                 searchTimeout = setTimeout(() => {
                     updateFiltersUI();

@@ -75,19 +75,59 @@ class DocumentGenerationService(DocumentGeneratorPort):
         )
 
     def create_zip_archive(
-        self, excel_file: BytesIO, word_file: BytesIO, company_name: str
+        self,
+        excel_file: BytesIO,
+        word_file: BytesIO,
+        company_name: str,
+        tender_number: Optional[str] = None,
+        margin_percent: Optional[object] = None,
     ) -> Tuple[BytesIO, str]:
-        """Упаковывает подготовленные документы в ZIP с читаемым именем."""
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M')
-        file_prefix = f"КП_{get_safe_filename(company_name)}_{timestamp}"
+        """Упаковывает подготовленные документы в ZIP с читаемым именем.
+
+        Новые правила именования:
+        - Имя ZIP-файла (без расширения) включает номер тендера, название компании и маржу.
+        - Имя Word-файла внутри архива фиксировано: «КП.docx».
+        - Имя Excel-файла внутри архива: «Бюджет <номер тендера>.xlsx» (или «Бюджет.xlsx`, если номер не задан).
+        """
+        # Подготовка частей имени
+        tender_number = (tender_number or '').strip()
+        margin_str: Optional[str] = None
+        if margin_percent is not None:
+            # Не навязываем формат, используем как есть, только приводим к строке и обрезаем пробелы
+            margin_str = str(margin_percent).strip()
+
+        safe_company = get_safe_filename(company_name) or 'company'
+
+        # Строим читаемое имя ZIP без расширения
+        parts: list[str] = []
+        if tender_number:
+            parts.append(get_safe_filename(tender_number))
+        parts.append(safe_company)
+        if margin_str:
+            # Добавляем знак процента только визуально в имени файла
+            parts.append(f"{margin_str}%")
+
+        if parts:
+            zip_base_name = " - ".join(parts)
+        else:
+            # Защитный вариант: старый формат с таймстампом
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M')
+            zip_base_name = f"КП_{safe_company}_{timestamp}"
+
+        # Имена файлов внутри архива
+        if tender_number:
+            excel_name = f"Бюджет {tender_number}.xlsx"
+        else:
+            excel_name = "Бюджет.xlsx"
+        word_name = "КП.docx"
 
         zip_buffer = BytesIO()
         with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-            zip_file.writestr(f"{file_prefix}.xlsx", excel_file.getvalue())
-            zip_file.writestr(f"{file_prefix}.docx", word_file.getvalue())
+            zip_file.writestr(excel_name, excel_file.getvalue())
+            zip_file.writestr(word_name, word_file.getvalue())
 
         zip_buffer.seek(0)
-        return zip_buffer, file_prefix
+        return zip_buffer, zip_base_name
 
 
 _default_generator = DocumentGenerationService()
@@ -122,6 +162,16 @@ def generate_word_document(
 
 
 def create_zip_archive(
-    excel_file: BytesIO, word_file: BytesIO, company_name: str
+    excel_file: BytesIO,
+    word_file: BytesIO,
+    company_name: str,
+    tender_number: Optional[str] = None,
+    margin_percent: Optional[object] = None,
 ) -> Tuple[BytesIO, str]:
-    return _default_generator.create_zip_archive(excel_file, word_file, company_name)
+    return _default_generator.create_zip_archive(
+        excel_file,
+        word_file,
+        company_name,
+        tender_number=tender_number,
+        margin_percent=margin_percent,
+    )

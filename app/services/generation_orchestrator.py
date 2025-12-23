@@ -149,10 +149,19 @@ class GenerationOrchestrator:
             position_prices=position_prices,
             contact_info=contact_info,
         )
-        
+
         company = form_data.get('company', 'Unknown')
-        zip_buffer, file_prefix = create_zip_archive(excel_file, word_file, company)
-        
+        tender_number = form_data.get('tender_number')
+        margin_percent = form_data.get('margin_percent')
+
+        zip_buffer, file_prefix = create_zip_archive(
+            excel_file,
+            word_file,
+            company,
+            tender_number=tender_number,
+            margin_percent=margin_percent,
+        )
+
         return zip_buffer, file_prefix
     
     def save_history(
@@ -203,7 +212,12 @@ class GenerationOrchestrator:
         # Шаг 2: Извлечение параметров
         company = cleaned_data['company'].strip()
         logistics_rub = float(cleaned_data['logistics'])
-        margin_percent = float(cleaned_data['margin_percent'])
+        # Для расчетов используем числовое значение маржи,
+        # но для имени файла позже сохраним и строковое представление
+        try:
+            margin_percent = float(cleaned_data.get('margin_percent'))
+        except (TypeError, ValueError):
+            margin_percent = 0.0
         delivery_time = int(cleaned_data['delivery_time'])
         
         # Шаг 3: Проверка шаблонов

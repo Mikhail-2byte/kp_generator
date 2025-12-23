@@ -77,8 +77,37 @@ def test_document_generation_service_zip():
 
     assert prefix.startswith('КП_')
     with zipfile.ZipFile(zip_buffer) as archive:
-        assert any(name.endswith('.xlsx') for name in archive.namelist())
-        assert any(name.endswith('.docx') for name in archive.namelist())
+        names = archive.namelist()
+        assert any(name.endswith('.xlsx') for name in names)
+        assert any(name.endswith('.docx') for name in names)
+
+
+def test_document_generation_service_zip_with_tender_and_margin():
+    service = DocumentGenerationService()
+    excel = io.BytesIO(b'excel-bytes')
+    word = io.BytesIO(b'word-bytes')
+
+    tender_number = '12345'
+    margin = '25'
+
+    zip_buffer, prefix = service.create_zip_archive(
+        excel,
+        word,
+        'ООО Ромашка',
+        tender_number=tender_number,
+        margin_percent=margin,
+    )
+
+    # Имя архива должно содержать номер тендера, компанию и маржу с %
+    assert '12345' in prefix
+    assert 'ООО_Ромашка' in prefix
+    assert '25%' in prefix
+
+    with zipfile.ZipFile(zip_buffer) as archive:
+        names = archive.namelist()
+        # Внутри архива должны быть файлы с фиксированными именами
+        assert 'КП.docx' in names
+        assert f'Бюджет {tender_number}.xlsx' in names
 
 
 def test_document_generation_service_empty_positions_error():

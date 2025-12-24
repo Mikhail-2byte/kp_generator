@@ -501,34 +501,149 @@
 
             // Чистим поля формы на клиенте
             const form = document.getElementById('generateForm');
-            if (form) {
-                form.reset();
-                // Сбрасываем динамические контейнеры позиций к одной позиции
-                const positionsContainer = document.getElementById('positionsContainer');
-                if (positionsContainer) {
-                    const blocks = positionsContainer.querySelectorAll('.position-block');
-                    blocks.forEach((block, idx) => {
-                        if (idx === 0) {
-                            block.querySelectorAll('input, textarea').forEach(el => el.value = '');
-                            const duty = block.querySelector('[name="duty_percent"]');
-                            if (duty) duty.value = '0';
-                        } else {
-                            block.remove();
-                        }
-                    });
-                    const positionNumber = positionsContainer.querySelector('[data-role="position-number"]');
-                    if (positionNumber) positionNumber.textContent = '1';
-                }
+            if (!form) return;
+
+            // Сбрасываем основные поля формы к значениям по умолчанию
+            const companyInput = document.getElementById('company');
+            if (companyInput) companyInput.value = '';
+
+            const tenderNumberInput = document.getElementById('tender_number');
+            if (tenderNumberInput) tenderNumberInput.value = '';
+
+            const deliveryTimeInput = document.getElementById('delivery_time');
+            if (deliveryTimeInput) deliveryTimeInput.value = '150';
+
+            const paymentTermsInput = document.getElementById('payment_terms');
+            if (paymentTermsInput) paymentTermsInput.value = '100% по факту поставки в течении 30 календарных дней';
+
+            const proposalValidityInput = document.getElementById('proposal_validity');
+            if (proposalValidityInput) proposalValidityInput.value = '30';
+
+            const warrantyPeriodInput = document.getElementById('warranty_period');
+            if (warrantyPeriodInput) warrantyPeriodInput.value = '12 месяцев со дня ввода в эксплуатацию, но не более 18 месяцев со дня поставки.';
+
+            const deliveryAddressInput = document.getElementById('delivery_address');
+            if (deliveryAddressInput) deliveryAddressInput.value = '';
+
+            const commentInput = document.getElementById('comment');
+            if (commentInput) commentInput.value = '';
+
+            const marginPercentInput = document.getElementById('margin_percent');
+            if (marginPercentInput) marginPercentInput.value = '30';
+
+            const logisticsInput = document.getElementById('logistics');
+            if (logisticsInput) logisticsInput.value = '';
+
+            // Сбрасываем радио-кнопки региона бюджета
+            const budgetRegionCn = form.querySelector('input[name="budget_region"][value="cn"]');
+            const budgetRegionRu = form.querySelector('input[name="budget_region"][value="ru"]');
+            if (budgetRegionCn) budgetRegionCn.checked = true;
+            if (budgetRegionRu) budgetRegionRu.checked = false;
+
+            // Сбрасываем чекбоксы финансирования
+            const financeCredit = form.querySelector('input[name="finance_credit"]');
+            if (financeCredit) financeCredit.checked = false;
+
+            const financeBankGuarantee = form.querySelector('input[name="finance_bank_guarantee"]');
+            if (financeBankGuarantee) financeBankGuarantee.checked = false;
+
+            // Сбрасываем радио-кнопки типа транспорта
+            const mainTruck = document.getElementById('mainTruck');
+            const mainTrail = document.getElementById('mainTrail');
+            if (mainTruck) mainTruck.checked = true;
+            if (mainTrail) mainTrail.checked = false;
+
+            // Сбрасываем радио-кнопки типа расчета
+            const mainWeight = document.getElementById('mainWeight');
+            const mainDim = document.getElementById('mainDim');
+            if (mainWeight) mainWeight.checked = true;
+            if (mainDim) mainDim.checked = false;
+
+            // Очищаем логистику
+            const mainCityInput = document.getElementById('logistics_city');
+            if (mainCityInput) {
+                mainCityInput.value = '';
+                // Закрываем автокомплит списки
+                document.querySelectorAll('.autocomplete-items').forEach(list => list.remove());
             }
+
+            const mainSelectedCityName = document.getElementById('mainSelectedCityName');
+            if (mainSelectedCityName) mainSelectedCityName.value = '';
+
+            const mainSelectedCityPrice = document.getElementById('mainSelectedCityPrice');
+            if (mainSelectedCityPrice) mainSelectedCityPrice.value = '';
+
+            // Скрываем панели результатов логистики
+            const mainLogisticsResult = document.getElementById('mainLogisticsResult');
+            if (mainLogisticsResult) mainLogisticsResult.classList.add('hidden');
+
+            const mainLogisticsResultDetails = document.getElementById('mainLogisticsResultDetails');
+            if (mainLogisticsResultDetails) mainLogisticsResultDetails.classList.add('hidden');
+
+            const logisticsHelper = document.getElementById('logisticsHelper');
+            if (logisticsHelper) logisticsHelper.hidden = true;
+
+            const logisticsHelperValue = document.getElementById('logisticsHelperValue');
+            if (logisticsHelperValue) logisticsHelperValue.textContent = '';
+
+            // Сбрасываем оценочный вес
+            const totalWeightValue = document.getElementById('totalWeightValue');
+            if (totalWeightValue) totalWeightValue.value = '0 кг';
+
+            // Скрываем восклицательные знаки у номеров чертежей во всех позициях
+            const drawingAlerts = document.querySelectorAll('[data-role="drawing-alert"]');
+            drawingAlerts.forEach(alert => {
+                alert.hidden = true;
+                alert.removeAttribute('data-drawing-number');
+                alert.removeAttribute('aria-label');
+            });
+
+            // Сбрасываем динамические контейнеры позиций к одной позиции
+            const positionsContainer = document.getElementById('positionsContainer');
+            if (positionsContainer) {
+                const blocks = positionsContainer.querySelectorAll('.position-block');
+                blocks.forEach((block, idx) => {
+                    if (idx === 0) {
+                        block.querySelectorAll('input, textarea').forEach(el => el.value = '');
+                        const duty = block.querySelector('[name="duty_percent"]');
+                        if (duty) duty.value = '0';
+                    } else {
+                        block.remove();
+                    }
+                });
+                const positionNumber = positionsContainer.querySelector('[data-role="position-number"]');
+                if (positionNumber) positionNumber.textContent = '1';
+            }
+
             // Сбросить вспомогательные отображения
             const summaryWeight = document.getElementById('summaryTotalWeight');
             if (summaryWeight) summaryWeight.textContent = '0 кг';
+
             const summaryCost = document.getElementById('summaryTotalCost');
             if (summaryCost) summaryCost.textContent = '0';
+
             const summaryItems = document.getElementById('summaryTotalItems');
             if (summaryItems) summaryItems.textContent = '0 позиций';
+
             const summaryLogistics = document.getElementById('summaryLogistics');
             if (summaryLogistics) summaryLogistics.textContent = '0';
+
+            const summaryRegionTag = document.getElementById('summaryRegionTag');
+            if (summaryRegionTag) summaryRegionTag.textContent = 'по КНР';
+
+            const summaryFinance = document.getElementById('summaryFinance');
+            if (summaryFinance) summaryFinance.textContent = '—';
+
+            // Обновляем вес и логистику (если функции доступны)
+            if (typeof updateWeight === 'function') {
+                updateWeight();
+            }
+            if (typeof refreshLogisticsValue === 'function') {
+                refreshLogisticsValue();
+            }
+            if (typeof updateLogisticsSummary === 'function') {
+                updateLogisticsSummary();
+            }
         } catch (err) {
             console.error('Не удалось сбросить черновик формы', err);
             alert('Не удалось сбросить форму. Попробуйте ещё раз.');

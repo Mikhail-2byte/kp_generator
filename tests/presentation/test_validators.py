@@ -43,3 +43,4 @@ def test_validate_form_data_requires_company():
 
     assert 'company' in result.invalid_fields
     assert any('Укажите название компании.' in error for error in result.errors)
+

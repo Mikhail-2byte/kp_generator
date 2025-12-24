@@ -14,6 +14,11 @@
       "name": "Таганрог",
       "region": "Ростовская область",
       "distance_from_ekb_km": 2320
+    },
+    {
+      "name": "Челябинск",
+      "region": "Челябинская область",
+      "distance_from_ekb_km": 212
     }
   ]
 }

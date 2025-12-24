@@ -12,4 +12,3 @@ def test_migrations_are_up_to_date():
     assert status['pending'] is False
     assert status['head_revision'] in status['head_revisions']
 
-

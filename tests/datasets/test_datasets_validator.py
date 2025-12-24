@@ -15,4 +15,3 @@ def test_run_all_validations_returns_results():
     for r in results:
         assert r.status in {"ok", "warning", "error"}
 
-

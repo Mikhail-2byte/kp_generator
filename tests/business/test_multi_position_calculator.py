@@ -123,3 +123,4 @@ def test_calculate_multi_position_zero_weight():
     result = calculator.calculate_multi_position_prices(positions, 50000, 30, 30)
     
     assert len(result['positions']) == 1
+

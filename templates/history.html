@@ -170,14 +170,14 @@
             </div>
             <div class="pagination-buttons">
                 {% if pagination.has_prev %}
-                {% set prev_params = request.args.copy() %}
+                {% set prev_params = request.args.to_dict(flat=True) %}
                 {% set _ = prev_params.update({'page': pagination.page - 1}) %}
                 <a class="btn btn-outline" href="{{ url_for('main.history', **prev_params) }}">Предыдущая</a>
                 {% else %}
                 <button class="btn btn-outline" disabled>Предыдущая</button>
                 {% endif %}
                 {% if pagination.has_next %}
-                {% set next_params = request.args.copy() %}
+                {% set next_params = request.args.to_dict(flat=True) %}
                 {% set _ = next_params.update({'page': pagination.page + 1}) %}
                 <a class="btn btn-outline" href="{{ url_for('main.history', **next_params) }}">Следующая</a>
                 {% else %}
@@ -687,8 +687,11 @@
         const filterSelect = document.getElementById('filterSelect');
         const clearSearch = document.getElementById('clearSearch');
         const recordsCount = document.getElementById('recordsCount');
-        const modal = document.getElementById('detailsModal');
-        const modalContent = document.getElementById('modalDetailsContent');
+        // Делаем переменные глобальными для использования в restoreEventHandlers
+        window.historyModal = document.getElementById('detailsModal');
+        window.historyModalContent = document.getElementById('modalDetailsContent');
+        const modal = window.historyModal;
+        const modalContent = window.historyModalContent;
         const compareModal = document.getElementById('compareModal');
         const compareModalContent = document.getElementById('compareModalContent');
         const filtersModal = document.getElementById('filtersModal');
@@ -716,11 +719,15 @@
         let selectedCompanies = new Set();
         let activeQuickFilter = null;
 
-        const openModal = () => {
+        // Делаем функцию openModal глобальной для использования в restoreEventHandlers
+        window.historyOpenModal = () => {
+            if (modal) {
             modal.classList.add('is-open');
             modal.setAttribute('aria-hidden', 'false');
             document.body.style.overflow = 'hidden'; // Блокируем прокрутку фона
+            }
         };
+        const openModal = window.historyOpenModal;
 
         const closeModal = () => {
             modal.classList.remove('is-open');
@@ -804,7 +811,8 @@
             openFiltersModal.addEventListener('click', openFiltersModalWindow);
         }
 
-        const renderDetails = (data) => {
+        // Делаем функцию renderDetails доступной глобально для использования в restoreEventHandlers
+        window.renderDetails = (data) => {
             const format = (value, empty = 'Не указан') => value ? value : empty;
             const formatCurrency = (value) => Number(value || 0).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const formatNumber = (value) => Number(value || 0).toLocaleString('ru-RU');
@@ -1113,7 +1121,8 @@
         });
 
         const toggleButtons = document.querySelectorAll('.toggle-history');
-        const renderVersions = (records, total, latestRecord = null) => {
+        // Делаем функцию renderVersions доступной глобально для использования в restoreEventHandlers
+        window.renderVersions = (records, total, latestRecord = null) => {
             if ((!records || records.length === 0) && !latestRecord) {
                 return '<p class="text-muted">Версии не найдены.</p>';
             }
@@ -1860,25 +1869,553 @@
         // Применяем клиентский поиск, если search уже есть в URL
         applyClientSearch();
 
-        // Обработчик поиска: динамический поиск + debounce для обновления UI
+        // Функция для выполнения AJAX поиска по всей истории
+        const performServerSearch = async (searchQuery) => {
+            if (!table || !searchQuery || searchQuery.trim().length === 0) {
+                // Если поиск пустой, перезагружаем страницу без параметра поиска
+                const params = new URLSearchParams(window.location.search);
+                params.delete('search');
+                params.delete('q');
+                params.delete('page'); // Возвращаемся на первую страницу
+                const newURL = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+                window.location.href = newURL;
+                return;
+            }
+
+            // Показываем индикатор загрузки
+            const tbody = table.querySelector('tbody');
+            if (tbody) {
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 40px;"><div class="loading-spinner"></div><p>Поиск по всей истории...</p></td></tr>';
+            }
+
+            try {
+                // Собираем параметры для запроса
+                const params = new URLSearchParams(window.location.search);
+                params.set('search', searchQuery.trim());
+                params.set('page', '1'); // Всегда начинаем с первой страницы при поиске
+                
+                // Получаем текущие фильтры
+                const currentParams = {
+                    page: 1,
+                    per_page: params.get('per_page') || 25,
+                    search: searchQuery.trim(),
+                    date_from: params.get('date_from') || null,
+                    date_to: params.get('date_to') || null,
+                    price_from: params.get('price_from') || null,
+                    price_to: params.get('price_to') || null,
+                    margin_from: params.get('margin_from') || null,
+                    margin_to: params.get('margin_to') || null,
+                    companies: params.get('companies') || null,
+                };
+
+                // Формируем URL для API запроса
+                const apiParams = new URLSearchParams();
+                Object.entries(currentParams).forEach(([key, value]) => {
+                    if (value !== null && value !== '') {
+                        apiParams.append(key, value);
+                    }
+                });
+
+                // Выполняем AJAX запрос
+                const response = await fetch(`/api/v1/generations?${apiParams.toString()}`);
+                if (!response.ok) {
+                    throw new Error('Ошибка при выполнении поиска');
+                }
+
+                const data = await response.json();
+                
+                // Обновляем URL без перезагрузки страницы
+                const newURL = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+                window.history.replaceState({}, '', newURL);
+
+                // Обновляем таблицу с результатами поиска
+                updateTableFromApiData(data);
+
+                // Обновляем счетчик
+                if (recordsCount) {
+                    recordsCount.textContent = `Найдено тендеров: ${data.pagination?.total || 0}`;
+                }
+
+                // Обновляем UI фильтров
+                updateFiltersUI();
+            } catch (error) {
+                console.error('Ошибка при выполнении поиска:', error);
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 40px; color: red;"><p>Ошибка при выполнении поиска. Попробуйте обновить страницу.</p></td></tr>';
+                }
+            }
+        };
+
+        // Функция для обновления таблицы из данных API
+        const updateTableFromApiData = (data) => {
+            const tbody = table?.querySelector('tbody');
+            if (!tbody) return;
+
+            const items = data.items || [];
+            const pagination = data.pagination || {};
+
+            if (items.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 40px;"><p>Ничего не найдено</p></td></tr>';
+                // Обновляем пагинацию
+                updatePagination(pagination);
+                return;
+            }
+
+            // Группируем по тендерам (как делает _build_tender_groups на сервере)
+            const groups = buildTenderGroups(items);
+
+            // Рендерим строки таблицы
+            let html = '';
+            groups.forEach(group => {
+                const item = group.latest;
+                const authorFull = ((item.last_name || '') + ' ' + (item.first_name || '')).trim();
+                const authorDisplay = authorFull || item.username || '—';
+                const positionsCount = item.positions_count || 1;
+                const totalSale = item.total_general_price !== null && item.total_general_price !== undefined 
+                    ? item.total_general_price 
+                    : (item.final_price || 0) * (item.quantity || 1);
+                const totalPurchase = item.total_purchase_price !== null && item.total_purchase_price !== undefined
+                    ? item.total_purchase_price
+                    : (item.cost_price || 0) * (item.quantity || 1);
+                const totalWeight = item.total_weight !== null && item.total_weight !== undefined
+                    ? item.total_weight
+                    : (item.weight || 0);
+                const avgDuty = item.avg_duty_percent !== null && item.avg_duty_percent !== undefined
+                    ? item.avg_duty_percent
+                    : (item.duty_percent || 0);
+
+                const identifier = group.identifier;
+                const tenderNumber = group.tender_number || '';
+                const displayTender = group.display_tender || 'Без номера тендера';
+
+                html += `
+                    <tr class="history-group-row"
+                        data-history-group="${identifier}"
+                        data-tender="${tenderNumber}"
+                        data-drawing="${(item.drawing_number || '').replace(/"/g, '&quot;')}"
+                        data-product="${(item.product || '').replace(/"/g, '&quot;')}"
+                        data-company="${(item.company || '').replace(/"/g, '&quot;')}"
+                        data-date="${item.timestamp || ''}"
+                        data-positions="${positionsCount}"
+                        data-sale="${totalSale}"
+                        data-purchase="${totalPurchase}"
+                        data-weight="${totalWeight}"
+                        data-duty="${avgDuty}"
+                        data-margin="${item.margin_percent || 0}"
+                        data-username="${(authorDisplay || '').toLowerCase()}"
+                        data-manager="${(authorDisplay || '').toLowerCase()}">
+                        <td>${item.timestamp || ''}</td>
+                        <td>
+                            <div class="tender-cell">
+                                <div class="tender-company">${item.company || 'Без заказчика'}</div>
+                                <div class="tender-number">${displayTender}</div>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge ${positionsCount > 1 ? 'badge-primary' : 'badge-secondary'}">${positionsCount}</span>
+                        </td>
+                        <td><strong>${formatNumber(totalSale, 2)}</strong></td>
+                        <td>${formatNumber(totalPurchase, 2)}</td>
+                        <td>${formatNumber(totalWeight, 2)}</td>
+                        <td class="col-duty">${formatNumber(avgDuty, 0)}</td>
+                        <td class="text-center">
+                            <span class="status-pill ${(item.margin_percent || 0) >= 20 ? 'status-success' : 'status-warning'}">${formatNumber(item.margin_percent || 0, 1)}</span>
+                        </td>
+                        <td>${authorDisplay}</td>
+                        <td class="table-actions">
+                            <a href="/load_generation/${item.id}" class="btn btn-outline" title="Повторить генерацию">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M3 21v-5h5"></path></svg>
+                            </a>
+                            <button type="button" class="btn btn-outline view-details" data-id="${item.id}" title="Показать детали">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 8 4-8 4-8-4 8-4z"></path><path d="m4 10 8 4 8-4"></path><path d="m4 18 8 4 8-4"></path></svg>
+                            </button>
+                            <button type="button"
+                                    class="btn btn-outline toggle-history"
+                                    data-target="${identifier}"
+                                    data-tender="${tenderNumber}"
+                                    data-latest-id="${item.id}"
+                                    data-preloaded='${JSON.stringify(group.previous || [])}'
+                                    data-version-count="${group.version_count || 1}"
+                                    ${(!group.has_remote && (!group.previous || group.previous.length === 0)) ? 'disabled' : ''}
+                                    title="Показать предыдущие версии">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                <span class="history-count">${group.version_count || 1}</span>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr class="history-details-row" data-details="${identifier}" hidden>
+                        <td colspan="10">
+                            <div class="tender-history-details previous-history-panel" id="history-details-${identifier}">
+                                ${group.previous && group.previous.length > 0 
+                                    ? `<div class="previous-history-header">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M3 21v-5h5"></path></svg>
+                                        <span>Предыдущие версии (${group.previous.length + 1})</span>
+                                    </div>
+                                    <p class="text-muted">Нажмите кнопку выше, чтобы раскрыть историю всех расчётов по этому тендеру.</p>`
+                                    : `<div class="previous-history-header">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M3 21v-5h5"></path></svg>
+                                        <span>Предыдущие версии</span>
+                                    </div>
+                                    <p class="text-muted">Нажмите «Показать предыдущие версии», чтобы загрузить историю.</p>`
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+
+            // Обновляем пагинацию
+            updatePagination(pagination);
+
+            // Восстанавливаем обработчики событий для новых элементов
+            // Используем setTimeout для асинхронного выполнения, чтобы избежать блокировки
+            setTimeout(() => {
+                try {
+                    restoreEventHandlers();
+                } catch (error) {
+                    console.error('Error restoring event handlers:', error);
+                }
+            }, 0);
+        };
+
+        // Функция для группировки по тендерам (аналог _build_tender_groups на сервере)
+        const buildTenderGroups = (items) => {
+            const groups = [];
+            const lookup = {};
+
+            items.forEach(item => {
+                const tenderNumber = item.tender_number;
+                let key;
+                if (tenderNumber && tenderNumber !== 'Не указан') {
+                    key = tenderNumber.toLowerCase();
+                } else {
+                    key = `record-${item.id}`;
+                }
+
+                let group = lookup[key];
+                if (!group) {
+                    const identifierSource = tenderNumber && tenderNumber !== 'Не указан' ? tenderNumber : `${item.id}`;
+                    const identifier = identifierSource.replace(/[^a-zA-Z0-9_-]+/g, '-').replace(/^-+|-+$/g, '').toLowerCase() || `group-${item.id}`;
+                    group = {
+                        identifier: identifier,
+                        tender_number: tenderNumber && tenderNumber !== 'Не указан' ? tenderNumber : null,
+                        display_tender: tenderNumber && tenderNumber !== 'Не указан' ? tenderNumber : 'Без номера тендера',
+                        latest: item,
+                        previous: [],
+                        version_count: item.version_count || 1,
+                        has_remote: !!(tenderNumber && tenderNumber !== 'Не указан'),
+                    };
+                    lookup[key] = group;
+                    groups.push(group);
+                } else {
+                    group.previous.push(item);
+                }
+            });
+
+            groups.forEach(group => {
+                group.previous.sort((a, b) => {
+                    const timeA = a.timestamp || '';
+                    const timeB = b.timestamp || '';
+                    return timeB.localeCompare(timeA);
+                });
+                if (!group.version_count) {
+                    group.version_count = 1;
+                }
+            });
+
+            return groups;
+        };
+
+        // Функция для форматирования чисел (аналог format_number из Jinja2)
+        const formatNumber = (value, decimals = 2) => {
+            try {
+                const number = parseFloat(value);
+                if (isNaN(number)) return value;
+                
+                const formatted = number.toLocaleString('ru-RU', {
+                    minimumFractionDigits: decimals,
+                    maximumFractionDigits: decimals
+                });
+                return formatted.replace(/,/g, ' ').replace(/\./g, ',');
+            } catch (e) {
+                return value;
+            }
+        };
+
+        // Функция для обновления пагинации
+        const updatePagination = (pagination) => {
+            const paginationControls = document.querySelector('.pagination-controls');
+            if (!paginationControls) return;
+
+            const pages = pagination.pages || 1;
+            const currentPage = pagination.page || 1;
+            const hasPrev = pagination.has_prev || false;
+            const hasNext = pagination.has_next || false;
+
+            if (pages <= 1) {
+                paginationControls.style.display = 'none';
+                return;
+            }
+
+            paginationControls.style.display = 'block';
+
+            // Обновляем информацию о странице
+            const paginationInfo = paginationControls.querySelector('.pagination-info');
+            if (paginationInfo) {
+                paginationInfo.textContent = `Страница ${currentPage} из ${pages}`;
+            }
+
+            // Обновляем кнопки
+            const prevButton = paginationControls.querySelector('.pagination-buttons a:first-child, .pagination-buttons button:first-child');
+            const nextButton = paginationControls.querySelector('.pagination-buttons a:last-child, .pagination-buttons button:last-child');
+
+            if (prevButton) {
+                if (hasPrev) {
+                    const params = new URLSearchParams(window.location.search);
+                    params.set('page', currentPage - 1);
+                    prevButton.href = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+                    prevButton.style.display = '';
+                    if (prevButton.tagName === 'BUTTON') {
+                        const link = document.createElement('a');
+                        link.className = prevButton.className;
+                        link.href = prevButton.href;
+                        link.textContent = prevButton.textContent;
+                        prevButton.parentNode.replaceChild(link, prevButton);
+                    }
+                } else {
+                    if (prevButton.tagName === 'A') {
+                        const button = document.createElement('button');
+                        button.className = prevButton.className;
+                        button.disabled = true;
+                        button.textContent = prevButton.textContent;
+                        prevButton.parentNode.replaceChild(button, prevButton);
+                    }
+                }
+            }
+
+            if (nextButton) {
+                if (hasNext) {
+                    const params = new URLSearchParams(window.location.search);
+                    params.set('page', currentPage + 1);
+                    nextButton.href = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+                    nextButton.style.display = '';
+                    if (nextButton.tagName === 'BUTTON') {
+                        const link = document.createElement('a');
+                        link.className = nextButton.className;
+                        link.href = nextButton.href;
+                        link.textContent = nextButton.textContent;
+                        nextButton.parentNode.replaceChild(link, nextButton);
+                    }
+                } else {
+                    if (nextButton.tagName === 'A') {
+                        const button = document.createElement('button');
+                        button.className = nextButton.className;
+                        button.disabled = true;
+                        button.textContent = nextButton.textContent;
+                        nextButton.parentNode.replaceChild(button, nextButton);
+                    }
+                }
+            }
+        };
+
+        // Функция для восстановления обработчиков событий после обновления таблицы
+        const restoreEventHandlers = () => {
+            try {
+                // Используем глобальные переменные, определенные в начале скрипта
+                const modal = window.historyModal || document.getElementById('detailsModal');
+                const modalContent = window.historyModalContent || document.getElementById('modalDetailsContent');
+                const openModalFunc = window.historyOpenModal;
+                
+                if (!modal || !modalContent) {
+                    console.warn('Modal elements not found, skipping event handler restoration');
+                    return;
+                }
+                
+                // Восстанавливаем обработчики для кнопок просмотра деталей
+                // Удаляем все существующие обработчики перед добавлением новых
+                document.querySelectorAll('.view-details').forEach(button => {
+                // Клонируем кнопку без обработчиков событий
+                const newButton = button.cloneNode(true);
+                button.parentNode.replaceChild(newButton, button);
+                
+                // Добавляем новый обработчик
+                newButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const recordId = this.getAttribute('data-id');
+                    if (!recordId) {
+                        console.error('Record ID not found');
+                        return;
+                    }
+                    
+                    // Используем глобальные переменные
+                    if (modalContent) {
+                        modalContent.innerHTML = `
+                            <div class="loading-state">
+                                <div class="loading-spinner"></div>
+                                <p>Загрузка данных...</p>
+                            </div>
+                        `;
+                    }
+                    
+                    // Используем глобальную функцию openModal
+                    if (typeof openModalFunc === 'function') {
+                        openModalFunc();
+                    } else if (modal) {
+                        // Fallback если функция не доступна
+                        modal.classList.add('is-open');
+                        modal.setAttribute('aria-hidden', 'false');
+                        document.body.style.overflow = 'hidden';
+                    }
+
+                    fetch(`/history/details/${recordId}`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Ошибка загрузки данных');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            try {
+                                // Используем глобальную функцию renderDetails
+                                if (typeof window.renderDetails === 'function') {
+                                    window.renderDetails(data);
+                                } else if (modalContent) {
+                                    modalContent.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                                }
+                            } catch (renderError) {
+                                console.error('Error rendering details:', renderError);
+                                if (modalContent) {
+                                    modalContent.innerHTML = `
+                                        <div class="error-state">
+                                            <h4>Ошибка отображения данных</h4>
+                                            <p>${renderError.message}</p>
+                                        </div>
+                                    `;
+                                }
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error loading details:', error);
+                            if (modalContent) {
+                                modalContent.innerHTML = `
+                                    <div class="error-state">
+                                        <h4>Ошибка загрузки</h4>
+                                        <p>${error.message}</p>
+                                    </div>
+                                `;
+                            }
+                        });
+                });
+            });
+
+            // Восстанавливаем обработчики для кнопок истории
+            document.querySelectorAll('.toggle-history').forEach(button => {
+                // Удаляем старые обработчики, если они есть
+                const newButton = button.cloneNode(true);
+                button.parentNode.replaceChild(newButton, button);
+                
+                newButton.addEventListener('click', async () => {
+                    const identifier = newButton.dataset.target;
+                    const historyTable = document.getElementById('historyTable');
+                    const detailsRow = historyTable?.querySelector(`tr.history-details-row[data-details="${identifier}"]`);
+                    if (!detailsRow) {
+                        return;
+                    }
+
+                    const container = detailsRow.querySelector('.tender-history-details');
+                    const isOpen = !detailsRow.hasAttribute('hidden');
+
+                    if (isOpen) {
+                        detailsRow.setAttribute('hidden', '');
+                        newButton.classList.remove('is-open');
+                        return;
+                    }
+
+                    detailsRow.removeAttribute('hidden');
+                    newButton.classList.add('is-open');
+
+                    if (!container.dataset.loaded) {
+                        let records = [];
+                        let latestRecord = null;
+                        
+                        if (newButton.dataset.preloaded) {
+                            try {
+                                records = JSON.parse(newButton.dataset.preloaded) || [];
+                            } catch {
+                                records = [];
+                            }
+                        }
+
+                        if ((!records || records.length === 0) && newButton.dataset.tender) {
+                            container.innerHTML = `
+                                <div class="loading-state" style="padding: 16px 0;">
+                                    <div class="loading-spinner"></div>
+                                    <p>Загрузка предыдущих версий...</p>
+                                </div>
+                            `;
+                            try {
+                                const response = await fetch(`/history/tender/${encodeURIComponent(newButton.dataset.tender)}`);
+                                const payload = await response.json();
+                                const allRecords = payload.records || [];
+                                latestRecord = allRecords.find(record => String(record.id) === newButton.dataset.latestId);
+                                records = allRecords.filter(record => String(record.id) !== newButton.dataset.latestId);
+                            } catch {
+                                container.innerHTML = '<p class="text-danger">Не удалось загрузить историю.</p>';
+                            }
+                        }
+
+                        const totalVersions = parseInt(newButton.dataset.versionCount || (records.length || 0) + 1, 10);
+                        // Используем существующую функцию renderVersions
+                        if (typeof window.renderVersions === 'function') {
+                            container.innerHTML = window.renderVersions(records, totalVersions, latestRecord);
+                            // Инициализируем обработчики для сравнения версий, если функция доступна
+                            if (typeof window.initVersionComparison === 'function') {
+                                window.initVersionComparison(container);
+                            }
+                        } else {
+                            container.innerHTML = `<p>Всего версий: ${totalVersions}</p>`;
+                        }
+                        container.dataset.loaded = '1';
+                    }
+                });
+            });
+            } catch (error) {
+                console.error('Error in restoreEventHandlers:', error);
+            }
+        };
+
+        // Обработчик поиска: динамический поиск по всей истории через AJAX
         let searchTimeout = null;
         if (searchInput) {
             searchInput.addEventListener('input', () => {
-                // Мгновенный клиентский поиск по текущей странице
-                applyClientSearch();
+                const query = (searchInput.value || '').trim();
 
+                // Очищаем предыдущий таймер
                 clearTimeout(searchTimeout);
+                
+                // Если поиск пустой, сразу перезагружаем страницу
+                if (query.length === 0) {
+                    performServerSearch('');
+                    return;
+                }
+
+                // Устанавливаем новый таймер для debounce (500ms)
                 searchTimeout = setTimeout(() => {
-                    updateFiltersUI();
-                }, 300);
+                    performServerSearch(query);
+                }, 500);
             });
-            // Применяем фильтры при нажатии Enter
+
+            // Применяем фильтры при нажатии Enter (для других фильтров)
             searchInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    if (validateFilters()) {
-                        applyFilters();
-                    }
+                    clearTimeout(searchTimeout);
+                    const query = (searchInput.value || '').trim();
+                    performServerSearch(query);
                 }
             });
         }
@@ -1890,8 +2427,13 @@
 
         if (clearSearch) {
             clearSearch.addEventListener('click', () => {
-                if (searchInput) searchInput.value = '';
-                applyFilters();
+                if (searchInput) {
+                    searchInput.value = '';
+                    // Очищаем таймер поиска, если он активен
+                    clearTimeout(searchTimeout);
+                    // Выполняем поиск с пустым запросом (перезагрузит страницу)
+                    performServerSearch('');
+                }
             });
         }
 
@@ -2234,7 +2776,8 @@
         }
 
         // Инициализация сравнения версий
-        const initVersionComparison = (container) => {
+        // Делаем функцию initVersionComparison доступной глобально
+        window.initVersionComparison = (container) => {
             const checkboxes = container.querySelectorAll('.version-checkbox');
             const selectAllCheckbox = container.querySelector('.select-all-versions');
             const compareBtn = container.querySelector('.compare-versions-btn');

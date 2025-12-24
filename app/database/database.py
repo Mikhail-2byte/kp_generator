@@ -11,7 +11,7 @@ from alembic import command
 from alembic.config import Config
 from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
-from sqlalchemy import create_engine, func, String, cast, or_
+from sqlalchemy import create_engine, func, String, cast, or_, and_
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import joinedload
 
@@ -415,14 +415,66 @@ def get_generation_history(
             # Текстовый поиск по нескольким полям
             if search:
                 search_pattern = f"%{search.lower()}%"
-                base_filter = base_filter.filter(
-                    or_(
-                        func.lower(GenerationHistoryRecord.tender_number).like(search_pattern),
-                        func.lower(GenerationHistoryRecord.product).like(search_pattern),
-                        func.lower(GenerationHistoryRecord.drawing_number).like(search_pattern),
-                        func.lower(GenerationHistoryRecord.company).like(search_pattern),
+                search_conditions = [
+                    func.lower(GenerationHistoryRecord.tender_number).like(search_pattern),
+                    func.lower(GenerationHistoryRecord.product).like(search_pattern),
+                    func.lower(GenerationHistoryRecord.drawing_number).like(search_pattern),
+                    func.lower(GenerationHistoryRecord.company).like(search_pattern),
+                ]
+                
+                # Поиск по наименованиям позиций в JSON (positions_data)
+                # Ищем в поле "product" внутри массива позиций
+                # JSON формат: [{"product":"Ротор",...}, {"product":"Колесо",...}]
+                # json.dumps() создает компактный формат без пробелов: "product":"значение"
+                # Важно: не используем func.lower() на всем JSON, так как это может нарушить структуру
+                # Вместо этого ищем с учетом различных вариантов регистра в самом паттерне
+                
+                search_lower = search.lower()
+                
+                # Используем более надежный подход: ищем слово в JSON с учетом регистра
+                # но используем паттерны, которые покрывают основные варианты регистра
+                # JSON формат компактный: [{"product":"Ротор",...}]
+                
+                # Генерируем варианты поискового запроса с разным регистром
+                # для покрытия случаев, когда в JSON сохранено с разным регистром
+                search_variants = [
+                    search_lower,           # "ротор"
+                    search.upper(),         # "РОТОР"
+                    search.capitalize(),    # "Ротор"
+                    search.title(),         # "Ротор" (если несколько слов)
+                ]
+                # Убираем дубликаты
+                search_variants = list(dict.fromkeys(search_variants))
+                
+                # Создаем паттерны для каждого варианта регистра
+                json_patterns = []
+                for variant in search_variants:
+                    # Компактный формат JSON (без пробелов после :) - основной формат json.dumps()
+                    json_patterns.extend([
+                        f'%"product":"%{variant}%"%',    # "product":"...ротор..." (слово внутри строки)
+                        f'%"product":"{variant}"%',      # "product":"ротор" (точное совпадение)
+                        f'%"product":"{variant}",%',     # "product":"ротор", (в конце объекта)
+                        f'%,"product":"{variant}"%',     # ,"product":"ротор" (не первая позиция)
+                    ])
+                    
+                    # Формат с пробелом после : (на случай если формат изменится в будущем)
+                    json_patterns.extend([
+                        f'%"product": "%{variant}%"%',   # "product": "...ротор..."
+                        f'%"product": "{variant}"%',     # "product": "ротор"
+                    ])
+                
+                # Добавляем условие поиска в positions_data для каждого паттерна
+                # Используем AND с проверкой на NULL, чтобы избежать ошибок
+                # Используем OR для всех паттернов, чтобы найти любое совпадение
+                for json_pattern in json_patterns:
+                    search_conditions.append(
+                        and_(
+                            GenerationHistoryRecord.positions_data.isnot(None),
+                            GenerationHistoryRecord.positions_data.like(json_pattern)
+                        )
                     )
-                )
+                
+                base_filter = base_filter.filter(or_(*search_conditions))
 
             # Создаем подзапрос с фильтрацией для window функции
             filtered_subquery = base_filter.with_entities(GenerationHistoryRecord.id).subquery()

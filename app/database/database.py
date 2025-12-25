@@ -367,7 +367,10 @@ def get_generation_history(
             )
 
             # Базовый запрос для фильтрации
-            base_filter = session.query(GenerationHistoryRecord)
+            # Используем outerjoin с UserRecord для поиска по менеджеру
+            base_filter = session.query(GenerationHistoryRecord).outerjoin(
+                UserRecord, GenerationHistoryRecord.user_id == UserRecord.id
+            )
 
             # Применяем фильтры по датам
             if date_from:
@@ -414,67 +417,97 @@ def get_generation_history(
 
             # Текстовый поиск по нескольким полям
             if search:
-                search_pattern = f"%{search.lower()}%"
-                search_conditions = [
-                    func.lower(GenerationHistoryRecord.tender_number).like(search_pattern),
-                    func.lower(GenerationHistoryRecord.product).like(search_pattern),
-                    func.lower(GenerationHistoryRecord.drawing_number).like(search_pattern),
-                    func.lower(GenerationHistoryRecord.company).like(search_pattern),
-                ]
-                
-                # Поиск по наименованиям позиций в JSON (positions_data)
-                # Ищем в поле "product" внутри массива позиций
-                # JSON формат: [{"product":"Ротор",...}, {"product":"Колесо",...}]
-                # json.dumps() создает компактный формат без пробелов: "product":"значение"
-                # Важно: не используем func.lower() на всем JSON, так как это может нарушить структуру
-                # Вместо этого ищем с учетом различных вариантов регистра в самом паттерне
-                
-                search_lower = search.lower()
-                
-                # Используем более надежный подход: ищем слово в JSON с учетом регистра
-                # но используем паттерны, которые покрывают основные варианты регистра
-                # JSON формат компактный: [{"product":"Ротор",...}]
-                
-                # Генерируем варианты поискового запроса с разным регистром
-                # для покрытия случаев, когда в JSON сохранено с разным регистром
-                search_variants = [
-                    search_lower,           # "ротор"
-                    search.upper(),         # "РОТОР"
-                    search.capitalize(),    # "Ротор"
-                    search.title(),         # "Ротор" (если несколько слов)
-                ]
-                # Убираем дубликаты
-                search_variants = list(dict.fromkeys(search_variants))
-                
-                # Создаем паттерны для каждого варианта регистра
-                json_patterns = []
-                for variant in search_variants:
-                    # Компактный формат JSON (без пробелов после :) - основной формат json.dumps()
-                    json_patterns.extend([
-                        f'%"product":"%{variant}%"%',    # "product":"...ротор..." (слово внутри строки)
-                        f'%"product":"{variant}"%',      # "product":"ротор" (точное совпадение)
-                        f'%"product":"{variant}",%',     # "product":"ротор", (в конце объекта)
-                        f'%,"product":"{variant}"%',     # ,"product":"ротор" (не первая позиция)
-                    ])
+                search_trimmed = search.strip()
+                if not search_trimmed:
+                    # Пустой поиск после trim - пропускаем
+                    pass
+                else:
+                    # Для SQLite используем несколько вариантов поиска для case-insensitive
+                    # SQLite может некорректно обрабатывать func.lower() для кириллицы
+                    search_lower = search_trimmed.lower()
+                    search_upper = search_trimmed.upper()
+                    search_title = search_trimmed.title() if search_trimmed else ''
                     
-                    # Формат с пробелом после : (на случай если формат изменится в будущем)
-                    json_patterns.extend([
-                        f'%"product": "%{variant}%"%',   # "product": "...ротор..."
-                        f'%"product": "{variant}"%',     # "product": "ротор"
-                    ])
-                
-                # Добавляем условие поиска в positions_data для каждого паттерна
-                # Используем AND с проверкой на NULL, чтобы избежать ошибок
-                # Используем OR для всех паттернов, чтобы найти любое совпадение
-                for json_pattern in json_patterns:
-                    search_conditions.append(
-                        and_(
-                            GenerationHistoryRecord.positions_data.isnot(None),
-                            GenerationHistoryRecord.positions_data.like(json_pattern)
+                    # Создаем паттерны для разных вариантов регистра
+                    patterns = [f"%{p}%" for p in [search_trimmed, search_lower, search_upper, search_title] if p]
+                    # Убираем дубликаты
+                    patterns = list(dict.fromkeys(patterns))
+                    
+                    # Базовые условия поиска по основным полям
+                    search_conditions = []
+                    
+                    # Поиск по номеру тендера (с обработкой NULL)
+                    for pattern in patterns:
+                        search_conditions.append(
+                            func.coalesce(GenerationHistoryRecord.tender_number, '').like(pattern)
                         )
-                    )
-                
-                base_filter = base_filter.filter(or_(*search_conditions))
+                    
+                    # Поиск по наименованию товара
+                    for pattern in patterns:
+                        search_conditions.append(
+                            GenerationHistoryRecord.product.like(pattern)
+                        )
+                    
+                    # Поиск по наименованию заказчика (company)
+                    for pattern in patterns:
+                        search_conditions.append(
+                            GenerationHistoryRecord.company.like(pattern)
+                        )
+                    
+                    # Поиск по номеру чертежа (опционально)
+                    for pattern in patterns:
+                        search_conditions.append(
+                            func.coalesce(GenerationHistoryRecord.drawing_number, '').like(pattern)
+                        )
+                    
+                    # Поиск по менеджеру (username, last_name, first_name из связанной таблицы users)
+                    # Используем outerjoin для поиска даже если user_id NULL
+                    for pattern in patterns:
+                        search_conditions.append(
+                            UserRecord.username.like(pattern)
+                        )
+                        search_conditions.append(
+                            func.coalesce(UserRecord.last_name, '').like(pattern)
+                        )
+                        search_conditions.append(
+                            func.coalesce(UserRecord.first_name, '').like(pattern)
+                        )
+                    
+                    # Поиск по товарам в множественных позициях (JSON)
+                    # Используем более простой и надежный подход:
+                    # ищем в JSON как в тексте, но с учетом того, что JSON может быть в разных форматах
+                    # Основной формат: [{"product":"Ротор",...}] или [{"product": "Ротор", ...}]
+                    
+                    # Создаем универсальный паттерн для поиска в JSON
+                    # Ищем "product" и значение рядом с ним, независимо от форматирования
+                    # Используем несколько вариантов для надежности
+                    json_search_patterns = [
+                        f'%"product"%{search_lower}%',      # "product"..."ротор"...
+                        f'%"product":%{search_lower}%',     # "product":"..."ротор"...
+                        f'%"product": "%{search_lower}%',   # "product": "..."ротор"...
+                    ]
+                    
+                    # Добавляем варианты с разным регистром для поиска в JSON
+                    # (так как JSON может содержать данные в исходном регистре)
+                    search_original = search.strip()
+                    if search_original != search_lower:
+                        json_search_patterns.extend([
+                            f'%"product"%{search_original}%',
+                            f'%"product":%{search_original}%',
+                            f'%"product": "%{search_original}%',
+                        ])
+                    
+                    # Добавляем условия поиска в JSON для каждого паттерна
+                    for json_pattern in json_search_patterns:
+                        search_conditions.append(
+                            and_(
+                                GenerationHistoryRecord.positions_data.isnot(None),
+                                GenerationHistoryRecord.positions_data.like(json_pattern)
+                            )
+                        )
+                    
+                    # Применяем все условия через OR
+                    base_filter = base_filter.filter(or_(*search_conditions))
 
             # Создаем подзапрос с фильтрацией для window функции
             filtered_subquery = base_filter.with_entities(GenerationHistoryRecord.id).subquery()

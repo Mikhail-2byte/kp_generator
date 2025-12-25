@@ -12,7 +12,11 @@
         </div>
 
         <div class="search-controls">
-            <input type="text" id="searchInput" class="search-input" placeholder="Поиск по номеру тендера, товару, дате...">
+            <input type="text" id="searchInput" class="search-input" placeholder="Поиск по номеру тендера, заказчику, товару, менеджеру...">
+            <button id="searchButton" class="btn btn-primary" title="Найти">
+                <span>{{ sidebar_icon('search')|safe }}</span>
+                <span>Поиск</span>
+            </button>
             <select id="filterSelect" class="search-input">
                 <option value="all">Все поля</option>
                 <option value="tender">Номер тендера</option>
@@ -1744,75 +1748,18 @@
             return true;
         };
 
-        // Клиентский (динамический) поиск по таблице истории
-        const applyClientSearch = () => {
-            if (!table || !groupRows.length) return;
-
-            const query = (searchInput?.value || '').trim().toLowerCase();
-            const filter = filterSelect ? (filterSelect.value || 'all') : 'all';
-            let visible = 0;
-
-            groupRows.forEach((row) => {
-                const tender = (row.getAttribute('data-tender') || '').toLowerCase();
-                const drawing = (row.getAttribute('data-drawing') || '').toLowerCase();
-                const product = (row.getAttribute('data-product') || '').toLowerCase();
-                const company = (row.getAttribute('data-company') || '').toLowerCase();
-                const date = (row.getAttribute('data-date') || '').toLowerCase();
-                const manager = (row.getAttribute('data-manager') || '').toLowerCase();
-                const usernameAttr = (row.getAttribute('data-username') || '').toLowerCase();
-
-                let matches = true;
-
-                if (query) {
-                    switch (filter) {
-                        case 'tender':
-                            matches = tender.includes(query);
-                            break;
-                        case 'drawing':
-                            matches = drawing.includes(query);
-                            break;
-                        case 'product':
-                            matches = product.includes(query);
-                            break;
-                        case 'date':
-                            matches = date.includes(query);
-                            break;
-                        case 'user':
-                            matches = manager.includes(query) || usernameAttr.includes(query);
-                            break;
-                        default:
-                            matches =
-                                tender.includes(query) ||
-                                drawing.includes(query) ||
-                                product.includes(query) ||
-                                company.includes(query) ||
-                                date.includes(query) ||
-                                manager.includes(query) ||
-                                usernameAttr.includes(query);
-                    }
-                }
-
-                row.style.display = matches ? '' : 'none';
-                const detailsRow = table.querySelector(`tr.history-details-row[data-details="${row.dataset.historyGroup}"]`);
-                if (detailsRow) {
-                    detailsRow.style.display = matches ? '' : 'none';
-                }
-
-                if (matches) {
-                    visible += 1;
-                }
-            });
-
-            if (recordsCount) {
-                if ((searchInput?.value || '').trim()) {
-                    recordsCount.textContent = `Найдено тендеров: ${visible}`;
-                } else {
-                    recordsCount.textContent = `Всего тендеров: ${groupRows.length}`;
-                }
-            }
-
-            if (clearSearch) {
-                clearSearch.style.display = (searchInput?.value || '').trim() ? 'inline-flex' : 'none';
+        // Функция для обновления счетчика записей (используется при загрузке страницы)
+        const updateRecordsCount = () => {
+            if (!recordsCount || !table) return;
+            
+            const searchQuery = (searchInput?.value || '').trim();
+            const params = new URLSearchParams(window.location.search);
+            const hasSearch = searchQuery || params.get('search') || params.get('q');
+            
+            // Если есть поиск, счетчик будет обновлен после выполнения поиска
+            // Иначе показываем общее количество загруженных строк
+            if (!hasSearch && groupRows.length > 0) {
+                recordsCount.textContent = `Всего тендеров: ${groupRows.length}`;
             }
         };
 
@@ -1866,13 +1813,17 @@
         // Восстанавливаем параметры из URL при загрузке
         restoreURLParams();
         updateFiltersUI();
-        // Применяем клиентский поиск, если search уже есть в URL
-        applyClientSearch();
+        // Обновляем счетчик записей при загрузке
+        updateRecordsCount();
 
         // Функция для выполнения AJAX поиска по всей истории
         const performServerSearch = async (searchQuery) => {
-            if (!table || !searchQuery || searchQuery.trim().length === 0) {
-                // Если поиск пустой, перезагружаем страницу без параметра поиска
+            if (!table) return;
+            
+            const trimmedQuery = (searchQuery || '').trim();
+            
+            // Если поиск пустой, перезагружаем страницу без параметра поиска
+            if (trimmedQuery.length === 0) {
                 const params = new URLSearchParams(window.location.search);
                 params.delete('search');
                 params.delete('q');
@@ -1931,9 +1882,17 @@
                 // Обновляем таблицу с результатами поиска
                 updateTableFromApiData(data);
 
-                // Обновляем счетчик
+                // Обновляем счетчик результатов поиска
                 if (recordsCount) {
-                    recordsCount.textContent = `Найдено тендеров: ${data.pagination?.total || 0}`;
+                    const total = data.pagination?.total || 0;
+                    recordsCount.textContent = total > 0 
+                        ? `Найдено тендеров: ${total}` 
+                        : 'Ничего не найдено';
+                }
+                
+                // Обновляем кнопку очистки поиска
+                if (clearSearch) {
+                    clearSearch.style.display = 'inline-flex';
                 }
 
                 // Обновляем UI фильтров
@@ -2388,34 +2347,30 @@
             }
         };
 
-        // Обработчик поиска: динамический поиск по всей истории через AJAX
-        let searchTimeout = null;
-        if (searchInput) {
-            searchInput.addEventListener('input', () => {
-                const query = (searchInput.value || '').trim();
-
-                // Очищаем предыдущий таймер
-                clearTimeout(searchTimeout);
-                
-                // Если поиск пустой, сразу перезагружаем страницу
-                if (query.length === 0) {
-                    performServerSearch('');
-                    return;
-                }
-
-                // Устанавливаем новый таймер для debounce (500ms)
-                searchTimeout = setTimeout(() => {
-                    performServerSearch(query);
-                }, 500);
+        // Обработчик поиска: статический поиск по кнопке или Enter
+        const searchButton = document.getElementById('searchButton');
+        
+        // Функция выполнения поиска
+        const executeSearch = () => {
+            if (!searchInput) return;
+            const query = (searchInput.value || '').trim();
+            performServerSearch(query);
+        };
+        
+        // Поиск по кнопке
+        if (searchButton) {
+            searchButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                executeSearch();
             });
-
-            // Применяем фильтры при нажатии Enter (для других фильтров)
+        }
+        
+        // Поиск по Enter
+        if (searchInput) {
             searchInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    clearTimeout(searchTimeout);
-                    const query = (searchInput.value || '').trim();
-                    performServerSearch(query);
+                    executeSearch();
                 }
             });
         }
@@ -2429,8 +2384,6 @@
             clearSearch.addEventListener('click', () => {
                 if (searchInput) {
                     searchInput.value = '';
-                    // Очищаем таймер поиска, если он активен
-                    clearTimeout(searchTimeout);
                     // Выполняем поиск с пустым запросом (перезагрузит страницу)
                     performServerSearch('');
                 }

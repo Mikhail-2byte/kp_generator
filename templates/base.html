@@ -56,6 +56,10 @@
                     <span class="sidebar-icon">{{ sidebar_icon('message-square')|safe }}</span>
                     <span class="sidebar-label">Обратная связь</span>
                 </a>
+                <a href="{{ url_for('main.ai_agent') }}" class="sidebar-link" data-nav="ai_agent">
+                    <span class="sidebar-icon">{{ sidebar_icon('bot')|safe }}</span>
+                    <span class="sidebar-label">AI Agent<span class="beta-badge">beta</span></span>
+                </a>
             </nav>
 
             <div class="sidebar-bottom" aria-label="Дополнительная навигация">
@@ -250,6 +254,17 @@
                 } else {
                     sidebarProfileLink.classList.remove('is-active');
                     sidebarProfileLink.removeAttribute('aria-current');
+                }
+            }
+
+            const sidebarAiAgentLink = document.querySelector('.sidebar-link[data-nav="ai_agent"]');
+            if (sidebarAiAgentLink) {
+                if (activePage === 'ai_agent') {
+                    sidebarAiAgentLink.classList.add('is-active');
+                    sidebarAiAgentLink.setAttribute('aria-current', 'page');
+                } else {
+                    sidebarAiAgentLink.classList.remove('is-active');
+                    sidebarAiAgentLink.removeAttribute('aria-current');
                 }
             }
 

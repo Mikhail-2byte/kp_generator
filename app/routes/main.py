@@ -358,6 +358,129 @@ def export_history() -> Response:
         return redirect(url_for('main.history'))
 
 
+@main_bp.route('/ai-agent')
+def ai_agent() -> str:
+    """Страница AI агента-консультанта. Доступна без авторизации."""
+    return render_template(
+        'ai_agent.html',
+        **build_context('ai_agent', 'AI Консультант')
+    )
+
+
+@main_bp.route('/api/ai-agent/chat', methods=['POST'])
+@csrf.exempt
+def ai_agent_chat() -> Response:
+    """API endpoint для общения с AI агентом. Доступен без авторизации."""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Не получены данные запроса', 'response': None}), 400
+        
+        message = data.get('message', '').strip()
+        if not message:
+            return jsonify({'error': 'Сообщение не может быть пустым', 'response': None}), 400
+        
+        # Инициализируем AI агента
+        # Добавляем корень проекта в sys.path для корректного импорта
+        import sys
+        from pathlib import Path
+        project_root = Path(__file__).resolve().parents[1]
+        if str(project_root) not in sys.path:
+            sys.path.insert(0, str(project_root))
+        
+        try:
+            from ai_agent.agent import AIAgent
+        except ImportError as import_err:
+            current_app.logger.error('Failed to import AIAgent: %s', import_err, exc_info=True)
+            return jsonify({
+                'response': None,
+                'error': f'Ошибка импорта AI агента: {str(import_err)}. Проверьте, что модуль ai_agent доступен.'
+            }), 500
+        
+        try:
+            agent = AIAgent()
+            current_app.logger.info('AI agent initialized successfully')
+        except Exception as init_err:
+            current_app.logger.error('Failed to initialize AIAgent: %s', init_err, exc_info=True)
+            return jsonify({
+                'response': None,
+                'error': f'Ошибка инициализации AI агента: {str(init_err)}'
+            }), 500
+        
+        # Восстанавливаем историю из сессии, если есть
+        if 'ai_agent_history' in session:
+            try:
+                history_data = session['ai_agent_history']
+                # Проверяем, что это список
+                if isinstance(history_data, list):
+                    agent.conversation_history = history_data
+                else:
+                    current_app.logger.warning('Invalid history format in session, resetting')
+                    agent.conversation_history = []
+            except Exception as e:
+                current_app.logger.warning('Failed to restore history from session: %s', e)
+                # Если не удалось восстановить, начинаем с чистого листа
+                agent.conversation_history = []
+        
+        # Отправляем сообщение агенту
+        current_app.logger.info('Sending message to AI agent: %s', message[:100])
+        response = agent.chat(message)
+        current_app.logger.info('Received response from AI agent, length: %d', len(response) if response else 0)
+        
+        # Проверяем, что получили ответ
+        if not response:
+            current_app.logger.warning('Empty response from AI agent')
+            return jsonify({
+                'response': None,
+                'error': 'Агент не вернул ответ. Попробуйте еще раз.'
+            }), 500
+        
+        # Сохраняем историю в сессии (ограничиваем размер)
+        try:
+            # Сохраняем только последние 20 сообщений, чтобы не перегружать сессию
+            history_to_save = agent.conversation_history[-20:] if len(agent.conversation_history) > 20 else agent.conversation_history
+            
+            # Очищаем history от объектов, которые не могут быть сериализованы (например, reasoning_details с сложными объектами)
+            serializable_history = []
+            for msg in history_to_save:
+                clean_msg = {
+                    'role': msg.get('role'),
+                    'content': msg.get('content', '')
+                }
+                # reasoning_details может содержать сложные объекты, пропускаем его для сессии
+                # или сериализуем только если это простой dict
+                if 'reasoning_details' in msg:
+                    try:
+                        # Пытаемся сохранить только если это простой dict
+                        if isinstance(msg['reasoning_details'], dict):
+                            clean_msg['reasoning_details'] = msg['reasoning_details']
+                    except Exception:
+                        pass  # Пропускаем reasoning_details если не можем сериализовать
+                serializable_history.append(clean_msg)
+            
+            session['ai_agent_history'] = serializable_history
+        except Exception as e:
+            current_app.logger.warning('Failed to save AI agent history to session: %s', e)
+        
+        return jsonify({
+            'response': response,
+            'error': None
+        })
+        
+    except ImportError as e:
+        current_app.logger.error('Import error in AI agent chat: %s', e, exc_info=True)
+        return jsonify({
+            'response': None,
+            'error': f'Ошибка импорта модуля AI агента: {str(e)}'
+        }), 500
+    except Exception as e:
+        current_app.logger.error('Error in AI agent chat: %s', e, exc_info=True)
+        return jsonify({
+            'response': None,
+            'error': f'Ошибка при обработке запроса: {str(e)}'
+        }), 500
+
+
 @main_bp.route('/feedback', methods=['GET', 'POST'])
 def feedback() -> Union[str, Response]:
     """Принимает обратную связь от пользователей и сохраняет её локально."""

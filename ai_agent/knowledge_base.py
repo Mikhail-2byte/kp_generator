@@ -136,21 +136,40 @@ class KnowledgeBase:
         query_lower = query.lower()
         query_words = set(query_lower.split())
         
+        # Ключевые фразы из запроса (для более точного поиска)
+        key_phrases = []
+        if 'согласование' in query_lower or 'согласовать' in query_lower:
+            key_phrases.append('согласование')
+        if 'бюджет' in query_lower:
+            key_phrases.append('бюджет')
+        if 'расценк' in query_lower or 'расценка' in query_lower:
+            key_phrases.append('расценк')
+        if 'отправ' in query_lower or 'отправить' in query_lower:
+            key_phrases.append('отправ')
+        
         # Собираем все документы
         all_docs = self.instructions + self.documentation
         
-        # Простой поиск по ключевым словам
+        # Улучшенный поиск по ключевым словам и фразам
         scored_docs = []
         for doc in all_docs:
             content_lower = doc['content'].lower()
             title_lower = doc['title'].lower()
             
-            # Подсчитываем совпадения
+            # Подсчитываем совпадения слов
             title_score = sum(1 for word in query_words if word in title_lower)
             content_score = sum(1 for word in query_words if word in content_lower)
             
+            # Бонус за совпадение ключевых фраз
+            phrase_bonus = 0
+            for phrase in key_phrases:
+                if phrase in content_lower:
+                    phrase_bonus += 5  # Большой бонус за ключевые фразы
+                if phrase in title_lower:
+                    phrase_bonus += 10  # Еще больший бонус в заголовке
+            
             # Общий score (заголовок важнее)
-            total_score = title_score * 3 + content_score
+            total_score = title_score * 3 + content_score + phrase_bonus
             
             if total_score > 0:
                 scored_docs.append((total_score, doc))
@@ -161,19 +180,41 @@ class KnowledgeBase:
         # Формируем контекст
         context_parts = []
         for score, doc in scored_docs[:max_results]:
-            # Берем первые 1000 символов или до конца первого раздела
             content = doc['content']
-            if len(content) > 1000:
-                # Пытаемся обрезать по разделам
+            
+            # Увеличиваем лимит до 3000 символов для инструкций
+            max_chars = 3000 if doc['source'].endswith('.txt') else 2000
+            
+            if len(content) > max_chars:
+                # Умное обрезание: ищем релевантные разделы
                 lines = content.split('\n')
-                truncated = []
+                relevant_lines = []
                 char_count = 0
-                for line in lines:
-                    if char_count + len(line) > 1000:
-                        break
-                    truncated.append(line)
-                    char_count += len(line) + 1
-                content = '\n'.join(truncated) + "..."
+                found_relevant_section = False
+                
+                # Если есть ключевые фразы, ищем разделы с ними
+                if key_phrases:
+                    for i, line in enumerate(lines):
+                        line_lower = line.lower()
+                        # Проверяем, содержит ли строка ключевую фразу
+                        if any(phrase in line_lower for phrase in key_phrases):
+                            found_relevant_section = True
+                            # Берем этот раздел и несколько строк до/после
+                            start = max(0, i - 5)
+                            end = min(len(lines), i + 30)  # Берем больше строк после найденного раздела
+                            relevant_lines = lines[start:end]
+                            break
+                
+                # Если не нашли релевантный раздел, берем начало
+                if not relevant_lines:
+                    for line in lines:
+                        if char_count + len(line) > max_chars:
+                            break
+                        relevant_lines.append(line)
+                        char_count += len(line) + 1
+                    relevant_lines.append("...")
+                
+                content = '\n'.join(relevant_lines)
             
             context_parts.append(
                 f"=== {doc['title']} ({doc['source']}) ===\n{content}\n"

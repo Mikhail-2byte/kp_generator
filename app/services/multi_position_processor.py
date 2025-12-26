@@ -283,6 +283,48 @@ class MultiPositionProcessor:
         sheet[f"I{difference_row}"] = f"=I{i27_row}-I{i28_row}"
         sheet[f"I{ratio_row}"] = f"=I{difference_row}/I{i27_row}"
 
+    def fill_finance_flags(self, sheet, form_data: Dict[str, Any], rows_added: int = 0) -> None:
+        """
+        Заполняет флаги финансирования в Excel.
+        
+        Записывает "ДА" в ячейки H для кредита и банковской гарантии,
+        если соответствующие чекбоксы отмечены в форме.
+        
+        Args:
+            sheet: Лист Excel
+            form_data: Данные формы с флагами финансирования
+            rows_added: Количество добавленных строк (для расчета номера строки банковской гарантии)
+        """
+        last_data_row = max(self.find_last_data_row(sheet), DATA_START_ROW)
+        total_row = last_data_row + 1
+        
+        # Вычисляем номера строк как в update_summary_block
+        # i25_row = total_row + 13
+        # i26_row = i25_row + 1 = total_row + 14
+        # i27_row = i26_row + 1 = total_row + 15
+        # i28_row = i27_row + 1 = total_row + 16
+        # i29_row = i28_row + 1 = total_row + 17
+        # i30_row = i29_row + 1 = total_row + 18
+        # i31_row = i30_row + 1 = total_row + 19
+        # i32_row = i31_row + 1 = total_row + 20
+        # i33_row = i32_row + 1 = total_row + 21
+        # i34_row = i33_row + 1 = total_row + 22 (строка для кредита)
+        i34_row = total_row + 22
+        
+        # bank_guarantee_row = 37 + rows_added (как в update_summary_block)
+        bank_guarantee_row = 37 + rows_added
+        
+        # Проверяем флаги из form_data
+        finance_credit = form_data.get('finance_credit', '')
+        finance_bank_guarantee = form_data.get('finance_bank_guarantee', '')
+        
+        # Записываем "ДА" если чекбоксы отмечены
+        if finance_credit and str(finance_credit).lower() in ['1', 'true', 'on', 'yes']:
+            sheet[f"H{i34_row}"] = "ДА"
+        
+        if finance_bank_guarantee and str(finance_bank_guarantee).lower() in ['1', 'true', 'on', 'yes']:
+            sheet[f"H{bank_guarantee_row}"] = "ДА"
+
     def update_logistics_columns(self, sheet) -> None:
         """Настраивает формулы в столбцах R и T для всех строк с данными."""
         last_data_row = max(self.find_last_data_row(sheet), DATA_START_ROW)
@@ -424,11 +466,11 @@ class MultiPositionProcessor:
         
         # Заполняем цены, если они переданы
         if final_price is not None:
-            # Округляем вверх до десятков
-            rounded_fp = math.ceil(float(final_price) / 10.0) * 10.0
+            # Округляем вверх до целого числа (чтобы маржа была не меньше целевой)
+            rounded_fp = math.ceil(float(final_price))
             sheet['H10'] = rounded_fp  # Цена за единицу
         if general_price is not None:
-            gp = round(float(general_price), 2)
+            gp = math.ceil(float(general_price))
             sheet['I11'] = gp  # Общая цена
 
     def process_multiple_positions(self, positions: List[Dict[str, Any]], form_data: Dict[str, Any] = None, final_price: float = None, general_price: float = None, position_prices: List[Dict[str, Any]] | None = None, manager_fio: str = None) -> BytesIO:
@@ -462,8 +504,8 @@ class MultiPositionProcessor:
                 pp = position_prices[i]
                 fp = pp.get('final_price')
                 if fp is not None:
-                    # Округляем вверх до десятков
-                    fp_rounded = math.ceil(float(fp) / 10.0) * 10.0
+                    # Округляем вверх до целого числа (чтобы маржа была не меньше целевой)
+                    fp_rounded = math.ceil(float(fp))
                     sheet[f"H{row_number}"] = fp_rounded  # Цена за единицу по позиции
                 # Вставляем формулу для выручки: цена за единицу * количество
                 sheet[f"I{row_number}"] = f"=H{row_number}*G{row_number}"
@@ -472,6 +514,10 @@ class MultiPositionProcessor:
         self.update_total_row_formulas(sheet)
         self.update_summary_block(sheet, positions_to_add)
         self.update_logistics_columns(sheet)
+        
+        # Заполняем флаги финансирования (после update_summary_block, чтобы номера строк были правильными)
+        if form_data:
+            self.fill_finance_flags(sheet, form_data, positions_to_add)
         
         # Сохраняем в BytesIO
         excel_file = BytesIO()

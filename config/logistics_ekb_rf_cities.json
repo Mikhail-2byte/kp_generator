@@ -19,6 +19,16 @@
       "name": "Челябинск",
       "region": "Челябинская область",
       "distance_from_ekb_km": 212
+    },
+    {
+      "name": "Старый Оскол",
+      "region": "Белгородская область",
+      "distance_from_ekb_km": 2000
+    },
+    {
+      "name": "Кирово-Чепецк",
+      "region": "Кировская область",
+      "distance_from_ekb_km": 850
     }
   ]
 }

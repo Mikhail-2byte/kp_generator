@@ -11,7 +11,10 @@ def calculate_selling_price(
     weight: float,
     delivery_time: int,
     margin_percent: float = 30,
-    config: Optional[Dict[str, Any]] = None
+    config: Optional[Dict[str, Any]] = None,
+    use_credit: bool = False,
+    use_bank_guarantee: bool = False,
+    payment_days: Optional[int] = None
 ) -> float:
     """
     Выполняет расчет продажной цены с учетом всех параметров бюджета.
@@ -80,11 +83,14 @@ def calculate_selling_price(
     conversion_fee = purchase_cost * quantity * CONVERSION_FEE_RATE
     conversion_fee_per_unit = conversion_fee / quantity
     
-    # Расчет кредитных затрат
-    credit_cost = purchase_cost * quantity * CREDIT_RATE / 365 * delivery_time
-    credit_cost_per_unit = credit_cost / quantity
+    # Расчет кредитных затрат (только если use_credit=True)
+    if use_credit:
+        credit_cost = purchase_cost * quantity * CREDIT_RATE / 365 * delivery_time
+        credit_cost_per_unit = credit_cost / quantity
+    else:
+        credit_cost_per_unit = 0
     
-    # Общие затраты на единицу товара
+    # Общие затраты на единицу товара (без банковской гарантии, т.к. она зависит от выручки)
     total_cost_per_unit = (
         purchase_cost +
         logistics_cnr_per_unit +
@@ -95,6 +101,30 @@ def calculate_selling_price(
     )
     
     # Расчет цены для маржи margin_percent%
-    selling_price_per_unit = total_cost_per_unit / (1 - margin_percent / 100)
+    # Если используется банковская гарантия, нужно учесть её в итеративном расчете
+    if use_bank_guarantee and payment_days is not None:
+        # Итеративный расчет с учетом банковской гарантии
+        # Банковская гарантия = (выручка с НДС) * 0.03 / 365 * payment_days
+        # Выручка с НДС = selling_price_per_unit * quantity * 1.2
+        # Начинаем с цены без банковской гарантии
+        selling_price_per_unit = total_cost_per_unit / (1 - margin_percent / 100)
+        
+        # Итеративно уточняем цену с учетом банковской гарантии
+        for _ in range(5):  # Максимум 5 итераций
+            revenue_with_vat = selling_price_per_unit * quantity * 1.2
+            bank_guarantee_cost = revenue_with_vat * 0.03 / 365 * payment_days
+            bank_guarantee_cost_per_unit = bank_guarantee_cost / quantity
+            
+            # Пересчитываем цену с учетом банковской гарантии
+            total_cost_with_guarantee = total_cost_per_unit + bank_guarantee_cost_per_unit
+            new_price = total_cost_with_guarantee / (1 - margin_percent / 100)
+            
+            # Проверяем сходимость (разница менее 0.01)
+            if abs(new_price - selling_price_per_unit) < 0.01:
+                break
+            selling_price_per_unit = new_price
+    else:
+        # Обычный расчет без банковской гарантии
+        selling_price_per_unit = total_cost_per_unit / (1 - margin_percent / 100)
     
     return selling_price_per_unit

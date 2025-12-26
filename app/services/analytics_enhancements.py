@@ -333,7 +333,7 @@ def generate_interactive_report(
             'revenue': 'sum',
             'margin': 'mean',
             'quantity': 'sum'
-        }).round(2)
+        }).round(0)
         company_stats.columns = ['Общая выручка', 'Средняя маржа (%)', 'Общее количество']
         company_stats = company_stats.sort_values('Общая выручка', ascending=False).head(20)
         

@@ -1,3 +1,4 @@
+import json
 import os
 import re
 from typing import Any, Dict, List, Tuple
@@ -32,6 +33,26 @@ def extract_positions_from_form(
 
     positions: List[Dict[str, Any]] = []
     field_keys: List[Dict[str, str]] = []
+
+    # Сначала проверяем positions_payload (JSON строка с позициями)
+    positions_payload = form_data.get('positions_payload')
+    if positions_payload:
+        try:
+            if isinstance(positions_payload, str):
+                parsed_positions = json.loads(positions_payload)
+            else:
+                parsed_positions = positions_payload
+            
+            if isinstance(parsed_positions, list) and len(parsed_positions) > 0:
+                # Создаем field_keys для каждой позиции
+                for pos in parsed_positions:
+                    if include_field_keys:
+                        key_map = {field: field for field in ['product', 'drawing_number', 'material', 'cost_price', 'cost_price_per_kg', 'quantity', 'weight', 'duty_percent']}
+                        field_keys.append(key_map)
+                return (parsed_positions, field_keys) if include_field_keys else parsed_positions
+        except (json.JSONDecodeError, TypeError, ValueError):
+            # Если не удалось распарсить, продолжаем обычную обработку
+            pass
 
     position_fields = [
         'product',

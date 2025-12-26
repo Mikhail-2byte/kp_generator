@@ -197,7 +197,7 @@ def _describe_dataframe(df: pd.DataFrame, columns: List[str]) -> Optional[Previe
         'max': 'Максимум'
     }
     describe_df = describe_df.rename(columns=rename_map)
-    describe_df = describe_df.round(2).replace(np.nan, '')
+    describe_df = describe_df.round(0).replace(np.nan, '')
     return _preview_table(describe_df, limit=len(describe_df))
 
 

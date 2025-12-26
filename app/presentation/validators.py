@@ -98,6 +98,19 @@ def validate_form_data(form_data: Dict[str, Any]) -> FormValidationResult:
         errors.append('Необходимо указать хотя бы одну позицию.')
         invalid_fields.update({'product', 'quantity', 'cost_price', 'weight'})
         return FormValidationResult(errors=errors, invalid_fields=sorted(invalid_fields), cleaned_data=cleaned_data)
+    
+    # Определяем, являются ли позиции множественными из payload
+    # (проверяем наличие positions_payload и что все key_map одинаковые)
+    has_positions_payload = 'positions_payload' in cleaned_data
+    is_multi_position_payload = (
+        has_positions_payload and 
+        len(positions) > 1 and 
+        len(position_field_keys) > 0 and
+        all(
+            all(k == field for field, k in key_map.items()) 
+            for key_map in position_field_keys
+        )
+    )
 
     company = cleaned_data.get('company', '') or ''
     if not company:
@@ -205,7 +218,7 @@ def validate_form_data(form_data: Dict[str, Any]) -> FormValidationResult:
 
     for index, (position, key_map) in enumerate(zip(positions, position_field_keys), start=1):
         normalized_position: Dict[str, Any] = {}
-
+        
         for field in ['product', 'drawing_number', 'material']:
             value = (position.get(field) or '').strip() if isinstance(position.get(field), str) else position.get(field)
             if field == 'product':
@@ -217,12 +230,18 @@ def validate_form_data(form_data: Dict[str, Any]) -> FormValidationResult:
                     invalid_fields.add(key_map.get(field, field))
             if value:
                 normalized_position[field] = value
-                cleaned_data[key_map.get(field, field)] = value
+                # Записываем в cleaned_data только если это не множественные позиции из payload
+                if not is_multi_position_payload:
+                    cleaned_data[key_map.get(field, field)] = value
 
         for field in required_position_fields:
             if field in ['quantity', 'cost_price', 'weight', 'product']:
                 key_name = key_map.get(field, field)
-                raw_value = cleaned_data.get(key_name, position.get(field))
+                # Для множественных позиций из payload используем значение напрямую из позиции
+                if is_multi_position_payload:
+                    raw_value = position.get(field)
+                else:
+                    raw_value = cleaned_data.get(key_name, position.get(field))
                 if (raw_value is None or str(raw_value).strip() == '') and field != 'product':
                     label = field_labels.get(field, field)
                     errors.append(f'Позиция {index}: поле "{label}" является обязательным.')
@@ -230,7 +249,11 @@ def validate_form_data(form_data: Dict[str, Any]) -> FormValidationResult:
 
         for field, rules in numeric_position_rules.items():
             key_name = key_map.get(field, field)
-            raw_value = cleaned_data.get(key_name, position.get(field))
+            # Для множественных позиций из payload используем значение напрямую из позиции
+            if is_multi_position_payload:
+                raw_value = position.get(field)
+            else:
+                raw_value = cleaned_data.get(key_name, position.get(field))
             label = field_labels.get(field, field)
 
             if (raw_value is None or str(raw_value).strip() == ''):
@@ -263,7 +286,9 @@ def validate_form_data(form_data: Dict[str, Any]) -> FormValidationResult:
                 invalid_fields.add(key_name)
 
             normalized_position[field] = value
-            cleaned_data[key_name] = _format_number_for_form(value, as_int=bool(rules.get('as_int')))
+            # Записываем в cleaned_data только если это не множественные позиции из payload
+            if not is_multi_position_payload:
+                cleaned_data[key_name] = _format_number_for_form(value, as_int=bool(rules.get('as_int')))
 
         if normalized_position:
             normalized_positions.append(normalized_position)

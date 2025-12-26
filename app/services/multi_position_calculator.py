@@ -41,7 +41,8 @@ class MultiPositionCalculator(PriceCalculatorPort):
     
     def calculate_position_costs(
         self, position: Dict[str, Any], logistics_rub: float, 
-        delivery_time: int, total_weight: float
+        delivery_time: int, total_weight: float,
+        use_credit: bool = False
     ) -> Dict[str, float]:
         """
         Рассчитывает все затраты для одной позиции.
@@ -91,9 +92,12 @@ class MultiPositionCalculator(PriceCalculatorPort):
         conversion_fee = cost_price * quantity * self.CONVERSION_FEE_RATE
         conversion_fee_per_unit = conversion_fee / quantity if quantity > 0 else 0
         
-        # Расчет кредитных затрат
-        credit_cost = cost_price * quantity * self.CREDIT_RATE / 365 * delivery_time
-        credit_cost_per_unit = credit_cost / quantity if quantity > 0 else 0
+        # Расчет кредитных затрат (только если use_credit=True)
+        if use_credit:
+            credit_cost = cost_price * quantity * self.CREDIT_RATE / 365 * delivery_time
+            credit_cost_per_unit = credit_cost / quantity if quantity > 0 else 0
+        else:
+            credit_cost_per_unit = 0
         
         # Общие затраты на единицу товара
         total_cost_per_unit = (
@@ -121,6 +125,9 @@ class MultiPositionCalculator(PriceCalculatorPort):
         logistics_rub: float,
         delivery_time: int,
         margin_percent: float,
+        use_credit: bool = False,
+        use_bank_guarantee: bool = False,
+        payment_days: Optional[int] = None
     ) -> Dict[str, Any]:
         """Реализация интерфейса калькулятора."""
         return self.calculate_multi_position_prices(
@@ -128,12 +135,18 @@ class MultiPositionCalculator(PriceCalculatorPort):
             logistics_rub,
             delivery_time,
             margin_percent,
+            use_credit=use_credit,
+            use_bank_guarantee=use_bank_guarantee,
+            payment_days=payment_days
         )
 
     def calculate_multi_position_prices(
         self, positions: List[Dict[str, Any]],
         logistics_rub: float, delivery_time: int,
-        target_margin_percent: float
+        target_margin_percent: float,
+        use_credit: bool = False,
+        use_bank_guarantee: bool = False,
+        payment_days: Optional[int] = None
     ) -> Dict[str, Any]:
         """
         Рассчитывает цены для множественных позиций с единой итоговой маржой.
@@ -172,7 +185,7 @@ class MultiPositionCalculator(PriceCalculatorPort):
         total_costs = 0
         
         for position in positions:
-            costs = self.calculate_position_costs(position, logistics_rub, delivery_time, total_weight)
+            costs = self.calculate_position_costs(position, logistics_rub, delivery_time, total_weight, use_credit=use_credit)
             position_costs.append({
                 'position': position,
                 'costs': costs
@@ -184,29 +197,102 @@ class MultiPositionCalculator(PriceCalculatorPort):
 
         if self.pricing_mode == 'per_position':
             # Ценообразование: каждая позиция достигает целевой маржи
-            for pos_data in position_costs:
-                position = pos_data['position']
-                costs = pos_data['costs']
-                cost_per_unit = costs['cost_per_unit']
-                if target_margin_percent >= 100:
-                    final_price = cost_per_unit  # защита от деления на ноль; не повышаем цену
-                else:
-                    final_price = cost_per_unit / (1 - target_margin_percent / 100)
-                quantity = int(position['quantity'])
-                general_price = final_price * quantity
-                total_revenue += general_price
-                result_positions.append({
-                    'position': position,
-                    'final_price': final_price,
-                    'general_price': general_price,
-                    'costs': costs,
-                    'margin': (final_price - cost_per_unit) / final_price * 100 if final_price > 0 else 0
-                })
+            # Если используется банковская гарантия, нужен итеративный расчет
+            if use_bank_guarantee and payment_days is not None:
+                # Итеративный расчет с учетом банковской гарантии для каждой позиции
+                for pos_data in position_costs:
+                    position = pos_data['position']
+                    costs = pos_data['costs']
+                    cost_per_unit = costs['cost_per_unit']
+                    quantity = int(position['quantity'])
+                    
+                    # Начинаем с цены без банковской гарантии
+                    if target_margin_percent >= 100:
+                        final_price = cost_per_unit
+                    else:
+                        final_price = cost_per_unit / (1 - target_margin_percent / 100)
+                    
+                    # Итеративно уточняем цену с учетом банковской гарантии
+                    for _ in range(5):  # Максимум 5 итераций
+                        revenue_with_vat = final_price * quantity * 1.2
+                        bank_guarantee_cost = revenue_with_vat * 0.03 / 365 * payment_days
+                        bank_guarantee_cost_per_unit = bank_guarantee_cost / quantity if quantity > 0 else 0
+                        
+                        # Пересчитываем цену с учетом банковской гарантии
+                        total_cost_with_guarantee = cost_per_unit + bank_guarantee_cost_per_unit
+                        if target_margin_percent >= 100:
+                            new_price = total_cost_with_guarantee
+                        else:
+                            new_price = total_cost_with_guarantee / (1 - target_margin_percent / 100)
+                        
+                        # Проверяем сходимость (разница менее 0.01)
+                        if abs(new_price - final_price) < 0.01:
+                            break
+                        final_price = new_price
+                    
+                    general_price = final_price * quantity
+                    total_revenue += general_price
+                    result_positions.append({
+                        'position': position,
+                        'final_price': final_price,
+                        'general_price': general_price,
+                        'costs': costs,
+                        'margin': (final_price - cost_per_unit) / final_price * 100 if final_price > 0 else 0
+                    })
+            else:
+                # Обычный расчет без банковской гарантии
+                for pos_data in position_costs:
+                    position = pos_data['position']
+                    costs = pos_data['costs']
+                    cost_per_unit = costs['cost_per_unit']
+                    if target_margin_percent >= 100:
+                        final_price = cost_per_unit  # защита от деления на ноль; не повышаем цену
+                    else:
+                        final_price = cost_per_unit / (1 - target_margin_percent / 100)
+                    quantity = int(position['quantity'])
+                    general_price = final_price * quantity
+                    total_revenue += general_price
+                    result_positions.append({
+                        'position': position,
+                        'final_price': final_price,
+                        'general_price': general_price,
+                        'costs': costs,
+                        'margin': (final_price - cost_per_unit) / final_price * 100 if final_price > 0 else 0
+                    })
             price_coefficient = None
         else:
             # Ценообразование: общий коэффициент по целевой суммарной марже
-            target_revenue = total_costs / (1 - target_margin_percent / 100)
-            price_coefficient = target_revenue / total_costs if total_costs > 0 else 1
+            # Если используется банковская гарантия, нужен итеративный расчет
+            if use_bank_guarantee and payment_days is not None:
+                # Итеративный расчет с учетом банковской гарантии
+                # Банковская гарантия = (выручка с НДС) * 0.03 / 365 * payment_days
+                target_revenue = total_costs / (1 - target_margin_percent / 100)
+                price_coefficient = target_revenue / total_costs if total_costs > 0 else 1
+                
+                # Итеративно уточняем коэффициент с учетом банковской гарантии
+                for _ in range(5):  # Максимум 5 итераций
+                    # Рассчитываем выручку с текущим коэффициентом
+                    test_revenue = sum(
+                        costs['cost_per_unit'] * price_coefficient * int(pos_data['position']['quantity'])
+                        for pos_data in position_costs
+                    )
+                    revenue_with_vat = test_revenue * 1.2
+                    bank_guarantee_cost = revenue_with_vat * 0.03 / 365 * payment_days
+                    
+                    # Пересчитываем коэффициент с учетом банковской гарантии
+                    total_costs_with_guarantee = total_costs + bank_guarantee_cost
+                    new_target_revenue = total_costs_with_guarantee / (1 - target_margin_percent / 100)
+                    new_coefficient = new_target_revenue / total_costs if total_costs > 0 else 1
+                    
+                    # Проверяем сходимость (разница менее 0.0001)
+                    if abs(new_coefficient - price_coefficient) < 0.0001:
+                        break
+                    price_coefficient = new_coefficient
+            else:
+                # Обычный расчет без банковской гарантии
+                target_revenue = total_costs / (1 - target_margin_percent / 100)
+                price_coefficient = target_revenue / total_costs if total_costs > 0 else 1
+            
             for pos_data in position_costs:
                 position = pos_data['position']
                 costs = pos_data['costs']
@@ -237,7 +323,10 @@ class MultiPositionCalculator(PriceCalculatorPort):
     def calculate_legacy_single_position(
         self, position: Dict[str, Any], 
         logistics_rub: float, delivery_time: int, 
-        margin_percent: float
+        margin_percent: float,
+        use_credit: bool = False,
+        use_bank_guarantee: bool = False,
+        payment_days: Optional[int] = None
     ) -> Dict[str, Any]:
         """
         Рассчитывает цену для одной позиции (старый метод для совместимости).
@@ -249,6 +338,9 @@ class MultiPositionCalculator(PriceCalculatorPort):
             logistics_rub: Общая стоимость логистики (в рублях)
             delivery_time: Время доставки (в днях)
             margin_percent: Целевая маржа в процентах
+            use_credit: Использовать ли кредит в расчете
+            use_bank_guarantee: Использовать ли банковскую гарантию в расчете
+            payment_days: Количество дней оплаты (для банковской гарантии)
         
         Returns:
             Словарь с результатами:
@@ -281,7 +373,10 @@ class MultiPositionCalculator(PriceCalculatorPort):
             weight=weight,
             delivery_time=delivery_time,
             margin_percent=margin_percent,
-            config=self.config
+            config=self.config,
+            use_credit=use_credit,
+            use_bank_guarantee=use_bank_guarantee,
+            payment_days=payment_days
         )
         
         general_price = final_price * quantity

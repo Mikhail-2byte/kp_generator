@@ -1,5 +1,6 @@
 """Оркестратор процесса генерации коммерческих предложений."""
 
+import math
 from typing import Any, Dict, List, Optional, Tuple
 
 from flask import current_app
@@ -70,43 +71,60 @@ class GenerationOrchestrator:
         positions: List[Dict[str, Any]],
         logistics_rub: float,
         delivery_time: int,
-        margin_percent: float
+        margin_percent: float,
+        use_credit: bool = False,
+        use_bank_guarantee: bool = False,
+        payment_days: Optional[int] = None
     ) -> Tuple[List[Dict[str, Any]], float]:
         """
         Рассчитывает цены для позиций.
         
+        Args:
+            positions: Список позиций
+            logistics_rub: Стоимость логистики в рублях
+            delivery_time: Срок доставки в днях
+            margin_percent: Целевая маржа в процентах
+            use_credit: Использовать ли кредит в расчете
+            use_bank_guarantee: Использовать ли банковскую гарантию в расчете
+            payment_days: Количество дней оплаты (для банковской гарантии)
+        
         Returns:
             Tuple[position_prices, total_general_price]
         """
-        import math
+        # Увеличиваем целевую маржу на 0.5-1% для компенсации округления и дополнительных затрат в Excel
+        # Это гарантирует, что итоговая маржа в Excel будет не меньше целевой
+        adjusted_margin = margin_percent + 0.5  # Добавляем 0.5% для компенсации
         
         if len(positions) == 1:
             # Для одной позиции используем старый метод
             result = self.calculator.calculate_legacy_single_position(
-                positions[0], logistics_rub, delivery_time, margin_percent
+                positions[0], logistics_rub, delivery_time, adjusted_margin,
+                use_credit=use_credit, use_bank_guarantee=use_bank_guarantee,
+                payment_days=payment_days
             )
             position_prices = [result]
-            # Округляем final_price вверх до десятков, как в Excel
-            final_price_rounded = math.ceil(result['final_price'] / 10.0) * 10.0
+            # Округляем final_price вверх до целого числа (чтобы маржа была не меньше целевой)
+            final_price_rounded = math.ceil(result['final_price'])
             total_general_price = final_price_rounded * result['position']['quantity']
         else:
             # Для множественных позиций используем новый метод с единой маржой
             calculation_result = self.calculator.calculate_multi_position_prices(
-                positions, logistics_rub, delivery_time, margin_percent
+                positions, logistics_rub, delivery_time, adjusted_margin,
+                use_credit=use_credit, use_bank_guarantee=use_bank_guarantee,
+                payment_days=payment_days
             )
             position_prices = calculation_result['positions']
-            # Пересчитываем total_general_price с округлением final_price до десятков, как в Excel
+            # Пересчитываем total_general_price с округлением final_price вверх до целого числа
             total_general_price = 0
             for pos_price in position_prices:
-                final_price_rounded = math.ceil(pos_price['final_price'] / 10.0) * 10.0
+                final_price_rounded = math.ceil(pos_price['final_price'])
                 quantity = pos_price['position']['quantity']
                 total_general_price += final_price_rounded * quantity
         
-        # Добавляем округленные final_price в позиции для сохранения в базе данных
-        import math
+        # Добавляем округленные вверх final_price в позиции для сохранения в базе данных
         for i, pos_price in enumerate(position_prices):
             if i < len(positions):
-                final_price_rounded = math.ceil(pos_price['final_price'] / 10.0) * 10.0
+                final_price_rounded = math.ceil(pos_price['final_price'])
                 positions[i]['final_price'] = final_price_rounded
         
         return position_prices, total_general_price
@@ -220,6 +238,22 @@ class GenerationOrchestrator:
             margin_percent = 0.0
         delivery_time = int(cleaned_data['delivery_time'])
         
+        # Извлекаем флаги финансирования
+        finance_credit = cleaned_data.get('finance_credit', '')
+        finance_bank_guarantee = cleaned_data.get('finance_bank_guarantee', '')
+        use_credit = finance_credit and str(finance_credit).lower() in ['1', 'true', 'on', 'yes']
+        use_bank_guarantee = finance_bank_guarantee and str(finance_bank_guarantee).lower() in ['1', 'true', 'on', 'yes']
+        
+        # Извлекаем количество дней оплаты для банковской гарантии
+        payment_terms = cleaned_data.get('payment_terms', '').strip()
+        payment_days = None
+        if use_bank_guarantee and payment_terms:
+            # Пытаемся извлечь число дней из условий оплаты
+            # Используем тот же метод, что и в multi_position_processor
+            from app.services.multi_position_processor import MultiPositionProcessor
+            processor = MultiPositionProcessor('templates_docs/template.xlsx')
+            payment_days = processor._extract_days_from_payment_terms(payment_terms)
+        
         # Шаг 3: Проверка шаблонов
         template_errors = check_templates_exist()
         if template_errors:
@@ -231,7 +265,9 @@ class GenerationOrchestrator:
         # Шаг 4: Расчет цен
         try:
             position_prices, total_general_price = self.calculate_prices(
-                positions, logistics_rub, delivery_time, margin_percent
+                positions, logistics_rub, delivery_time, margin_percent,
+                use_credit=use_credit, use_bank_guarantee=use_bank_guarantee,
+                payment_days=payment_days
             )
         except Exception as exc:
             raise CalculationError(

@@ -1,0 +1,43 @@
+{
+  "saved_at": "20251229T080405",
+  "actor": "tsc_perm@mail.ru",
+  "data": {
+    "cities": [
+      {
+        "name": "Самара",
+        "region": "Самарской области",
+        "distance_from_ekb_km": 900
+      },
+      {
+        "name": "Сыктывкар",
+        "region": "Республика Коми",
+        "distance_from_ekb_km": 1270
+      },
+      {
+        "name": "Таганрог",
+        "region": "Ростовская область",
+        "distance_from_ekb_km": 2320
+      },
+      {
+        "name": "Челябинск",
+        "region": "Челябинская область",
+        "distance_from_ekb_km": 212
+      },
+      {
+        "name": "Старый Оскол",
+        "region": "Белгородская область",
+        "distance_from_ekb_km": 2000
+      },
+      {
+        "name": "Кирово-Чепецк",
+        "region": "Кировская область",
+        "distance_from_ekb_km": 850
+      },
+      {
+        "name": "Краснотурьинск",
+        "region": "Свердловская область",
+        "distance_from_ekb_km": 390
+      }
+    ]
+  }
+}

@@ -17,14 +17,23 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # API конфигурация
 OPENROUTER_API_KEY = os.getenv(
     "OPENROUTER_API_KEY",
-    "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"
+    "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"
 )
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 MODEL_NAME = "xiaomi/mimo-v2-flash:free"
 
-# Пути к документации
-INSTRUCTIONS_DIR = BASE_DIR / "static" / "instructions"
-DOCS_DIR = BASE_DIR / "docs"
+# Пути к документации (теперь в папке ai_agent/data/)
+AI_AGENT_DIR = Path(__file__).resolve().parent
+INSTRUCTIONS_DIR = AI_AGENT_DIR / "data" / "instructions"
+DOCS_DIR = AI_AGENT_DIR / "data" / "documentation"
+
+# Проверяем существование папок при импорте (для диагностики)
+if not INSTRUCTIONS_DIR.exists():
+    import logging
+    logging.warning(f'Instructions directory not found: {INSTRUCTIONS_DIR}')
+if not DOCS_DIR.exists():
+    import logging
+    logging.warning(f'Documentation directory not found: {DOCS_DIR}')
 
 # Конфигурация для reasoning
 ENABLE_REASONING = True

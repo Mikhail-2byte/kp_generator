@@ -398,13 +398,16 @@ def ai_agent_chat() -> Response:
             }), 500
         
         try:
+            current_app.logger.info('Initializing AIAgent...')
             agent = AIAgent()
             current_app.logger.info('AI agent initialized successfully')
         except Exception as init_err:
             current_app.logger.error('Failed to initialize AIAgent: %s', init_err, exc_info=True)
+            import traceback
+            current_app.logger.error('Traceback: %s', traceback.format_exc())
             return jsonify({
                 'response': None,
-                'error': f'Ошибка инициализации AI агента: {str(init_err)}'
+                'error': f'Ошибка инициализации AI агента: {str(init_err)}. Проверьте логи сервера для деталей.'
             }), 500
         
         # Восстанавливаем историю из сессии, если есть

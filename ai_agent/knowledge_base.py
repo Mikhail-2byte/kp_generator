@@ -16,16 +16,28 @@ class KnowledgeBase:
         """Инициализирует базу знаний."""
         self.instructions: List[Dict[str, str]] = []
         self.documentation: List[Dict[str, str]] = []
-        self._load_all()
+        try:
+            self._load_all()
+        except Exception as e:
+            import logging
+            logging.error(f"Ошибка при загрузке базы знаний: {e}", exc_info=True)
+            # Продолжаем работу с пустыми списками, чтобы не ломать инициализацию агента
+            self.instructions = []
+            self.documentation = []
     
     def _load_all(self) -> None:
         """Загружает всю документацию и инструкции."""
-        self.instructions = self.load_instructions()
-        self.documentation = self.load_documentation()
+        try:
+            self.instructions = self.load_instructions()
+            self.documentation = self.load_documentation()
+        except Exception as e:
+            import logging
+            logging.error(f"Ошибка в _load_all: {e}", exc_info=True)
+            raise
     
     def load_instructions(self) -> List[Dict[str, str]]:
         """
-        Загружает все инструкции из static/instructions/.
+        Загружает все инструкции из ai_agent/data/instructions/.
         
         Returns:
             Список словарей с ключами 'title' и 'content'
@@ -33,6 +45,8 @@ class KnowledgeBase:
         instructions = []
         
         if not INSTRUCTIONS_DIR.exists():
+            import logging
+            logging.warning(f'Instructions directory not found: {INSTRUCTIONS_DIR}')
             return instructions
         
         # Загружаем все .txt файлы из папки инструкций
@@ -51,13 +65,14 @@ class KnowledgeBase:
                     'source': file_path.name
                 })
             except Exception as e:
-                print(f"Ошибка при загрузке инструкции {file_path}: {e}")
+                import logging
+                logging.error(f"Ошибка при загрузке инструкции {file_path}: {e}", exc_info=True)
         
         return instructions
     
     def load_documentation(self) -> List[Dict[str, str]]:
         """
-        Загружает документацию из docs/.
+        Загружает документацию из ai_agent/data/documentation/.
         
         Returns:
             Список словарей с ключами 'title' и 'content'
@@ -65,6 +80,8 @@ class KnowledgeBase:
         documentation = []
         
         if not DOCS_DIR.exists():
+            import logging
+            logging.warning(f'Documentation directory not found: {DOCS_DIR}')
             return documentation
         
         # Приоритетные файлы документации
@@ -119,7 +136,8 @@ class KnowledgeBase:
                 'source': file_path.name
             }
         except Exception as e:
-            print(f"Ошибка при загрузке документации {file_path}: {e}")
+            import logging
+            logging.error(f"Ошибка при загрузке документации {file_path}: {e}", exc_info=True)
             return None
     
     def get_relevant_context(self, query: str, max_results: int = 3) -> str:

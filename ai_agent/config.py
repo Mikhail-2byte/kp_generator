@@ -17,7 +17,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # API конфигурация
 OPENROUTER_API_KEY = os.getenv(
     "OPENROUTER_API_KEY",
-    "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"
+    "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"
 )
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 MODEL_NAME = "xiaomi/mimo-v2-flash:free"

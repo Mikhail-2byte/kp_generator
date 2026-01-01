@@ -11,7 +11,43 @@
             <span class="badge">Всего: {{ materials|length }}</span>
         </div>
         <div class="search-controls">
-            <input type="text" id="searchInput" class="search-input" placeholder="Поиск по названию, аналогу или составу" value="{{ query }}">
+            <input type="text" id="searchInput" class="search-input" placeholder="Поиск по названию, аналогу или ГОСТ" value="{{ query }}">
+            <button id="applyFilters" class="btn btn-primary">Применить фильтры</button>
+            <button id="clearFilters" class="btn btn-outline">Очистить</button>
+        </div>
+        
+        <div class="filters-panel" style="margin-top: 16px; padding: 16px; background: #f8f9fa; border-radius: 8px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                <div class="filter-group">
+                    <label for="filterGost" style="display: block; margin-bottom: 4px; font-weight: 500; font-size: 14px;">ГОСТ</label>
+                    <select id="filterGost" class="search-input" style="width: 100%;">
+                        <option value="">Все ГОСТы</option>
+                        {% for gost in unique_gosts %}
+                        <option value="{{ gost }}" {% if filter_gost == gost %}selected{% endif %}>{{ gost }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="filterWorkpiece" style="display: block; margin-bottom: 4px; font-weight: 500; font-size: 14px;">Вид заготовки</label>
+                    <select id="filterWorkpiece" class="search-input" style="width: 100%;">
+                        <option value="">Все виды</option>
+                        {% for workpiece in unique_workpieces %}
+                        <option value="{{ workpiece }}" {% if filter_workpiece == workpiece %}selected{% endif %}>{{ workpiece }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="priceFrom" style="display: block; margin-bottom: 4px; font-weight: 500; font-size: 14px;">Цена от</label>
+                    <input type="number" id="priceFrom" class="search-input" step="0.01" min="0" placeholder="0.00" value="{{ price_from }}" style="width: 100%;">
+                </div>
+                
+                <div class="filter-group">
+                    <label for="priceTo" style="display: block; margin-bottom: 4px; font-weight: 500; font-size: 14px;">Цена до</label>
+                    <input type="number" id="priceTo" class="search-input" step="0.01" min="0" placeholder="0.00" value="{{ price_to }}" style="width: 100%;">
+                </div>
+            </div>
         </div>
         <div class="history-table-wrapper">
             <table class="data-table" id="materialsTable">
@@ -19,33 +55,25 @@
                     <tr>
                         <th>Российский материал</th>
                         <th>GB аналог</th>
-                        <th>Примечание</th>
-                        <th class="text-center">Хим. состав</th>
+                        <th>ГОСТ</th>
+                        <th>Цена</th>
+                        <th>Вид заготовки</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% if materials %}
                         {% for material in materials %}
-                        <tr data-composition-text="{{ (material.composition_search or '') | lower }}">
+                        <tr>
                             <td>{{ material.russian }}</td>
                             <td>{{ material.gb }}</td>
-                            <td>{{ material.notes or '—' }}</td>
-                            <td class="text-center">
-                                {% if material.composition %}
-                                    <div class="composition-inline">
-                                        {% for component in material.composition %}
-                                            <span>{{ component.element }} — {{ component.content }}{% if not loop.last %}; {% endif %}</span>
-                                        {% endfor %}
-                                    </div>
-                                {% else %}
-                                    <span class="muted-text">Нет данных</span>
-                                {% endif %}
-                            </td>
+                            <td>{{ material.gost or '—' }}</td>
+                            <td>{{ material.price or '—' }}</td>
+                            <td>{{ material.workpiece_type or '—' }}</td>
                         </tr>
                         {% endfor %}
                     {% else %}
                         <tr id="emptyStateRow">
-                            <td colspan="4" class="empty-state">
+                            <td colspan="5" class="empty-state">
                                 <div class="icon">{{ sidebar_icon('search')|safe }}</div>
                                 <p>По запросу ничего не найдено. Попробуйте изменить критерии.</p>
                             </td>
@@ -62,42 +90,56 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const searchInput = document.getElementById('searchInput');
+        const filterGost = document.getElementById('filterGost');
+        const filterWorkpiece = document.getElementById('filterWorkpiece');
+        const priceFrom = document.getElementById('priceFrom');
+        const priceTo = document.getElementById('priceTo');
+        const applyFiltersBtn = document.getElementById('applyFilters');
+        const clearFiltersBtn = document.getElementById('clearFilters');
         const tableBody = document.querySelector('#materialsTable tbody');
 
-        const filterTable = () => {
-            const query = searchInput.value.trim().toLowerCase();
-            let visibleRows = 0;
-            const rows = Array.from(tableBody.querySelectorAll('tr')).filter(row => row.getAttribute('id') !== 'emptyStateRow');
-
-            rows.forEach(row => {
-                const baseText = Array.from(row.querySelectorAll('td'))
-                    .slice(0, 3)
-                    .map(td => td.textContent.toLowerCase())
-                    .join(' ');
-                const compositionText = (row.getAttribute('data-composition-text') || '').toLowerCase();
-                const matches = !query || baseText.includes(query) || compositionText.includes(query);
-                row.style.display = matches ? '' : 'none';
-                if (matches) visibleRows += 1;
-            });
-
-            const emptyRow = document.getElementById('emptyStateRow');
-            if (emptyRow) {
-                emptyRow.remove();
+        const applyFilters = () => {
+            const params = new URLSearchParams();
+            
+            if (searchInput.value.trim()) {
+                params.set('q', searchInput.value.trim());
             }
-
-            if (visibleRows === 0) {
-                const tr = document.createElement('tr');
-                tr.id = 'emptyStateRow';
-                tr.innerHTML = '<td colspan="4" class="empty-state"><div class="icon">' + `{{ sidebar_icon('search')|safe }}` + '</div><p>По запросу ничего не найдено. Попробуйте изменить критерии.</p></td>';
-                tableBody.appendChild(tr);
+            if (filterGost.value) {
+                params.set('gost', filterGost.value);
             }
+            if (filterWorkpiece.value) {
+                params.set('workpiece', filterWorkpiece.value);
+            }
+            if (priceFrom.value) {
+                params.set('price_from', priceFrom.value);
+            }
+            if (priceTo.value) {
+                params.set('price_to', priceTo.value);
+            }
+            
+            const queryString = params.toString();
+            window.location.href = queryString ? `{{ url_for('main.gb_analogs') }}?${queryString}` : '{{ url_for('main.gb_analogs') }}';
         };
 
+        const clearFilters = () => {
+            window.location.href = '{{ url_for('main.gb_analogs') }}';
+        };
+
+        if (applyFiltersBtn) {
+            applyFiltersBtn.addEventListener('click', applyFilters);
+        }
+
+        if (clearFiltersBtn) {
+            clearFiltersBtn.addEventListener('click', clearFilters);
+        }
+
+        // Быстрый поиск по тексту (без перезагрузки страницы)
         if (searchInput) {
-            searchInput.addEventListener('input', filterTable);
-            if (searchInput.value.trim()) {
-                filterTable();
-            }
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    applyFilters();
+                }
+            });
         }
     });
 </script>

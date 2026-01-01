@@ -85,7 +85,9 @@ class GBMaterialForm(FlaskForm):
     russian = StringField('Наименование (RU)', validators=[DataRequired(), Length(min=1, max=200)])
     gb = StringField('Наименование (GB)', validators=[DataRequired(), Length(min=1, max=200)])
     notes = StringField('Описание', validators=[Optional(), Length(max=500)])
-    composition = TextAreaField('Состав (формат: элемент: значение, каждое с новой строки)', validators=[Optional()])
+    gost = StringField('ГОСТ', validators=[Optional(), Length(max=100)])
+    price = StringField('Цена', validators=[Optional(), Length(max=50)])
+    workpiece_type = StringField('Вид заготовки', validators=[Optional(), Length(max=50)])
     action = HiddenField(default='add_gb')
     submit = SubmitField('Добавить аналог')
 

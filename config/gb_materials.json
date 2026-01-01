@@ -1,132 +1,7284 @@
 {
   "materials": [
     {
-      "russian": "Сталь 3",
-      "gb": "Q235",
-      "notes": "Углеродистая конструкционная сталь общего назначения",
-      "composition": [
-        {"element": "C", "content": "0.14 – 0.22"},
-        {"element": "Si", "content": "0.15 – 0.30"},
-        {"element": "Mn", "content": "0.40 – 0.65"},
-        {"element": "Ni", "content": "до 0.30"},
-        {"element": "S", "content": "до 0.05"},
-        {"element": "P", "content": "до 0.04"},
-        {"element": "Cr", "content": "до 0.30"},
-        {"element": "N", "content": "до 0.008"},
-        {"element": "Cu", "content": "до 0.30"},
-        {"element": "As", "content": "до 0.08"}
-      ]
+      "russian": "08пс",
+      "gb": "08F НЕ ИСПОЛЬЗОВАТЬ ЗАМЕНА НА 10",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "",
+      "workpiece_type": ""
     },
     {
-      "russian": "Сталь 45",
-      "gb": "45",
-      "notes": "Углеродистая конструкционная сталь общего назначения",
-      "composition": [
-        {"element": "C", "content": " до 0.24"},
-        {"element": "Si", "content": "0.15 – 0.30"},
-        {"element": "Mn", "content": "0.40 – 0.65"},
-        {"element": "Ni", "content": "до 0.30"},
-        {"element": "S", "content": "до 0.07"},
-        {"element": "P", "content": "до 0.04"},
-        {"element": "Cr", "content": "до 0.30"},
-        {"element": "N", "content": "до 0.008"},
-        {"element": "Cu", "content": "до 0.30"},
-        {"element": "As", "content": "до 0.08"}
-      ]
+      "russian": "0К360В",
+      "gb": "AISI 439",
+      "notes": "",
+      "gost": "ГОСТ 16523-97",
+      "price": "",
+      "workpiece_type": ""
     },
     {
-      "russian": "Сталь 40",
+      "russian": "10",
+      "gb": "10",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "4.30",
+      "workpiece_type": "Лист"
+    },
+    {
+      "russian": "10",
+      "gb": "10",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "4.50",
+      "workpiece_type": "Прокат"
+    },
+    {
+      "russian": "10",
+      "gb": "10",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "5.00",
+      "workpiece_type": "Труба"
+    },
+    {
+      "russian": "10",
+      "gb": "10",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "6.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "10Г2",
+      "gb": "12Mn",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "5.00",
+      "workpiece_type": "Лист"
+    },
+    {
+      "russian": "10Г2",
+      "gb": "12Mn",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "5.00",
+      "workpiece_type": "Прокат"
+    },
+    {
+      "russian": "15",
+      "gb": "15",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "4.50",
+      "workpiece_type": "Лист"
+    },
+    {
+      "russian": "15",
+      "gb": "15",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "4.50",
+      "workpiece_type": "Прокат"
+    },
+    {
+      "russian": "15",
+      "gb": "15",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "5.00",
+      "workpiece_type": "Труба"
+    },
+    {
+      "russian": "15",
+      "gb": "15",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "7.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "15Г",
+      "gb": "15Mn",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "5.00",
+      "workpiece_type": "Лист"
+    },
+    {
+      "russian": "15Г",
+      "gb": "15Mn",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "5.00",
+      "workpiece_type": "Прокат"
+    },
+    {
+      "russian": "15Г",
+      "gb": "15Mn",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "5.70",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "20",
+      "gb": "20",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "4.30",
+      "workpiece_type": "Лист"
+    },
+    {
+      "russian": "20",
+      "gb": "20",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "4.30",
+      "workpiece_type": "Прокат"
+    },
+    {
+      "russian": "20",
+      "gb": "20",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "5.00",
+      "workpiece_type": "Труба"
+    },
+    {
+      "russian": "20",
+      "gb": "20",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "6.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "20Г",
+      "gb": "20Mn",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "5.00",
+      "workpiece_type": "Лист"
+    },
+    {
+      "russian": "20Г",
+      "gb": "20Mn",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "5.00",
+      "workpiece_type": "Прокат"
+    },
+    {
+      "russian": "20Г",
+      "gb": "20Mn",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "5.70",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "20К",
+      "gb": "20",
+      "notes": "",
+      "gost": "ГОСТ 5520–2017",
+      "price": "4.70",
+      "workpiece_type": "Лист"
+    },
+    {
+      "russian": "20К",
+      "gb": "20",
+      "notes": "",
+      "gost": "ГОСТ 5520–2017",
+      "price": "5.50",
+      "workpiece_type": "Труба"
+    },
+    {
+      "russian": "20-ПВ",
+      "gb": "20",
+      "notes": "",
+      "gost": "ГОСТ Р 57423-2017",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "22К",
+      "gb": "20Mn5",
+      "notes": "",
+      "gost": "ГОСТ 5520–2017",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "25",
+      "gb": "25",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "4.30",
+      "workpiece_type": "Лист"
+    },
+    {
+      "russian": "25",
+      "gb": "25",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "4.30",
+      "workpiece_type": "Прокат"
+    },
+    {
+      "russian": "25",
+      "gb": "25",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "5.00",
+      "workpiece_type": "Труба"
+    },
+    {
+      "russian": "25",
+      "gb": "25",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "6.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "30",
+      "gb": "30",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "4.30",
+      "workpiece_type": "Лист"
+    },
+    {
+      "russian": "30",
+      "gb": "30",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "4.30",
+      "workpiece_type": "Прокат"
+    },
+    {
+      "russian": "30",
+      "gb": "30",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "5.00",
+      "workpiece_type": "Труба"
+    },
+    {
+      "russian": "30",
+      "gb": "30",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "6.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "30Г2",
+      "gb": "30Mn2",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "5.50",
+      "workpiece_type": "Прокат"
+    },
+    {
+      "russian": "30Г2",
+      "gb": "30Mn2",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "6.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "35",
+      "gb": "35",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "4.40",
+      "workpiece_type": "Лист"
+    },
+    {
+      "russian": "35",
+      "gb": "35",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "4.00",
+      "workpiece_type": "Прокат"
+    },
+    {
+      "russian": "35",
+      "gb": "35",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "5.00",
+      "workpiece_type": "Труба"
+    },
+    {
+      "russian": "35",
+      "gb": "35",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "6.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "35Г",
+      "gb": "35Mn2",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "5.50",
+      "workpiece_type": "Прокат"
+    },
+    {
+      "russian": "35Г",
+      "gb": "35Mn2",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "6.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "35Г2",
+      "gb": "35Mn2",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "5.50",
+      "workpiece_type": "Прокат"
+    },
+    {
+      "russian": "35Г2",
+      "gb": "35Mn2",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "8.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "40",
       "gb": "40",
-      "notes": "Углеродистая конструкционная сталь общего назначения",
-      "composition": [
-        {"element": "C", "content": " до 0.24"},
-        {"element": "Si", "content": "0.15 – 0.30"},
-        {"element": "Mn", "content": "0.40 – 0.65"},
-        {"element": "Ni", "content": "до 0.30"},
-        {"element": "S", "content": "до 0.07"},
-        {"element": "P", "content": "до 0.04"},
-        {"element": "Cr", "content": "до 0.30"},
-        {"element": "N", "content": "до 0.008"},
-        {"element": "Cu", "content": "до 0.30"},
-        {"element": "As", "content": "до 0.08"}
-      ]
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "4.40",
+      "workpiece_type": "Лист"
     },
     {
-      "russian": "09Г2С",
-      "gb": "Q345D",
-      "notes": "Низколегированная конструкционная сталь повышенной прочности",
-      "composition": [
-        {"element": "C", "content": "до 0.12"},
-        {"element": "Si", "content": "0.50 – 0.80"},
-        {"element": "Mn", "content": "1.30 – 1.70"},
-        {"element": "S", "content": "до 0.035"},
-        {"element": "P", "content": "до 0.035"},
-        {"element": "Cu", "content": "до 0.35"},
-        {"element": "Ni", "content": "до 0.30"},
-        {"element": "Cr", "content": "до 0.30"},
-        {"element": "Mo", "content": "до 0.10"},
-        {"element": "V", "content": "до 0.08"}
-      ]
+      "russian": "40",
+      "gb": "40",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "4.10",
+      "workpiece_type": "Прокат"
     },
     {
-      "russian": "12Х18Н10Т",
-      "gb": "0Cr18Ni10Ti",
-      "notes": "Коррозионностойкая сталь (аналог AISI 321)",
-      "composition": [
-        {"element": "C", "content": "до 0.08"},
-        {"element": "Si", "content": "до 0.75"},
-        {"element": "Mn", "content": "до 2.00"},
-        {"element": "P", "content": "до 0.045"},
-        {"element": "S", "content": "до 0.030"},
-        {"element": "Cr", "content": "17.0 – 19.0"},
-        {"element": "Ni", "content": "9.0 – 12.0"},
-        {"element": "Ti", "content": "5×C – 0.70"}
-      ]
+      "russian": "40",
+      "gb": "40",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "5.00",
+      "workpiece_type": "Труба"
     },
     {
-      "russian": "20Х",
-      "gb": "20Cr",
-      "notes": "Легированная конструкционная сталь для улучшения",
-      "composition": [
-        {"element": "C", "content": "0.17 – 0.24"},
-        {"element": "Si", "content": "0.17 – 0.37"},
-        {"element": "Mn", "content": "0.50 – 0.80"},
-        {"element": "Cr", "content": "0.80 – 1.10"},
-        {"element": "Ni", "content": "до 0.30"},
-        {"element": "Cu", "content": "до 0.25"},
-        {"element": "S", "content": "до 0.035"},
-        {"element": "P", "content": "до 0.035"}
-      ]
+      "russian": "40",
+      "gb": "40",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "6.00",
+      "workpiece_type": "Поковка"
     },
     {
-      "russian": "40Х",
-      "gb": "40Cr",
-      "notes": "Конструкционная легированная сталь для деталей повышенной прочности",
-      "composition": [
-        {"element": "C", "content": "0.37 – 0.44"},
-        {"element": "Si", "content": "0.17 – 0.37"},
-        {"element": "Mn", "content": "0.50 – 0.80"},
-        {"element": "Cr", "content": "0.80 – 1.10"},
-        {"element": "S", "content": "до 0.030"},
-        {"element": "P", "content": "до 0.030"},
-        {"element": "Ni", "content": "до 0.30"},
-        {"element": "Cu", "content": "до 0.25"}
-      ]
+      "russian": "40Г",
+      "gb": "40CrMn",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "5.50",
+      "workpiece_type": "Прокат"
+    },
+    {
+      "russian": "40Г",
+      "gb": "40CrMn",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "6.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "40Г2",
+      "gb": "40Mn2",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "5.50",
+      "workpiece_type": "Прокат"
+    },
+    {
+      "russian": "40Г2",
+      "gb": "40Mn2",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "6.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "45",
+      "gb": "45",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "4.40",
+      "workpiece_type": "Лист"
+    },
+    {
+      "russian": "45",
+      "gb": "45",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "4.40",
+      "workpiece_type": "Прокат"
+    },
+    {
+      "russian": "45",
+      "gb": "45",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "5.00",
+      "workpiece_type": "Труба"
+    },
+    {
+      "russian": "45",
+      "gb": "45",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "6.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "45А",
+      "gb": "45",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "45Г2",
+      "gb": "45Mn2",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "5.50",
+      "workpiece_type": "Прокат"
+    },
+    {
+      "russian": "45Г2",
+      "gb": "45Mn2",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "8.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "50",
+      "gb": "50",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "5.00",
+      "workpiece_type": "Лист"
+    },
+    {
+      "russian": "50",
+      "gb": "50",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "5.50",
+      "workpiece_type": "Прокат"
+    },
+    {
+      "russian": "50",
+      "gb": "50",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "5.50",
+      "workpiece_type": "Труба"
+    },
+    {
+      "russian": "50",
+      "gb": "50",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "7.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "50Г",
+      "gb": "50G",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "6.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "50Г2",
+      "gb": "50Mn2",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "5.50",
+      "workpiece_type": "Прокат"
+    },
+    {
+      "russian": "50Г2",
+      "gb": "50Mn2",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "7.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "55",
+      "gb": "55",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "4.90",
+      "workpiece_type": "Лист"
+    },
+    {
+      "russian": "55",
+      "gb": "55",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "4.30",
+      "workpiece_type": "Прокат"
+    },
+    {
+      "russian": "55",
+      "gb": "55",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "5.00",
+      "workpiece_type": "Труба"
+    },
+    {
+      "russian": "55",
+      "gb": "55",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "7.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "60",
+      "gb": "60",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "5.50",
+      "workpiece_type": "Труба"
+    },
+    {
+      "russian": "60",
+      "gb": "60",
+      "notes": "",
+      "gost": "ГОСТ 1050-2013",
+      "price": "7.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "60Г",
+      "gb": "60Mn",
+      "notes": "",
+      "gost": "ГОСТ 14959-2016",
+      "price": "5.50",
+      "workpiece_type": "Прокат"
+    },
+    {
+      "russian": "60Г",
+      "gb": "60Mn",
+      "notes": "",
+      "gost": "ГОСТ 14959-2016",
+      "price": "6.50",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "65",
+      "gb": "65",
+      "notes": "",
+      "gost": "ГОСТ 14959-2016",
+      "price": "5.50",
+      "workpiece_type": "Лист"
+    },
+    {
+      "russian": "65",
+      "gb": "65",
+      "notes": "",
+      "gost": "ГОСТ 14959-2016",
+      "price": "5.50",
+      "workpiece_type": "Прокат"
+    },
+    {
+      "russian": "65",
+      "gb": "65",
+      "notes": "",
+      "gost": "ГОСТ 14959-2016",
+      "price": "7.00",
+      "workpiece_type": "Поковка"
     },
     {
       "russian": "65Г",
       "gb": "65Mn",
-      "notes": "Пружинная и рессорная сталь",
-      "composition": [
-        {"element": "C", "content": "0.62 – 0.70"},
-        {"element": "Si", "content": "0.17 – 0.37"},
-        {"element": "Mn", "content": "0.90 – 1.20"},
-        {"element": "Ni", "content": "до 0.25"},
-        {"element": "Cr", "content": "до 0.25"},
-        {"element": "Cu", "content": "до 0.25"},
-        {"element": "S", "content": "до 0.035"},
-        {"element": "P", "content": "до 0.035"}
-      ]
+      "notes": "",
+      "gost": "ГОСТ 14959-2016",
+      "price": "5.50",
+      "workpiece_type": "Прокат"
+    },
+    {
+      "russian": "65Г",
+      "gb": "65Mn",
+      "notes": "",
+      "gost": "ГОСТ 14959-2016",
+      "price": "6.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "70",
+      "gb": "70 редко исп",
+      "notes": "",
+      "gost": "ГОСТ 14959-2016",
+      "price": "7.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "75",
+      "gb": "75",
+      "notes": "",
+      "gost": "ГОСТ 14959-2016",
+      "price": "7.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "80",
+      "gb": "80",
+      "notes": "",
+      "gost": "ГОСТ 14959-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "C21",
+      "gb": "профнастил",
+      "notes": "",
+      "gost": "ГОСТ 24045-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Б20",
+      "gb": "15,20",
+      "notes": "",
+      "gost": "ГОСТ 14637-2024",
+      "price": "4.20",
+      "workpiece_type": "Труба"
+    },
+    {
+      "russian": "В10",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 10705-80",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "В20",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 8733-74",
+      "price": "4.20",
+      "workpiece_type": "Труба"
+    },
+    {
+      "russian": "ВСт3пс",
+      "gb": "Q235",
+      "notes": "",
+      "gost": "ГОСТ 380-2005",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ВСт3пс2",
+      "gb": "Q235A",
+      "notes": "",
+      "gost": "ГОСТ 24379.1-2012",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ВСт3сп4",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5521-93",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "М16С",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 6713-2021",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "М76",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 51685-2022",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ОС",
+      "gb": "рельсовый транспорт",
+      "notes": "",
+      "gost": "ГОСТ 4728–2010",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "С235",
+      "gb": "Q235A",
+      "notes": "",
+      "gost": "ГОСТ 27772-2021",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Ст. 2",
+      "gb": "Q215",
+      "notes": "",
+      "gost": "ГОСТ 380-2005",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Ст. 2пс",
+      "gb": "Q215",
+      "notes": "",
+      "gost": "ГОСТ 380-2005",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Ст. 3",
+      "gb": "Q235",
+      "notes": "",
+      "gost": "ГОСТ 380-2005",
+      "price": "4.30",
+      "workpiece_type": "Лист"
+    },
+    {
+      "russian": "Ст. 3",
+      "gb": "Q235",
+      "notes": "",
+      "gost": "ГОСТ 380-2005",
+      "price": "4.30",
+      "workpiece_type": "Прокат"
+    },
+    {
+      "russian": "Ст. 3",
+      "gb": "Q235",
+      "notes": "",
+      "gost": "ГОСТ 380-2005",
+      "price": "5.50",
+      "workpiece_type": "Труба"
+    },
+    {
+      "russian": "Ст. 3",
+      "gb": "Q235",
+      "notes": "",
+      "gost": "ГОСТ 380-2005",
+      "price": "5.70",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "Ст. 3кп",
+      "gb": "Q235",
+      "notes": "",
+      "gost": "ГОСТ 380-2005",
+      "price": "4.30",
+      "workpiece_type": "Лист"
+    },
+    {
+      "russian": "Ст. 3пс",
+      "gb": "Q235",
+      "notes": "",
+      "gost": "ГОСТ 380-2005",
+      "price": "4.30",
+      "workpiece_type": "Лист"
+    },
+    {
+      "russian": "Ст. 3сп",
+      "gb": "Q235",
+      "notes": "",
+      "gost": "ГОСТ 380-2005",
+      "price": "4.30",
+      "workpiece_type": "Лист"
+    },
+    {
+      "russian": "Ст. 3сп",
+      "gb": "Q235",
+      "notes": "",
+      "gost": "ГОСТ 380-2005",
+      "price": "4.30",
+      "workpiece_type": "Прокат"
+    },
+    {
+      "russian": "Ст. 3сп",
+      "gb": "Q235",
+      "notes": "",
+      "gost": "ГОСТ 380-2005",
+      "price": "5.50",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "Ст. 4пс",
+      "gb": "Q225",
+      "notes": "",
+      "gost": "ГОСТ 380-2005",
+      "price": "4.30",
+      "workpiece_type": "Прокат"
+    },
+    {
+      "russian": "Ст. 4пс",
+      "gb": "Q225",
+      "notes": "",
+      "gost": "ГОСТ 380-2005",
+      "price": "5.70",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "Ст. 4сп",
+      "gb": "Q255",
+      "notes": "",
+      "gost": "ГОСТ 380-2005",
+      "price": "5.50",
+      "workpiece_type": "Труба"
+    },
+    {
+      "russian": "Ст. 5",
+      "gb": "Q275",
+      "notes": "",
+      "gost": "ГОСТ 14637-2024",
+      "price": "4.30",
+      "workpiece_type": "Лист"
+    },
+    {
+      "russian": "Ст. 5",
+      "gb": "Q275",
+      "notes": "",
+      "gost": "ГОСТ 14637-2024",
+      "price": "4.30",
+      "workpiece_type": "Прокат"
+    },
+    {
+      "russian": "Ст. 5",
+      "gb": "Q275",
+      "notes": "",
+      "gost": "ГОСТ 14637-2024",
+      "price": "5.50",
+      "workpiece_type": "Труба"
+    },
+    {
+      "russian": "Ст. 5",
+      "gb": "Q275",
+      "notes": "",
+      "gost": "ГОСТ 14637-2024",
+      "price": "5.70",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "Ст. 5сп",
+      "gb": "Q275",
+      "notes": "",
+      "gost": "ГОСТ 380-2005",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Ст. 6пс",
+      "gb": "HRB335",
+      "notes": "",
+      "gost": "ГОСТ 380-2005",
+      "price": "4.30",
+      "workpiece_type": "Прокат"
+    },
+    {
+      "russian": "Ст. 6сп",
+      "gb": "HRB335",
+      "notes": "",
+      "gost": "ГОСТ 14637-2024",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Э76",
+      "gb": "рельсовый транспорт",
+      "notes": "",
+      "gost": "ГОСТ Р 51685–2022",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "09Г2",
+      "gb": "09Mn2",
+      "notes": "",
+      "gost": "ГОСТ 19281-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "09Г2С",
+      "gb": "12Mn",
+      "notes": "",
+      "gost": "ГОСТ 19281-2014",
+      "price": "4.00",
+      "workpiece_type": "Лист"
+    },
+    {
+      "russian": "09Г2С",
+      "gb": "12Mn",
+      "notes": "",
+      "gost": "ГОСТ 19281-2014",
+      "price": "4.00",
+      "workpiece_type": "Прокат"
+    },
+    {
+      "russian": "09Г2С",
+      "gb": "12Mn",
+      "notes": "",
+      "gost": "ГОСТ 19281-2014",
+      "price": "5.90",
+      "workpiece_type": "Труба"
+    },
+    {
+      "russian": "09Г2С",
+      "gb": "12Mn",
+      "notes": "",
+      "gost": "ГОСТ 19281-2014",
+      "price": "7.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "09ГСФЮ",
+      "gb": "Q345D",
+      "notes": "",
+      "gost": "ГОСТ 19281-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "10Г2Б",
+      "gb": "09MnNb",
+      "notes": "",
+      "gost": "ГОСТ 19281-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "10ХСНД",
+      "gb": "Q420C",
+      "notes": "",
+      "gost": "ГОСТ 19281-2014",
+      "price": "8.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "12ГС",
+      "gb": "Q345B",
+      "notes": "",
+      "gost": "ГОСТ 19281-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "12ХМ",
+      "gb": "12CrMo",
+      "notes": "",
+      "gost": "ГОСТ 20072-74",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "12ХМ-18",
+      "gb": "13CrMo4-5",
+      "notes": "",
+      "gost": "ГОСТ 5520-2017",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "12ХН",
+      "gb": "12CrNi2",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "14ХГН",
+      "gb": "НЕТ",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "14ХГС",
+      "gb": "30CrMnSiA",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "15Г2СФ",
+      "gb": "20MnMoB",
+      "notes": "",
+      "gost": "ГОСТ 27772-2021",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "15ГС",
+      "gb": "Q345B",
+      "notes": "",
+      "gost": "ГОСТ 19281-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "15Х",
+      "gb": "15Cr",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "15ХА",
+      "gb": "15CrA",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "15ХМ",
+      "gb": "15CrMo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "15ХР",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "15ХФ",
+      "gb": "20CrV",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "16Г2АФ",
+      "gb": "Q420C",
+      "notes": "",
+      "gost": "ГОСТ 19281-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "16ГС",
+      "gb": "1.0445",
+      "notes": "",
+      "gost": "ГОСТ 19281-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "16ХГТА",
+      "gb": "20CrMnTi",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "17Г1С",
+      "gb": "16Mn",
+      "notes": "",
+      "gost": "ГОСТ 19281-2014",
+      "price": "7.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "17ГС",
+      "gb": "16MnR",
+      "notes": "",
+      "gost": "ГОСТ 19281-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "17ХГ",
+      "gb": "17CrMn",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "18Г2АФ",
+      "gb": "Q460C",
+      "notes": "",
+      "gost": "ГОСТ 19281-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "18ХГ",
+      "gb": "15CrMn",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "8.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "18ХГТ",
+      "gb": "16MnCrS",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "12.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "19ХГН",
+      "gb": "20CrMnTi",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20ГС",
+      "gb": "НЕТ",
+      "notes": "",
+      "gost": "ГОСТ 10884-94",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20Н2М",
+      "gb": "4620",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20Х",
+      "gb": "20Cr",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "12.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "20ХГР",
+      "gb": "20CrMn",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "23Г2А",
+      "gb": "Q345",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "25ГС",
+      "gb": "C 25, Ck 25",
+      "notes": "",
+      "gost": "ГОСТ ТУ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "27ХГР",
+      "gb": "30MnB4",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "30Х",
+      "gb": "30Cr",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "30ХР",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "33ХС",
+      "gb": "34CrSi6",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "35ГС",
+      "gb": "ZG35SiMn",
+      "notes": "",
+      "gost": "ГОСТ 34028-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "35Х",
+      "gb": "35Cr",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "35ХГР",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "40Г1Р",
+      "gb": "38MnB5",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "40ГР",
+      "gb": "40MnB",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "40Х",
+      "gb": "40Cr",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "4.90",
+      "workpiece_type": "Лист"
+    },
+    {
+      "russian": "40Х",
+      "gb": "40Cr",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "4.30",
+      "workpiece_type": "Прокат"
+    },
+    {
+      "russian": "40Х",
+      "gb": "40Cr",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "5.00",
+      "workpiece_type": "Труба"
+    },
+    {
+      "russian": "40Х",
+      "gb": "40Cr",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "6.50",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "45Х",
+      "gb": "45Cr",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "7.50",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "50Х",
+      "gb": "50Cr",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "10.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "55Ф",
+      "gb": "SM55",
+      "notes": "",
+      "gost": "ГОСТ Р 51220-98",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "60С2",
+      "gb": "60Si2Mn",
+      "notes": "",
+      "gost": "ГОСТ 14959-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "75Г2Ф",
+      "gb": "Q420B",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "9Г2С",
+      "gb": "12Mn",
+      "notes": "",
+      "gost": "ГОСТ 19281-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "C255",
+      "gb": "S235",
+      "notes": "",
+      "gost": "ГОСТ 27772-2021",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Powerweld 690",
+      "gb": "НЕТ",
+      "notes": "",
+      "gost": "ГОСТ 27772-2021",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ОХН1М",
+      "gb": "38CrNiMoA",
+      "notes": "",
+      "gost": "ГОСТ 4543‑2016",
+      "price": "14.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "С245",
+      "gb": "Q235",
+      "notes": "",
+      "gost": "ГОСТ 27772-2021",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "С255",
+      "gb": "S235",
+      "notes": "",
+      "gost": "ГОСТ 27772-2021",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "С345",
+      "gb": "16Mn",
+      "notes": "",
+      "gost": "ГОСТ 27772-2021",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "С390",
+      "gb": "CPM S35 VN",
+      "notes": "",
+      "gost": "ГОСТ 27772-2021",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "С500",
+      "gb": "Hardox 500",
+      "notes": "",
+      "gost": "ГОСТ 34286-2017",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "07Х3ГНМЮА",
+      "gb": "НЕТ",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "10Г2ФБЮ",
+      "gb": "Q420C",
+      "notes": "",
+      "gost": "ГОСТ 19281-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "10Х2М1",
+      "gb": "12Cr2Mo1",
+      "notes": "",
+      "gost": "ГОСТ 10885-85",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "12Х1МФ",
+      "gb": "12Cr1MoV",
+      "notes": "",
+      "gost": "ГОСТ 20072-74",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "12Х2Н4А",
+      "gb": "12Cr2Ni4",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "17.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "12Х2Н4А",
+      "gb": "12Cr2Ni4",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "12Х8ВФ",
+      "gb": "12Cr1MoV",
+      "notes": "",
+      "gost": "ГОСТ 20072-74",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "12ХН2",
+      "gb": "12CrNi2",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "12ХН3А",
+      "gb": "12CrNi3",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "13ХГН2МФД",
+      "gb": "20CrNiMo",
+      "notes": "",
+      "gost": "ГОСТ ТУ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "13ХФА",
+      "gb": "15CrV",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "14Х2ГМР",
+      "gb": "30CrMnSiNi2A",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "17.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "15Н2М",
+      "gb": "G46150",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "15Х2ГМФ",
+      "gb": "НЕТ",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "15Х2НМФА",
+      "gb": "НЕТ",
+      "notes": "",
+      "gost": "ГОСТ ТУ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "15Х5",
+      "gb": "12CrMo44",
+      "notes": "",
+      "gost": "ГОСТ 20072-74",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "15Х5ВФ",
+      "gb": "12CrMo44",
+      "notes": "",
+      "gost": "ГОСТ 20072-74",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "15Х5М",
+      "gb": "10MoCr50",
+      "notes": "",
+      "gost": "ГОСТ 20072-74",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "15ХГН2ТА",
+      "gb": "X12CrNi18‑10",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "15ХСНД",
+      "gb": "Q345GNHL",
+      "notes": "",
+      "gost": "ГОСТ 19281-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "18Х2Н2М",
+      "gb": "18CrNiMo7-6",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "13.50",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "18Х2Н4ВА",
+      "gb": "20Cr2Ni4W",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "14.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "18Х2Н4МА",
+      "gb": "18CrNiMo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "17.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "18Х3МФ",
+      "gb": "20Cr3MoWVA",
+      "notes": "",
+      "gost": "ГОСТ 20072-74",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "18ХН3МА",
+      "gb": "18CrNiMo7-6",
+      "notes": "",
+      "gost": "ГОСТ ТУ",
+      "price": "12.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "20Х1М1Ф1БР",
+      "gb": "12Cr1MoV",
+      "notes": "",
+      "gost": "ГОСТ 20072-74",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20Х1М1Ф1ТР",
+      "gb": "15CrMoR",
+      "notes": "",
+      "gost": "ГОСТ 20072-74",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20Х2М",
+      "gb": "20Cr2Mo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016 (у)",
+      "price": "11.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "20Х2МА",
+      "gb": "30CrMo",
+      "notes": "",
+      "gost": "ГОСТ 2590-2006",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20Х2Н4А",
+      "gb": "20Cr2Ni4",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "14.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "20Х2Н4МФ",
+      "gb": "20Cr2Ni4A",
+      "notes": "",
+      "gost": "ГОСТ ТУ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20Х2Н4МФА",
+      "gb": "20Cr2Ni4A",
+      "notes": "",
+      "gost": "ГОСТ ТУ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20Х3МВФ",
+      "gb": "25Cr2MoV",
+      "notes": "",
+      "gost": "ГОСТ 20072-74",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20ХГНМ",
+      "gb": "20CrNiMo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20ХГНР",
+      "gb": "20SiMn2MoV",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "14.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "20ХГНТР",
+      "gb": "20NiCrMo2‑2",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20ХГСА",
+      "gb": "20CrMnSi",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20ХМ",
+      "gb": "20CrMo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20ХМФА",
+      "gb": "18CrMo4",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20ХН",
+      "gb": "20CrNi",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20ХН2А",
+      "gb": "17CrNiMo6",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20ХН2М",
+      "gb": "20CrNi3Mo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "14.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "20ХН3А",
+      "gb": "20CrNi3",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "14.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "20ХН4ФА",
+      "gb": "20CrNiMoV",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "17.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "20ХНР",
+      "gb": "20CrNiMo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20ХФР",
+      "gb": "20CrMnTi",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20ЮЧ",
+      "gb": "20Cr",
+      "notes": "",
+      "gost": "ГОСТ ТУ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "24ХМ1Ф",
+      "gb": "12CrMoV",
+      "notes": "",
+      "gost": "ГОСТ 20072-74",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "25XГCA",
+      "gb": "25CrMnSiA",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "25Х1М1Ф",
+      "gb": "25CrMoVA",
+      "notes": "",
+      "gost": "ГОСТ 20072-74",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "25Х1М1ФА",
+      "gb": "25CrMoVA",
+      "notes": "",
+      "gost": "ГОСТ 20072-74 (у)",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "25Х1МФ",
+      "gb": "25CrMoVA",
+      "notes": "",
+      "gost": "ГОСТ 20072-74",
+      "price": "14.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "25Х2М1Ф",
+      "gb": "25Cr2Mo1V",
+      "notes": "",
+      "gost": "ГОСТ 20072-74 (у)",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "25Х2Н4МА",
+      "gb": "18Cr2Ni4W",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "25ХГМ",
+      "gb": "25CrMnMo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "25ХГМА",
+      "gb": "20CrMnMo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "25ХГНМТ",
+      "gb": "20CrNiMo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "25ХГСА",
+      "gb": "30CrMnSi",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "25ХГТ",
+      "gb": "20CrMnTi",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "12.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "26ХГ2МФ",
+      "gb": "30CrMnSiMoV",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "28Х2М",
+      "gb": "30CrMo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "28ХГН3МА",
+      "gb": "30CrNi3Mo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "30Х2ГМТ",
+      "gb": "30CrMnMoTi",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "30Х2Н2М",
+      "gb": "30Cr2Ni2Mo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "13.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "30Х2НМФА",
+      "gb": "30Cr2Ni2Mo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "30Х3МФ",
+      "gb": "30CrMoV9",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "15.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "30ХГВТ",
+      "gb": "30CrMnTi",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "30ХГС",
+      "gb": "30MnCrSi",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "9.50",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "30ХГСА",
+      "gb": "30CrMnSiA",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "9.50",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "30ХГСН2А",
+      "gb": "30CrMnSiNi2",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "30ХГТ",
+      "gb": "30CrMnTi",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "30ХМ",
+      "gb": "30CrMo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "8.50",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "30ХМА",
+      "gb": "30CrMo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "8.50",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "30ХМФ",
+      "gb": "30CrMoV9",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "8.50",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "30ХН2МА",
+      "gb": "30CrNiMo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "14.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "30ХН2МФА",
+      "gb": "30Cr2Ni4MoV",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "30ХН3А",
+      "gb": "34CrNi2",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "15.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "30ХНМ",
+      "gb": "30CrNiMo8",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "11.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "30ХНМФА",
+      "gb": "30Cr2Ni2MoV",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "30ХРА",
+      "gb": "28Cr4",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "32ХГМА",
+      "gb": "35CrMo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "34Х1НМ",
+      "gb": "34CrNiMo6",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "34Х2Н2М",
+      "gb": "34Cr2Ni2Mo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "34ХМ",
+      "gb": "35CrMo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "34ХН1М",
+      "gb": "34CrNiMo6",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "14.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "34ХН1М2ФА",
+      "gb": "34Cr2Ni2MoV",
+      "notes": "",
+      "gost": "ГОСТ ТУ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "34ХН1МА",
+      "gb": "34CrNiMo6",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "14.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "34ХН3М",
+      "gb": "34CrNi3Mo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "14.50",
+      "workpiece_type": "Прокат"
+    },
+    {
+      "russian": "34ХН3М",
+      "gb": "34CrNi3Mo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "15.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "34ХН3МА",
+      "gb": "34CrNi3Mo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016 (у)",
+      "price": "16.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "35Х2М",
+      "gb": "35Cr2Mo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "35ХГН",
+      "gb": "35CrNiMo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "35ХГС",
+      "gb": "35CrMnSi",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "35ХГСА",
+      "gb": "35CrMnSi",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "9.50",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "35ХМ",
+      "gb": "35CrMo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "5.10",
+      "workpiece_type": "Лист"
+    },
+    {
+      "russian": "35ХМ",
+      "gb": "35CrMo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "5.10",
+      "workpiece_type": "Прокат"
+    },
+    {
+      "russian": "35ХМ",
+      "gb": "35CrMo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "7.00",
+      "workpiece_type": "Труба"
+    },
+    {
+      "russian": "35ХМ",
+      "gb": "35CrMo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "8.50",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "35ХМА",
+      "gb": "35CrMo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "10.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "35ХМФА",
+      "gb": "35CrMoV",
+      "notes": "",
+      "gost": "ГОСТ ТУ",
+      "price": "10.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "35ХН1М2ФА",
+      "gb": "35Cr2Ni2MoV",
+      "notes": "",
+      "gost": "ГОСТ ТУ",
+      "price": "18.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "35ХН2МА",
+      "gb": "35CrNiMo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "35ХН2Ф",
+      "gb": "35CrNiMo",
+      "notes": "",
+      "gost": "ГОСТ ТУ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "35ХНВ",
+      "gb": "35CrNiW",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "36Х2Н2МФА",
+      "gb": "40CrNiMoVA",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "38Х2МЮА",
+      "gb": "38CrMoАl",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "14.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "38Х2Н2МА",
+      "gb": "45CrNiMo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "16.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "38Х2Н3М",
+      "gb": "40CrNiMoA",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "38Х2НМ",
+      "gb": "40CrNiMoA",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "14.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "38Х2НМА",
+      "gb": "40CrNiMoA",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "38Х2Ю",
+      "gb": "38CrMoAl",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "38ХА",
+      "gb": "35Cr",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "8.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "38ХГМ",
+      "gb": "35CrMnMo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "8.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "38ХГН",
+      "gb": "39NiCrMo3",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "8.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "38ХМ",
+      "gb": "42CrMo4",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "9.50",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "38ХМА",
+      "gb": "35CrMo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "9.50",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "38ХМЮА",
+      "gb": "38CrMoАl",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "10.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "38ХН1М2ФА",
+      "gb": "34NiCrMoV14-5",
+      "notes": "",
+      "gost": "ГОСТ ТУ",
+      "price": "18.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "38ХН3МА",
+      "gb": "38CrNiMoA",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "38ХН3МФА",
+      "gb": "37CrNi3",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "18.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "38ХНМ",
+      "gb": "42CrNiMo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "11.50",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "38ХНМА",
+      "gb": "40CrNiMoA",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "38ХС",
+      "gb": "37SiMn2MoV",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "10.50",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "38ХФР",
+      "gb": "40CrV",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "18.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "40Г1ТР",
+      "gb": "40MnTiB",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "40ГМФР",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "40Х1МФА",
+      "gb": "40CrMoV",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "18.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "40Х2Н2МА",
+      "gb": "40CrNi2MoA",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "14.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "40Х2НМА",
+      "gb": "40CrNiMoA",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "40ХГМА",
+      "gb": "40CrMo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "9.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "40ХГНМ",
+      "gb": "40CrNiMoA",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "9.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "40ХГТР",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "40ХМФ",
+      "gb": "40CrMoV4‑7",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "40ХМФА",
+      "gb": "40CrMoV4‑6",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "11.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "40ХН",
+      "gb": "40CrNi",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "10.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "40ХН2МА",
+      "gb": "40CrNi2Mo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "7.60",
+      "workpiece_type": "Прокат"
+    },
+    {
+      "russian": "40ХН2МА",
+      "gb": "40CrNi2Mo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "9.20",
+      "workpiece_type": "Труба"
+    },
+    {
+      "russian": "40ХН2МА",
+      "gb": "40CrNi2Mo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "13.50",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "40ХНМА",
+      "gb": "40CrNiMoA",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "13.60",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "40ХС",
+      "gb": "40Cr",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "40ХФА",
+      "gb": "40CrV",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "13.60",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "40ХФР",
+      "gb": "40CrV",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "45Х3М1Ф",
+      "gb": "38CrMoV",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "45ХГМА",
+      "gb": "40CrMnMo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "12.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "45ХГСНМА",
+      "gb": "40CrNiMoA",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "45ХН",
+      "gb": "45CrNi",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "13.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "45ХН2МФА",
+      "gb": "45CrNiMoVA",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "45ХН4МФА",
+      "gb": "40CrNiMoA",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "45ХНМФА",
+      "gb": "40CrNiMoA",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "47ГТ",
+      "gb": "40MnB",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "50ХГФА",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 14959-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "50ХМ",
+      "gb": "50CrMo",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "50ХН",
+      "gb": "50CrNi",
+      "notes": "",
+      "gost": "ГОСТ 4543-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "50ХФА",
+      "gb": "50CrV",
+      "notes": "",
+      "gost": "ГОСТ 14959-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "55С2А",
+      "gb": "55Si7",
+      "notes": "",
+      "gost": "ГОСТ 14959-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "60С2А",
+      "gb": "60Si2Mn",
+      "notes": "",
+      "gost": "ГОСТ 14959-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "60С2Г",
+      "gb": "60Si2Mn",
+      "notes": "",
+      "gost": "ГОСТ 14959-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "60С2ГА",
+      "gb": "60Si2MnA",
+      "notes": "",
+      "gost": "ГОСТ 14959-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "60С2ФА",
+      "gb": "60Si2Mn",
+      "notes": "",
+      "gost": "ГОСТ 14959-2016",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "65Х2С3МФ",
+      "gb": "60Si2Mn",
+      "notes": "",
+      "gost": "ГОСТ ТУ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "75Г2ФЮ",
+      "gb": "ZGMn13",
+      "notes": "",
+      "gost": "ГОСТ ТУ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "75ХГСМ",
+      "gb": "60Si2Mn",
+      "notes": "",
+      "gost": "ГОСТ ТУ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Magstrong H400",
+      "gb": "Hardox HiTuf",
+      "notes": "",
+      "gost": "ГОСТ ТУ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ZDI-0225",
+      "gb": "Дамасская",
+      "notes": "",
+      "gost": "ГОСТ ТУ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ШХ15СГ",
+      "gb": "GCr15SiMn",
+      "notes": "",
+      "gost": "ГОСТ 801-78",
+      "price": "16.00",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ШХ20ГС",
+      "gb": "52100Mod.2",
+      "notes": "",
+      "gost": "ГОСТ 801-78",
+      "price": "17.00",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "03Х13АГ19",
+      "gb": "0Cr13Mn19",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "03Х17Н14М3",
+      "gb": "022Cr17Ni12Mo2",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "03Х18Н10",
+      "gb": "0Cr18Ni10",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "03Х18Н10Т",
+      "gb": "0Cr18Ni10Ti",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "03Х18Н11",
+      "gb": "00Cr19Ni10",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "03Х18Н12",
+      "gb": "00Cr19Ni10",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "03Х21Н21М4ГБ",
+      "gb": "10Cr17Ni13Mo2Si",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "03Х21Н32М3Б",
+      "gb": "0Cr21Ni32Mo3Cu",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "03Х21Н32М3БУ",
+      "gb": "AISI 316Ti",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "03Х22Н5АМ3",
+      "gb": "AISI 304",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "03Х22Н6М2",
+      "gb": "OCr22Ni6Mo2",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "03Х23Н6",
+      "gb": "03Cr23Ni6",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "03ХН28МДТ",
+      "gb": "OCr25Ni28Mo3CuTi",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "04Х18Н10",
+      "gb": "OCr18Ni9",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "05Х12Н2М",
+      "gb": "OCr12Ni2Mo",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "05Х16Н5АБ",
+      "gb": "OCr16Ni5Mo",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "05Х18Н10Т",
+      "gb": "OCr18Ni10Ti",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "05ХН32Т",
+      "gb": "OCr25Ni32MoTi",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "06Х18Н11",
+      "gb": "0Cr18Ni11",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "06ХН28МДТ",
+      "gb": "0Cr25Ni28Mo3D",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "25.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "06ХН28МТ",
+      "gb": "0Cr25Ni28Mo3",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "07Х12НМФБ",
+      "gb": "OCr12NiMoVB",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "07Х15Н30В5М2",
+      "gb": "OCr15Ni30W5Mo2",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "07Х16Н4Б",
+      "gb": "OCr16Ni4B",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "07Х16Н6",
+      "gb": "1Cr16Ni6",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "07Х21Г7АН5",
+      "gb": "0Cr21Ni7Mn5",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "08Cr20Ni14",
+      "gb": "X15CrNiSi20-12",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "25.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "08Х10Н20Т2",
+      "gb": "009Cr10Ni20Ti2",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "08Х13",
+      "gb": "1Cr13",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "08Х15Н24В4ТР",
+      "gb": "0Cr15Ni24W4TR",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "08Х16Н11М3",
+      "gb": "0Cr16Ni11Mo3",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "08Х16Н13М2Б",
+      "gb": "0Cr16Ni13Mo2B",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "08Х17Н13М2Т",
+      "gb": "0Cr17Ni13Mo2Ti",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "08Х17Н15М3Т",
+      "gb": "0Cr17Ni15Mo3Ti",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "08Х17Н5М3",
+      "gb": "0Cr17Ni5Mo3",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "08Х17Н6Т",
+      "gb": "0Cr17Ni6Ti",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "08Х17Т",
+      "gb": "0Cr17Ti",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "08Х18Г8Н2Т",
+      "gb": "0Cr18Ni2Ti",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "08Х18Н10",
+      "gb": "0Cr18Ni9",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "08Х18Н10Т",
+      "gb": "0Cr18Ni10Ti",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "08Х18Н12Б",
+      "gb": "0Cr18Ni12B",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "08Х18Н12Т",
+      "gb": "0Cr18Ni12Ti",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "08Х18Н9",
+      "gb": "AISI 304",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "08Х18Т1",
+      "gb": "0Cr18Ti1",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "08Х18Тч",
+      "gb": "0Cr18Ti",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "16.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "08Х20Н14С2",
+      "gb": "1Cr20Ni14Si2",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "08Х21Н6М2Т",
+      "gb": "0Cr21Ni6Mo2Ti",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "08Х22Н6Т",
+      "gb": "1Cr22Ni6Ti",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "08ХН35ВТЮ",
+      "gb": "1Cr35Ni35WTY",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "09Х14Н19В2БР",
+      "gb": "00Cr25Ni13Mo3Cu3",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "09Х14Н19В2БР1",
+      "gb": "GH2036",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "09Х15Н8Ю1",
+      "gb": "0Cr15Ni8Al1",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "09Х16Н15М3Б",
+      "gb": "1Cr16Ni15Mo3Nb",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "09Х16Н4Б",
+      "gb": "1Cr16Ni4Nb",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "09Х17Н7Ю",
+      "gb": "0Cr17Ni7Al",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "09Х17Н7Ю1",
+      "gb": "1Cr17Ni7",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "09Х18Н9",
+      "gb": "1Cr18Ni9",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "10Х11Н20Т2Р",
+      "gb": "1Cr11Ni20Ti2Nb",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "10Х11Н20Т3Р",
+      "gb": "1Cr11Ni20Ti3Nb",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "10Х11Н23Т3МР",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "10Х13СЮ",
+      "gb": "1Cr13Si",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "10Х14АГ15",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "10Х14Г14Н4Т",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "10Х17Н13М2Т",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "10Х17Н13М3Т",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "10Х18Н9",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "10Х23Н18",
+      "gb": "X10CrNiSiN21-11",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "10ХН28ВМАБ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "10ХН45Ю",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "11Х11Н2В2МФ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "12Х13",
+      "gb": "1Cr13",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "12Х17",
+      "gb": "1Cr17",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "12Х17Г9АН4",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "12Х18Н10",
+      "gb": "1Cr18Ni10",
+      "notes": "",
+      "gost": "ГОСТ 5949-2018",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "12Х18Н10Е",
+      "gb": "1Cr18Ni10Nb",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "12Х18Н10Т",
+      "gb": "1Cr18Ni9Ti",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "25.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "12Х18Н10Т-М2б",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 7350-77",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "12Х18Н12Т",
+      "gb": "1Cr18Ni12Ti",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "12Х18Н9",
+      "gb": "1Cr18Ni9",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "12Х18Н9Т",
+      "gb": "1Cr18Ni9Ti",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "12Х21Н5Т",
+      "gb": "1Cr21Ni5Ti",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "12Х25Н16Г7АР",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "12ХН35ВТ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "12ХН38ВТ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "13Х11Н2В2МФ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "13Х11Н2В2Мф-ш",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "13Х14Н3В2ФР",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "14Х17Н2",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "15Х11МФ",
+      "gb": "1Cr11MoV",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "15Х12ВНМФ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "15Х18Н12С4ТЮ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "15Х18СЮ",
+      "gb": "1Cr18Si4",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "15Х25Т",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "15Х28",
+      "gb": "1Cr28",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "16Х11Н2В2МФ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "17Х18Н9",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "18Х11МНФБ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "18Х12ВМБФР",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20Х12ВНМФ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20Х13",
+      "gb": "2Cr13",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "17.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "20Х13Н4Г9",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20Х17Н2",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20Х20Н14С2",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20Х23Н13",
+      "gb": "ЭИ-319",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20Х23Н18",
+      "gb": "1Cr25Ni20Si2",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "25.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "20Х25Н20С2",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "30Х13",
+      "gb": "3Cr13",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "17.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "30Х13Н7С2",
+      "gb": "3Cr13Ni7Si2",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "31Х19Н9МВБТ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "36Х18Н25С2",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "37Х12Н8Г8МФБ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "40Х10С2М",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "40Х13",
+      "gb": "4Cr13",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "40Х15Н7Г7Ф2МС",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "40Х27Н36С2Б",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ1333-006-76886",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "40Х9С2",
+      "gb": "4Cr9Si2",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "45Х14Н14В2М (ЭИ 69)",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "25.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "45Х22Н4М3",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "45Х25Н20С",
+      "gb": "ТУ1333-047-00220302-02",
+      "notes": "",
+      "gost": "ГОСТ1333-047-0022030",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "45Х28Н49В5С",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ1333-047-0022030",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "55Х20Г9АН4",
+      "gb": "5Cr20Ni9Mn4",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "55Х20Г9ФН4",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "65Х13",
+      "gb": "8Gr5MoV",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "80ХН28В",
+      "gb": "по химсоставу",
+      "notes": "",
+      "gost": "ГОСТ ТУ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "95Х18",
+      "gb": "X 102 CrMo17",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "X150CrMo12",
+      "gb": "1.2379",
+      "notes": "",
+      "gost": "ГОСТ 5632-72",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "А25Х13Н2П",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "7.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "Б10",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 8733-74",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ВК15",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 3882–74",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Н70МФВ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Х18Н10Т",
+      "gb": "0Cr18Ni10Ti",
+      "notes": "",
+      "gost": "ГОСТ 5949-75",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Х18Н9Т",
+      "gb": "0Cr18Ni9Ti",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "25.00",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Х20Н14С2",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5949-75",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Х23Н13",
+      "gb": "1Cr23Ni13",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Х25Н20С2",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН32Т",
+      "gb": "Х20Н32Т, ЭП670",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН33КВЮ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН38ВТ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН45МВТЮБР",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН45Ю",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН54К15МБЮВТ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН55ВМТКЮ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН55К15МБЮВТ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН55МВЦ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН55МВЦУ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН55МВЮ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН56ВМКЮ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН56ВМТЮ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН56К16МБВЮТ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН56КМЮБВТ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН57МТВЮ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН58В",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН58МБЮ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН59КВЮМБТ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН60ВТ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН60Ю",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН62БМКТЮ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН62ВМЮТ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН62МКЮ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН65ВМТЮ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН65МВ",
+      "gb": "0Х15Н65М16В ЭП567",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН65МВУ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН67МВТЮ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН68ВМТЮК",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН69МБЮТВР",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН70ВМТЮ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН70ВМТЮФ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН70ВМЮТ",
+      "gb": "ЭИ765",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН70МВТЮБ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН70Ю",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН73МБТЮ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН75ВМЮ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН75МБТЮ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН77ТЮР",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН77ТЮРУ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН78Т",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХН80ТБЮ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5632-2014",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "11ХФ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5950-2000",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "13Х",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5950-2000",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "150ХНМ",
+      "gb": "AD160I Валковая",
+      "notes": "",
+      "gost": "ГОСТ ТУ",
+      "price": "17.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "150ХНМЛ",
+      "gb": "AD160I",
+      "notes": "",
+      "gost": "ГОСТ ТУ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "18ХВГ",
+      "gb": "CrWMn",
+      "notes": "",
+      "gost": "ГОСТ 5950-2000",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "27Х2Н2М1Ф",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ ТУ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "3Х2В8Ф",
+      "gb": "3Cr2W8V",
+      "notes": "",
+      "gost": "ГОСТ 5950-2000",
+      "price": "17.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "3Х3М3Ф",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5950-2000",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "40Х5МФС",
+      "gb": "4Cr5MoSiV",
+      "notes": "",
+      "gost": "ГОСТ 5950-2000",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "45ХНМ",
+      "gb": "45CrNiMo",
+      "notes": "",
+      "gost": "ГОСТ 24.013.04-0",
+      "price": "11.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "4Х5МФ1С",
+      "gb": "45Cr5MoSiV1",
+      "notes": "",
+      "gost": "ГОСТ 5950-2000",
+      "price": "15.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "4Х5МФ1СА",
+      "gb": "45Cr5MoSiV1",
+      "notes": "",
+      "gost": "ГОСТ 5950-2000",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "4Х5МФС",
+      "gb": "4Cr5MoSiV",
+      "notes": "",
+      "gost": "ГОСТ 5950-2000",
+      "price": "14.50",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "55Х",
+      "gb": "55Cr",
+      "notes": "",
+      "gost": "ГОСТ 3541-79",
+      "price": "7.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "5ХВ2С",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5950-2000",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "5ХГМ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5950-2000",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "5ХНВ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5950-2000",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "5ХНВС",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5950-2000",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "5ХНМ",
+      "gb": "5CrNiMo",
+      "notes": "",
+      "gost": "ГОСТ 5950-2000",
+      "price": "13.60",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "5ХНМ2",
+      "gb": "5CrNiMo2",
+      "notes": "",
+      "gost": "ГОСТ ТУ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "60ХГ",
+      "gb": "60CrMnMo",
+      "notes": "",
+      "gost": "ГОСТ24.013.21–85",
+      "price": "9.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "60ХН",
+      "gb": "60CrNi",
+      "notes": "",
+      "gost": "ГОСТ 24.013.04-0",
+      "price": "10.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "60ХСМФ",
+      "gb": "НЕТ",
+      "notes": "",
+      "gost": "ГОСТ24.013.20–85",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "6Х6В3МФС",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5950-2000",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "6ХВ2С",
+      "gb": "8Gr2MoV",
+      "notes": "",
+      "gost": "ГОСТ 5950-2000",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "75Х3МФА",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5950-2000",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "75ХМ",
+      "gb": "75CrMo",
+      "notes": "",
+      "gost": "ГОСТ 3541-79",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "75ХМФ",
+      "gb": "75CrMoV",
+      "notes": "",
+      "gost": "ГОСТ 24.013.04-0",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "75ХМФА",
+      "gb": "75CrMoV",
+      "notes": "",
+      "gost": "ГОСТ 24.013.04-0",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "8ХФ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5950-2000",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "90ХФ",
+      "gb": "9Cr2",
+      "notes": "",
+      "gost": "ГОСТ 3541-79",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "9Х",
+      "gb": "9Cr",
+      "notes": "",
+      "gost": "ГОСТ 5950-2000",
+      "price": "16.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "9Х1",
+      "gb": "9Cr1",
+      "notes": "",
+      "gost": "ГОСТ 5950-2000",
+      "price": "16.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "9Х1Ф",
+      "gb": "9Cr1V",
+      "notes": "",
+      "gost": "ГОСТ 5950-2000",
+      "price": "16.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "9Х2",
+      "gb": "9Cr2",
+      "notes": "",
+      "gost": "ГОСТ 5950-2000",
+      "price": "16.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "9Х2М",
+      "gb": "9Cr2Mo",
+      "notes": "",
+      "gost": "ГОСТ 5950-2000",
+      "price": "16.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "9Х2МФ",
+      "gb": "9Cr2MoV",
+      "notes": "",
+      "gost": "ГОСТ 3541-79",
+      "price": "16.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "9Х2МФ",
+      "gb": "9Cr2MoV",
+      "notes": "",
+      "gost": "ГОСТ 5950-2000",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "9Х2МФА",
+      "gb": "9Cr2MoV",
+      "notes": "",
+      "gost": "ГОСТ 3541-79",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "9ХВГ",
+      "gb": "9CrWMn",
+      "notes": "",
+      "gost": "ГОСТ 5950-2000",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "9ХС",
+      "gb": "8Gr2MoV",
+      "notes": "",
+      "gost": "ГОСТ 5950-2000",
+      "price": "16.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "9ХФ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5950-2000",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "У8",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 1435‑1999",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "У8А",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 1435‑1999",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Х12",
+      "gb": "Cr12",
+      "notes": "",
+      "gost": "ГОСТ 5950-2000",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Х12М",
+      "gb": "Cr12MoV",
+      "notes": "",
+      "gost": "ГОСТ 5950-2000",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Х12МФ",
+      "gb": "Cr12MoV",
+      "notes": "",
+      "gost": "ГОСТ 5950-2000",
+      "price": "16.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "Х12МФ1",
+      "gb": "Cr12Mo1V1",
+      "notes": "",
+      "gost": "ГОСТ 5950-2000",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Х12Ф1",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5950-2000",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХВГ",
+      "gb": "CrWMn",
+      "notes": "",
+      "gost": "ГОСТ 5950-2000",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ХГС",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 5950-2000",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ШХ15",
+      "gb": "GCr15",
+      "notes": "",
+      "gost": "ГОСТ 801-2022",
+      "price": "16.00",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ШХ9",
+      "gb": "Cr2",
+      "notes": "",
+      "gost": "ГОСТ 801-2022",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "07Х18Н9Л",
+      "gb": "CF8",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "09Х17Н3СЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "100Г13Х2Л",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "10Х18Н9ТЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "110Г13Л",
+      "gb": "ZGMn13-1-4",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "7.50",
+      "workpiece_type": "Литье"
+    },
+    {
+      "russian": "110Г13ФТЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "110Г13Х2БРЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "110Г13Х2Л",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "110Г13ХМЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "125Г18Х2МНЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "125Г18Х2Н2МЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "12Х18Н12М3ТЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "12Х18Н9ТЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "130Г13Х2ТЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "145Х15НЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "14Х2ГМРЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "12.00",
+      "workpiece_type": "Литье"
+    },
+    {
+      "russian": "14ХГ2НМЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "14ХГНМЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "15Л",
+      "gb": "1.0420, GS-38",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "15Х13Л",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "15Х25Н20С2Л",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "15Х25ТЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "20.00",
+      "workpiece_type": "Литье"
+    },
+    {
+      "russian": "15ХМЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "170ХНМ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "185Х31Н5Л",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20Г1ФЛ",
+      "gb": "J13002",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20Г1ФЛ",
+      "gb": "J13002",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20ГЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20ГСЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20Л",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "8.50",
+      "workpiece_type": "Литье"
+    },
+    {
+      "russian": "20Х20Н14С2Л",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20Х23Н18СЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20Х25Н19С2",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20Х25Н19С2Л",
+      "gb": "GX40CrNiSi25-20",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "56.00",
+      "workpiece_type": "Литье"
+    },
+    {
+      "russian": "20Х25Н19СЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20Х25Н20С2Л",
+      "gb": "2Cr25Ni20",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20Х27НСЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20Х5МЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20ХГСЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "20ХМЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "23ГНМФЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "23ХГС2МФЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "25ГСЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "25Л",
+      "gb": "GS45",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "8.50",
+      "workpiece_type": "Литье"
+    },
+    {
+      "russian": "25Х23Н7СЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "25ХМЛ",
+      "gb": "ZG25CrMo",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "25ХНМЛ",
+      "gb": "ZG25CrNiMo",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "27ГЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "30ГЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "30ГСЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "30Л",
+      "gb": "ZG270-500",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "8.50",
+      "workpiece_type": "Литье"
+    },
+    {
+      "russian": "30ФЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "30Х06Л",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "30Х24Н12СЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "30Х25Н19С2Л",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "30Х25Н5Л",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "30ХГСЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "30ХМЛ",
+      "gb": "ZG35CrMo",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "30ХНМЛ",
+      "gb": "ZG28CrNiMo",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "35 ГЛ",
+      "gb": "36Mn5",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "8.50",
+      "workpiece_type": "Литье"
+    },
+    {
+      "russian": "35ГЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "35Л",
+      "gb": "ZG270-500",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "8.50",
+      "workpiece_type": "Литье"
+    },
+    {
+      "russian": "35Л",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "35Л-II",
+      "gb": "ZG290-510",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "8.50",
+      "workpiece_type": "Литье"
+    },
+    {
+      "russian": "35МЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "35ФЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "35Х18Н24С2Л",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "35Х23Н19СЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "35Х23Н7СЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "35ХГСЛ",
+      "gb": "ZG35SiMn",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "35ХМЛ",
+      "gb": "ZG35CrMo",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "10.00",
+      "workpiece_type": "Поковка"
+    },
+    {
+      "russian": "35ХМФЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "35ХН2МЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ ТУ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "35ХНЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "38ХЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "40ГЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "40Л",
+      "gb": "ZG270-500",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "8.50",
+      "workpiece_type": "Литье"
+    },
+    {
+      "russian": "40Х24Н12СЛ",
+      "gb": "ZG35Cr26Ni12",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "48.00",
+      "workpiece_type": "Литье"
+    },
+    {
+      "russian": "40Х24Н19С2Л",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "40Х27Н4СЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "40Х9С2Л",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "40ХЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "10.00",
+      "workpiece_type": "Литье"
+    },
+    {
+      "russian": "40ХМЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "40ХНМЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "40ХФЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "42ХНМФЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "45ГЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "45Л",
+      "gb": "ZGD410-620",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "8.50",
+      "workpiece_type": "Литье"
+    },
+    {
+      "russian": "45Л-II",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "8.50",
+      "workpiece_type": "Литье"
+    },
+    {
+      "russian": "45ФЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "45ФЛ (35ХМЛ)",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "45ФЛ-2",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "45Х13Л",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "45Х17Н2СЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "45Х25Н20С2Л",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "45Х25Н35 БСЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "45Х28Н49В5Л",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "45ХГСФЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "50Л",
+      "gb": "50ZG",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "8.50",
+      "workpiece_type": "Литье"
+    },
+    {
+      "russian": "50Х25Н35БСЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "55Л",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "8.50",
+      "workpiece_type": "Литье"
+    },
+    {
+      "russian": "55СЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "60Х2МЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "60ХГЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "65Л-2",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "70 ХЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "70Л",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "70Л",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "70ХЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "75Г2ФЮЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "75Х24ТЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "80ГСЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Г13Л",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Г13ФЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Г13Х2Л",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Г13Х8Л",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Х14Н15С4Л",
+      "gb": "нужно разобраться",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Х18Н25С2Л",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Х23МД",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Х24Н25БЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ ТУ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Х25Н19С2Л",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Х28Н48В5Л",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Х28Н48ВЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Х6С2МЛ",
+      "gb": "окалиностойкая",
+      "notes": "",
+      "gost": "ГОСТ 977-88",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "250Х25Т",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ ТУ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "300Х13Г3С2М",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ ТУ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "320Х20Н",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ ТУ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "340ХС2",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "АСЧ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 1585-85",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "АЧВ-1",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 1585-85",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "АЧС-1",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 1585-85",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "АЧС-2",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 1585-85",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ВЧ100",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 7293-85",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ВЧ35",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 7293-85",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ВЧ40",
+      "gb": "QT400-15",
+      "notes": "",
+      "gost": "ГОСТ 7293-85",
+      "price": "10.00",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ВЧ45",
+      "gb": "QT450-10",
+      "notes": "",
+      "gost": "ГОСТ 7293-85",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ВЧ50",
+      "gb": "QT500-7",
+      "notes": "",
+      "gost": "ГОСТ 7293-85",
+      "price": "10.00",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ВЧ60",
+      "gb": "QT600-3",
+      "notes": "",
+      "gost": "ГОСТ 7293-85",
+      "price": "10.00",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ВЧ70",
+      "gb": "QT700-2",
+      "notes": "",
+      "gost": "ГОСТ 7293-85",
+      "price": "10.00",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ВЧШГ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ЖЧХ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ЖЧХН",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ЖЧЮ7Х2",
+      "gb": "жаропрочный",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ИЧ300Х18Г3",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ ТУ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ИЧХ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ИЧХ16МЛ",
+      "gb": "CC II",
+      "notes": "",
+      "gost": "ГОСТ 7769-82",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ИЧХ17",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 7769-82",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ИЧХ26",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 7769-82",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ИЧХ28",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 7769-82",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ИЧХ28Н2",
+      "gb": "KmTBCr26",
+      "notes": "",
+      "gost": "ГОСТ 7769-82",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Лиг.чугун",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ЛПХНД-63",
+      "gb": "SGP III",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ЛПХНд-65",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ЛПХНд-70",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ЛПХНд-71",
+      "gb": "CC IV",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ЛПХНМд-73",
+      "gb": "CC IV",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ЛПХНМДа-58",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ЛШН45",
+      "gb": "SGP I",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "8.00",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ЛШН51",
+      "gb": "SGP I",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Спец.чугун",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СПХН-45",
+      "gb": "CC I",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СПХН-47",
+      "gb": "CC II",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СПХН-50",
+      "gb": "CC II",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "8.00",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СПХН-55",
+      "gb": "CC II",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СПХН-60",
+      "gb": "CC III",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "8.00",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СПХН-65",
+      "gb": "CC III",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СПХНМ-50",
+      "gb": "SG IV",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СЧ10",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 1412-85",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СЧ12",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 1412-70",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СЧ12-22",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 1412-70",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СЧ12-28",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 1412-70",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СЧ15",
+      "gb": "HT150",
+      "notes": "",
+      "gost": "ГОСТ 1412-85",
+      "price": "7.00",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СЧ15-32",
+      "gb": "HT200",
+      "notes": "",
+      "gost": "ГОСТ 1412-70",
+      "price": "7.00",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СЧ18",
+      "gb": "HT200",
+      "notes": "",
+      "gost": "ГОСТ 1412-70",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СЧ18-35",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 1412-70",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СЧ18-36",
+      "gb": "HT200",
+      "notes": "",
+      "gost": "ГОСТ 1412-70",
+      "price": "7.00",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СЧ20",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 1412-85",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СЧ20-40",
+      "gb": "HT200",
+      "notes": "",
+      "gost": "ГОСТ 1412-70",
+      "price": "7.00",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СЧ21",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 1412-85",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СЧ21-40",
+      "gb": "HT250",
+      "notes": "",
+      "gost": "ГОСТ 1412-70",
+      "price": "7.00",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СЧ21-60",
+      "gb": "HT250",
+      "notes": "",
+      "gost": "ГОСТ 1412-70",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СЧ24-44",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 1412-70",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СЧ25",
+      "gb": "HT250",
+      "notes": "",
+      "gost": "ГОСТ 1412-85",
+      "price": "7.00",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СЧ28",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 1412-85",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СЧ28-48",
+      "gb": "HT300",
+      "notes": "",
+      "gost": "ГОСТ 1412-70",
+      "price": "7.00",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СЧ30",
+      "gb": "HT300",
+      "notes": "",
+      "gost": "ГОСТ 1412-85",
+      "price": "7.00",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СЧ32",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 1412-85",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СЧ32-52",
+      "gb": "HT300",
+      "notes": "",
+      "gost": "ГОСТ 1412-70",
+      "price": "7.00",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СЧ34",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 1412-85",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СЧ340ХС2",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СЧ35",
+      "gb": "HT350",
+      "notes": "",
+      "gost": "ГОСТ 1412-85",
+      "price": "7.00",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СЧ36-56",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 1412-70",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СШН-39",
+      "gb": "SGP II",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СШХ2НМ-55",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СШХ2НМ-60",
+      "gb": "SGA I",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СШХМД-55",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СШХН-45",
+      "gb": "SG V",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "8.00",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СШХН-50",
+      "gb": "SG V",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "8.00",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СШХН-60",
+      "gb": "SG V",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СШХН-65",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СШХНМ-40",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "9.00",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СШХНМ-45",
+      "gb": "SGA I",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СШХНМ-50",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СШХНМ-55",
+      "gb": "SGA I",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СШХНМ-63",
+      "gb": "CC II",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СШХНМ-70",
+      "gb": "SGA II",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СШХНМД-50",
+      "gb": "CC III",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "11.00",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СШХНМД-55",
+      "gb": "CC III",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СШХНМД-60",
+      "gb": "CC III",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СШХНМД-63",
+      "gb": "CC III",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "СШХНт-50",
+      "gb": "SG V",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Твердый сплав",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ТПХН-60",
+      "gb": "CC III",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "9.00",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ТПХНдц-60",
+      "gb": "CC II",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ТШХН-45",
+      "gb": "SG V",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ТШХН-50",
+      "gb": "SG V",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ТШХН-51",
+      "gb": "SG V",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ТШХН-65",
+      "gb": "CC IV",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ТШХНМ-42",
+      "gb": "SGA I",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ТШХНМ-50",
+      "gb": "SGA I",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "11.00",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ТШХНМдц-55",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ТШХНМц-60",
+      "gb": "CC II",
+      "notes": "",
+      "gost": "ГОСТ ТУ СТО",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ЧНХМД",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 7769-82",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ЧХ1",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 7769-82",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ЧХ16",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 7769-82",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ЧХ16М2",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 7769-82",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ЧХ2",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 7769-82",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ЧХ28",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 7769-82",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ЧХ28Н2Т",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 7769-82",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ЧХ3",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 7769-82",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ЧХ32",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 7769-82",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ЧХ3Т",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 7769-82",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ZCuAl10Fe3",
+      "gb": "БрАЖ93Л",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "А12",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "АД31",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "АК5",
+      "gb": "Силумин",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Ал.",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Ал. ZL102",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Ал. ZL104",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Ал3В",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "АМ5",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "АМГ2",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "АМг4,0",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "АМРСО 18.23",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "АМц",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Б16",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Бр МЦС 8-20",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Бр.ОЦС 5-5-5",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Бр010С10",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Бр010Ф1",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "80.00",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Бр010Ц2",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "80.00",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Бр05С25",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Бр05Ц5С5",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Бр06Ц6С3",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Бр08С-12",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Бр08С21",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Бр0С8-12",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Бр0Ф10-0,5",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Бр0Ф6,5-0,15",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Бр0Ф7-0,2",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "БрА10ЖЗ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "БрА10ЖЗМЦ2",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 493-79",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "БрА11Ж4Н4Л",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "БрА11Ж6Н6",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "БрА9Ж3Л",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "БрА9Ж4Л",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "БрА9ЖЗЛ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "80.00",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "БрАЖ10-4",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "БрАЖ9-4",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "80.00",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "БрАЖ9-4Л",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "БрАЖМц10-3-1,5",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "БрАЖМц10-3-1.5",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "БрАЖН10-4-4",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "80.00",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "БрАЖН-10-4-4Л",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "БрАМ5-5-5",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "БрАмц9-2",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "БрАНЖ6Н6",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "80.00",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "БрО10С10",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "БрО10Ф1",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "БрО5Ц5С5",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "80.00",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "БрО6Ц6С3",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "БрО6Ц6С4",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "БрО6Ц6С5",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "БрО6Ц6С6",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "БрО6Ц6С7",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "БрО6Ц6С8",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Бронза 010С10",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Бронза ZCuAl10Fe3",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Бронза ZQSn10-1",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Бронза ZQSn6-6-3",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Бронза Бр.О5Ц5С5",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "бронза БрА9Ж3Л",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Бронза БрО5Ц5С5",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "бронза/латунь",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "БрОС8-12",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "БрОФ-10-1",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "БрОФ7-0.2",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "БрОЦС 5-5-5",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "БрОЦС5-5-5",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "БрОЦС6-6-3",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "БрСр0.1",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "БрХЦр",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ВТ1-0",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Д16",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Л63",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ЛАЖ-60-1-1Л",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ЛАЖМЦ 66-6-3-2",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ЛАЖМц66-6-3-2",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Латунь",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Латунь Н62",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Лента ДПРНТ",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ЛМцС 58-2-2",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ЛС59-1",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ЛЦ23А6Ж3Мц2",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ЛЦ38Мц2С2",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "80.00",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "М1",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "М1р",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "М99,95-МП",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Медь",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Медь М1",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Медь М2",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Медь МС",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "медь ТР1",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "80.00",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "МНЖ5-1",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "НП2",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "НП3",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ОЦС 5-5-5",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Т2",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Титан ВТ1-0",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ЦАМ10-5Л",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 21437-95",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Полиамид 6",
+      "gb": "Капролон",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Полиамид 6-2л",
+      "gb": "Капролон",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "ПОН(б)",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Проволока Б-3-6,0",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ 9389",
+      "price": "",
+      "workpiece_type": ""
+    },
+    {
+      "russian": "Р550",
+      "gb": "",
+      "notes": "",
+      "gost": "ГОСТ",
+      "price": "80.00",
+      "workpiece_type": ""
     }
   ]
 }

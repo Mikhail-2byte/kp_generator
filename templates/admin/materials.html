@@ -34,10 +34,24 @@
                     <div class="field-error">{{ error }}</div>
                 {% endfor %}
             </div>
-            <div class="field-group span-2">
-                {{ gb_form.composition.label(class_='field-label') }}
-                {{ gb_form.composition(rows=4, class_='', id='form-composition') }}
-                {% for error in gb_form.composition.errors %}
+            <div class="field-group">
+                {{ gb_form.gost.label(class_='field-label') }}
+                {{ gb_form.gost(class_='', id='form-gost') }}
+                {% for error in gb_form.gost.errors %}
+                    <div class="field-error">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <div class="field-group">
+                {{ gb_form.price.label(class_='field-label') }}
+                {{ gb_form.price(class_='', id='form-price') }}
+                {% for error in gb_form.price.errors %}
+                    <div class="field-error">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <div class="field-group">
+                {{ gb_form.workpiece_type.label(class_='field-label') }}
+                {{ gb_form.workpiece_type(class_='', id='form-workpiece-type') }}
+                {% for error in gb_form.workpiece_type.errors %}
                     <div class="field-error">{{ error }}</div>
                 {% endfor %}
             </div>
@@ -52,14 +66,22 @@
     </div>
 
     <div class="card">
-        <h2 class="section-title">Справочник аналогов</h2>
+        <div class="section-header">
+            <h2 class="section-title">Справочник аналогов</h2>
+            <form method="post" action="{{ url_for('admin.import_materials') }}" style="display: inline-block;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-primary" onclick="return confirm('Импорт заменит все существующие данные. Продолжить?')">Импорт из CSV</button>
+            </form>
+        </div>
         <div class="history-table-wrapper">
             <table class="data-table">
                 <thead>
                     <tr>
                         <th>Наименование (RU)</th>
                         <th>Наименование (GB)</th>
-                        <th>Состав</th>
+                        <th>ГОСТ</th>
+                        <th>Цена</th>
+                        <th>Вид заготовки</th>
                         <th>Действия</th>
                     </tr>
                 </thead>
@@ -68,19 +90,11 @@
                     <tr>
                         <td>{{ material.russian }}</td>
                         <td>{{ material.gb }}</td>
-                        <td>
-                            {% if material.composition %}
-                                <div class="composition-inline">
-                                    {% for component in material.composition %}
-                                        <span>{{ component.element }} — {{ component.content }}{% if not loop.last %}; {% endif %}</span>
-                                    {% endfor %}
-                                </div>
-                            {% else %}
-                                <span class="muted-text">Нет данных</span>
-                            {% endif %}
-                        </td>
+                        <td>{{ material.gost or '—' }}</td>
+                        <td>{{ material.price or '—' }}</td>
+                        <td>{{ material.workpiece_type or '—' }}</td>
                         <td class="table-actions">
-                            <button type="button" class="btn btn-sm btn-secondary" onclick="showEditModal({{ loop.index0 }}, {{ material.russian|tojson }}, {{ material.gb|tojson }}, {{ (material.notes or '')|tojson }}, {{ (material.composition|default([]))|tojson }})">Редактировать</button>
+                            <button type="button" class="btn btn-sm btn-secondary" onclick="showEditModal({{ loop.index0 }}, {{ material.russian|tojson }}, {{ material.gb|tojson }}, {{ (material.notes or '')|tojson }}, {{ (material.gost or '')|tojson }}, {{ (material.price or '')|tojson }}, {{ (material.workpiece_type or '')|tojson }})">Редактировать</button>
                             <form method="post" class="inline-form" style="display:inline;">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <input type="hidden" name="action" value="delete_gb">
@@ -91,7 +105,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="4" class="muted-text">Материалы не найдены.</td>
+                        <td colspan="6" class="muted-text">Материалы не найдены.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -101,14 +115,7 @@
 </div>
 
 <script>
-function formatComposition(composition) {
-    if (!composition || composition.length === 0) return '';
-    return composition.map(function(comp) {
-        return comp.element + ': ' + comp.content;
-    }).join('\n');
-}
-
-function showEditModal(index, russian, gb, notes, composition) {
+function showEditModal(index, russian, gb, notes, gost, price, workpiece_type) {
     document.getElementById('form-title').textContent = 'Редактирование материала';
     document.getElementById('form-description').textContent = 'Измените данные материала в справочнике.';
     document.getElementById('form-action').value = 'edit_gb';
@@ -116,7 +123,9 @@ function showEditModal(index, russian, gb, notes, composition) {
     document.getElementById('form-russian').value = russian || '';
     document.getElementById('form-gb').value = gb || '';
     document.getElementById('form-notes').value = notes || '';
-    document.getElementById('form-composition').value = formatComposition(composition);
+    document.getElementById('form-gost').value = gost || '';
+    document.getElementById('form-price').value = price || '';
+    document.getElementById('form-workpiece-type').value = workpiece_type || '';
     document.getElementById('submit-btn').textContent = 'Сохранить изменения';
     document.getElementById('cancel-btn').style.display = 'inline-block';
     document.getElementById('materialForm').scrollIntoView({ behavior: 'smooth', block: 'start' });

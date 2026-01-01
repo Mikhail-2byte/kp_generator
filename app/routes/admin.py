@@ -27,6 +27,9 @@ from app.auth.security import admin_required
 from app.services import datasets, datasets_validator
 from app.services.audit_service import log_create, log_delete, log_update
 from app.services.content_manager import ContentManager, build_manager
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parents[2]
 from app.services.export_service import (
     create_excel_response,
     create_pdf_response,
@@ -157,17 +160,17 @@ def admin_panel() -> Union[str, Response]:
                 russian_name = gb_form.russian.data.strip()
                 gb_name = gb_form.gb.data.strip()
                 notes_text = (gb_form.notes.data or '').strip()
-                composition_list = datasets.parse_composition_input(gb_form.composition.data)
-                composition_search = ' '.join(
-                    f"{comp.get('element', '')} {comp.get('content', '')}" for comp in composition_list
-                ).lower()
+                gost = (gb_form.gost.data or '').strip() if hasattr(gb_form, 'gost') else ''
+                price = (gb_form.price.data or '').strip() if hasattr(gb_form, 'price') else ''
+                workpiece_type = (gb_form.workpiece_type.data or '').strip() if hasattr(gb_form, 'workpiece_type') else ''
 
                 new_material = {
                     'russian': russian_name,
                     'gb': gb_name,
                     'notes': notes_text,
-                    'composition': composition_list,
-                    'composition_search': composition_search
+                    'gost': gost,
+                    'price': price,
+                    'workpiece_type': workpiece_type
                 }
                 gb_materials.append(new_material)
                 datasets.save_gb_materials(gb_materials, actor=_current_actor())
@@ -371,17 +374,17 @@ def manage_materials() -> Union[str, Response]:
                 russian_name = gb_form.russian.data.strip()
                 gb_name = gb_form.gb.data.strip()
                 notes_text = (gb_form.notes.data or '').strip()
-                composition_list = datasets.parse_composition_input(gb_form.composition.data)
-                composition_search = ' '.join(
-                    f"{comp.get('element', '')} {comp.get('content', '')}" for comp in composition_list
-                ).lower()
+                gost = (gb_form.gost.data or '').strip() if hasattr(gb_form, 'gost') else ''
+                price = (gb_form.price.data or '').strip() if hasattr(gb_form, 'price') else ''
+                workpiece_type = (gb_form.workpiece_type.data or '').strip() if hasattr(gb_form, 'workpiece_type') else ''
 
                 gb_materials.append({
                     'russian': russian_name,
                     'gb': gb_name,
                     'notes': notes_text,
-                    'composition': composition_list,
-                    'composition_search': composition_search
+                    'gost': gost,
+                    'price': price,
+                    'workpiece_type': workpiece_type
                 })
                 datasets.save_gb_materials(gb_materials, actor=_current_actor())
                 datasets.refresh_gb_analogs()
@@ -399,17 +402,17 @@ def manage_materials() -> Union[str, Response]:
                     russian_name = gb_form.russian.data.strip()
                     gb_name = gb_form.gb.data.strip()
                     notes_text = (gb_form.notes.data or '').strip()
-                    composition_list = datasets.parse_composition_input(gb_form.composition.data)
-                    composition_search = ' '.join(
-                        f"{comp.get('element', '')} {comp.get('content', '')}" for comp in composition_list
-                    ).lower()
+                    gost = (gb_form.gost.data or '').strip() if hasattr(gb_form, 'gost') else ''
+                    price = (gb_form.price.data or '').strip() if hasattr(gb_form, 'price') else ''
+                    workpiece_type = (gb_form.workpiece_type.data or '').strip() if hasattr(gb_form, 'workpiece_type') else ''
 
                     gb_materials[index] = {
                         'russian': russian_name,
                         'gb': gb_name,
                         'notes': notes_text,
-                        'composition': composition_list,
-                        'composition_search': composition_search
+                        'gost': gost,
+                        'price': price,
+                        'workpiece_type': workpiece_type
                     }
                     datasets.save_gb_materials(gb_materials, actor=_current_actor())
                     datasets.refresh_gb_analogs()
@@ -451,6 +454,25 @@ def manage_materials() -> Union[str, Response]:
             gb_form=gb_form,
         )
     )
+
+
+@admin_bp.route('/admin/materials/import', methods=['POST'])
+@admin_required
+def import_materials() -> Response:
+    """Импортирует материалы из CSV файла."""
+    csv_path = BASE_DIR / 'Стали цены.csv'
+    
+    if not csv_path.exists():
+        flash('Файл "Стали цены.csv" не найден в корне проекта.', 'danger')
+        return redirect(url_for('admin.manage_materials'))
+    
+    try:
+        count = datasets.import_gb_materials_from_csv(csv_path, actor=_current_actor())
+        flash(f'Импортировано материалов: {count}.', 'success')
+    except Exception as exc:
+        flash(f'Ошибка при импорте: {str(exc)}', 'danger')
+    
+    return redirect(url_for('admin.manage_materials'))
 
 
 @admin_bp.route('/admin/logistics', methods=['GET', 'POST'])

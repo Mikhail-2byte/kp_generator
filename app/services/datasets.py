@@ -41,14 +41,6 @@ def load_gb_materials() -> List[Dict[str, Any]]:
         with materials_path.open('r', encoding='utf-8') as file:
             data = json.load(file)
         materials = data.get('materials', [])
-
-        for material in materials:
-            composition = material.get('composition', [])
-            material['composition_search'] = ' '.join(
-                f"{item.get('element', '')} {item.get('content', '')}"
-                for item in composition
-            )
-
         return materials
     except FileNotFoundError:
         _log_error(f'GB materials file not found at {materials_path.as_posix()}')
@@ -67,13 +59,9 @@ def save_gb_materials(materials: List[Dict[str, Any]], *, actor: Optional[str] =
                 'russian': material.get('russian', ''),
                 'gb': material.get('gb', ''),
                 'notes': material.get('notes', ''),
-                'composition': [
-                    {
-                        'element': component.get('element', ''),
-                        'content': component.get('content', '')
-                    }
-                    for component in material.get('composition', [])
-                ]
+                'gost': material.get('gost', ''),
+                'price': material.get('price', ''),
+                'workpiece_type': material.get('workpiece_type', '')
             }
             for material in materials
         ]
@@ -882,27 +870,99 @@ def get_task_instructions() -> List[Dict[str, Any]]:
     return result
 
 
-def parse_composition_input(raw_text: str):
-    """Преобразует текстовое описание состава материала в структуру данных."""
-    if not raw_text:
-        return []
+def parse_steel_prices_csv(csv_path: Path) -> List[Dict[str, Any]]:
+    """Парсит CSV файл со сталями и ценами, извлекая данные о материалах.
+    
+    Args:
+        csv_path: Путь к CSV файлу
+        
+    Returns:
+        Список словарей с полями: russian, gb, gost, price, workpiece_type, notes
+    """
+    materials = []
+    
+    try:
+        with csv_path.open('r', encoding='utf-8') as file:
+            reader = csv.reader(file)
+            rows = list(reader)
+            
+            # Пропускаем служебные строки, ищем заголовки (строка 9, индекс 8)
+            # Данные начинаются со строки 10 (индекс 9)
+            for i, row in enumerate(rows):
+                if i < 9:  # Пропускаем служебные строки до заголовков
+                    continue
+                
+                # Пропускаем пустые строки или строки без данных
+                if len(row) < 9:
+                    continue
+                
+                # Извлекаем данные из колонок
+                first_col = row[0].strip() if len(row) > 0 else ''
+                russian = row[1].strip() if len(row) > 1 else ''
+                gb = row[4].strip() if len(row) > 4 else ''
+                gost = row[6].strip() if len(row) > 6 else ''
+                price = row[7].strip() if len(row) > 7 else ''
+                workpiece_type = row[8].strip() if len(row) > 8 else ''
+                
+                # Пропускаем заголовки (строка с "№ в группе" или "Материал" в первой колонке)
+                if first_col in ('№ в группе', 'Материал') or russian in ('Материал', 'Наименование мир'):
+                    continue
+                
+                # Пропускаем группирующие строки (начинаются с пробела и цифры с точкой, например " 1. Углеродистая")
+                if first_col and len(first_col) > 2 and first_col[0] == ' ':
+                    if first_col[1].isdigit() and '.' in first_col[:5]:
+                        continue
+                
+                # Пропускаем строки без российского материала
+                if not russian:
+                    continue
+                
+                # Пропускаем группирующие строки (если российский материал начинается с пробела, цифры и точки)
+                # и содержит длинный текст (например " 1. Углеродистая (нелегир)")
+                if russian and len(russian) > 15 and russian[0] == ' ':
+                    if russian[1].isdigit() and '.' in russian[:5]:
+                        continue
+                
+                materials.append({
+                    'russian': russian,
+                    'gb': gb,
+                    'gost': gost,
+                    'price': price,
+                    'workpiece_type': workpiece_type,
+                    'notes': ''
+                })
+                
+    except FileNotFoundError:
+        try:
+            _log_error(f'CSV file not found at {csv_path.as_posix()}')
+        except RuntimeError:
+            pass  # Игнорируем ошибку, если нет application context
+    except Exception as exc:
+        try:
+            _log_error(f'Failed to parse CSV file: {exc}')
+        except RuntimeError:
+            pass  # Игнорируем ошибку, если нет application context
+    
+    return materials
 
-    composition = []
-    for line in raw_text.splitlines():
-        cleaned = line.strip()
-        if not cleaned:
-            continue
-        if ':' in cleaned:
-            element, content = cleaned.split(':', 1)
-        elif '=' in cleaned:
-            element, content = cleaned.split('=', 1)
-        else:
-            parts = cleaned.split(maxsplit=1)
-            element = parts[0]
-            content = parts[1] if len(parts) > 1 else ''
-        composition.append({'element': element.strip(), 'content': content.strip()})
 
-    return composition
+def import_gb_materials_from_csv(csv_path: Path, *, actor: Optional[str] = None) -> int:
+    """Импортирует материалы из CSV файла, заменяя все существующие данные.
+    
+    Args:
+        csv_path: Путь к CSV файлу
+        actor: Имя пользователя, выполняющего импорт (для версионирования)
+        
+    Returns:
+        Количество импортированных записей
+    """
+    materials = parse_steel_prices_csv(csv_path)
+    
+    if materials:
+        save_gb_materials(materials, actor=actor)
+        refresh_gb_analogs()
+    
+    return len(materials)
 
 
 def save_orders_documents(orders: List[Dict[str, Any]], *, actor: Optional[str] = None):

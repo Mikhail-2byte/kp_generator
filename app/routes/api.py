@@ -267,7 +267,7 @@ def get_gb_materials_api() -> Dict[str, Any]:
             m for m in materials
             if search_lower in m.get('russian', '').lower()
             or search_lower in m.get('gb', '').lower()
-            or search_lower in m.get('composition_search', '').lower()
+            or search_lower in m.get('gost', '').lower()
         ]
     
     return jsonify({

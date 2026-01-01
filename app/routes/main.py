@@ -536,32 +536,77 @@ def feedback() -> Union[str, Response]:
 def gb_analogs() -> str:
     """Показывает таблицу аналогов материалов по китайскому стандарту GB."""
     query = request.args.get('q', '').strip()
+    filter_gost = request.args.get('gost', '').strip()
+    filter_workpiece = request.args.get('workpiece', '').strip()
+    price_from = request.args.get('price_from', '').strip()
+    price_to = request.args.get('price_to', '').strip()
+    
     normalized_query = query.lower()
     filtered_materials = datasets.get_gb_materials()
+    
+    # Получаем уникальные значения для фильтров
+    all_materials = datasets.get_gb_materials()
+    unique_gosts = sorted(set(m.get('gost', '') for m in all_materials if m.get('gost')))
+    unique_workpieces = sorted(set(m.get('workpiece_type', '') for m in all_materials if m.get('workpiece_type')))
 
-    if normalized_query:
-        filtered = []
-        for material in datasets.get_gb_materials():
-            composition_values = (
-                material.get('composition_search', '')
-                or ' '.join(
-                    f"{comp.get('element', '')} {comp.get('content', '')}"
-                    for comp in material.get('composition', [])
-                )
-            ).lower()
-
-            if (
+    # Применяем фильтры
+    filtered = []
+    for material in filtered_materials:
+        # Текстовый поиск
+        if normalized_query:
+            if not (
                 normalized_query in material['russian'].lower()
                 or normalized_query in material['gb'].lower()
-                or normalized_query in material.get('notes', '').lower()
-                or normalized_query in composition_values
+                or normalized_query in material.get('gost', '').lower()
             ):
-                filtered.append(material)
-        filtered_materials = filtered
+                continue
+        
+        # Фильтр по ГОСТ
+        if filter_gost and material.get('gost', '').strip() != filter_gost:
+            continue
+        
+        # Фильтр по виду заготовки
+        if filter_workpiece and material.get('workpiece_type', '').strip() != filter_workpiece:
+            continue
+        
+        # Фильтр по цене
+        price_str = material.get('price', '').strip()
+        if price_str:
+            try:
+                price_value = float(price_str.replace(',', '.'))
+                if price_from:
+                    try:
+                        if price_value < float(price_from.replace(',', '.')):
+                            continue
+                    except ValueError:
+                        pass
+                if price_to:
+                    try:
+                        if price_value > float(price_to.replace(',', '.')):
+                            continue
+                    except ValueError:
+                        pass
+            except ValueError:
+                pass
+        
+        filtered.append(material)
+    
+    filtered_materials = filtered
 
     return render_template(
         'gb_analogs.html',
-        **build_context('gb', 'Аналоги по стандарту GB', materials=filtered_materials, query=query)
+        **build_context(
+            'gb', 
+            'Аналоги по стандарту GB', 
+            materials=filtered_materials, 
+            query=query,
+            filter_gost=filter_gost,
+            filter_workpiece=filter_workpiece,
+            price_from=price_from,
+            price_to=price_to,
+            unique_gosts=unique_gosts,
+            unique_workpieces=unique_workpieces
+        )
     )
 
 

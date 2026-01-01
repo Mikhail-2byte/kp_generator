@@ -1,0 +1,24 @@
+{
+  "saved_at": "20260101T152139",
+  "actor": "test_user",
+  "data": {
+    "materials": [
+      {
+        "russian": "Материал",
+        "gb": "Наименование мир",
+        "notes": "",
+        "gost": "ГОСТ",
+        "price": "Материал.Цена",
+        "workpiece_type": "Материал.Цена.Вид заготовки"
+      },
+      {
+        "russian": "10",
+        "gb": "10",
+        "notes": "",
+        "gost": "ГОСТ 1050-2013",
+        "price": "4.30",
+        "workpiece_type": "Лист"
+      }
+    ]
+  }
+}

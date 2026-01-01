@@ -536,62 +536,46 @@ def feedback() -> Union[str, Response]:
 def gb_analogs() -> str:
     """Показывает таблицу аналогов материалов по китайскому стандарту GB."""
     query = request.args.get('q', '').strip()
-    filter_gost = request.args.get('gost', '').strip()
-    filter_workpiece = request.args.get('workpiece', '').strip()
-    price_from = request.args.get('price_from', '').strip()
-    price_to = request.args.get('price_to', '').strip()
+    search_field = request.args.get('field', 'all').strip()
     
     normalized_query = query.lower()
     filtered_materials = datasets.get_gb_materials()
-    
-    # Получаем уникальные значения для фильтров
-    all_materials = datasets.get_gb_materials()
-    unique_gosts = sorted(set(m.get('gost', '') for m in all_materials if m.get('gost')))
-    unique_workpieces = sorted(set(m.get('workpiece_type', '') for m in all_materials if m.get('workpiece_type')))
 
-    # Применяем фильтры
-    filtered = []
-    for material in filtered_materials:
-        # Текстовый поиск
-        if normalized_query:
-            if not (
-                normalized_query in material['russian'].lower()
-                or normalized_query in material['gb'].lower()
-                or normalized_query in material.get('gost', '').lower()
-            ):
-                continue
+    # Применяем поиск по выбранному полю
+    if normalized_query:
+        filtered = []
+        for material in filtered_materials:
+            match = False
+            
+            if search_field == 'all' or not search_field:
+                # Поиск по всем полям
+                match = (
+                    normalized_query in material['russian'].lower()
+                    or normalized_query in material['gb'].lower()
+                    or normalized_query in material.get('gost', '').lower()
+                    or normalized_query in material.get('price', '').lower()
+                    or normalized_query in material.get('workpiece_type', '').lower()
+                )
+            elif search_field == 'russian':
+                # Поиск по российскому материалу
+                match = normalized_query in material['russian'].lower()
+            elif search_field == 'gb':
+                # Поиск по GB аналогу
+                match = normalized_query in material['gb'].lower()
+            elif search_field == 'gost':
+                # Поиск по ГОСТ
+                match = normalized_query in material.get('gost', '').lower()
+            elif search_field == 'price':
+                # Поиск по цене
+                match = normalized_query in material.get('price', '').lower()
+            elif search_field == 'workpiece_type':
+                # Поиск по виду заготовки
+                match = normalized_query in material.get('workpiece_type', '').lower()
+            
+            if match:
+                filtered.append(material)
         
-        # Фильтр по ГОСТ
-        if filter_gost and material.get('gost', '').strip() != filter_gost:
-            continue
-        
-        # Фильтр по виду заготовки
-        if filter_workpiece and material.get('workpiece_type', '').strip() != filter_workpiece:
-            continue
-        
-        # Фильтр по цене
-        price_str = material.get('price', '').strip()
-        if price_str:
-            try:
-                price_value = float(price_str.replace(',', '.'))
-                if price_from:
-                    try:
-                        if price_value < float(price_from.replace(',', '.')):
-                            continue
-                    except ValueError:
-                        pass
-                if price_to:
-                    try:
-                        if price_value > float(price_to.replace(',', '.')):
-                            continue
-                    except ValueError:
-                        pass
-            except ValueError:
-                pass
-        
-        filtered.append(material)
-    
-    filtered_materials = filtered
+        filtered_materials = filtered
 
     return render_template(
         'gb_analogs.html',
@@ -600,12 +584,7 @@ def gb_analogs() -> str:
             'Аналоги по стандарту GB', 
             materials=filtered_materials, 
             query=query,
-            filter_gost=filter_gost,
-            filter_workpiece=filter_workpiece,
-            price_from=price_from,
-            price_to=price_to,
-            unique_gosts=unique_gosts,
-            unique_workpieces=unique_workpieces
+            search_field=search_field
         )
     )
 

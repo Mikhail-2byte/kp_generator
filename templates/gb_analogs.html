@@ -11,43 +11,20 @@
             <span class="badge">Всего: {{ materials|length }}</span>
         </div>
         <div class="search-controls">
-            <input type="text" id="searchInput" class="search-input" placeholder="Поиск по названию, аналогу или ГОСТ" value="{{ query }}">
-            <button id="applyFilters" class="btn btn-primary">Применить фильтры</button>
-            <button id="clearFilters" class="btn btn-outline">Очистить</button>
-        </div>
-        
-        <div class="filters-panel" style="margin-top: 16px; padding: 16px; background: #f8f9fa; border-radius: 8px;">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
-                <div class="filter-group">
-                    <label for="filterGost" style="display: block; margin-bottom: 4px; font-weight: 500; font-size: 14px;">ГОСТ</label>
-                    <select id="filterGost" class="search-input" style="width: 100%;">
-                        <option value="">Все ГОСТы</option>
-                        {% for gost in unique_gosts %}
-                        <option value="{{ gost }}" {% if filter_gost == gost %}selected{% endif %}>{{ gost }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                
-                <div class="filter-group">
-                    <label for="filterWorkpiece" style="display: block; margin-bottom: 4px; font-weight: 500; font-size: 14px;">Вид заготовки</label>
-                    <select id="filterWorkpiece" class="search-input" style="width: 100%;">
-                        <option value="">Все виды</option>
-                        {% for workpiece in unique_workpieces %}
-                        <option value="{{ workpiece }}" {% if filter_workpiece == workpiece %}selected{% endif %}>{{ workpiece }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                
-                <div class="filter-group">
-                    <label for="priceFrom" style="display: block; margin-bottom: 4px; font-weight: 500; font-size: 14px;">Цена от</label>
-                    <input type="number" id="priceFrom" class="search-input" step="0.01" min="0" placeholder="0.00" value="{{ price_from }}" style="width: 100%;">
-                </div>
-                
-                <div class="filter-group">
-                    <label for="priceTo" style="display: block; margin-bottom: 4px; font-weight: 500; font-size: 14px;">Цена до</label>
-                    <input type="number" id="priceTo" class="search-input" step="0.01" min="0" placeholder="0.00" value="{{ price_to }}" style="width: 100%;">
-                </div>
-            </div>
+            <input type="text" id="searchInput" class="search-input" placeholder="Поиск по материалам..." value="{{ query }}">
+            <button id="searchButton" class="btn btn-primary" title="Найти">
+                <span>{{ sidebar_icon('search')|safe }}</span>
+                <span>Поиск</span>
+            </button>
+            <select id="filterSelect" class="search-input">
+                <option value="all" {% if search_field == 'all' or not search_field %}selected{% endif %}>Все поля</option>
+                <option value="russian" {% if search_field == 'russian' %}selected{% endif %}>Российский материал</option>
+                <option value="gb" {% if search_field == 'gb' %}selected{% endif %}>GB аналог</option>
+                <option value="gost" {% if search_field == 'gost' %}selected{% endif %}>ГОСТ</option>
+                <option value="price" {% if search_field == 'price' %}selected{% endif %}>Цена</option>
+                <option value="workpiece_type" {% if search_field == 'workpiece_type' %}selected{% endif %}>Вид заготовки</option>
+            </select>
+            <button id="clearSearch" class="btn btn-outline" style="display:none;">Очистить поиск</button>
         </div>
         <div class="history-table-wrapper">
             <table class="data-table" id="materialsTable">
@@ -90,57 +67,73 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const searchInput = document.getElementById('searchInput');
-        const filterGost = document.getElementById('filterGost');
-        const filterWorkpiece = document.getElementById('filterWorkpiece');
-        const priceFrom = document.getElementById('priceFrom');
-        const priceTo = document.getElementById('priceTo');
-        const applyFiltersBtn = document.getElementById('applyFilters');
-        const clearFiltersBtn = document.getElementById('clearFilters');
+        const filterSelect = document.getElementById('filterSelect');
+        const searchButton = document.getElementById('searchButton');
+        const clearSearch = document.getElementById('clearSearch');
         const tableBody = document.querySelector('#materialsTable tbody');
 
-        const applyFilters = () => {
+        // Показываем/скрываем кнопку очистки
+        const updateClearButton = () => {
+            if (clearSearch && searchInput) {
+                clearSearch.style.display = searchInput.value.trim() ? 'inline-block' : 'none';
+            }
+        };
+
+        // Функция выполнения поиска
+        const executeSearch = () => {
+            if (!searchInput) return;
+            
+            const query = searchInput.value.trim();
+            const searchField = filterSelect ? filterSelect.value : 'all';
+            
             const params = new URLSearchParams();
             
-            if (searchInput.value.trim()) {
-                params.set('q', searchInput.value.trim());
+            if (query) {
+                params.set('q', query);
             }
-            if (filterGost.value) {
-                params.set('gost', filterGost.value);
-            }
-            if (filterWorkpiece.value) {
-                params.set('workpiece', filterWorkpiece.value);
-            }
-            if (priceFrom.value) {
-                params.set('price_from', priceFrom.value);
-            }
-            if (priceTo.value) {
-                params.set('price_to', priceTo.value);
+            
+            if (searchField && searchField !== 'all') {
+                params.set('field', searchField);
             }
             
             const queryString = params.toString();
             window.location.href = queryString ? `{{ url_for('main.gb_analogs') }}?${queryString}` : '{{ url_for('main.gb_analogs') }}';
         };
 
-        const clearFilters = () => {
-            window.location.href = '{{ url_for('main.gb_analogs') }}';
-        };
-
-        if (applyFiltersBtn) {
-            applyFiltersBtn.addEventListener('click', applyFilters);
+        // Поиск по кнопке
+        if (searchButton) {
+            searchButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                executeSearch();
+            });
         }
 
-        if (clearFiltersBtn) {
-            clearFiltersBtn.addEventListener('click', clearFilters);
-        }
-
-        // Быстрый поиск по тексту (без перезагрузки страницы)
+        // Поиск по Enter
         if (searchInput) {
             searchInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
-                    applyFilters();
+                    e.preventDefault();
+                    executeSearch();
+                }
+            });
+            
+            // Обновляем кнопку очистки при вводе
+            searchInput.addEventListener('input', updateClearButton);
+        }
+
+        // Очистка поиска
+        if (clearSearch) {
+            clearSearch.addEventListener('click', () => {
+                if (searchInput) {
+                    searchInput.value = '';
+                    updateClearButton();
+                    window.location.href = '{{ url_for('main.gb_analogs') }}';
                 }
             });
         }
+
+        // Инициализация кнопки очистки
+        updateClearButton();
     });
 </script>
 {% endblock %}

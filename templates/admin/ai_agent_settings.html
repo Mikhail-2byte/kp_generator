@@ -1,0 +1,303 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="content-container">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="section-title">Управление AI Агентом</h2>
+            <p class="section-description">Настройки, мониторинг и статистика использования AI консультанта</p>
+        </div>
+
+        <!-- Статус API ключа -->
+        <div class="card-section">
+            <h3>Статус API Ключа</h3>
+            <div class="status-indicator">
+                {% if api_key_status == 'valid' %}
+                <span class="status-badge status-success">✓ Валиден</span>
+                {% elif api_key_status == 'invalid' %}
+                <span class="status-badge status-error">✗ Невалиден</span>
+                {% elif api_key_status == 'not_set' %}
+                <span class="status-badge status-warning">⚠ Не установлен</span>
+                {% else %}
+                <span class="status-badge status-info">? Неизвестно</span>
+                {% endif %}
+                <span class="status-message">{{ api_key_message }}</span>
+            </div>
+        </div>
+
+        <!-- Текущие настройки -->
+        <div class="card-section">
+            <h3>Текущие настройки</h3>
+            <table class="settings-table">
+                <tr>
+                    <td><strong>Модель:</strong></td>
+                    <td>{{ current_settings.model_name }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Timeout:</strong></td>
+                    <td>{{ current_settings.timeout }} сек</td>
+                </tr>
+                <tr>
+                    <td><strong>Reasoning:</strong></td>
+                    <td>{{ '✓ Включен' if current_settings.reasoning_enabled else '✗ Выключен' }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Fallback режим:</strong></td>
+                    <td>{{ '✓ Включен' if current_settings.fallback_enabled else '✗ Выключен' }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Мониторинг:</strong></td>
+                    <td>{{ '✓ Включен' if current_settings.usage_monitoring else '✗ Выключен' }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Макс. история:</strong></td>
+                    <td>{{ current_settings.max_history_length }} сообщений</td>
+                </tr>
+                <tr>
+                    <td><strong>TTL кеша:</strong></td>
+                    <td>{{ (current_settings.cache_ttl / 3600) | round(1) }} часов</td>
+                </tr>
+            </table>
+            <p class="help-text">💡 Для изменения настроек отредактируйте файл <code>.env</code> на сервере</p>
+        </div>
+
+        <!-- Статистика использования -->
+        {% if stats %}
+        <div class="card-section">
+            <h3>Статистика использования ({{ request.args.get('days', '30') }} дней)</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats.total_requests }}</div>
+                    <div class="stat-label">Всего запросов</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats.total_tokens }}</div>
+                    <div class="stat-label">Токенов использовано</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats.avg_response_time }} мс</div>
+                    <div class="stat-label">Среднее время ответа</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats.errors_count }}</div>
+                    <div class="stat-label">Ошибок</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats.cache_hits }}</div>
+                    <div class="stat-label">Cache hits</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats.cache_hit_rate }}%</div>
+                    <div class="stat-label">Cache hit rate</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Статистика ошибок -->
+        {% if error_stats %}
+        <div class="card-section">
+            <h3>Статистика ошибок (7 дней)</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Тип ошибки</th>
+                        <th>Количество</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for error in error_stats %}
+                    <tr>
+                        <td>{{ error.error_type }}</td>
+                        <td>{{ error.count }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <!-- Топ запросов -->
+        {% if top_queries %}
+        <div class="card-section">
+            <h3>Топ запросов (7 дней)</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Запрос</th>
+                        <th>Количество</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for query in top_queries %}
+                    <tr>
+                        <td>{{ query.query }}</td>
+                        <td>{{ query.count }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <!-- Кеш -->
+        <div class="card-section">
+            <h3>Управление кешем</h3>
+            {% if cache_stats.enabled %}
+            <p>Записей в кеше: <strong>{{ cache_stats.total_keys }}</strong></p>
+            <p>Размер кеша: <strong>{{ cache_stats.total_size_kb }} KB</strong></p>
+            <form method="POST" style="margin-top: 1rem;">
+                {{ cache_form.hidden_tag() }}
+                {{ cache_form.action }}
+                {{ cache_form.submit(class="btn btn-warning") }}
+            </form>
+            {% else %}
+            <p class="help-text">⚠️ Redis кеш недоступен или отключен</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.status-indicator {
+    padding: 1rem;
+    background: var(--bg-secondary, #f3f4f6);
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.25rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.status-success {
+    background: #10b981;
+    color: white;
+}
+
+.status-error {
+    background: #ef4444;
+    color: white;
+}
+
+.status-warning {
+    background: #f59e0b;
+    color: white;
+}
+
+.status-info {
+    background: #3b82f6;
+    color: white;
+}
+
+.status-message {
+    color: var(--foreground, #111827);
+}
+
+.settings-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.settings-table td {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border-color, #e5e7eb);
+}
+
+.settings-table td:first-child {
+    width: 200px;
+}
+
+.help-text {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: #fef3c7;
+    border-left: 3px solid #f59e0b;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.stat-card {
+    padding: 1rem;
+    background: var(--bg-secondary, #f3f4f6);
+    border-radius: 0.5rem;
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: var(--primary, #3b82f6);
+}
+
+.stat-label {
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--muted-text, #6b7280);
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.data-table th,
+.data-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color, #e5e7eb);
+}
+
+.data-table th {
+    background: var(--bg-secondary, #f3f4f6);
+    font-weight: 600;
+}
+
+.card-section {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color, #e5e7eb);
+}
+
+.card-section:last-child {
+    border-bottom: none;
+}
+
+.card-section h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-warning {
+    background: #f59e0b;
+    color: white;
+}
+
+.btn-warning:hover {
+    background: #d97706;
+}
+</style>
+{% endblock %}
+

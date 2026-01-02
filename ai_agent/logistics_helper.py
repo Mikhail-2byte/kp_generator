@@ -155,8 +155,10 @@ class LogisticsHelper:
             return error_msg
         
         if result.get('basis') == 'small_cargo':
+            weight_kg = result.get('weight_kg', 0)
             return (
                 f"📦 Мелкогабаритный груз (≤ 600 кг)\n\n"
+                f"Вес груза: {weight_kg:,.0f} кг\n\n"
                 f"Рекомендация: {result.get('recommendation', 'dellin')}\n"
                 f"{result.get('message', '')}"
             )

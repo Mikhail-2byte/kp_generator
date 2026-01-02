@@ -27,13 +27,6 @@
                     <div class="field-error">{{ error }}</div>
                 {% endfor %}
             </div>
-            <div class="field-group span-2">
-                {{ gb_form.notes.label(class_='field-label') }}
-                {{ gb_form.notes(class_='', id='form-notes') }}
-                {% for error in gb_form.notes.errors %}
-                    <div class="field-error">{{ error }}</div>
-                {% endfor %}
-            </div>
             <div class="field-group">
                 {{ gb_form.gost.label(class_='field-label') }}
                 {{ gb_form.gost(class_='', id='form-gost') }}
@@ -68,10 +61,20 @@
     <div class="card">
         <div class="section-header">
             <h2 class="section-title">Справочник аналогов</h2>
-            <form method="post" action="{{ url_for('admin.import_materials') }}" style="display: inline-block;">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn btn-primary" onclick="return confirm('Импорт заменит все существующие данные. Продолжить?')">Импорт из CSV</button>
-            </form>
+            <div style="display: flex; gap: 8px;">
+                <a href="{{ url_for('admin.export_materials') }}" class="btn btn-outline">
+                    <span>{{ sidebar_icon('download')|safe }}</span>
+                    <span>Экспорт в Excel</span>
+                </a>
+                <form method="post" action="{{ url_for('admin.import_materials') }}" enctype="multipart/form-data" style="display: inline-block;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="file" id="excelFileInput" name="excel_file" accept=".xlsx,.xls" style="display: none;" onchange="this.form.submit()">
+                    <button type="button" class="btn btn-primary" onclick="document.getElementById('excelFileInput').click()">
+                        <span>{{ sidebar_icon('upload')|safe }}</span>
+                        <span>Импорт из Excel</span>
+                    </button>
+                </form>
+            </div>
         </div>
         <div class="history-table-wrapper">
             <table class="data-table">
@@ -94,7 +97,7 @@
                         <td>{{ material.price or '—' }}</td>
                         <td>{{ material.workpiece_type or '—' }}</td>
                         <td class="table-actions">
-                            <button type="button" class="btn btn-sm btn-secondary" onclick="showEditModal({{ loop.index0 }}, {{ material.russian|tojson }}, {{ material.gb|tojson }}, {{ (material.notes or '')|tojson }}, {{ (material.gost or '')|tojson }}, {{ (material.price or '')|tojson }}, {{ (material.workpiece_type or '')|tojson }})">Редактировать</button>
+                            <button type="button" class="btn btn-sm btn-secondary" onclick="showEditModal({{ loop.index0 }}, {{ material.russian|tojson }}, {{ material.gb|tojson }}, {{ (material.gost or '')|tojson }}, {{ (material.price or '')|tojson }}, {{ (material.workpiece_type or '')|tojson }})">Редактировать</button>
                             <form method="post" class="inline-form" style="display:inline;">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <input type="hidden" name="action" value="delete_gb">
@@ -115,14 +118,13 @@
 </div>
 
 <script>
-function showEditModal(index, russian, gb, notes, gost, price, workpiece_type) {
+function showEditModal(index, russian, gb, gost, price, workpiece_type) {
     document.getElementById('form-title').textContent = 'Редактирование материала';
     document.getElementById('form-description').textContent = 'Измените данные материала в справочнике.';
     document.getElementById('form-action').value = 'edit_gb';
     document.getElementById('form-index').value = index;
     document.getElementById('form-russian').value = russian || '';
     document.getElementById('form-gb').value = gb || '';
-    document.getElementById('form-notes').value = notes || '';
     document.getElementById('form-gost').value = gost || '';
     document.getElementById('form-price').value = price || '';
     document.getElementById('form-workpiece-type').value = workpiece_type || '';

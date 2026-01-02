@@ -10,6 +10,8 @@ from app.presentation.forms import (
     AdminResetPasswordForm,
     AdminUserDeleteForm,
     AdminUserForm,
+    AIAgentCacheForm,
+    AIAgentConfigForm,
     DutyDeleteForm,
     DutyItemForm,
     GBMaterialDeleteForm,
@@ -159,7 +161,6 @@ def admin_panel() -> Union[str, Response]:
             if gb_form.validate():
                 russian_name = gb_form.russian.data.strip()
                 gb_name = gb_form.gb.data.strip()
-                notes_text = (gb_form.notes.data or '').strip()
                 gost = (gb_form.gost.data or '').strip() if hasattr(gb_form, 'gost') else ''
                 price = (gb_form.price.data or '').strip() if hasattr(gb_form, 'price') else ''
                 workpiece_type = (gb_form.workpiece_type.data or '').strip() if hasattr(gb_form, 'workpiece_type') else ''
@@ -167,7 +168,7 @@ def admin_panel() -> Union[str, Response]:
                 new_material = {
                     'russian': russian_name,
                     'gb': gb_name,
-                    'notes': notes_text,
+                    'notes': '',
                     'gost': gost,
                     'price': price,
                     'workpiece_type': workpiece_type
@@ -248,12 +249,25 @@ def admin_panel() -> Union[str, Response]:
         result.to_dict() for result in datasets_validator.run_all_validations()
     ]
 
+    # Статус AI агента
+    try:
+        from ai_agent.config import get_api_key
+        from ai_agent.usage_monitor import get_api_key_status_from_db
+        
+        ai_agent_status = {
+            'configured': bool(get_api_key()),
+            'recent_error': get_api_key_status_from_db()
+        }
+    except Exception:
+        ai_agent_status = {'configured': False, 'recent_error': None}
+
     return render_template(
         'admin.html',
         **build_context(
             'admin',
             'Администрирование',
             datasets_health=datasets_health,
+            ai_agent_status=ai_agent_status,
         )
     )
 
@@ -373,7 +387,6 @@ def manage_materials() -> Union[str, Response]:
             if gb_form.validate():
                 russian_name = gb_form.russian.data.strip()
                 gb_name = gb_form.gb.data.strip()
-                notes_text = (gb_form.notes.data or '').strip()
                 gost = (gb_form.gost.data or '').strip() if hasattr(gb_form, 'gost') else ''
                 price = (gb_form.price.data or '').strip() if hasattr(gb_form, 'price') else ''
                 workpiece_type = (gb_form.workpiece_type.data or '').strip() if hasattr(gb_form, 'workpiece_type') else ''
@@ -381,7 +394,7 @@ def manage_materials() -> Union[str, Response]:
                 gb_materials.append({
                     'russian': russian_name,
                     'gb': gb_name,
-                    'notes': notes_text,
+                    'notes': '',
                     'gost': gost,
                     'price': price,
                     'workpiece_type': workpiece_type
@@ -401,7 +414,6 @@ def manage_materials() -> Union[str, Response]:
                 if 0 <= index < len(gb_materials):
                     russian_name = gb_form.russian.data.strip()
                     gb_name = gb_form.gb.data.strip()
-                    notes_text = (gb_form.notes.data or '').strip()
                     gost = (gb_form.gost.data or '').strip() if hasattr(gb_form, 'gost') else ''
                     price = (gb_form.price.data or '').strip() if hasattr(gb_form, 'price') else ''
                     workpiece_type = (gb_form.workpiece_type.data or '').strip() if hasattr(gb_form, 'workpiece_type') else ''
@@ -409,7 +421,7 @@ def manage_materials() -> Union[str, Response]:
                     gb_materials[index] = {
                         'russian': russian_name,
                         'gb': gb_name,
-                        'notes': notes_text,
+                        'notes': '',
                         'gost': gost,
                         'price': price,
                         'workpiece_type': workpiece_type
@@ -459,20 +471,72 @@ def manage_materials() -> Union[str, Response]:
 @admin_bp.route('/admin/materials/import', methods=['POST'])
 @admin_required
 def import_materials() -> Response:
-    """Импортирует материалы из CSV файла."""
-    csv_path = BASE_DIR / 'Стали цены.csv'
+    """Импортирует материалы из загруженного Excel файла."""
+    import tempfile
+    import os
+    from werkzeug.utils import secure_filename
     
-    if not csv_path.exists():
-        flash('Файл "Стали цены.csv" не найден в корне проекта.', 'danger')
+    # Проверяем наличие файла в запросе
+    if 'excel_file' not in request.files:
+        flash('Файл не выбран.', 'danger')
+        return redirect(url_for('admin.manage_materials'))
+    
+    file = request.files['excel_file']
+    
+    # Проверяем, что файл выбран
+    if file.filename == '':
+        flash('Файл не выбран.', 'danger')
+        return redirect(url_for('admin.manage_materials'))
+    
+    # Проверяем расширение файла
+    if not (file.filename.lower().endswith('.xlsx') or file.filename.lower().endswith('.xls')):
+        flash('Неверный формат файла. Требуется Excel (.xlsx или .xls).', 'danger')
         return redirect(url_for('admin.manage_materials'))
     
     try:
-        count = datasets.import_gb_materials_from_csv(csv_path, actor=_current_actor())
+        # Сохраняем файл во временную директорию
+        temp_dir = tempfile.gettempdir()
+        filename = secure_filename(file.filename)
+        temp_path = Path(temp_dir) / f'temp_import_{datetime.now().strftime("%Y%m%d%H%M%S")}_{filename}'
+        file.save(str(temp_path))
+        
+        # Импортируем данные
+        count = datasets.import_gb_materials_from_excel(temp_path, actor=_current_actor())
+        
+        # Удаляем временный файл
+        if temp_path.exists():
+            os.remove(temp_path)
+        
         flash(f'Импортировано материалов: {count}.', 'success')
     except Exception as exc:
         flash(f'Ошибка при импорте: {str(exc)}', 'danger')
+        # Удаляем временный файл в случае ошибки
+        if 'temp_path' in locals() and temp_path.exists():
+            os.remove(temp_path)
     
     return redirect(url_for('admin.manage_materials'))
+
+
+@admin_bp.route('/admin/materials/export')
+@admin_required
+def export_materials() -> Response:
+    """Экспортирует материалы в Excel файл."""
+    from flask import Response
+    from datetime import datetime
+    
+    try:
+        excel_data = datasets.export_gb_materials_to_excel()
+        # Используем ASCII имя файла для совместимости с HTTP заголовками
+        filename = f'Steel_prices_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+        
+        return Response(
+            excel_data,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            headers={'Content-Disposition': f'attachment; filename="{filename}"'}
+        )
+    except Exception as exc:
+        flash(f'Ошибка при экспорте: {str(exc)}', 'danger')
+        return redirect(url_for('admin.manage_materials'))
 
 
 @admin_bp.route('/admin/logistics', methods=['GET', 'POST'])
@@ -1454,3 +1518,104 @@ def manage_customers() -> Union[str, Response]:
 
     top_users = audit_log_repository.get_top_users(limit=limit, days=days)
     return jsonify(top_users)
+
+
+@admin_bp.route('/admin/ai-agent', methods=['GET', 'POST'])
+@admin_required
+def manage_ai_agent() -> Union[str, Response]:
+    """Страница управления AI агентом."""
+    import os
+    from flask import current_app
+    
+    config_form = AIAgentConfigForm()
+    cache_form = AIAgentCacheForm()
+    
+    # Получаем текущие настройки
+    current_settings = {
+        'api_key_set': bool(os.getenv('OPENROUTER_API_KEY')),
+        'model_name': os.getenv('OPENROUTER_MODEL', 'xiaomi/mimo-v2-flash:free'),
+        'timeout': int(os.getenv('OPENROUTER_TIMEOUT', '60')),
+        'reasoning_enabled': os.getenv('OPENROUTER_REASONING_ENABLED', 'true').lower() == 'true',
+        'fallback_enabled': os.getenv('AI_FALLBACK_ENABLED', 'true').lower() == 'true',
+        'usage_monitoring': os.getenv('AI_USAGE_MONITORING', 'true').lower() == 'true',
+        'max_history_length': int(os.getenv('AI_MAX_HISTORY_LENGTH', '20')),
+        'cache_ttl': int(os.getenv('AI_CACHE_TTL', '86400')),
+    }
+    
+    if request.method == 'POST':
+        # Обработка очистки кеша
+        if cache_form.validate_on_submit() and cache_form.action.data == 'clear_cache':
+            try:
+                from ai_agent.cache_manager import invalidate_ai_cache
+                result = invalidate_ai_cache()
+                if result:
+                    flash('Кеш AI агента успешно очищен.', 'success')
+                else:
+                    flash('Не удалось очистить кеш (Redis может быть недоступен).', 'warning')
+            except Exception as e:
+                current_app.logger.error(f'Ошибка очистки кеша AI: {e}')
+                flash(f'Ошибка при очистке кеша: {str(e)}', 'danger')
+            
+            return redirect(url_for('admin.manage_ai_agent'))
+        
+        # Обработка обновления настроек
+        if config_form.validate_on_submit():
+            flash('Внимание: Изменение настроек через интерфейс требует обновления .env файла на сервере. '
+                  'Настройки отображаются для информации.', 'info')
+            # В реальном production нужно было бы сохранять в БД или конфиг
+            return redirect(url_for('admin.manage_ai_agent'))
+    
+    # Предзаполняем форму текущими значениями
+    if request.method == 'GET':
+        config_form.model_name.data = current_settings['model_name']
+        config_form.timeout.data = current_settings['timeout']
+        config_form.reasoning_enabled.data = current_settings['reasoning_enabled']
+        config_form.fallback_enabled.data = current_settings['fallback_enabled']
+        config_form.usage_monitoring.data = current_settings['usage_monitoring']
+        config_form.max_history_length.data = current_settings['max_history_length']
+        config_form.cache_ttl.data = current_settings['cache_ttl']
+    
+    # Получаем статистику кеша (если доступен)
+    cache_stats = {}
+    try:
+        from ai_agent.cache_manager import AICacheManager
+        cache_stats = AICacheManager.get_cache_stats()
+    except Exception as e:
+        current_app.logger.debug(f'Ошибка получения статистики кеша AI: {e}')
+        cache_stats = {}
+    
+    # Проверяем валидность API ключа
+    api_key_status = 'unknown'
+    api_key_message = ''
+    try:
+        from ai_agent.api_validator import validate_api_key
+        if current_settings['api_key_set']:
+            api_key = os.getenv('OPENROUTER_API_KEY')
+            validation_result = validate_api_key(api_key)
+            if validation_result.is_valid:
+                api_key_status = 'valid'
+                api_key_message = 'API ключ валиден и работает'
+            else:
+                api_key_status = 'invalid'
+                api_key_message = validation_result.error_message or 'API ключ невалиден'
+        else:
+            api_key_status = 'not_set'
+            api_key_message = 'API ключ не установлен'
+    except Exception as e:
+        current_app.logger.error(f'Ошибка проверки API ключа: {e}')
+        api_key_status = 'error'
+        api_key_message = f'Ошибка при проверке: {str(e)}'
+    
+    return render_template(
+        'admin/ai_agent_settings.html',
+        **build_context(
+            'admin_ai_agent',
+            'Управление AI Агентом',
+            config_form=config_form,
+            cache_form=cache_form,
+            current_settings=current_settings,
+            api_key_status=api_key_status,
+            api_key_message=api_key_message,
+            cache_stats=cache_stats
+        )
+    )

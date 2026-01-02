@@ -84,7 +84,6 @@ class GBMaterialForm(FlaskForm):
     """Добавление аналога материала по стандарту GB."""
     russian = StringField('Наименование (RU)', validators=[DataRequired(), Length(min=1, max=200)])
     gb = StringField('Наименование (GB)', validators=[DataRequired(), Length(min=1, max=200)])
-    notes = StringField('Описание', validators=[Optional(), Length(max=500)])
     gost = StringField('ГОСТ', validators=[Optional(), Length(max=100)])
     price = StringField('Цена', validators=[Optional(), Length(max=50)])
     workpiece_type = StringField('Вид заготовки', validators=[Optional(), Length(max=50)])
@@ -240,3 +239,51 @@ class CustomerContactDeleteForm(FlaskForm):
         validators=[DataRequired()]
     )
     submit = SubmitField('Удалить контакт')
+
+
+class AIAgentConfigForm(FlaskForm):
+    """Форма настройки AI агента."""
+    api_key = PasswordField(
+        'OpenRouter API Key',
+        validators=[Optional(), Length(min=20, max=200)],
+        description='API ключ для доступа к OpenRouter. Оставьте пустым, чтобы не менять.'
+    )
+    model_name = StringField(
+        'Модель',
+        validators=[Optional(), Length(max=100)],
+        description='Название модели (например, xiaomi/mimo-v2-flash:free)'
+    )
+    timeout = IntegerField(
+        'Timeout (сек)',
+        validators=[Optional(), NumberRange(min=10, max=300)],
+        description='Максимальное время ожидания ответа от API'
+    )
+    reasoning_enabled = BooleanField(
+        'Включить reasoning',
+        description='Включить режим рассуждения для модели'
+    )
+    fallback_enabled = BooleanField(
+        'Fallback режим',
+        description='Использовать поиск по документации при ошибках API'
+    )
+    usage_monitoring = BooleanField(
+        'Мониторинг использования',
+        description='Записывать статистику использования API в БД'
+    )
+    max_history_length = IntegerField(
+        'Макс. длина истории',
+        validators=[Optional(), NumberRange(min=5, max=50)],
+        description='Максимальное количество сообщений в истории диалога'
+    )
+    cache_ttl = IntegerField(
+        'TTL кеша (сек)',
+        validators=[Optional(), NumberRange(min=300, max=604800)],
+        description='Время жизни кеша ответов (по умолчанию 86400 = 24 часа)'
+    )
+    submit = SubmitField('Сохранить настройки')
+
+
+class AIAgentCacheForm(FlaskForm):
+    """Форма управления кешем AI агента."""
+    action = HiddenField(default='clear_cache')
+    submit = SubmitField('Очистить кеш')

@@ -2,6 +2,7 @@
 Конфигурация для AI агента.
 """
 
+import logging
 import os
 from pathlib import Path
 from typing import Optional
@@ -11,17 +12,16 @@ from dotenv import load_dotenv
 # Загружаем переменные окружения
 load_dotenv()
 
+# Настраиваем логирование
+logger = logging.getLogger(__name__)
+
 # Путь к корню проекта (на уровень выше ai_agent/)
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # API конфигурация
-OPENROUTER_API_KEY = os.getenv(
-    "OPENROUTER_API_KEY",
-    "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"
-    #"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"
-)
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
-MODEL_NAME = "xiaomi/mimo-v2-flash:free"
+MODEL_NAME = os.getenv("OPENROUTER_MODEL", "xiaomi/mimo-v2-flash:free")
 
 # Пути к документации (теперь в папке ai_agent/data/)
 AI_AGENT_DIR = Path(__file__).resolve().parent
@@ -37,11 +37,67 @@ if not DOCS_DIR.exists():
     logging.warning(f'Documentation directory not found: {DOCS_DIR}')
 
 # Конфигурация для reasoning
-ENABLE_REASONING = True
+ENABLE_REASONING = os.getenv("OPENROUTER_REASONING_ENABLED", "true").lower() == "true"
+
+# Timeout для запросов к API
+API_TIMEOUT = int(os.getenv("OPENROUTER_TIMEOUT", "60"))
+
+# Fallback режим
+FALLBACK_ENABLED = os.getenv("AI_FALLBACK_ENABLED", "true").lower() == "true"
+
+# Максимальная длина истории
+MAX_HISTORY_LENGTH = int(os.getenv("AI_MAX_HISTORY_LENGTH", "20"))
+
+# Мониторинг использования
+USAGE_MONITORING = os.getenv("AI_USAGE_MONITORING", "true").lower() == "true"
+
+
+class ConfigurationError(Exception):
+    """Исключение для ошибок конфигурации."""
+    pass
+
+
+def validate_api_key(api_key: Optional[str]) -> None:
+    """
+    Валидирует API ключ OpenRouter.
+    
+    Args:
+        api_key: API ключ для валидации
+        
+    Raises:
+        ConfigurationError: Если ключ невалиден
+    """
+    if not api_key:
+        raise ConfigurationError(
+            "OPENROUTER_API_KEY не установлен! "
+            "Установите переменную окружения OPENROUTER_API_KEY или добавьте её в .env файл. "
+            "Получить ключ можно на https://openrouter.ai/keys"
+        )
+    
+    if not api_key.startswith("sk-or-v1-"):
+        raise ConfigurationError(
+            f"Неверный формат OPENROUTER_API_KEY. "
+            f"Ключ должен начинаться с 'sk-or-v1-', получено: {api_key[:15]}..."
+        )
+    
+    if len(api_key) < 40:
+        raise ConfigurationError(
+            f"OPENROUTER_API_KEY слишком короткий. "
+            f"Ожидается минимум 40 символов, получено: {len(api_key)}"
+        )
 
 
 def get_api_key() -> str:
-    """Возвращает API ключ OpenRouter."""
+    """
+    Возвращает и валидирует API ключ OpenRouter.
+    
+    Returns:
+        Валидный API ключ
+        
+    Raises:
+        ConfigurationError: Если ключ не установлен или невалиден
+    """
+    validate_api_key(OPENROUTER_API_KEY)
     return OPENROUTER_API_KEY
 
 
@@ -58,4 +114,24 @@ def get_api_url() -> str:
 def is_reasoning_enabled() -> bool:
     """Проверяет, включен ли reasoning."""
     return ENABLE_REASONING
+
+
+def get_timeout() -> int:
+    """Возвращает timeout для API запросов в секундах."""
+    return API_TIMEOUT
+
+
+def is_fallback_enabled() -> bool:
+    """Проверяет, включен ли fallback режим."""
+    return FALLBACK_ENABLED
+
+
+def get_max_history_length() -> int:
+    """Возвращает максимальную длину истории диалога."""
+    return MAX_HISTORY_LENGTH
+
+
+def is_usage_monitoring_enabled() -> bool:
+    """Проверяет, включен ли мониторинг использования API."""
+    return USAGE_MONITORING
 

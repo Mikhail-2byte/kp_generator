@@ -946,23 +946,137 @@ def parse_steel_prices_csv(csv_path: Path) -> List[Dict[str, Any]]:
     return materials
 
 
-def import_gb_materials_from_csv(csv_path: Path, *, actor: Optional[str] = None) -> int:
-    """Импортирует материалы из CSV файла, заменяя все существующие данные.
+def import_gb_materials_from_excel(excel_path: Path, *, actor: Optional[str] = None) -> int:
+    """Импортирует материалы из Excel файла, заменяя все существующие данные.
     
     Args:
-        csv_path: Путь к CSV файлу
+        excel_path: Путь к Excel файлу
         actor: Имя пользователя, выполняющего импорт (для версионирования)
         
     Returns:
         Количество импортированных записей
     """
-    materials = parse_steel_prices_csv(csv_path)
+    try:
+        import openpyxl
+    except ImportError:
+        raise RuntimeError('openpyxl не установлен. Установите: pip install openpyxl')
+    
+    if not excel_path.exists():
+        raise FileNotFoundError(f'Файл не найден: {excel_path}')
+    
+    materials = []
+    
+    try:
+        wb = openpyxl.load_workbook(excel_path, data_only=True)
+        ws = wb.active
+        
+        # Пропускаем заголовок (первая строка)
+        rows = list(ws.iter_rows(min_row=2, values_only=True))
+        
+        for row in rows:
+            if not row or len(row) < 9:
+                continue
+            
+            # Индексы колонок: 0-номер, 1-материал(RU), 2-4 пустые, 5-GB, 6 пустая, 7-ГОСТ, 8-цена, 9-вид заготовки
+            russian = str(row[1]).strip() if row[1] else ''
+            gb = str(row[4]).strip() if row[4] else ''
+            gost = str(row[6]).strip() if row[6] else ''
+            price = str(row[7]).strip() if row[7] else ''
+            workpiece_type = str(row[8]).strip() if row[8] else ''
+            
+            if russian and gb:
+                materials.append({
+                    'russian': russian,
+                    'gb': gb,
+                    'notes': '',
+                    'gost': gost,
+                    'price': price,
+                    'workpiece_type': workpiece_type
+                })
+        
+        wb.close()
+        
+    except Exception as exc:
+        try:
+            current_app.logger.error(f'Ошибка при парсинге Excel: {exc}')
+        except RuntimeError:
+            pass
+        raise
     
     if materials:
         save_gb_materials(materials, actor=actor)
         refresh_gb_analogs()
     
     return len(materials)
+
+
+def export_gb_materials_to_excel() -> bytes:
+    """Экспортирует материалы GB в Excel формат.
+    
+    Returns:
+        Байты Excel файла
+    """
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, Alignment, PatternFill
+    except ImportError:
+        raise RuntimeError('openpyxl не установлен. Установите: pip install openpyxl')
+    
+    from io import BytesIO
+    
+    materials = load_gb_materials()
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Материалы'
+    
+    # Стили для заголовков
+    header_fill = PatternFill(start_color='366092', end_color='366092', fill_type='solid')
+    header_font = Font(bold=True, color='FFFFFF')
+    
+    # Заголовки
+    headers = ['№ в группе', 'Материал', '', '', 'Наименование мир', '', 'ГОСТ', 'Материал.Цена', 'Материал.Цена.Вид заготовки']
+    ws.append(headers)
+    
+    # Применяем стили к заголовкам
+    for col_num, _ in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+    
+    # Данные
+    for i, material in enumerate(materials, start=1):
+        ws.append([
+            i,
+            material.get('russian', ''),
+            '',
+            '',
+            material.get('gb', ''),
+            '',
+            material.get('gost', ''),
+            material.get('price', ''),
+            material.get('workpiece_type', '')
+        ])
+    
+    # Автоподбор ширины колонок
+    for column in ws.columns:
+        max_length = 0
+        column_letter = column[0].column_letter
+        for cell in column:
+            try:
+                if cell.value:
+                    max_length = max(max_length, len(str(cell.value)))
+            except:
+                pass
+        adjusted_width = min(max_length + 2, 50)
+        ws.column_dimensions[column_letter].width = adjusted_width
+    
+    # Сохраняем в байты
+    buffer = BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    
+    return buffer.getvalue()
 
 
 def save_orders_documents(orders: List[Dict[str, Any]], *, actor: Optional[str] = None):

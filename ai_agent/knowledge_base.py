@@ -93,6 +93,9 @@ class KnowledgeBase:
             'USER_MANAGEMENT.md',
             'BUDGET_EXCEL_FLOW.md',
             'CHANGELOG.md',
+            'LOGISTICS_CALCULATION.md',
+            'MATERIALS_CATALOG.md',
+            'DUTY_RATES.md',
         ]
         
         # Сначала загружаем приоритетные файлы

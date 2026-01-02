@@ -117,6 +117,18 @@
     margin-bottom: 0;
 }
 
+.ai-message-content code {
+    background: rgba(0, 0, 0, 0.05);
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.875em;
+}
+
+.ai-message-content strong {
+    font-weight: 700;
+}
+
 .ai-chat-loading {
     padding: 1rem;
     text-align: center;
@@ -290,9 +302,25 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (!response.ok) {
-                const errorText = await response.text();
-                console.error('HTTP error:', response.status, errorText);
-                addMessage('Ошибка сервера: ' + response.status + '. Попробуйте еще раз.', 'assistant', true);
+                let errorMessage = 'Ошибка сервера';
+                
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.error || errorMessage;
+                } catch {
+                    errorMessage = `Ошибка ${response.status}: ${response.statusText}`;
+                }
+                
+                // Специфичные сообщения для разных статусов
+                if (response.status === 401 || response.status === 403) {
+                    addMessage('🔐 **Ошибка аутентификации**: ' + errorMessage + '\n\nОбратитесь к администратору для обновления API ключа.', 'assistant', true);
+                } else if (response.status === 429) {
+                    addMessage('⏱️ **Превышен лимит запросов**: ' + errorMessage + '\n\nПопробуйте через несколько минут.', 'assistant', true);
+                } else if (response.status >= 500) {
+                    addMessage('🔧 **Сервис временно недоступен**: ' + errorMessage + '\n\nПопробуйте позже.', 'assistant', true);
+                } else {
+                    addMessage('❌ Ошибка: ' + errorMessage, 'assistant', true);
+                }
                 return;
             }
 
@@ -300,7 +328,8 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('Response data:', data);
 
             if (data.error) {
-                addMessage('Ошибка: ' + data.error, 'assistant', true);
+                // Ошибка от сервера с подробностями
+                addMessage('⚠️ ' + data.error, 'assistant', true);
             } else if (data.response) {
                 addMessage(data.response, 'assistant');
             } else {
@@ -309,7 +338,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error('Error:', error);
-            addMessage('Ошибка при отправке запроса. Попробуйте еще раз.', 'assistant', true);
+            if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                addMessage('🌐 **Ошибка подключения**: Не удалось связаться с сервером. Проверьте подключение к интернету.', 'assistant', true);
+            } else {
+                addMessage('❌ **Неожиданная ошибка**: ' + error.message + '\n\nПопробуйте обновить страницу.', 'assistant', true);
+            }
         } finally {
             sendBtn.disabled = false;
             chatLoading.style.display = 'none';
@@ -332,6 +365,15 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Форматируем текст (сохраняем переносы строк и форматирование)
         let formattedText = escapeHtml(text);
+        
+        // Поддержка markdown-like форматирования
+        // **Жирный текст**
+        formattedText = formattedText.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        
+        // `код`
+        formattedText = formattedText.replace(/`(.+?)`/g, '<code>$1</code>');
+        
+        // Эмодзи остаются как есть
         
         // Заменяем двойные переносы на параграфы
         formattedText = formattedText.replace(/\n\n+/g, '</p><p>');

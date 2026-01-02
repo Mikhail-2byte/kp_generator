@@ -288,6 +288,7 @@ def calculate_logistics(
     if weight_kg <= SMALL_CARGO_THRESHOLD_KG:
         return {
             'basis': 'small_cargo',
+            'weight_kg': weight_kg,  # Добавляем вес для отображения
             'total_price': None,
             'recommendation': 'dellin',
             'message': f'Для грузов до {SMALL_CARGO_THRESHOLD_KG} кг рекомендуется транспортная компания «Деловые линии» (dellin.ru). Расчет от Забайкальска (погранпереход) до точки назначения. Логистика по Китаю + 30% к стоимости из просчета.',

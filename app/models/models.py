@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from typing import Any, Mapping, Sequence
 
 from flask_login import UserMixin
-from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, Text, func
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import declarative_base, relationship
 
 
@@ -93,6 +93,25 @@ class CustomerContactRecord(Base):
     notes = Column(Text)  # Дополнительные заметки
     created_at = Column(DateTime, server_default=func.current_timestamp())
     updated_at = Column(DateTime, server_default=func.current_timestamp(), onupdate=func.current_timestamp())
+
+
+class AIAgentUsageRecord(Base):
+    """ORM-модель для мониторинга использования AI агента."""
+    __tablename__ = 'ai_agent_usage'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    timestamp = Column(DateTime, server_default=func.current_timestamp(), nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
+    request_tokens = Column(Integer, nullable=True)
+    response_tokens = Column(Integer, nullable=True)
+    total_cost = Column(Float, nullable=True)
+    response_time_ms = Column(Integer, nullable=True)
+    model_name = Column(String(100), nullable=True)
+    error_type = Column(String(50), nullable=True)
+    user_message = Column(Text, nullable=True)
+    cache_hit = Column(Boolean, default=False, nullable=False)
+
+    user = relationship('UserRecord', foreign_keys=[user_id])
 
 
 class User(UserMixin):

@@ -3,10 +3,10 @@ from contextlib import contextmanager
 from typing import Iterator
 
 import pytest
+from flask import Flask
 
 from app import create_app
 from app.core.extensions import SessionLocal
-from flask import Flask
 
 
 @contextmanager
@@ -57,8 +57,8 @@ def client(app):
 @pytest.fixture
 def admin_user(app):
     """Создает тестового администратора."""
-    from app.models.models import User
     from app.database.service import DatabaseService
+    from app.models.models import User
     
     with app.app_context():
         db_service = DatabaseService()

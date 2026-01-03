@@ -1,7 +1,13 @@
 """Тесты для REST API endpoints."""
 
 import json
+import sys
+from pathlib import Path
 from typing import Any, Dict
+
+# Добавляем корень проекта в путь для возможности прямого запуска
+project_root = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(project_root))
 
 import pytest
 from flask import Flask
@@ -335,4 +341,9 @@ class TestAPICustomers:
         """Тест что удаление контакта требует аутентификации."""
         response = client.delete('/api/v1/customers/1')
         assert response.status_code == 401 or response.status_code == 302
+
+
+if __name__ == "__main__":
+    # Запуск тестов при прямом выполнении файла
+    pytest.main([__file__, "-v"])
 

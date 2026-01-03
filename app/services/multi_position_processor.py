@@ -1,11 +1,12 @@
 # app/services/multi_position_processor.py
-from copy import copy
 import math
-from typing import List, Dict, Any
+from copy import copy
+from io import BytesIO
+from typing import Any, Dict, List
+
 import openpyxl
 from openpyxl.formula.translate import Translator
 from openpyxl.utils import get_column_letter
-from io import BytesIO
 
 # Константы из excel_row_inserter.py
 DATA_START_ROW = 10

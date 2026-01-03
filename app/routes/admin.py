@@ -12,6 +12,8 @@ from app.presentation.forms import (
     AdminUserForm,
     AIAgentCacheForm,
     AIAgentConfigForm,
+    CustomerContactDeleteForm,
+    CustomerContactForm,
     DutyDeleteForm,
     DutyItemForm,
     GBMaterialDeleteForm,

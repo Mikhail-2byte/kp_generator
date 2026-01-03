@@ -20,7 +20,7 @@ if __name__ == '__main__':
     use_waitress = _env_flag('USE_WAITRESS', default=False) or os.environ.get('FLASK_ENV') == 'production'
 
     print(f"\n{'='*60}")
-    print(f"  KP Generator Flask Application")
+    print("  KP Generator Flask Application")
     print(f"{'='*60}")
     print(f"  Host: {host}")
     print(f"  Port: {port}")

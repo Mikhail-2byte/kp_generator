@@ -10,8 +10,11 @@
 - Для грузов <5 тонн в города вне основного маршрута: алгоритм "До ЕКБ + по РФ"
 """
 
+import logging
 import math
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional
+
+logger = logging.getLogger(__name__)
 
 
 # Стандартные параметры транспорта
@@ -101,18 +104,33 @@ def calculate_logistics_by_weight(
     
     Формула: (Стоимость до города / Грузоподъемность) × Вес груза
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    # Логируем входные параметры для отладки
+    logger.debug(f"calculate_logistics_by_weight: weight_kg={weight_kg}, city_price={city_price}, truck_capacity_kg={truck_capacity_kg}")
+    
+    # Проверка на разумность веса (максимум 1000 тонн = 1,000,000 кг)
+    if weight_kg > 1_000_000:
+        logger.warning(f"Подозрительно большой вес в calculate_logistics_by_weight: {weight_kg} кг. Возможно ошибка.")
+    
     price_per_kg = city_price / truck_capacity_kg
     total_price = price_per_kg * weight_kg
     
     trucks_count = (weight_kg + truck_capacity_kg - 1) // truck_capacity_kg  # Округление вверх
     
-    return {
+    result = {
         'basis': 'weight',
+        'weight_kg': weight_kg,  # Добавляем вес для отображения
         'price_per_kg': price_per_kg,
         'total_price': total_price,
         'trucks_count': trucks_count,
         'calculation_formula': f'({city_price:,.0f} руб / {truck_capacity_kg:,} кг) × {weight_kg:,.0f} кг',
     }
+    
+    logger.debug(f"calculate_logistics_by_weight результат: weight_kg={result['weight_kg']}, formula={result['calculation_formula']}")
+    
+    return result
 
 
 def calculate_logistics_by_volume(
@@ -230,6 +248,7 @@ def calculate_ekb_plus_rf_route(
     
     return {
         'basis': 'weight',
+        'weight_kg': weight_kg,  # Добавляем вес для отображения
         'calculation_type': 'ekb_plus_rf',
         'price_per_kg': china_to_ekb_result['price_per_kg'],
         'total_price': total_price,
@@ -303,7 +322,7 @@ def calculate_logistics(
             }
     
     # Проверяем, находится ли город в справочнике ЕКБ+РФ
-    from app.services.datasets import is_city_in_ekb_rf_catalog, get_ekb_rf_city_distance
+    from app.services.datasets import get_ekb_rf_city_distance, is_city_in_ekb_rf_catalog
     
     if city_in_ekb_rf_catalog is None:
         # Автоматическая проверка, если не указано явно
@@ -362,11 +381,19 @@ def calculate_logistics(
     # Стандартный расчет (прямой расчет по формуле 5.2)
     # Если габариты не указаны (None), считаем только по весу
     if length_mm is None or width_mm is None or height_mm is None:
+        logger.debug(f"calculate_logistics: расчет по весу, weight_kg={weight_kg}, city_price={city_price}, truck_capacity={truck_capacity}")
         result = calculate_logistics_by_weight(weight_kg, city_price, truck_capacity)
+        # Убеждаемся, что weight_kg правильный (защита от перезаписи)
+        if result.get('weight_kg') != weight_kg:
+            logger.warning(f"calculate_logistics: weight_kg в результате ({result.get('weight_kg')}) не совпадает с переданным ({weight_kg}), исправляем")
+            result['weight_kg'] = weight_kg
+            # Пересчитываем формулу с правильным весом
+            result['calculation_formula'] = f'({city_price:,.0f} руб / {truck_capacity:,} кг) × {weight_kg:,.0f} кг'
         result['calculation_type'] = 'direct'
         result['transport_type'] = transport_type
         result['distance_from_ekb_provided'] = False
         result['can_save_distance'] = distance_from_ekb_km is None and not is_main_route
+        logger.debug(f"calculate_logistics: результат weight_kg={result.get('weight_kg')}, formula={result.get('calculation_formula')}")
         return result
     
     # Вычисляем объем

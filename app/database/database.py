@@ -11,14 +11,13 @@ from alembic import command
 from alembic.config import Config
 from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
-from sqlalchemy import create_engine, func, String, cast, or_, and_
+from sqlalchemy import String, and_, cast, create_engine, func, or_
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import joinedload
 
 from app.core.exceptions import DatabaseError, NotFoundError
 from app.core.extensions import SessionLocal, get_database_url
 from app.models.models import GenerationHistoryRecord, UserRecord
-
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
@@ -58,6 +57,12 @@ def get_alembic_config(strict: bool = False) -> Optional[Config]:
 
     config = Config(str(alembic_cfg))
     config.set_main_option('sqlalchemy.url', get_database_url())
+    
+    # Устанавливаем абсолютный путь к migrations, чтобы работало из любой директории
+    migrations_path = PROJECT_ROOT / 'migrations'
+    if migrations_path.exists():
+        config.set_main_option('script_location', str(migrations_path))
+    
     return config
 
 
@@ -680,6 +685,7 @@ def get_generation_history(
                     'drawing_number': record.drawing_number or 'Не указан',
                     'duty_percent': record.duty_percent,
                     'weight': record.weight,
+                    'user_id': record.user_id,
                     'username': record.user.username if record.user else None,
                     'last_name': record.user.last_name if record.user else None,
                     'first_name': record.user.first_name if record.user else None,
@@ -720,6 +726,7 @@ def save_generation_history(form_data, final_price, config, user_id=None, total_
     """Сохраняет расчёт генерации вместе с расчётными параметрами пользователя."""
     try:
         import json
+
         from app.presentation.helpers import extract_positions_from_form
         
         # Извлекаем позиции из формы (используем готовые позиции из form_data если есть)

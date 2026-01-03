@@ -5,7 +5,6 @@ from flask_login import UserMixin
 from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import declarative_base, relationship
 
-
 Base = declarative_base()
 
 
@@ -147,9 +146,9 @@ class User(UserMixin):
 
         if hasattr(row, 'username'):
             return cls(
-                user_id=getattr(row, 'id'),
-                username=getattr(row, 'username'),
-                password_hash=getattr(row, 'password_hash'),
+                user_id=row.id,
+                username=row.username,
+                password_hash=row.password_hash,
                 created_at=getattr(row, 'created_at', None),
                 last_login=getattr(row, 'last_login', None),
                 last_name=getattr(row, 'last_name', None),

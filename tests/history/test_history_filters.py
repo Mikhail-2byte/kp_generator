@@ -1,7 +1,15 @@
 """Тесты для серверной фильтрации истории генераций."""
 
+import sys
 import time
 from datetime import datetime
+from pathlib import Path
+
+# Добавляем корень проекта в путь для возможности прямого запуска
+project_root = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(project_root))
+
+import pytest
 
 from app.database import database_service
 from app.services.repositories import generation_repository
@@ -395,4 +403,9 @@ def test_filter_with_pagination(app):
         for item in result_page1['items'] + result_page2['items']:
             if item.get('tender_number', '').startswith(f'TND-{base_tender}'):
                 assert item.get('margin_percent', 0) == 20, "Запись не соответствует фильтру маржи"
+
+
+if __name__ == "__main__":
+    # Запуск тестов при прямом выполнении файла
+    pytest.main([__file__, "-v"])
 

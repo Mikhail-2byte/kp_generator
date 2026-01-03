@@ -1,16 +1,16 @@
 from flask_wtf import FlaskForm
 from wtforms import (
-    StringField,
-    PasswordField,
-    SubmitField,
     BooleanField,
-    HiddenField,
-    TextAreaField,
     DecimalField,
+    HiddenField,
     IntegerField,
-    SelectField
+    PasswordField,
+    SelectField,
+    StringField,
+    SubmitField,
+    TextAreaField,
 )
-from wtforms.validators import DataRequired, Length, EqualTo, Optional, NumberRange
+from wtforms.validators import DataRequired, EqualTo, Length, NumberRange, Optional
 
 
 class LoginForm(FlaskForm):

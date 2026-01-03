@@ -222,7 +222,7 @@ class AICacheManager:
                         value = redis_client.get(key)
                         if value:
                             total_size += len(value)
-                    except:
+                    except Exception:
                         pass
             
             return {

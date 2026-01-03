@@ -1,3 +1,12 @@
+import sys
+from pathlib import Path
+
+# Добавляем корень проекта в путь для возможности прямого запуска
+project_root = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(project_root))
+
+import pytest
+
 from app.database import database_service
 from app.services.repositories import generation_repository
 
@@ -71,4 +80,9 @@ def test_history_tender_endpoint(app, client):
     assert response.status_code == 200
     payload = response.get_json()
     assert len(payload['records']) >= 2
+
+
+if __name__ == "__main__":
+    # Запуск тестов при прямом выполнении файла
+    pytest.main([__file__, "-v"])
 

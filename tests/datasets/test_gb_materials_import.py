@@ -2,8 +2,13 @@
 
 import csv
 import json
+import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
+
+# Добавляем корень проекта в путь для возможности прямого запуска
+project_root = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(project_root))
 
 import pytest
 
@@ -192,4 +197,9 @@ def test_import_gb_materials_from_csv_replaces_existing(tmp_path: Path, app, mon
         
     finally:
         monkeypatch.setattr(datasets, 'CONFIG_DIR', original_config_dir)
+
+
+if __name__ == "__main__":
+    # Запуск тестов при прямом выполнении файла
+    pytest.main([__file__, "-v"])
 

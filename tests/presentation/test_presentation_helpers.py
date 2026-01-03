@@ -1,8 +1,13 @@
 """Тесты для presentation helpers."""
 
 import os
+import sys
 import tempfile
 from pathlib import Path
+
+# Добавляем корень проекта в путь для возможности прямого запуска
+project_root = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(project_root))
 
 import pytest
 
@@ -217,4 +222,9 @@ class TestExtractPositionsFromForm:
         positions = extract_positions_from_form(form_data)
         assert len(positions) == 1
         assert positions[0]['cost_price_per_kg'] == '200'
+
+
+if __name__ == "__main__":
+    # Запуск тестов при прямом выполнении файла
+    pytest.main([__file__, "-v"])
 

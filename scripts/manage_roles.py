@@ -16,7 +16,6 @@ import sys
 from pathlib import Path
 from typing import Iterable
 
-
 # Путь к базе данных относительно корня проекта (скрипт находится в scripts/)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_DB_PATH = PROJECT_ROOT / "kp_generator.db"

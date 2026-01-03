@@ -19,16 +19,12 @@ from flask import (
 )
 from flask_login import current_user, login_required
 
-from app.business.document_generator import create_zip_archive, generate_excel_document, generate_word_document
 from app.services.export_service import (
     export_generation_history_to_excel,
     export_generation_history_to_csv,
     create_excel_response,
     create_csv_response,
 )
-from app.presentation.helpers import check_templates_exist, extract_positions_from_form
-from app.presentation.validators import validate_form_data
-from app.services.multi_position_calculator import MultiPositionCalculator
 from app.services.generation_orchestrator import GenerationOrchestrator
 from app.services import (
     AnalyticsProcessingError,
@@ -40,7 +36,6 @@ from app.services.analytics_enhancements import (
     generate_interactive_report,
     generate_margin_analysis,
 )
-from app.services.audit_service import log_generation_created
 from app.services.repositories import generation_repository
 from app.services.feedback import save_feedback_entry
 from app.services.excel_importer import ExcelImportError, parse_positions_from_excel
@@ -648,7 +643,6 @@ def _parse_instruction_content(content_text: str) -> Dict[str, Any]:
     separator_pattern = re.compile(r'^_{10,}$')
     
     for i, line in enumerate(lines):
-        original_line = line
         line = line.strip()
         
         # Определяем разделы

@@ -228,7 +228,7 @@ class APIKeyValidator:
         """
         if api_key:
             cls._validation_cache.pop(api_key, None)
-            logger.debug(f"Очищен кеш валидации для ключа")
+            logger.debug("Очищен кеш валидации для ключа")
         else:
             cls._validation_cache.clear()
             logger.debug("Очищен весь кеш валидации")

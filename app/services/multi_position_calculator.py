@@ -1,5 +1,5 @@
 # app/services/multi_position_calculator.py
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
 
 from app.business.interfaces import PriceCalculatorPort
 from app.business.price_calculator import calculate_selling_price

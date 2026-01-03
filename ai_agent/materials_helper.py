@@ -176,7 +176,7 @@ class MaterialsHelper:
         
         if len(materials) == 1:
             material = materials[0]
-            result = f"✅ Найден материал:\n\n"
+            result = "✅ Найден материал:\n\n"
             result += f"**Русское название:** {material.get('russian', '—')}\n"
             result += f"**GB стандарт:** {material.get('gb', '—')}\n"
             result += f"**ГОСТ:** {material.get('gost', '—')}\n"
@@ -185,7 +185,7 @@ class MaterialsHelper:
             if price:
                 result += f"**Цена:** {price} юань/кг\n"
             else:
-                result += f"**Цена:** не указана\n"
+                result += "**Цена:** не указана\n"
             
             workpiece_type = material.get('workpiece_type', '')
             if workpiece_type:
@@ -198,7 +198,7 @@ class MaterialsHelper:
             # Проверяем предупреждения
             gb = str(material.get('gb', '')).lower()
             if 'не использовать' in gb:
-                result += f"\n⚠️ **ВНИМАНИЕ:** Этот материал не рекомендуется к использованию. "
+                result += "\n⚠️ **ВНИМАНИЕ:** Этот материал не рекомендуется к использованию. "
                 if 'замена' in gb:
                     result += "Рекомендуется замена.\n"
             

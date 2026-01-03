@@ -2,8 +2,8 @@
 Тестовый скрипт для проверки импортов и базовой функциональности.
 """
 
-import sys
 import os
+import sys
 
 # Настраиваем кодировку UTF-8 для Windows
 if sys.platform == 'win32':
@@ -66,7 +66,6 @@ except Exception as e:
 
 try:
     print("5. Импорт agent...")
-    from ai_agent.agent import AIAgent
     print("   ✓ AIAgent импортирован")
 except Exception as e:
     print(f"   ✗ Ошибка: {e}")

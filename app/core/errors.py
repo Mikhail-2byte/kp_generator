@@ -11,8 +11,8 @@ from app.core.exceptions import (
     PermissionError,
     ValidationError,
 )
-from app.presentation.ui import build_context
 from app.core.extensions import login_manager
+from app.presentation.ui import build_context
 
 
 def _is_api_request() -> bool:

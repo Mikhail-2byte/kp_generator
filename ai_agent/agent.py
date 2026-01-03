@@ -5,7 +5,6 @@
 import json
 import logging
 import re
-import sys
 import time
 from typing import Any, Dict, List, Optional
 
@@ -22,10 +21,10 @@ from ai_agent.config import (
     is_reasoning_enabled,
     is_usage_monitoring_enabled,
 )
+from ai_agent.duty_helper import DutyHelper
 from ai_agent.knowledge_base import KnowledgeBase
 from ai_agent.logistics_helper import LogisticsHelper
 from ai_agent.materials_helper import MaterialsHelper
-from ai_agent.duty_helper import DutyHelper
 
 logger = logging.getLogger(__name__)
 
@@ -183,25 +182,88 @@ class AIAgent:
             weight = None
             is_tons = False
             
-            # Паттерн для поиска веса: число (с точкой/запятой) + пробел (опционально) + единица измерения
-            # Используем более широкий поиск
+            def parse_weight_number(weight_str: str) -> float:
+                """
+                Парсит строку с весом, правильно обрабатывая разделители тысяч.
+                
+                Args:
+                    weight_str: Строка с числом (может содержать пробелы, запятые, точки)
+                    
+                Returns:
+                    Число в виде float
+                """
+                # Убираем пробелы по краям
+                weight_str = weight_str.strip()
+                
+                # Убираем пробелы внутри числа (разделители тысяч)
+                # Пробелы между цифрами считаем разделителями тысяч
+                weight_str = re.sub(r'(\d)\s+(\d)', r'\1\2', weight_str)
+                
+                # Если есть запятая и точка, определяем что есть что
+                # Обычно: запятая = разделитель тысяч, точка = десятичный разделитель
+                # Или наоборот: точка = разделитель тысяч, запятая = десятичный разделитель
+                
+                # Сначала проверяем, есть ли и запятая, и точка
+                has_comma = ',' in weight_str
+                has_dot = '.' in weight_str
+                
+                if has_comma and has_dot:
+                    # Определяем по позиции: что идет последним, то и есть десятичный разделитель
+                    comma_pos = weight_str.rfind(',')
+                    dot_pos = weight_str.rfind('.')
+                    if comma_pos > dot_pos:
+                        # Запятая - десятичный разделитель, точка - разделитель тысяч
+                        weight_str = weight_str.replace('.', '').replace(',', '.')
+                    else:
+                        # Точка - десятичный разделитель, запятая - разделитель тысяч
+                        weight_str = weight_str.replace(',', '')
+                elif has_comma:
+                    # Только запятая - может быть и разделитель тысяч, и десятичный разделитель
+                    # Если после запятой 3 цифры - это разделитель тысяч
+                    parts = weight_str.split(',')
+                    if len(parts) == 2 and len(parts[1]) == 3 and len(parts[0]) > 0:
+                        # Вероятно разделитель тысяч (например, "5,000")
+                        weight_str = weight_str.replace(',', '')
+                    else:
+                        # Вероятно десятичный разделитель
+                        weight_str = weight_str.replace(',', '.')
+                elif has_dot:
+                    # Только точка - может быть и разделитель тысяч, и десятичный разделитель
+                    # Если после точки 3 цифры - это разделитель тысяч
+                    parts = weight_str.split('.')
+                    if len(parts) == 2 and len(parts[1]) == 3 and len(parts[0]) > 0:
+                        # Вероятно разделитель тысяч (например, "5.000")
+                        weight_str = weight_str.replace('.', '')
+                    # Иначе точка - десятичный разделитель, оставляем как есть
+                
+                return float(weight_str)
+            
+            # Паттерн для поиска веса: число (с пробелами, точкой/запятой) + пробел (опционально) + единица измерения
+            # Используем более широкий поиск, включая случаи без пробела и с пробелами внутри числа
+            # Для кириллицы используем отрицательный просмотр вперед вместо \b
+            # Поддерживаем пробелы внутри числа как разделители тысяч (например, "4 500кг")
             weight_patterns = [
-                (r'(\d+(?:[.,]\d+)?)\s*(?:кг|kg)', False),  # килограммы
-                (r'(\d+(?:[.,]\d+)?)\s*(?:тонн|т)(?!\w)', True),  # тонны (не часть слова)
+                (r'(\d+(?:\s+\d+)*(?:[.,]\d+)?)\s*(?:кг|kg)(?![а-яёa-z])', False),  # килограммы (с пробелами в числе)
+                (r'(\d+(?:\s+\d+)*(?:[.,]\d+)?)\s*(?:тонн|т)(?![а-яёa-z])', True),  # тонны (с пробелами в числе)
             ]
             
             for pattern, tons_flag in weight_patterns:
                 try:
-                    weight_match = re.search(pattern, message_lower, re.UNICODE)
-                    if weight_match:
-                        weight_str = weight_match.group(1).replace(',', '.')
+                    # Ищем все совпадения и выбираем самое длинное (вероятно, полное число)
+                    weight_matches = re.findall(pattern, message_lower, re.UNICODE)
+                    if weight_matches:
+                        # Выбираем самое длинное совпадение (вероятно, полное число с разделителями)
+                        weight_str = max(weight_matches, key=len)
                         try:
-                            weight = float(weight_str)
+                            weight = parse_weight_number(weight_str)
                             is_tons = tons_flag
+                            logger.debug(f"Извлечен вес: {weight} ({'тонн' if is_tons else 'кг'}) из строки '{weight_str}'")
                             break
-                        except ValueError:
+                        except ValueError as e:
+                            logger.warning(f"Не удалось распарсить вес из '{weight_str}': {e}")
                             continue
-                except Exception:
+                except Exception as e:
+                    logger.warning(f"Ошибка при поиске веса по паттерну '{pattern}': {e}")
                     continue
             
             # Если не нашли через регулярки, попробуем найти число рядом со словами "вес", "весом"
@@ -209,20 +271,31 @@ class AIAgent:
                 # Ищем паттерн "вес[ом] ... число"
                 weight_context_match = re.search(r'вес[ома]*\s+(\d+(?:[.,]\d+)?)', message_lower, re.UNICODE)
                 if weight_context_match:
-                    weight_str = weight_context_match.group(1).replace(',', '.')
+                    weight_str = weight_context_match.group(1)
                     try:
-                        weight = float(weight_str)
+                        weight = parse_weight_number(weight_str)
                         # По умолчанию считаем килограммами, если не указано иное
-                        if 'тонн' in message_lower or ('т' in message_lower and 'тонн' not in message_lower):
+                        if 'тонн' in message_lower or (re.search(r'\bт\b', message_lower) and 'тонн' not in message_lower):
                             is_tons = True
-                    except ValueError:
-                        pass
+                        logger.debug(f"Извлечен вес из контекста: {weight} ({'тонн' if is_tons else 'кг'}) из строки '{weight_str}'")
+                    except ValueError as e:
+                        logger.warning(f"Не удалось распарсить вес из контекста '{weight_str}': {e}")
             
             if weight is not None:
                 # Если указано в тоннах, переводим в кг
                 if is_tons:
+                    logger.debug(f"Вес указан в тоннах: {weight} т, переводим в кг")
                     weight *= 1000
+                
+                # Проверка на разумность значения (максимум 1000 тонн = 1,000,000 кг)
+                # Если вес больше, вероятно ошибка парсинга
+                if weight > 1_000_000:
+                    logger.warning(f"Обнаружен подозрительно большой вес: {weight} кг. Возможно ошибка парсинга.")
+                    # Пытаемся исправить: если вес очень большой, возможно это было в граммах или ошибка
+                    # Но для безопасности оставляем как есть и просто логируем
+                
                 logistics_params['weight_kg'] = weight
+                logger.info(f"Установлен вес для логистики: {logistics_params['weight_kg']} кг (извлечено из сообщения: '{message[:100]}', is_tons={is_tons})")
             
             # Город (поиск по словам, включая сокращения)
             cities = [c.get('name') for c in self.logistics_helper._load_cities()]
@@ -688,6 +761,8 @@ class AIAgent:
                 self.conversation_history.append({"role": "assistant", "content": response})
                 return response
             
+            logger.debug(f"Вызываем calculate_simple_logistics с weight_kg={weight_kg}, city_name={city_name}")
+            
             result = self.logistics_helper.calculate_simple_logistics(
                 weight_kg=weight_kg,
                 city_name=city_name,
@@ -696,6 +771,8 @@ class AIAgent:
                 width_mm=params.get('width_mm'),
                 height_mm=params.get('height_mm'),
             )
+            
+            logger.debug(f"Результат calculate_simple_logistics: weight_kg={result.get('weight_kg')}, formula={result.get('calculation_formula')}")
             
             # Форматируем результат
             formatted_result = self.logistics_helper.format_logistics_result(result)
@@ -854,7 +931,7 @@ class AIAgent:
         
         except Exception as e:
             logger.exception(f"Неожиданная ошибка в chat(): {e}")
-            error_response = f"❌ Произошла неожиданная ошибка. Пожалуйста, попробуйте позже."
+            error_response = "❌ Произошла неожиданная ошибка. Пожалуйста, попробуйте позже."
             
             # Используем fallback если включен
             if self.fallback_enabled:

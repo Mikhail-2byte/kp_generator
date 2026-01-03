@@ -1,26 +1,26 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from .database import (
     connect_db,
-    init_db,
-    get_generation_history,
-    save_generation_history,
-    get_generation_details,
-    load_generation_data,
     create_user,
-    get_user_by_username,
-    get_user_by_id,
-    update_last_login,
-    get_user_statistics,
-    get_admin_user_activity,
-    update_user_profile,
     delete_user,
+    get_admin_user_activity,
+    get_generation_details,
+    get_generation_history,
     get_generations_by_drawing,
     get_generations_by_tender,
     get_unique_companies,
+    get_user_by_id,
+    get_user_by_username,
+    get_user_statistics,
     get_users_list,
+    init_db,
+    load_generation_data,
+    save_generation_history,
+    update_last_login,
+    update_user_profile,
 )
 
 

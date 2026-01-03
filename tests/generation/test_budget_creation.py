@@ -1,7 +1,14 @@
 """Тесты для создания бюджета и получения данных для создания."""
 
-import pytest
+import sys
+from pathlib import Path
 from unittest.mock import Mock, patch, MagicMock
+
+# Добавляем корень проекта в путь для возможности прямого запуска
+project_root = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(project_root))
+
+import pytest
 
 from app.core.exceptions import ValidationError, CalculationError
 from app.services.generation_orchestrator import GenerationOrchestrator
@@ -299,4 +306,9 @@ class TestBudgetCreation:
         assert second_pos.get('product') == 'Деталь B'
         assert int(second_pos.get('quantity', 0)) == 5
         assert float(second_pos.get('cost_price', 0)) == 2000
+
+
+if __name__ == "__main__":
+    # Запуск тестов при прямом выполнении файла
+    pytest.main([__file__, "-v"])
 

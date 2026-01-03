@@ -1,4 +1,12 @@
+import sys
 from datetime import datetime, timezone
+from pathlib import Path
+
+# Добавляем корень проекта в путь для возможности прямого запуска
+project_root = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(project_root))
+
+import pytest
 
 
 def test_health_endpoint_ok(monkeypatch, client):
@@ -29,4 +37,9 @@ def test_health_endpoint_error(monkeypatch, client):
 
     assert response.status_code == 503
     assert response.get_json() == payload
+
+
+if __name__ == "__main__":
+    # Запуск тестов при прямом выполнении файла
+    pytest.main([__file__, "-v"])
 

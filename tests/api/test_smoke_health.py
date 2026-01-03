@@ -1,3 +1,12 @@
+import sys
+from pathlib import Path
+
+# Добавляем корень проекта в путь для возможности прямого запуска
+project_root = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(project_root))
+
+import pytest
+
 from app import create_app
 
 
@@ -15,4 +24,9 @@ def test_health_smoke():
         payload = response.get_json()
         assert payload.get("status") == "ok"
         assert "checks" in payload
+
+
+if __name__ == "__main__":
+    # Запуск тестов при прямом выполнении файла
+    pytest.main([__file__, "-v"])
 

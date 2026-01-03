@@ -1,6 +1,5 @@
 import argparse
 import json
-import sys
 
 from app.services import datasets_validator
 

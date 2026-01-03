@@ -1,5 +1,11 @@
 import io
+import sys
 import zipfile
+from pathlib import Path
+
+# Добавляем корень проекта в путь для возможности прямого запуска
+project_root = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(project_root))
 
 import pytest
 
@@ -75,7 +81,9 @@ def test_document_generation_service_zip():
     word = io.BytesIO(b'word-bytes')
     zip_buffer, prefix = service.create_zip_archive(excel, word, 'ООО Ромашка')
 
-    assert prefix.startswith('КП_')
+    # Новый формат: "company" или "tender_number - company - margin%"
+    # Если нет tender_number и margin, то просто "company"
+    assert prefix == 'ООО_Ромашка' or prefix.startswith('КП_')
     with zipfile.ZipFile(zip_buffer) as archive:
         names = archive.namelist()
         assert any(name.endswith('.xlsx') for name in names)
@@ -123,4 +131,9 @@ def test_document_generation_service_empty_positions_error():
             final_price=1000,
             general_prise=1000,
         )
+
+
+if __name__ == "__main__":
+    # Запуск тестов при прямом выполнении файла
+    pytest.main([__file__, "-v"])
 

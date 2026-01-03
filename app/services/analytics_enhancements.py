@@ -1,7 +1,7 @@
 """Расширенные функции аналитики: графики маржинальности, динамика курсов, интерактивные отчеты."""
 
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import matplotlib
 matplotlib.use('Agg')
@@ -126,7 +126,7 @@ def generate_margin_analysis(user_id: Optional[int] = None, days: int = 30) -> D
     # График маржа vs выручка
     if margins and revenues:
         fig, ax = plt.subplots(figsize=(10, 6))
-        scatter = ax.scatter(revenues, margins, alpha=0.6, s=50)
+        ax.scatter(revenues, margins, alpha=0.6, s=50)
         ax.set_title('Маржа vs Выручка', fontsize=14, fontweight='bold')
         ax.set_xlabel('Выручка (руб)')
         ax.set_ylabel('Маржа (%)')

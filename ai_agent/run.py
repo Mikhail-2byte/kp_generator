@@ -3,8 +3,8 @@
 Используется для обхода проблем с кодировкой при запуске через -m.
 """
 
-import sys
 import os
+import sys
 
 # Настраиваем кодировку UTF-8 для Windows
 if sys.platform == 'win32':

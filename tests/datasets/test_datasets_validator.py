@@ -1,3 +1,12 @@
+import sys
+from pathlib import Path
+
+# Добавляем корень проекта в путь для возможности прямого запуска
+project_root = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(project_root))
+
+import pytest
+
 from app.services import datasets_validator
 
 
@@ -14,4 +23,9 @@ def test_run_all_validations_returns_results():
     # Статус в допустимом наборе
     for r in results:
         assert r.status in {"ok", "warning", "error"}
+
+
+if __name__ == "__main__":
+    # Запуск тестов при прямом выполнении файла
+    pytest.main([__file__, "-v"])
 

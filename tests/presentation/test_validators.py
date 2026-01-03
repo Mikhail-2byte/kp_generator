@@ -1,3 +1,12 @@
+import sys
+from pathlib import Path
+
+# Добавляем корень проекта в путь для возможности прямого запуска
+project_root = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(project_root))
+
+import pytest
+
 from app.presentation.validators import FormValidationResult, validate_form_data
 
 
@@ -43,4 +52,9 @@ def test_validate_form_data_requires_company():
 
     assert 'company' in result.invalid_fields
     assert any('Укажите название компании.' in error for error in result.errors)
+
+
+if __name__ == "__main__":
+    # Запуск тестов при прямом выполнении файла
+    pytest.main([__file__, "-v"])
 

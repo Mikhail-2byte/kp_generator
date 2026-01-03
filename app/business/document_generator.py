@@ -1,11 +1,11 @@
 # Document generation
-from datetime import datetime
 import zipfile
+from datetime import datetime
 from io import BytesIO
-from typing import Dict, Any, List, Optional, Tuple, Type, Callable
+from typing import Any, Dict, List, Optional, Tuple, Type
 
 from app.business.interfaces import DocumentGeneratorPort
-from app.presentation.helpers import get_safe_filename, extract_positions_from_form
+from app.presentation.helpers import extract_positions_from_form, get_safe_filename
 from app.services.multi_position_processor import MultiPositionProcessor
 from app.services.word_multi_position_processor import WordMultiPositionProcessor
 

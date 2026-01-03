@@ -1,7 +1,14 @@
 """Тесты для GenerationOrchestrator."""
 
+import sys
+from pathlib import Path
+from unittest.mock import MagicMock, Mock, patch
+
+# Добавляем корень проекта в путь для возможности прямого запуска
+project_root = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(project_root))
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock
 
 from app.core.exceptions import CalculationError, DocumentGenerationError, ValidationError
 from app.services.generation_orchestrator import GenerationOrchestrator
@@ -209,4 +216,9 @@ class TestGenerationOrchestrator:
                             
                             with pytest.raises(DocumentGenerationError):
                                 orchestrator.orchestrate(valid_form_data, None)
+
+
+if __name__ == "__main__":
+    # Запуск тестов при прямом выполнении файла
+    pytest.main([__file__, "-v"])
 

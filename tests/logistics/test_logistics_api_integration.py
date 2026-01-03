@@ -6,6 +6,13 @@
 - /api/logistics/save-distance
 """
 
+import sys
+from pathlib import Path
+
+# Добавляем корень проекта в путь для возможности прямого запуска
+project_root = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(project_root))
+
 import pytest
 import json
 from flask import url_for

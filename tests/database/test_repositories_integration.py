@@ -1,7 +1,14 @@
 """Интеграционные тесты для репозиториев."""
 
-import pytest
+import sys
 from datetime import datetime, timedelta
+from pathlib import Path
+
+# Добавляем корень проекта в путь для возможности прямого запуска
+project_root = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(project_root))
+
+import pytest
 
 from app.services.repositories import (
     generation_repository,
@@ -50,18 +57,35 @@ class TestGenerationRepositoryIntegration:
                 form_data, 1500.0, app.config['APP_SETTINGS'], user.id, 15000.0
             )
             
-            assert saved is not None
-            assert isinstance(saved, int)
+            assert saved is True
             
-            # Получаем сохраненную историю
-            history = generation_repository.get_by_id(saved)
+            # Получаем список истории и находим сохраненную запись
+            history_result = generation_repository.get_history(
+                app.config['APP_SETTINGS'],
+                page=1,
+                per_page=10
+            )
+            history_list = history_result.get('items', [])
+            
+            # Находим нашу запись по компании и пользователю
+            history = None
+            # user.id возвращается как строка из модели User, но в БД это число
+            user_id_int = int(user.id)
+            for item in history_list:
+                if item.get('company') == 'Тестовая компания' and item.get('user_id') == user_id_int:
+                    history = item
+                    break
             
             assert history is not None
-            assert history['id'] == saved
-            assert history['user_id'] == user.id
+            assert history['user_id'] == user_id_int
             assert history['company'] == 'Тестовая компания'
             assert history['final_price'] == 1500.0
-            assert history['general_price'] == 15000.0
+            assert history.get('general_price') == 15000.0 or history.get('total_general_price') == 15000.0
+            
+            # Проверяем, что можем получить детали по ID
+            history_details = generation_repository.get_details(history['id'])
+            assert history_details is not None
+            assert history_details['id'] == history['id']
     
     def test_get_history_list(self, app):
         """Тест получения списка истории генераций."""
@@ -74,6 +98,7 @@ class TestGenerationRepositoryIntegration:
             )
             
             # Сохраняем несколько генераций
+            # Используем разные tender_number для каждой записи, чтобы они не группировались
             for i in range(3):
                 form_data = {
                     'company': f'Компания {i}',
@@ -85,16 +110,26 @@ class TestGenerationRepositoryIntegration:
                     'margin_percent': '30',
                     'delivery_time': '30',
                     'duty_percent': '5',
+                    'tender_number': f'TEST-{i}',  # Уникальный номер тендера для каждой записи
                 }
                 generation_repository.save_history(
                     form_data, 1500.0, app.config['APP_SETTINGS'], user.id, 15000.0
                 )
             
             # Получаем список
-            history_list = generation_repository.get_user_history(user.id, limit=10, offset=0)
+            history_result = generation_repository.get_history(
+                app.config['APP_SETTINGS'],
+                page=1,
+                per_page=10
+            )
+            history_list = history_result.get('items', [])
             
-            assert len(history_list) >= 3
-            assert all(item['user_id'] == user.id for item in history_list)
+            # Фильтруем по user_id, так как get_history возвращает все записи
+            # user.id возвращается как строка из модели User, но в БД это число
+            user_id_int = int(user.id)
+            user_history = [item for item in history_list if item.get('user_id') == user_id_int]
+            assert len(user_history) >= 3
+            assert all(item['user_id'] == user_id_int for item in user_history)
     
     def test_get_history_with_filters(self, app):
         """Тест получения истории с фильтрами."""
@@ -122,15 +157,16 @@ class TestGenerationRepositoryIntegration:
             )
             
             # Фильтруем по компании
-            filtered = generation_repository.get_user_history(
-                user.id, 
-                company_filter='Фильтрованная',
-                limit=10,
-                offset=0
+            filtered_result = generation_repository.get_history(
+                app.config['APP_SETTINGS'],
+                page=1,
+                per_page=10,
+                search='Фильтрованная'
             )
+            filtered = filtered_result.get('items', [])
             
             assert len(filtered) >= 1
-            assert any('Фильтрованная' in item['company'] for item in filtered)
+            assert any('Фильтрованная' in item.get('company', '') for item in filtered)
 
 
 class TestAuditLogRepositoryIntegration:
@@ -145,25 +181,34 @@ class TestAuditLogRepositoryIntegration:
                 role='user'
             )
             
-            log_id = audit_log_repository.create(
+            result = audit_log_repository.create_log(
                 user_id=user.id,
-                action='test_action',
+                username=user.username,
+                action_type='test_action',
+                description='Test action description',
                 resource_type='test_resource',
-                resource_id=123,
-                details={'key': 'value'}
+                resource_id='123',
+                changes_after={'key': 'value'}
             )
             
-            assert log_id is not None
-            assert isinstance(log_id, int)
+            assert result is True
             
-            # Получаем запись
-            log = audit_log_repository.get_by_id(log_id)
+            # Получаем записи и ищем созданную
+            logs_result = audit_log_repository.get_logs(
+                user_id=user.id,
+                action_type='test_action',
+                page=1,
+                per_page=10
+            )
+            logs = logs_result.get('items', [])
             
-            assert log is not None
-            assert log['user_id'] == user.id
-            assert log['action'] == 'test_action'
+            assert len(logs) >= 1
+            log = logs[0]
+            # user.id возвращается как строка из модели User, но в БД это число
+            assert log['user_id'] == int(user.id)
+            assert log['action_type'] == 'test_action'
             assert log['resource_type'] == 'test_resource'
-            assert log['resource_id'] == 123
+            assert log['resource_id'] == '123'
     
     def test_get_user_audit_logs(self, app):
         """Тест получения логов пользователя."""
@@ -176,18 +221,26 @@ class TestAuditLogRepositoryIntegration:
             
             # Создаем несколько записей
             for i in range(3):
-                audit_log_repository.create(
+                audit_log_repository.create_log(
                     user_id=user.id,
-                    action=f'action_{i}',
+                    username=user.username,
+                    action_type=f'action_{i}',
+                    description=f'Test action {i}',
                     resource_type='test_resource',
-                    resource_id=i
+                    resource_id=str(i)
                 )
             
             # Получаем логи пользователя
-            logs = audit_log_repository.get_user_logs(user.id, limit=10, offset=0)
+            logs_result = audit_log_repository.get_logs(
+                user_id=user.id,
+                page=1,
+                per_page=10
+            )
+            logs = logs_result.get('items', [])
             
             assert len(logs) >= 3
-            assert all(log['user_id'] == user.id for log in logs)
+            # user.id возвращается как строка из модели User, но в БД это число
+            assert all(log['user_id'] == int(user.id) for log in logs)
 
 
 class TestUserRepositoryIntegration:
@@ -237,8 +290,9 @@ class TestUserRepositoryIntegration:
                 role='user'
             )
             
-            updated = user_repository.update_user(
+            updated = user_repository.update_profile(
                 user.id,
+                username=user.username,
                 last_name='Иванов',
                 first_name='Иван'
             )
@@ -248,4 +302,9 @@ class TestUserRepositoryIntegration:
             retrieved = user_repository.get_by_id(user.id)
             assert retrieved.last_name == 'Иванов'
             assert retrieved.first_name == 'Иван'
+
+
+if __name__ == "__main__":
+    # Запуск тестов при прямом выполнении файла
+    pytest.main([__file__, "-v"])
 

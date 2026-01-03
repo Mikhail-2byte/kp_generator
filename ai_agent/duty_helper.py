@@ -200,7 +200,7 @@ class DutyHelper:
         
         if len(items) == 1:
             item = items[0]
-            result = f"✅ Найдена пошлина:\n\n"
+            result = "✅ Найдена пошлина:\n\n"
             
             # Код ТН ВЭД (если есть)
             code = item.get('code', '')
@@ -225,7 +225,7 @@ class DutyHelper:
             elif duty_text:
                 result += f"**Пошлина:** {duty_text}\n"
             else:
-                result += f"**Пошлина:** не указана\n"
+                result += "**Пошлина:** не указана\n"
             
             # Примеры (если есть)
             examples = item.get('examples', '')
@@ -235,9 +235,9 @@ class DutyHelper:
             # Источник
             source = item.get('source', '')
             if source == 'manual':
-                result += f"\n📝 Источник: Ручной справочник"
+                result += "\n📝 Источник: Ручной справочник"
             elif source == 'tnved':
-                result += f"\n📋 Источник: Каталог ТН ВЭД"
+                result += "\n📋 Источник: Каталог ТН ВЭД"
             
             return result
         

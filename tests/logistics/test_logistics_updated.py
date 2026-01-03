@@ -9,7 +9,15 @@
 - Выбор между алгоритмами расчета
 """
 
+import sys
+from pathlib import Path
+
+# Добавляем корень проекта в путь для возможности прямого запуска
+project_root = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(project_root))
+
 import pytest
+
 from app.services.logistics_calculator import (
     calculate_logistics,
     calculate_logistics_by_weight,

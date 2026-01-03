@@ -4,7 +4,7 @@ import json
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import func, and_, or_
+from sqlalchemy import func, or_
 
 from app.database import DatabaseService, database_service
 from app.database.database import _session_scope

@@ -2,6 +2,15 @@
 Демонстрационные тесты для проверки обновленных RF тарифов.
 """
 
+import sys
+from pathlib import Path
+
+# Добавляем корень проекта в путь для возможности прямого запуска
+project_root = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(project_root))
+
+import pytest
+
 from app.services.logistics_calculator import (
     get_rf_tariff_per_1000km,
     calculate_ekb_plus_rf_route,
@@ -86,6 +95,5 @@ def test_tariff_table_integrity():
 
 
 if __name__ == '__main__':
-    import pytest
     pytest.main([__file__, '-v'])
 

@@ -2,7 +2,7 @@
 
 import json
 from functools import lru_cache, wraps
-from typing import Any, Callable, Dict, List, Optional, TypeVar
+from typing import Any, Callable, Dict, Optional, TypeVar
 
 from flask import current_app
 

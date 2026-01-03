@@ -1,4 +1,12 @@
-from datetime import datetime, timedelta, timezone
+import sys
+from datetime import datetime, timedelta
+from pathlib import Path
+
+# Добавляем корень проекта в путь для возможности прямого запуска
+project_root = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(project_root))
+
+import pytest
 
 from app.database import database_service
 
@@ -40,4 +48,9 @@ def test_database_service_user_lifecycle(app):
     deleted = service.delete_user(user_id)
     assert deleted is True
     assert service.get_user_by_id(user_id) is None
+
+
+if __name__ == "__main__":
+    # Запуск тестов при прямом выполнении файла
+    pytest.main([__file__, "-v"])
 

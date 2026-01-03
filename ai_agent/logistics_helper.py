@@ -11,8 +11,8 @@ from typing import Any, Dict, Optional
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE_DIR))
 
-from app.services.logistics_calculator import calculate_logistics
 from app.services import datasets
+from app.services.logistics_calculator import calculate_logistics
 
 
 class LogisticsHelper:
@@ -171,7 +171,7 @@ class LogisticsHelper:
         calculation_type = result.get('calculation_type', 'direct')
         
         output = [
-            f"🚚 Расчет логистики",
+            "🚚 Расчет логистики",
             f"Город: {city_name}" + (f" ({region})" if region else ""),
             f"Вес: {result.get('weight_kg', 0):,.0f} кг",
         ]
@@ -195,11 +195,11 @@ class LogisticsHelper:
         # Базис расчета
         if basis == 'weight':
             price_per_kg = result.get('price_per_kg', 0)
-            output.append(f"Базис: по весу")
+            output.append("Базис: по весу")
             output.append(f"Цена за кг: {price_per_kg:,.2f} руб/кг")
         elif basis == 'volume':
             price_per_m3 = result.get('price_per_m3', 0)
-            output.append(f"Базис: по объему")
+            output.append("Базис: по объему")
             output.append(f"Цена за м³: {price_per_m3:,.2f} руб/м³")
         
         # Количество машин

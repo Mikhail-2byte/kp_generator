@@ -82,7 +82,7 @@ def export_audit_logs_to_excel(logs_data: Dict[str, Any]) -> BytesIO:
             try:
                 if len(str(row.value)) > max_length:
                     max_length = len(str(row.value))
-            except:
+            except Exception:
                 pass
         adjusted_width = min(max_length + 2, 50)
         ws.column_dimensions[column_letter].width = adjusted_width
@@ -272,7 +272,7 @@ def export_generation_history_to_excel(history_data: Dict[str, Any]) -> BytesIO:
             try:
                 if row.value and len(str(row.value)) > max_length:
                     max_length = len(str(row.value))
-            except:
+            except Exception:
                 pass
         adjusted_width = min(max_length + 2, 50)
         ws.column_dimensions[column_letter].width = adjusted_width

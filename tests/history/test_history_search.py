@@ -1,8 +1,16 @@
 """Тесты для поиска по истории генераций."""
 
 import json
+import sys
 import time
 from datetime import datetime
+from pathlib import Path
+
+# Добавляем корень проекта в путь для возможности прямого запуска
+project_root = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(project_root))
+
+import pytest
 
 from app.database import database_service
 from app.services.repositories import generation_repository
@@ -515,4 +523,9 @@ def test_search_empty_query(app):
         # Проверяем, что результат не пустой
         assert 'items' in result
         assert 'pagination' in result
+
+
+if __name__ == "__main__":
+    # Запуск тестов при прямом выполнении файла
+    pytest.main([__file__, "-v"])
 

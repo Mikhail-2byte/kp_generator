@@ -3,7 +3,6 @@
 """
 
 import sys
-from typing import Optional
 
 from ai_agent.agent import AIAgent
 from ai_agent.config import get_api_key

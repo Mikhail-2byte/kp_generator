@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import csv
 import json
-import os
 import re
 from datetime import datetime, timezone
 from pathlib import Path
@@ -946,6 +945,25 @@ def parse_steel_prices_csv(csv_path: Path) -> List[Dict[str, Any]]:
     return materials
 
 
+def import_gb_materials_from_csv(csv_path: Path, *, actor: Optional[str] = None) -> int:
+    """Импортирует материалы из CSV файла, заменяя все существующие данные.
+    
+    Args:
+        csv_path: Путь к CSV файлу
+        actor: Имя пользователя, выполняющего импорт (для версионирования)
+        
+    Returns:
+        Количество импортированных записей
+    """
+    materials = parse_steel_prices_csv(csv_path)
+    
+    if materials:
+        save_gb_materials(materials, actor=actor)
+        refresh_gb_analogs()
+    
+    return len(materials)
+
+
 def import_gb_materials_from_excel(excel_path: Path, *, actor: Optional[str] = None) -> int:
     """Импортирует материалы из Excel файла, заменяя все существующие данные.
     
@@ -958,8 +976,8 @@ def import_gb_materials_from_excel(excel_path: Path, *, actor: Optional[str] = N
     """
     try:
         import openpyxl
-    except ImportError:
-        raise RuntimeError('openpyxl не установлен. Установите: pip install openpyxl')
+    except ImportError as exc:
+        raise RuntimeError('openpyxl не установлен. Установите: pip install openpyxl') from exc
     
     if not excel_path.exists():
         raise FileNotFoundError(f'Файл не найден: {excel_path}')
@@ -1019,8 +1037,8 @@ def export_gb_materials_to_excel() -> bytes:
     try:
         from openpyxl import Workbook
         from openpyxl.styles import Font, Alignment, PatternFill
-    except ImportError:
-        raise RuntimeError('openpyxl не установлен. Установите: pip install openpyxl')
+    except ImportError as exc:
+        raise RuntimeError('openpyxl не установлен. Установите: pip install openpyxl') from exc
     
     from io import BytesIO
     
@@ -1066,7 +1084,7 @@ def export_gb_materials_to_excel() -> bytes:
             try:
                 if cell.value:
                     max_length = max(max_length, len(str(cell.value)))
-            except:
+            except Exception:
                 pass
         adjusted_width = min(max_length + 2, 50)
         ws.column_dimensions[column_letter].width = adjusted_width

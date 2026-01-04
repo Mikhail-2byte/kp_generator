@@ -9,14 +9,15 @@ from typing import Optional
 
 from dotenv import load_dotenv
 
-# Загружаем переменные окружения
-load_dotenv()
-
 # Настраиваем логирование
 logger = logging.getLogger(__name__)
 
 # Путь к корню проекта (на уровень выше ai_agent/)
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Загружаем переменные окружения из .env файла в корне проекта
+env_path = BASE_DIR / '.env'
+load_dotenv(dotenv_path=env_path)
 
 # API конфигурация
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")

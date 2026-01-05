@@ -465,14 +465,11 @@ class MultiPositionProcessor:
         if manager_fio:
             sheet['N22'] = manager_fio
         
-        # Заполняем цены, если они переданы
+        # Заполняем цены, если они переданы (без округления)
         if final_price is not None:
-            # Округляем вверх до целого числа (чтобы маржа была не меньше целевой)
-            rounded_fp = math.ceil(float(final_price))
-            sheet['H10'] = rounded_fp  # Цена за единицу
+            sheet['H10'] = float(final_price)  # Цена за единицу (точное значение)
         if general_price is not None:
-            gp = math.ceil(float(general_price))
-            sheet['I11'] = gp  # Общая цена
+            sheet['I11'] = float(general_price)  # Общая цена (точное значение)
 
     def process_multiple_positions(self, positions: List[Dict[str, Any]], form_data: Dict[str, Any] = None, final_price: float = None, general_price: float = None, position_prices: List[Dict[str, Any]] | None = None, manager_fio: str = None) -> BytesIO:
         """Обрабатывает множественные позиции и возвращает Excel файл в памяти."""
@@ -500,14 +497,12 @@ class MultiPositionProcessor:
             sheet[f"B{row_number}"] = i + 1
             self.fill_position_data(sheet, position, row_number)
 
-            # Проставляем рассчитанные цены по позиции, если переданы
+            # Проставляем рассчитанные цены по позиции, если переданы (без округления)
             if position_prices and i < len(position_prices):
                 pp = position_prices[i]
                 fp = pp.get('final_price')
                 if fp is not None:
-                    # Округляем вверх до целого числа (чтобы маржа была не меньше целевой)
-                    fp_rounded = math.ceil(float(fp))
-                    sheet[f"H{row_number}"] = fp_rounded  # Цена за единицу по позиции
+                    sheet[f"H{row_number}"] = float(fp)  # Цена за единицу по позиции (точное значение)
                 # Вставляем формулу для выручки: цена за единицу * количество
                 sheet[f"I{row_number}"] = f"=H{row_number}*G{row_number}"
         

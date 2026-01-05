@@ -207,6 +207,224 @@ class TestPriceCalculator:
         )
         
         assert price > 0
+    
+    def test_calculate_selling_price_with_conversion_rate_11_5(self):
+        """Тест расчета с курсом конвертации 11.5 (новое значение по умолчанию)."""
+        # Тестовые данные из плана
+        quantity = 10
+        purchase_cost = 1000  # юаней/шт
+        logistics_rub = 50000  # рублей
+        duty_percent = 5
+        weight = 5  # кг/шт
+        delivery_time = 30  # дней
+        margin_percent = 30
+        
+        # Расчет с курсом 11.5 (значение по умолчанию)
+        price = calculate_selling_price(
+            quantity=quantity,
+            purchase_cost=purchase_cost,
+            logistics_rub=logistics_rub,
+            duty_percent=duty_percent,
+            weight=weight,
+            delivery_time=delivery_time,
+            margin_percent=margin_percent,
+            use_credit=False,
+            use_bank_guarantee=False
+        )
+        
+        # Проверяем, что цена рассчитана
+        assert price > 0
+        
+        # Проверяем ожидаемые значения (с округлением)
+        # Логистика на единицу: (50000 / 11.5) × (5 / 50) = ~434.78 юаней
+        # Логистика КНР: 434.78 × 0.3 = ~130.43 юаней
+        # Логистика РФ: 434.78 × 0.7 = ~304.35 юаней
+        # Пошлина: (1000 + 130.43) × 0.05 = ~56.52 юаней
+        # Конвертация: 1000 × 0.032 = 32 юани
+        # Общие затраты: 1000 + 130.43 + 304.35 + 56.52 + 32 = ~1523.3 юаней
+        # Продажная цена: 1523.3 / (1 - 0.30) = ~2176.14 юаней
+        
+        # Проверяем, что цена находится в ожидаемом диапазоне (с учетом округления)
+        # Ожидаемая цена: ~2176.14 юаней, допускаем отклонение ±50
+        assert 2100 <= price <= 2250, f"Цена {price} не в ожидаемом диапазоне [2100, 2250]"
+        
+        # Проверяем, что цена выше затрат
+        total_weight = weight * quantity  # 50 кг
+        logistics_total_yuan = logistics_rub / 11.5  # ~4347.83 юаней
+        logistics_cnr_per_unit = (logistics_total_yuan * 0.3 * weight) / total_weight  # ~130.43
+        logistics_rf_per_unit = (logistics_total_yuan * 0.7 * weight) / total_weight  # ~304.35
+        duty_per_unit = (purchase_cost + logistics_cnr_per_unit) * (duty_percent / 100)  # ~56.52
+        conversion_fee_per_unit = purchase_cost * 0.032  # 32
+        total_cost_per_unit = purchase_cost + logistics_cnr_per_unit + logistics_rf_per_unit + duty_per_unit + conversion_fee_per_unit
+        
+        # Проверяем, что продажная цена больше затрат
+        assert price > total_cost_per_unit, f"Цена {price} должна быть больше затрат {total_cost_per_unit}"
+        
+        # Проверяем маржу (допускаем небольшую погрешность из-за округления)
+        actual_margin = (price - total_cost_per_unit) / price * 100
+        assert 28 <= actual_margin <= 32, f"Маржа {actual_margin}% не в ожидаемом диапазоне [28%, 32%]"
+    
+    def test_calculate_selling_price_conversion_rate_default(self):
+        """Тест, что значение по умолчанию курса конвертации теперь 11.5, а не 12."""
+        # Расчет без указания конфига (должен использоваться значение по умолчанию 11.5)
+        price_with_default = calculate_selling_price(
+            quantity=10,
+            purchase_cost=1000,
+            logistics_rub=50000,
+            duty_percent=5,
+            weight=5,
+            delivery_time=30,
+            margin_percent=30
+        )
+        
+        # Расчет с явным указанием курса 12 (старое значение)
+        config_old = {
+            'calculation_constants': {
+                'conversion_rate': 12
+            }
+        }
+        price_with_12 = calculate_selling_price(
+            quantity=10,
+            purchase_cost=1000,
+            logistics_rub=50000,
+            duty_percent=5,
+            weight=5,
+            delivery_time=30,
+            margin_percent=30,
+            config=config_old
+        )
+        
+        # Расчет с явным указанием курса 11.5 (новое значение)
+        config_new = {
+            'calculation_constants': {
+                'conversion_rate': 11.5
+            }
+        }
+        price_with_11_5 = calculate_selling_price(
+            quantity=10,
+            purchase_cost=1000,
+            logistics_rub=50000,
+            duty_percent=5,
+            weight=5,
+            delivery_time=30,
+            margin_percent=30,
+            config=config_new
+        )
+        
+        # Цена с курсом 11.5 должна быть выше, чем с курсом 12
+        # (так как логистика в юанях будет больше при меньшем курсе)
+        assert price_with_11_5 > price_with_12, \
+            f"Цена с курсом 11.5 ({price_with_11_5}) должна быть больше цены с курсом 12 ({price_with_12})"
+        
+        # Цена по умолчанию должна совпадать с ценой с курсом 11.5
+        assert abs(price_with_default - price_with_11_5) < 0.01, \
+            f"Цена по умолчанию ({price_with_default}) должна совпадать с ценой с курсом 11.5 ({price_with_11_5})"
+    
+    def test_calculate_selling_price_with_credit(self):
+        """Тест расчета с включенным кредитом."""
+        # Тестовые данные
+        quantity = 10
+        purchase_cost = 1000  # юаней/шт
+        logistics_rub = 50000  # рублей
+        duty_percent = 5
+        weight = 5  # кг/шт
+        delivery_time = 30  # дней
+        margin_percent = 30
+        
+        # Расчет без кредита
+        price_without_credit = calculate_selling_price(
+            quantity=quantity,
+            purchase_cost=purchase_cost,
+            logistics_rub=logistics_rub,
+            duty_percent=duty_percent,
+            weight=weight,
+            delivery_time=delivery_time,
+            margin_percent=margin_percent,
+            use_credit=False,
+            use_bank_guarantee=False
+        )
+        
+        # Расчет с кредитом
+        price_with_credit = calculate_selling_price(
+            quantity=quantity,
+            purchase_cost=purchase_cost,
+            logistics_rub=logistics_rub,
+            duty_percent=duty_percent,
+            weight=weight,
+            delivery_time=delivery_time,
+            margin_percent=margin_percent,
+            use_credit=True,
+            use_bank_guarantee=False
+        )
+        
+        # Проверяем, что цена рассчитана
+        assert price_with_credit > 0
+        assert price_without_credit > 0
+        
+        # Цена с кредитом должна быть выше, чем без кредита
+        assert price_with_credit > price_without_credit, \
+            f"Цена с кредитом ({price_with_credit}) должна быть больше цены без кредита ({price_without_credit})"
+        
+        # Проверяем ожидаемые значения
+        # Логистика на единицу: (50000 / 11.5) × (5 / 50) = ~434.78 юаней
+        # Логистика КНР: 434.78 × 0.3 = ~130.43 юаней
+        # Логистика РФ: 434.78 × 0.7 = ~304.35 юаней
+        # Пошлина: (1000 + 130.43) × 0.05 = ~56.52 юани
+        # Конвертация: 1000 × 0.032 = 32 юани
+        # Кредит: 1000 × 0.16 / 365 × 30 = ~13.15 юаней (только delivery_time, без payment_days)
+        # Общие затраты: 1000 + 130.43 + 304.35 + 56.52 + 32 + 13.15 = ~1536.45 юаней
+        # Продажная цена: 1536.45 / (1 - 0.30) = ~2194.93 юаней
+        # 
+        # В Excel формула кредита: I28*16%/365*K15, где K15 = I15 + I16
+        # Если payment_days не указан, используется только delivery_time (I15)
+        
+        # Проверяем, что цена находится в ожидаемом диапазоне
+        # Ожидаемая цена с кредитом: ~2194.93 юаней, допускаем отклонение ±5
+        assert 2190 <= price_with_credit <= 2200, \
+            f"Цена с кредитом {price_with_credit} не в ожидаемом диапазоне [2190, 2200]"
+        
+        # Проверяем разницу между ценой с кредитом и без кредита
+        # Кредит должен добавить примерно 13.15 юаней к затратам
+        # Это должно увеличить цену примерно на 13.15 / (1 - 0.30) = ~18.79 юаней
+        price_difference = price_with_credit - price_without_credit
+        assert 15 <= price_difference <= 25, \
+            f"Разница в цене {price_difference} должна быть в диапазоне [15, 25] юаней"
+        
+        # Проверяем расчет затрат с кредитом
+        total_weight = weight * quantity  # 50 кг
+        logistics_total_yuan = logistics_rub / 11.5  # ~4347.83 юаней
+        logistics_cnr_per_unit = (logistics_total_yuan * 0.3 * weight) / total_weight  # ~130.43
+        logistics_rf_per_unit = (logistics_total_yuan * 0.7 * weight) / total_weight  # ~304.35
+        duty_per_unit = (purchase_cost + logistics_cnr_per_unit) * (duty_percent / 100)  # ~56.52
+        conversion_fee_per_unit = purchase_cost * 0.032  # 32
+        # Кредит рассчитывается как в Excel: I28*16%/365*K15, где K15 = I15 + I16
+        # Если payment_days не указан, используется только delivery_time (I15)
+        credit_cost_per_unit = purchase_cost * 0.16 / 365 * delivery_time  # ~13.15
+        total_cost_per_unit_with_credit = (
+            purchase_cost + 
+            logistics_cnr_per_unit + 
+            logistics_rf_per_unit + 
+            duty_per_unit + 
+            conversion_fee_per_unit + 
+            credit_cost_per_unit
+        )
+        
+        # Проверяем, что продажная цена больше затрат
+        assert price_with_credit > total_cost_per_unit_with_credit, \
+            f"Цена {price_with_credit} должна быть больше затрат {total_cost_per_unit_with_credit}"
+        
+        # Проверяем маржу (допускаем небольшую погрешность из-за округления)
+        actual_margin = (price_with_credit - total_cost_per_unit_with_credit) / price_with_credit * 100
+        assert 28 <= actual_margin <= 32, \
+            f"Маржа {actual_margin}% не в ожидаемом диапазоне [28%, 32%]"
+        
+        print(f"\nРезультаты расчета с кредитом:")
+        print(f"  Цена без кредита: {price_without_credit:.2f} юаней")
+        print(f"  Цена с кредитом: {price_with_credit:.2f} юаней")
+        print(f"  Разница: {price_difference:.2f} юаней")
+        print(f"  Кредитные затраты на единицу: {credit_cost_per_unit:.2f} юаней")
+        print(f"  Общие затраты на единицу с кредитом: {total_cost_per_unit_with_credit:.2f} юаней")
+        print(f"  Фактическая маржа: {actual_margin:.2f}%")
 
 
 if __name__ == "__main__":

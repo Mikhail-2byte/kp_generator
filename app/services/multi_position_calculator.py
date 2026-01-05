@@ -33,7 +33,7 @@ class MultiPositionCalculator(PriceCalculatorPort):
         self.pricing_mode = pricing_cfg.get('mode', 'global')
         
         # Константы расчета
-        self.CONVERSION_RATE = self.calc_config.get('conversion_rate', 12)
+        self.CONVERSION_RATE = self.calc_config.get('conversion_rate', 11.5)
         self.LOGISTICS_CNR_RATIO = self.calc_config.get('logistics_cnr_ratio', 0.3)
         self.LOGISTICS_RF_RATIO = self.calc_config.get('logistics_rf_ratio', 0.7)
         self.CONVERSION_FEE_RATE = self.calc_config.get('conversion_fee_rate', 0.032)
@@ -42,7 +42,8 @@ class MultiPositionCalculator(PriceCalculatorPort):
     def calculate_position_costs(
         self, position: Dict[str, Any], logistics_rub: float, 
         delivery_time: int, total_weight: float,
-        use_credit: bool = False
+        use_credit: bool = False,
+        payment_days: Optional[int] = None
     ) -> Dict[str, float]:
         """
         Рассчитывает все затраты для одной позиции.
@@ -52,6 +53,8 @@ class MultiPositionCalculator(PriceCalculatorPort):
             logistics_rub: Общая стоимость логистики (в рублях)
             delivery_time: Время доставки (в днях)
             total_weight: Общий вес всех позиций (в кг)
+            use_credit: Использовать ли кредит в расчете
+            payment_days: Количество дней оплаты (для расчета кредита, как в Excel K15 = I15 + I16)
         
         Returns:
             Словарь с рассчитанными затратами:
@@ -93,8 +96,11 @@ class MultiPositionCalculator(PriceCalculatorPort):
         conversion_fee_per_unit = conversion_fee / quantity if quantity > 0 else 0
         
         # Расчет кредитных затрат (только если use_credit=True)
+        # В Excel формула: I28*16%/365*K15, где K15 = I15 + I16 (срок поставки + условия оплаты)
         if use_credit:
-            credit_cost = cost_price * quantity * self.CREDIT_RATE / 365 * delivery_time
+            # Используем delivery_time + payment_days, как в Excel (K15 = I15 + I16)
+            credit_days = delivery_time + (payment_days if payment_days is not None else 0)
+            credit_cost = cost_price * quantity * self.CREDIT_RATE / 365 * credit_days
             credit_cost_per_unit = credit_cost / quantity if quantity > 0 else 0
         else:
             credit_cost_per_unit = 0
@@ -185,7 +191,10 @@ class MultiPositionCalculator(PriceCalculatorPort):
         total_costs = 0
         
         for position in positions:
-            costs = self.calculate_position_costs(position, logistics_rub, delivery_time, total_weight, use_credit=use_credit)
+            costs = self.calculate_position_costs(
+                position, logistics_rub, delivery_time, total_weight, 
+                use_credit=use_credit, payment_days=payment_days
+            )
             position_costs.append({
                 'position': position,
                 'costs': costs
@@ -213,9 +222,11 @@ class MultiPositionCalculator(PriceCalculatorPort):
                         final_price = cost_per_unit / (1 - target_margin_percent / 100)
                     
                     # Итеративно уточняем цену с учетом банковской гарантии
+                    # В Excel формула: I24*3%/365*(I15+I16), где I15+I16 = delivery_time + payment_days
+                    bank_guarantee_days = delivery_time + payment_days  # K15 = I15 + I16
                     for _ in range(5):  # Максимум 5 итераций
                         revenue_with_vat = final_price * quantity * 1.2
-                        bank_guarantee_cost = revenue_with_vat * 0.03 / 365 * payment_days
+                        bank_guarantee_cost = revenue_with_vat * 0.03 / 365 * bank_guarantee_days
                         bank_guarantee_cost_per_unit = bank_guarantee_cost / quantity if quantity > 0 else 0
                         
                         # Пересчитываем цену с учетом банковской гарантии
@@ -265,7 +276,9 @@ class MultiPositionCalculator(PriceCalculatorPort):
             # Если используется банковская гарантия, нужен итеративный расчет
             if use_bank_guarantee and payment_days is not None:
                 # Итеративный расчет с учетом банковской гарантии
-                # Банковская гарантия = (выручка с НДС) * 0.03 / 365 * payment_days
+                # В Excel формула: I24*3%/365*(I15+I16), где I15+I16 = delivery_time + payment_days
+                # Банковская гарантия = (выручка с НДС) * 0.03 / 365 * (delivery_time + payment_days)
+                bank_guarantee_days = delivery_time + payment_days  # K15 = I15 + I16
                 target_revenue = total_costs / (1 - target_margin_percent / 100)
                 price_coefficient = target_revenue / total_costs if total_costs > 0 else 1
                 
@@ -277,7 +290,7 @@ class MultiPositionCalculator(PriceCalculatorPort):
                         for pos_data in position_costs
                     )
                     revenue_with_vat = test_revenue * 1.2
-                    bank_guarantee_cost = revenue_with_vat * 0.03 / 365 * payment_days
+                    bank_guarantee_cost = revenue_with_vat * 0.03 / 365 * bank_guarantee_days
                     
                     # Пересчитываем коэффициент с учетом банковской гарантии
                     total_costs_with_guarantee = total_costs + bank_guarantee_cost

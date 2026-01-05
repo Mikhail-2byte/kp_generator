@@ -60,7 +60,7 @@ def calculate_selling_price(
     # Получаем константы из конфига или используем значения по умолчанию
     calc_config = config.get('calculation_constants', {}) if config else {}
     
-    CONVERSION_RATE = calc_config.get('conversion_rate', 12)  # Курс юаня к рублю
+    CONVERSION_RATE = calc_config.get('conversion_rate', 11.5)  # Курс юаня к рублю
     LOGISTICS_CNR_RATIO = calc_config.get('logistics_cnr_ratio', 0.3)  # Доля логистики КНР
     LOGISTICS_RF_RATIO = calc_config.get('logistics_rf_ratio', 0.7)  # Доля логистики РФ
     CONVERSION_FEE_RATE = calc_config.get('conversion_fee_rate', 0.032)  # Комиссия за конвертацию 3.2%
@@ -84,8 +84,11 @@ def calculate_selling_price(
     conversion_fee_per_unit = conversion_fee / quantity
     
     # Расчет кредитных затрат (только если use_credit=True)
+    # В Excel формула: I28*16%/365*K15, где K15 = I15 + I16 (срок поставки + условия оплаты)
     if use_credit:
-        credit_cost = purchase_cost * quantity * CREDIT_RATE / 365 * delivery_time
+        # Используем delivery_time + payment_days, как в Excel (K15 = I15 + I16)
+        credit_days = delivery_time + (payment_days if payment_days is not None else 0)
+        credit_cost = purchase_cost * quantity * CREDIT_RATE / 365 * credit_days
         credit_cost_per_unit = credit_cost / quantity
     else:
         credit_cost_per_unit = 0
@@ -104,15 +107,17 @@ def calculate_selling_price(
     # Если используется банковская гарантия, нужно учесть её в итеративном расчете
     if use_bank_guarantee and payment_days is not None:
         # Итеративный расчет с учетом банковской гарантии
-        # Банковская гарантия = (выручка с НДС) * 0.03 / 365 * payment_days
+        # В Excel формула: I24*3%/365*(I15+I16), где I15+I16 = delivery_time + payment_days
+        # Банковская гарантия = (выручка с НДС) * 0.03 / 365 * (delivery_time + payment_days)
         # Выручка с НДС = selling_price_per_unit * quantity * 1.2
         # Начинаем с цены без банковской гарантии
         selling_price_per_unit = total_cost_per_unit / (1 - margin_percent / 100)
         
         # Итеративно уточняем цену с учетом банковской гарантии
+        bank_guarantee_days = delivery_time + payment_days  # K15 = I15 + I16
         for _ in range(5):  # Максимум 5 итераций
             revenue_with_vat = selling_price_per_unit * quantity * 1.2
-            bank_guarantee_cost = revenue_with_vat * 0.03 / 365 * payment_days
+            bank_guarantee_cost = revenue_with_vat * 0.03 / 365 * bank_guarantee_days
             bank_guarantee_cost_per_unit = bank_guarantee_cost / quantity
             
             # Пересчитываем цену с учетом банковской гарантии

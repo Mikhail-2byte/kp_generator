@@ -91,41 +91,36 @@ class GenerationOrchestrator:
         Returns:
             Tuple[position_prices, total_general_price]
         """
-        # Увеличиваем целевую маржу на 0.5-1% для компенсации округления и дополнительных затрат в Excel
-        # Это гарантирует, что итоговая маржа в Excel будет не меньше целевой
-        adjusted_margin = margin_percent + 0.5  # Добавляем 0.5% для компенсации
-        
         if len(positions) == 1:
             # Для одной позиции используем старый метод
             result = self.calculator.calculate_legacy_single_position(
-                positions[0], logistics_rub, delivery_time, adjusted_margin,
+                positions[0], logistics_rub, delivery_time, margin_percent,
                 use_credit=use_credit, use_bank_guarantee=use_bank_guarantee,
                 payment_days=payment_days
             )
             position_prices = [result]
-            # Округляем final_price вверх до целого числа (чтобы маржа была не меньше целевой)
-            final_price_rounded = math.ceil(result['final_price'])
-            total_general_price = final_price_rounded * result['position']['quantity']
+            # Используем точное значение цены без округления
+            final_price = result['final_price']
+            total_general_price = final_price * result['position']['quantity']
         else:
             # Для множественных позиций используем новый метод с единой маржой
             calculation_result = self.calculator.calculate_multi_position_prices(
-                positions, logistics_rub, delivery_time, adjusted_margin,
+                positions, logistics_rub, delivery_time, margin_percent,
                 use_credit=use_credit, use_bank_guarantee=use_bank_guarantee,
                 payment_days=payment_days
             )
             position_prices = calculation_result['positions']
-            # Пересчитываем total_general_price с округлением final_price вверх до целого числа
+            # Рассчитываем total_general_price без округления
             total_general_price = 0
             for pos_price in position_prices:
-                final_price_rounded = math.ceil(pos_price['final_price'])
+                final_price = pos_price['final_price']
                 quantity = pos_price['position']['quantity']
-                total_general_price += final_price_rounded * quantity
+                total_general_price += final_price * quantity
         
-        # Добавляем округленные вверх final_price в позиции для сохранения в базе данных
+        # Добавляем final_price в позиции для сохранения в базе данных (без округления)
         for i, pos_price in enumerate(position_prices):
             if i < len(positions):
-                final_price_rounded = math.ceil(pos_price['final_price'])
-                positions[i]['final_price'] = final_price_rounded
+                positions[i]['final_price'] = pos_price['final_price']
         
         return position_prices, total_general_price
     
@@ -244,10 +239,11 @@ class GenerationOrchestrator:
         use_credit = finance_credit and str(finance_credit).lower() in ['1', 'true', 'on', 'yes']
         use_bank_guarantee = finance_bank_guarantee and str(finance_bank_guarantee).lower() in ['1', 'true', 'on', 'yes']
         
-        # Извлекаем количество дней оплаты для банковской гарантии
+        # Извлекаем количество дней оплаты для кредита и банковской гарантии
+        # В Excel формула кредита: I28*16%/365*K15, где K15 = I15 + I16 (срок поставки + условия оплаты)
         payment_terms = cleaned_data.get('payment_terms', '').strip()
         payment_days = None
-        if use_bank_guarantee and payment_terms:
+        if (use_credit or use_bank_guarantee) and payment_terms:
             # Пытаемся извлечь число дней из условий оплаты
             # Используем тот же метод, что и в multi_position_processor
             from app.services.multi_position_processor import MultiPositionProcessor

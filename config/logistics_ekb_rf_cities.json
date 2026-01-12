@@ -39,6 +39,11 @@
       "name": "Нижнекамск",
       "region": "Республика Татарстан",
       "distance_from_ekb_km": 670
+    },
+    {
+      "name": "Асбест",
+      "region": "Свердловская область",
+      "distance_from_ekb_km": 107
     }
   ]
 }

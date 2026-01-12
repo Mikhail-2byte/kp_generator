@@ -8,7 +8,7 @@
     {% set selected_budget_region = (form_data.budget_region if form_data and form_data.budget_region else 'cn') %}
     {% set finance_credit_raw = form_data.finance_credit if form_data and form_data.finance_credit is not none else '' %}
     {% set finance_bank_guarantee_raw = form_data.finance_bank_guarantee if form_data and form_data.finance_bank_guarantee is not none else '' %}
-    {% set finance_credit_checked = (finance_credit_raw|string|lower) in ['1', 'true', 'on', 'yes'] %}
+    {% set finance_credit_checked = (finance_credit_raw|string|lower) in ['1', 'true', 'on', 'yes'] if finance_credit_raw else True %}
     {% set finance_bank_guarantee_checked = (finance_bank_guarantee_raw|string|lower) in ['1', 'true', 'on', 'yes'] %}
     <form action="{{ url_for('main.generate') }}" method="post" novalidate class="card-stack" id="generateForm">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -542,7 +542,7 @@
 
             // Сбрасываем чекбоксы финансирования
             const financeCredit = form.querySelector('input[name="finance_credit"]');
-            if (financeCredit) financeCredit.checked = false;
+            if (financeCredit) financeCredit.checked = true;
 
             const financeBankGuarantee = form.querySelector('input[name="finance_bank_guarantee"]');
             if (financeBankGuarantee) financeBankGuarantee.checked = false;

@@ -3331,6 +3331,39 @@ button[disabled] {
   border-bottom: none;
 }
 
+/* Стили для ячейки с названием тендера */
+.data-table td.tender-cell-wrapper {
+  max-width: 300px;
+  width: 300px;
+}
+
+.tender-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.tender-company {
+  font-weight: 500;
+  color: var(--foreground);
+  line-height: 1.4;
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.tender-number {
+  font-size: 13px;
+  color: var(--muted-foreground);
+  line-height: 1.4;
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
 .badge {
   display: inline-flex;
   align-items: center;

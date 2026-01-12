@@ -106,7 +106,7 @@
                         data-username="{{ (author_display or '')|lower }}"
                         data-manager="{{ (author_display or '')|lower }}">
                         <td>{{ item.timestamp }}</td>
-                        <td>
+                        <td class="tender-cell-wrapper">
                             <div class="tender-cell">
                                 <div class="tender-company">{{ item.company or 'Без заказчика' }}</div>
                                 <div class="tender-number">{{ group.display_tender }}</div>
@@ -1964,7 +1964,7 @@
                         data-username="${(authorDisplay || '').toLowerCase()}"
                         data-manager="${(authorDisplay || '').toLowerCase()}">
                         <td>${item.timestamp || ''}</td>
-                        <td>
+                        <td class="tender-cell-wrapper">
                             <div class="tender-cell">
                                 <div class="tender-company">${item.company || 'Без заказчика'}</div>
                                 <div class="tender-number">${displayTender}</div>

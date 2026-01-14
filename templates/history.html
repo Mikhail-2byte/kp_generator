@@ -1868,7 +1868,9 @@
                 });
 
                 // Выполняем AJAX запрос
-                const response = await fetch(`/api/v1/generations?${apiParams.toString()}`);
+                const response = await fetch(`/api/v1/generations?${apiParams.toString()}`, {
+                    credentials: 'same-origin'
+                });
                 if (!response.ok) {
                     throw new Error('Ошибка при выполнении поиска');
                 }

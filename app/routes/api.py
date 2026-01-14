@@ -6,6 +6,7 @@ from flask import Blueprint, jsonify, request
 from flask_login import login_required
 
 from app.core.exceptions import NotFoundError, ValidationError
+from app.core.extensions import csrf
 from app.services.repositories import (
     customer_contact_repository,
     generation_repository,
@@ -35,10 +36,11 @@ def health() -> Dict[str, Any]:
 
 
 @api_bp.route('/generations', methods=['GET'])
-@login_required
+@csrf.exempt
 def list_generations() -> Dict[str, Any]:
     """
     Получить список генераций с пагинацией.
+    Доступен для неавторизованных пользователей.
     
     Query Parameters:
         page: Номер страницы (по умолчанию 1)
@@ -98,6 +100,7 @@ def list_generations() -> Dict[str, Any]:
 
 
 @api_bp.route('/generations/<int:generation_id>', methods=['GET'])
+@csrf.exempt
 @login_required
 def get_generation(generation_id: int) -> Dict[str, Any]:
     """
@@ -125,6 +128,7 @@ def get_generation(generation_id: int) -> Dict[str, Any]:
 
 
 @api_bp.route('/calculate', methods=['POST'])
+@csrf.exempt
 @login_required
 def calculate_prices() -> Dict[str, Any]:
     """
@@ -293,6 +297,7 @@ def get_logistics_cities() -> Dict[str, Any]:
 
 
 @api_bp.route('/customers', methods=['GET'])
+@csrf.exempt
 @login_required
 def list_customers() -> Dict[str, Any]:
     """
@@ -315,6 +320,7 @@ def list_customers() -> Dict[str, Any]:
 
 
 @api_bp.route('/customers', methods=['POST'])
+@csrf.exempt
 @login_required
 def create_customer() -> Dict[str, Any]:
     """
@@ -354,6 +360,7 @@ def create_customer() -> Dict[str, Any]:
 
 
 @api_bp.route('/customers/<int:customer_id>', methods=['GET'])
+@csrf.exempt
 @login_required
 def get_customer(customer_id: int) -> Dict[str, Any]:
     """
@@ -381,6 +388,7 @@ def get_customer(customer_id: int) -> Dict[str, Any]:
 
 
 @api_bp.route('/customers/<int:customer_id>', methods=['PUT'])
+@csrf.exempt
 @login_required
 def update_customer(customer_id: int) -> Dict[str, Any]:
     """
@@ -427,6 +435,7 @@ def update_customer(customer_id: int) -> Dict[str, Any]:
 
 
 @api_bp.route('/customers/<int:customer_id>', methods=['DELETE'])
+@csrf.exempt
 @login_required
 def delete_customer(customer_id: int) -> Dict[str, Any]:
     """

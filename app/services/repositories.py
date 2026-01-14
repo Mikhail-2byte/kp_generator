@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import json
+import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy import func, or_
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.database import DatabaseService, database_service
 from app.database.database import _session_scope
@@ -205,7 +207,8 @@ class AuditLogRepository:
                 )
                 session.add(log_record)
                 return True
-        except Exception:
+        except (SQLAlchemyError, json.JSONEncodeError) as exc:
+            logging.error('Failed to create audit log: %s', exc)
             return False
 
     def get_logs(

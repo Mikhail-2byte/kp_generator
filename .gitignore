@@ -38,6 +38,7 @@ wheels/
 *.sqlite3
 *.db-journal
 kp_generator.db
+*.backup
 
 # Runtime generated data
 logs/

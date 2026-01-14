@@ -84,7 +84,7 @@ class TestGetSafeFilename:
     def test_get_safe_filename_empty(self):
         """Тест с пустым именем."""
         filename = get_safe_filename('')
-        assert filename == ''
+        assert filename == 'file'  # Пустое имя заменяется на 'file'
 
 
 class TestExtractPositionsFromForm:
@@ -222,6 +222,39 @@ class TestExtractPositionsFromForm:
         positions = extract_positions_from_form(form_data)
         assert len(positions) == 1
         assert positions[0]['cost_price_per_kg'] == '200'
+
+    def test_extract_positions_with_payload(self):
+        """Тест извлечения позиций из positions_payload."""
+        positions_data = [
+            {'product': 'Товар 1', 'quantity': '10', 'cost_price': '1000'},
+            {'product': 'Товар 2', 'quantity': '20', 'cost_price': '2000'}
+        ]
+        import json
+        form_data = {
+            'positions_payload': json.dumps(positions_data, ensure_ascii=False)
+        }
+        
+        positions = extract_positions_from_form(form_data)
+        assert len(positions) == 2
+        assert positions[0]['product'] == 'Товар 1'
+        assert positions[1]['product'] == 'Товар 2'
+
+    def test_extract_positions_with_path_traversal_protection(self):
+        """Тест защиты от path traversal в get_safe_filename."""
+        dangerous_names = [
+            '../../../etc/passwd',
+            '..\\..\\windows\\system32',
+            '/etc/shadow',
+            'C:\\Windows\\System32',
+            '../../templates',
+        ]
+        
+        for dangerous_name in dangerous_names:
+            safe_name = get_safe_filename(dangerous_name)
+            assert '..' not in safe_name
+            assert '/' not in safe_name or safe_name == Path(safe_name).name
+            assert '\\' not in safe_name or safe_name == Path(safe_name).name
+            assert len(safe_name) <= 50
 
 
 if __name__ == "__main__":

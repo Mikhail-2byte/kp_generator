@@ -26,6 +26,9 @@ def create_app() -> Flask:
     app_config = load_config(app)
     app.config['APP_SETTINGS'] = app_config
 
+    # Ограничение размера загружаемых файлов (10 MB)
+    app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
+
     # Настраиваем защиту, логирование и подключаем расширения к приложению
     setup_app_security(app, app_config)
     setup_logging(app, app_config)

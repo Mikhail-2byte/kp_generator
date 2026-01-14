@@ -3918,12 +3918,6 @@ body[data-page="index"] .summary-card {
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
 }
 
-body[data-page="index"] .position-block {
-  background: oklch(0.99 0 0);
-  border: 1px solid oklch(0.94 0 0);
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
-}
-
 body[data-page="index"] .logistics-panel {
   background: oklch(0.985 0 0);
   border: 1px solid oklch(0.93 0 0);
@@ -3966,13 +3960,8 @@ body[data-page="index"] .position-block {
   transform: none;
 }
 
-body[data-page="index"] .position-block + .position-block {
-  border-top: 1px solid oklch(0.93 0 0);
-}
-
 body[data-page="index"] .position-block:hover {
   box-shadow: none;
-  border-color: inherit;
   transform: none;
 }
 

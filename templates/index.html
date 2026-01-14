@@ -1037,6 +1037,7 @@
         const renderGenerationDetails = (data) => {
             const format = (value, empty = 'Не указан') => value ? value : empty;
             const formatCurrencyLocal = (value) => Number(value || 0).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const formatCurrencyLocalInt = (value) => Math.round(Number(value || 0)).toLocaleString('ru-RU');
             const formatNumberLocal = (value) => Number(value || 0).toLocaleString('ru-RU');
             const authorName = [data.last_name, data.first_name].filter(Boolean).join(' ').trim();
             const authorDisplay = authorName || data.username || 'Не указан';
@@ -1097,8 +1098,8 @@
                 }
             }
 
-            // Округляем общую стоимость продажи "вверх" до ближайших 10 рублей (как в бюджете Excel)
-            const roundedTotalSalePrice = totalSalePrice > 0 ? Math.ceil(totalSalePrice / 10) * 10 : totalSalePrice;
+            // Округляем общую стоимость продажи до целого числа (как в Excel и Word)
+            const roundedTotalSalePrice = totalSalePrice > 0 ? Math.round(totalSalePrice) : totalSalePrice;
 
             const renderPositionsTable = () => {
                 if (!data.positions || data.positions.length === 0) {
@@ -1136,8 +1137,8 @@
                     }
                     // Если final_price уже есть в позиции, он уже округлен (как в Excel), используем его напрямую
                     const finalPriceRounded = finalPrice;
-                    // Итоговая продажная стоимость позиции (цена за единицу * количество)
-                    const totalSalePrice = finalPriceRounded * quantity;
+                    // Итоговая продажная стоимость позиции (цена за единицу * количество), округляем до целого
+                    const totalSalePrice = Math.round(finalPriceRounded * quantity);
 
                     const weight = Number(pos.weight || 0);
                     const weightPerUnit = quantity > 0 ? weight / quantity : 0;
@@ -1154,7 +1155,7 @@
                             <td class="text-right">${formatCurrencyLocal(costPrice)}</td>
                             <td class="text-right">${formatCurrencyLocal(costPricePerKg)}</td>
                             <td class="text-center">${format(pos.duty_percent, '0')}%</td>
-                            <td class="text-right">${formatCurrencyLocal(totalSalePrice)}</td>
+                            <td class="text-right">${formatCurrencyLocalInt(totalSalePrice)}</td>
                         </tr>
                     `;
                 }).join('');
@@ -1253,7 +1254,7 @@
                                 </div>
                                 <div class="indicator-item financial-item highlight sale">
                                     <span class="indicator-label">Общая стоимость продажи</span>
-                                    <span class="indicator-value price-final">${formatCurrencyLocal(roundedTotalSalePrice)}</span>
+                                    <span class="indicator-value price-final">${formatCurrencyLocalInt(roundedTotalSalePrice)}</span>
                                 </div>
                                 <div class="indicator-item financial-item margin">
                                     <span class="indicator-label">Маржа</span>

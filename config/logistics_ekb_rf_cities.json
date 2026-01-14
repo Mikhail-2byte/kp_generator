@@ -44,6 +44,21 @@
       "name": "Асбест",
       "region": "Свердловская область",
       "distance_from_ekb_km": 107
+    },
+    {
+      "name": "Саранск",
+      "region": "респ. Мордовия",
+      "distance_from_ekb_km": 1250
+    },
+    {
+      "name": "Заинск",
+      "region": "Татарстан",
+      "distance_from_ekb_km": 680
+    },
+    {
+      "name": "Усть-Джегута",
+      "region": "Черкесская Республика",
+      "distance_from_ekb_km": 2400
     }
   ]
 }

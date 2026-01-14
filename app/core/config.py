@@ -83,7 +83,7 @@ def load_config(app):
             debug_flag = os.environ.get('FLASK_DEBUG')
 
         env_config = {
-            'secret_key': os.environ.get('SECRET_KEY') or profile_config.get('secret_key'),
+            'secret_key': os.environ.get('SECRET_KEY'),
             'database_url': os.environ.get('DATABASE_URL') or profile_config.get('database_url') or 'sqlite:///kp_generator.db',
             'debug': str(debug_flag).lower() == 'true' if debug_flag is not None else profile_config.get('debug', False),
             'log_level': os.environ.get('LOG_LEVEL') or profile_config.get('log_level', 'INFO'),
@@ -112,7 +112,7 @@ def setup_app_security(app, config):
 
     # В продакшене запрещаем автогенерацию ключа, чтобы не ронять сессии между рестартами
     if (config.get('profile') or '').lower() == 'production' and not secret_key:
-        raise RuntimeError('SECRET_KEY обязателен в production. Задайте переменную окружения или config/environments/production.json')
+        raise RuntimeError('SECRET_KEY обязателен в production. Задайте переменную окружения SECRET_KEY')
 
     secret_key = secret_key or secrets.token_hex(32)
     app.secret_key = secret_key

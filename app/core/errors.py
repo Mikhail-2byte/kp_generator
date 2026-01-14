@@ -1,6 +1,7 @@
 from typing import Any
 
 from flask import Response, flash, jsonify, render_template, request
+from werkzeug.exceptions import RequestEntityTooLarge
 
 from app.core.exceptions import (
     CalculationError,
@@ -50,6 +51,20 @@ def register_error_handlers(app) -> None:
             '500.html',
             **build_context('index', 'Внутренняя ошибка')
         ), 500
+    
+    @app.errorhandler(RequestEntityTooLarge)
+    def handle_request_entity_too_large(_error: RequestEntityTooLarge) -> tuple[str, int]:
+        """Обрабатывает ошибку превышения максимального размера загружаемого файла."""
+        if _is_api_request():
+            return jsonify({
+                'error': 'file_too_large',
+                'message': 'Загружаемый файл слишком большой. Максимальный размер: 10 МБ'
+            }), 413
+        flash('Загружаемый файл слишком большой. Максимальный размер: 10 МБ', 'danger')
+        return render_template(
+            'index.html',
+            **build_context('index', 'Файл слишком большой')
+        ), 413
     
     @app.errorhandler(NotFoundError)
     def handle_not_found(error: NotFoundError) -> tuple[str, int]:

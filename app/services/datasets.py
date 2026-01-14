@@ -367,7 +367,7 @@ def load_logistics_cities() -> List[Dict[str, Any]]:
     return load_all_logistics_cities()
 
 
-def save_logistics_cities(cities: List[Dict[str, Any]], *, actor: Optional[str] = None):
+def save_logistics_cities(cities: List[Dict[str, Any]], *, actor: Optional[str] = None) -> None:
     """Сохраняет обновлённый список тарифов логистики в JSON."""
     logistics_path = CONFIG_DIR / 'logistics_cities.json'
     logistics_path.parent.mkdir(parents=True, exist_ok=True)
@@ -720,7 +720,7 @@ def load_orders_documents() -> List[Dict[str, Any]]:
     return normalized_orders
 
 
-def refresh_orders_documents():
+def refresh_orders_documents() -> None:
     """Обновляет кэш распоряжений из конфигурационного файла."""
     global ORDERS_REGISTRY
     ORDERS_REGISTRY = load_orders_documents()
@@ -774,7 +774,7 @@ def load_task_templates() -> List[Dict[str, Any]]:
     return normalized_templates
 
 
-def refresh_task_templates():
+def refresh_task_templates() -> None:
     """Обновляет кэш шаблонов задач."""
     global TASK_TEMPLATES
     TASK_TEMPLATES = load_task_templates()
@@ -830,7 +830,7 @@ def load_task_instructions() -> List[Dict[str, Any]]:
     return normalized_instructions
 
 
-def refresh_task_instructions():
+def refresh_task_instructions() -> None:
     """Обновляет кэш инструкций."""
     global TASK_INSTRUCTIONS
     TASK_INSTRUCTIONS = load_task_instructions()
@@ -1084,8 +1084,8 @@ def export_gb_materials_to_excel() -> bytes:
             try:
                 if cell.value:
                     max_length = max(max_length, len(str(cell.value)))
-            except Exception:
-                pass
+            except (AttributeError, TypeError):
+                pass  # Игнорируем ошибки преобразования значений ячеек
         adjusted_width = min(max_length + 2, 50)
         ws.column_dimensions[column_letter].width = adjusted_width
     
@@ -1097,7 +1097,7 @@ def export_gb_materials_to_excel() -> bytes:
     return buffer.getvalue()
 
 
-def save_orders_documents(orders: List[Dict[str, Any]], *, actor: Optional[str] = None):
+def save_orders_documents(orders: List[Dict[str, Any]], *, actor: Optional[str] = None) -> None:
     """Сохраняет список распоряжений и обновляет кэш."""
     orders_path = CONFIG_DIR / 'orders_documents.json'
     orders_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1112,7 +1112,7 @@ def save_orders_documents(orders: List[Dict[str, Any]], *, actor: Optional[str] 
     load_orders_documents.cache_clear()  # type: ignore
 
 
-def save_task_templates(templates: List[Dict[str, Any]], *, actor: Optional[str] = None):
+def save_task_templates(templates: List[Dict[str, Any]], *, actor: Optional[str] = None) -> None:
     """Сохраняет перечень шаблонов и обновляет кэш."""
     templates_path = CONFIG_DIR / 'task_templates.json'
     templates_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1127,7 +1127,7 @@ def save_task_templates(templates: List[Dict[str, Any]], *, actor: Optional[str]
     load_task_templates.cache_clear()  # type: ignore
 
 
-def save_task_instructions(instructions: List[Dict[str, Any]], *, actor: Optional[str] = None):
+def save_task_instructions(instructions: List[Dict[str, Any]], *, actor: Optional[str] = None) -> None:
     """Сохраняет список инструкций и обновляет кэш."""
     instructions_path = CONFIG_DIR / 'instructions_tasks.json'
     instructions_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1142,7 +1142,7 @@ def save_task_instructions(instructions: List[Dict[str, Any]], *, actor: Optiona
     load_task_instructions.cache_clear()  # type: ignore
 
 
-def save_with_version(collection: str, data: Dict[str, Any], *, actor: Optional[str] = None):
+def save_with_version(collection: str, data: Dict[str, Any], *, actor: Optional[str] = None) -> None:
     """Обёртка для сохранения произвольных данных с версионированием."""
     _snapshot_version(collection, data, actor)
 
@@ -1227,7 +1227,7 @@ def load_content_version(collection: str, filename: str) -> Optional[Dict[str, A
         return None
 
 
-def init_app(_app):
+def init_app(_app: Any) -> None:
     """Инициализирует кэшированные данные при старте приложения."""
     refresh_gb_analogs()
     refresh_duty_rates()
@@ -1237,7 +1237,7 @@ def init_app(_app):
     refresh_task_instructions()
 
 
-def _snapshot_version(collection: str, payload: Dict[str, Any], actor: Optional[str] = None):
+def _snapshot_version(collection: str, payload: Dict[str, Any], actor: Optional[str] = None) -> None:
     """Сохраняет резервную копию данных в каталоге версий."""
     if not payload:
         return

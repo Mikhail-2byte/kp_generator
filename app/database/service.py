@@ -27,7 +27,7 @@ from .database import (
 class DatabaseService:
     """Фасад поверх функций модуля database для удобства внедрения."""
 
-    def connect(self):
+    def connect(self) -> Any:
         return connect_db()
 
     def init(self) -> None:
@@ -46,10 +46,10 @@ class DatabaseService:
     ) -> Optional[int]:
         return create_user(username, password_hash, last_name, first_name, role, contact_info)
 
-    def get_user_by_username(self, username: str):
+    def get_user_by_username(self, username: str) -> Any:
         return get_user_by_username(username)
 
-    def get_user_by_id(self, user_id: int):
+    def get_user_by_id(self, user_id: int) -> Any:
         return get_user_by_id(user_id)
 
     def update_last_login(self, user_id: int) -> bool:
@@ -110,7 +110,7 @@ class DatabaseService:
         search: Optional[str] = None,
         sort_by: Optional[str] = None,
         sort_order: Optional[str] = None,
-    ):
+    ) -> Any:
         return get_generation_history(
             config,
             page=page,
@@ -127,24 +127,24 @@ class DatabaseService:
             sort_order=sort_order,
         )
 
-    def get_generation_details(self, record_id: int):
+    def get_generation_details(self, record_id: int) -> Any:
         return get_generation_details(record_id)
 
-    def load_generation_data(self, record_id: int):
+    def load_generation_data(self, record_id: int) -> Any:
         return load_generation_data(record_id)
 
-    def get_generations_by_drawing(self, drawing_number: str):
+    def get_generations_by_drawing(self, drawing_number: str) -> Any:
         return get_generations_by_drawing(drawing_number)
 
-    def get_generations_by_tender(self, tender_number: str):
+    def get_generations_by_tender(self, tender_number: str) -> Any:
         return get_generations_by_tender(tender_number)
 
-    def get_unique_companies(self):
+    def get_unique_companies(self) -> List[str]:
         return get_unique_companies()
 
     # --- Админская аналитика ----------------------------------------------------------
 
-    def get_admin_user_activity(self, limit: int = 10):
+    def get_admin_user_activity(self, limit: int = 10) -> Any:
         return get_admin_user_activity(limit)
 
 

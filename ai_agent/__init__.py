@@ -87,7 +87,7 @@ def __getattr__(name: str):
         return cache_ai_response
     if name == 'get_cached_ai_response':
         from ai_agent.cache_manager import get_cached_ai_response
-        return cache_ai_response
+        return get_cached_ai_response
     if name == 'invalidate_ai_cache':
         from ai_agent.cache_manager import invalidate_ai_cache
         return invalidate_ai_cache

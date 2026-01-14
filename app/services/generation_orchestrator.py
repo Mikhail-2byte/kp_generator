@@ -185,8 +185,11 @@ class GenerationOrchestrator:
         user_id: Optional[int]
     ) -> bool:
         """Сохраняет историю генерации."""
+        # Округляем цены до целого числа, как в Excel и Word
+        rounded_final_price = round(final_price) if final_price is not None else None
+        rounded_total_general_price = round(total_general_price) if total_general_price is not None else None
         saved = generation_repository.save_history(
-            form_data, final_price, self.app_config, user_id, total_general_price
+            form_data, rounded_final_price, self.app_config, user_id, rounded_total_general_price
         )
         if saved:
             tender_number = form_data.get('tender_number', '').strip() or None

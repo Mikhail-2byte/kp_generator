@@ -574,6 +574,7 @@ Email: ivanov@example.com
             const renderDetails = (data) => {
                 const format = (value, empty = 'Не указан') => value ? value : empty;
                 const formatCurrency = (value) => Number(value || 0).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const formatCurrencyInt = (value) => Math.round(Number(value || 0)).toLocaleString('ru-RU');
                 const formatNumber = (value) => Number(value || 0).toLocaleString('ru-RU');
                 const authorName = [data.last_name, data.first_name].filter(Boolean).join(' ').trim();
                 const authorDisplay = authorName || data.username || 'Не указан';
@@ -648,7 +649,7 @@ Email: ivanov@example.com
                         const weight = Number(pos.weight || 0);
                         const weightPerUnit = quantity > 0 ? weight / quantity : 0;
                         const costPricePerKg = weightPerUnit > 0 ? costPrice / weightPerUnit : 0;
-                        const totalSalePrice = finalPrice * quantity;
+                        const totalSalePrice = Math.round(finalPrice * quantity);
 
                         return `
                             <tr>
@@ -661,7 +662,7 @@ Email: ivanov@example.com
                                 <td class="text-right">${formatCurrency(costPrice)}</td>
                                 <td class="text-right">${formatCurrency(costPricePerKg)}</td>
                                 <td class="text-center">${format(pos.duty_percent, '0')}%</td>
-                                <td class="text-right">${formatCurrency(totalSalePrice)}</td>
+                                <td class="text-right">${formatCurrencyInt(totalSalePrice)}</td>
                             </tr>
                         `;
                     }).join('');
@@ -762,7 +763,7 @@ Email: ivanov@example.com
                                         </div>
                                         <div class="indicator-item financial-item highlight sale">
                                             <span class="indicator-label">Общая стоимость продажи</span>
-                                            <span class="indicator-value price-final">${formatCurrency(totalSalePrice)}</span>
+                                            <span class="indicator-value price-final">${formatCurrencyInt(Math.round(totalSalePrice))}</span>
                                         </div>
                                         <div class="indicator-item financial-item margin">
                                             <span class="indicator-label">Маржа</span>

@@ -4,6 +4,7 @@ import math
 import sqlite3
 from contextlib import contextmanager
 from datetime import datetime, timezone
+from functools import lru_cache
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence
 
@@ -197,6 +198,37 @@ def _session_scope():
         SessionLocal.remove()
 
 
+def _sanitize_search_term(search: Optional[str], max_length: int = 100) -> Optional[str]:
+    """
+    Санитизирует поисковый запрос для использования в SQL LIKE.
+    
+    Ограничивает длину, убирает лишние пробелы и защищает от DoS-атак.
+    
+    Args:
+        search: Исходная строка поиска
+        max_length: Максимальная длина результата (по умолчанию 100)
+    
+    Returns:
+        Санитизированная строка или None, если входная строка пуста/невалидна
+    """
+    if not search:
+        return None
+    
+    # Убираем пробелы в начале и конце
+    sanitized = search.strip()
+    
+    if not sanitized:
+        return None
+    
+    # Ограничиваем длину для защиты от DoS
+    if len(sanitized) > max_length:
+        sanitized = sanitized[:max_length]
+    
+    # SQLAlchemy правильно экранирует параметры LIKE,
+    # но мы все равно ограничиваем длину для безопасности
+    return sanitized
+
+
 def _format_timestamp(value: Optional[datetime]) -> Optional[str]:
     """Конвертирует отметку времени в строку для отображения."""
     if value is None:
@@ -382,8 +414,8 @@ def get_generation_history(
                 try:
                     date_from_obj = datetime.strptime(date_from, '%Y-%m-%d')
                     base_filter = base_filter.filter(GenerationHistoryRecord.timestamp >= date_from_obj)
-                except ValueError:
-                    pass  # Игнорируем неверный формат даты
+                except ValueError as exc:
+                    logging.warning('Invalid date_from format "%s": %s. Filter skipped.', date_from, exc)
 
             if date_to:
                 try:
@@ -391,8 +423,8 @@ def get_generation_history(
                     # Добавляем время до конца дня
                     date_to_obj = date_to_obj.replace(hour=23, minute=59, second=59)
                     base_filter = base_filter.filter(GenerationHistoryRecord.timestamp <= date_to_obj)
-                except ValueError:
-                    pass  # Игнорируем неверный формат даты
+                except ValueError as exc:
+                    logging.warning('Invalid date_to format "%s": %s. Filter skipped.', date_to, exc)
 
             # Фильтр по цене продажи (используем общую цену, если есть)
             sale_price_expr = func.coalesce(
@@ -422,9 +454,9 @@ def get_generation_history(
 
             # Текстовый поиск по нескольким полям
             if search:
-                search_trimmed = search.strip()
+                search_trimmed = _sanitize_search_term(search)
                 if not search_trimmed:
-                    # Пустой поиск после trim - пропускаем
+                    # Пустой поиск после санитизации - пропускаем
                     pass
                 else:
                     # Для SQLite используем несколько вариантов поиска для case-insensitive
@@ -782,6 +814,8 @@ def save_generation_history(form_data, final_price, config, user_id=None, total_
                 positions_count=len(positions),
             )
             session.add(record)
+        # Инвалидируем кеш списка компаний после добавления новой записи
+        _get_unique_companies_cached.cache_clear()
         return True
     except SQLAlchemyError as exc:
         logging.error('Database error saving generation history: %s', exc)
@@ -1270,9 +1304,11 @@ def get_generations_by_drawing(drawing_number: str, limit: int = 5) -> List[Dict
         return []
 
     try:
-        normalized = drawing_number.strip().lower()
-        if not normalized:
+        normalized_raw = _sanitize_search_term(drawing_number)
+        if not normalized_raw:
             return []
+        
+        normalized = normalized_raw.lower()
 
         with _session_scope() as session:
             base_query = (
@@ -1371,8 +1407,9 @@ def get_generations_by_tender(tender_number: str) -> List[Dict[str, object]]:
         return []
 
 
-def get_unique_companies() -> List[str]:
-    """Возвращает список уникальных компаний из истории генераций."""
+@lru_cache(maxsize=1)
+def _get_unique_companies_cached() -> tuple:
+    """Внутренняя функция для кеширования списка компаний. Возвращает tuple для возможности кеширования."""
     try:
         with _session_scope() as session:
             companies = (
@@ -1383,10 +1420,15 @@ def get_unique_companies() -> List[str]:
                 .order_by(GenerationHistoryRecord.company)
                 .all()
             )
-            return [company[0] for company in companies if company[0]]
+            return tuple(company[0] for company in companies if company[0])
     except Exception as exc:
         logging.error('Error fetching unique companies: %s', exc)
-        return []
+        return tuple()
+
+
+def get_unique_companies() -> List[str]:
+    """Возвращает список уникальных компаний из истории генераций (с кешированием)."""
+    return list(_get_unique_companies_cached())
 
 
 def get_users_list(
@@ -1407,12 +1449,14 @@ def get_users_list(
 
             # Поиск по имени пользователя, фамилии, имени
             if search:
-                search_term = f'%{search.strip().lower()}%'
-                query = query.filter(
-                    func.lower(UserRecord.username).like(search_term)
-                    | func.lower(func.coalesce(UserRecord.last_name, '')).like(search_term)
-                    | func.lower(func.coalesce(UserRecord.first_name, '')).like(search_term)
-                )
+                search_sanitized = _sanitize_search_term(search)
+                if search_sanitized:
+                    search_term = f'%{search_sanitized.lower()}%'
+                    query = query.filter(
+                        func.lower(UserRecord.username).like(search_term)
+                        | func.lower(func.coalesce(UserRecord.last_name, '')).like(search_term)
+                        | func.lower(func.coalesce(UserRecord.first_name, '')).like(search_term)
+                    )
 
             # Фильтр по роли
             if role_filter and role_filter.lower() in ('admin', 'user'):

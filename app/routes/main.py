@@ -46,6 +46,8 @@ from app.core.exceptions import CalculationError, DocumentGenerationError, Valid
 
 main_bp = Blueprint('main', __name__)  # Основные страницы и бизнес-логика генератора КП
 FORM_TTL_HOURS = 24  # время жизни сохранённой формы в сессии
+MAX_SESSION_POSITIONS = 100  # максимальное количество позиций в сессии
+MAX_SESSION_HISTORY_MESSAGES = 20  # максимальное количество сообщений истории AI агента в сессии
 
 
 def _load_logistics_cities_safe() -> List[Dict[str, Any]]:
@@ -157,7 +159,7 @@ def history_by_tender(tender_number: str) -> Response:
 
 
 @main_bp.route('/history/companies')
-def history_companies():
+def history_companies() -> Response:
     """Возвращает список уникальных компаний."""
     try:
         companies = generation_repository.get_unique_companies()
@@ -435,8 +437,12 @@ def ai_agent_chat() -> Response:
         
         # Сохраняем историю в сессии (ограничиваем размер)
         try:
-            # Сохраняем только последние 20 сообщений, чтобы не перегружать сессию
-            history_to_save = agent.conversation_history[-20:] if len(agent.conversation_history) > 20 else agent.conversation_history
+            # Сохраняем только последние N сообщений, чтобы не перегружать сессию
+            history_to_save = (
+                agent.conversation_history[-MAX_SESSION_HISTORY_MESSAGES:]
+                if len(agent.conversation_history) > MAX_SESSION_HISTORY_MESSAGES
+                else agent.conversation_history
+            )
             
             # Очищаем history от объектов, которые не могут быть сериализованы (например, reasoning_details с сложными объектами)
             serializable_history = []
@@ -452,8 +458,8 @@ def ai_agent_chat() -> Response:
                         # Пытаемся сохранить только если это простой dict
                         if isinstance(msg['reasoning_details'], dict):
                             clean_msg['reasoning_details'] = msg['reasoning_details']
-                    except Exception:
-                        pass  # Пропускаем reasoning_details если не можем сериализовать
+                    except (TypeError, AttributeError, KeyError) as exc:
+                        current_app.logger.debug('Skipping reasoning_details serialization: %s', exc)
                 serializable_history.append(clean_msg)
             
             session['ai_agent_history'] = serializable_history
@@ -1016,6 +1022,14 @@ def import_positions() -> Response:
         current_app.logger.error('Ошибка импорта Excel: %s', exc)
         return jsonify({'error': 'Не удалось импортировать файл. Попробуйте позже.'}), 500
 
+    # Ограничиваем количество позиций, сохраняемых в сессии
+    if len(positions) > MAX_SESSION_POSITIONS:
+        current_app.logger.warning(
+            'Imported positions count (%d) exceeds session limit (%d), truncating',
+            len(positions), MAX_SESSION_POSITIONS
+        )
+        positions = positions[:MAX_SESSION_POSITIONS]
+    
     session['imported_positions'] = positions
     # Сохраняем текущую форму, если она была отправлена вместе с импортом
     if request.form:
@@ -1024,9 +1038,13 @@ def import_positions() -> Response:
 
 
 @main_bp.route('/form/reset', methods=['POST'])
-@csrf.exempt
 def reset_form_state() -> Response:
-    """Очищает сохранённый черновик формы и импортированные позиции в сессии."""
+    """
+    Очищает сохранённый черновик формы и импортированные позиции в сессии.
+    
+    CSRF защита: Токен передается в заголовке X-CSRFToken из JavaScript.
+    Flask-WTF автоматически проверяет токен из заголовка.
+    """
     _clear_form_session()
     return jsonify({'status': 'ok'})
 

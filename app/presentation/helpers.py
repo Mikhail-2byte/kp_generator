@@ -1,10 +1,11 @@
 import json
 import os
 import re
+from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
 
-def check_templates_exist():
+def check_templates_exist() -> List[str]:
     """Проверяет существование шаблонов документов перед генерацией."""
     excel_template_path = os.path.join('templates_docs', 'template.xlsx')
     word_template_path = os.path.join('templates_docs', 'template.docx')
@@ -19,9 +20,42 @@ def check_templates_exist():
 
 
 def get_safe_filename(company_name: str) -> str:
-    """Создаёт безопасное имя файла из названия компании."""
-    safe_name = re.sub(r'[^\w\s-]', '', company_name).strip()
+    """
+    Создаёт безопасное имя файла из названия компании.
+    
+    Защищает от path traversal атак и других небезопасных символов.
+    Удаляет пути (.., /, \), нормализует имя файла.
+    
+    Args:
+        company_name: Исходное название компании
+    
+    Returns:
+        Безопасное имя файла (максимум 50 символов)
+    """
+    if not company_name:
+        return 'file'
+    
+    # Защита от path traversal: удаляем .., /, \
+    safe_name = company_name.replace('..', '').replace('/', '').replace('\\', '')
+    
+    # Удаляем все символы кроме букв, цифр, пробелов и дефисов
+    safe_name = re.sub(r'[^\w\s-]', '', safe_name)
+    
+    # Удаляем ведущие/завершающие пробелы и дефисы
+    safe_name = safe_name.strip(' \t\n\r-_')
+    
+    # Заменяем последовательности пробелов и дефисов на одно подчеркивание
     safe_name = re.sub(r'[-\s]+', '_', safe_name)
+    
+    # Убеждаемся, что имя не пустое
+    if not safe_name:
+        return 'file'
+    
+    # Дополнительная защита: используем только имя файла (без пути)
+    # Это защищает от случаев, когда имя начинается с пути
+    safe_name = Path(safe_name).name
+    
+    # Ограничиваем длину
     return safe_name[:50]
 
 

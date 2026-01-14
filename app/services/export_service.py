@@ -82,8 +82,8 @@ def export_audit_logs_to_excel(logs_data: Dict[str, Any]) -> BytesIO:
             try:
                 if len(str(row.value)) > max_length:
                     max_length = len(str(row.value))
-            except Exception:
-                pass
+            except (AttributeError, TypeError):
+                pass  # Игнорируем ошибки преобразования значений ячеек
         adjusted_width = min(max_length + 2, 50)
         ws.column_dimensions[column_letter].width = adjusted_width
 

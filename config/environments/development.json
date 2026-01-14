@@ -2,7 +2,6 @@
   "profile": "development",
   "debug": true,
   "log_level": "DEBUG",
-  "database_url": "sqlite:///kp_generator.db",
-  "secret_key": "dev-secret-key-change-me"
+  "database_url": "sqlite:///kp_generator.db"
 }
 

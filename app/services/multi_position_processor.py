@@ -465,11 +465,11 @@ class MultiPositionProcessor:
         if manager_fio:
             sheet['N22'] = manager_fio
         
-        # Заполняем цены, если они переданы (без округления)
+        # Заполняем цены, если они переданы (округляем до целого числа, как в Word)
         if final_price is not None:
-            sheet['H10'] = float(final_price)  # Цена за единицу (точное значение)
+            sheet['H10'] = round(float(final_price))  # Цена за единицу (округлено до целого)
         if general_price is not None:
-            sheet['I11'] = float(general_price)  # Общая цена (точное значение)
+            sheet['I11'] = round(float(general_price))  # Общая цена (округлено до целого)
 
     def process_multiple_positions(self, positions: List[Dict[str, Any]], form_data: Dict[str, Any] = None, final_price: float = None, general_price: float = None, position_prices: List[Dict[str, Any]] | None = None, manager_fio: str = None) -> BytesIO:
         """Обрабатывает множественные позиции и возвращает Excel файл в памяти."""
@@ -497,12 +497,13 @@ class MultiPositionProcessor:
             sheet[f"B{row_number}"] = i + 1
             self.fill_position_data(sheet, position, row_number)
 
-            # Проставляем рассчитанные цены по позиции, если переданы (без округления)
+            # Проставляем рассчитанные цены по позиции, если переданы
             if position_prices and i < len(position_prices):
                 pp = position_prices[i]
                 fp = pp.get('final_price')
                 if fp is not None:
-                    sheet[f"H{row_number}"] = float(fp)  # Цена за единицу по позиции (точное значение)
+                    # Округляем до целого числа, как в Word файле
+                    sheet[f"H{row_number}"] = round(float(fp))
                 # Вставляем формулу для выручки: цена за единицу * количество
                 sheet[f"I{row_number}"] = f"=H{row_number}*G{row_number}"
         

@@ -12,7 +12,7 @@
 
 import logging
 import math
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +25,11 @@ EURO_TRUCK_CAPACITY_KG = 20000
 EURO_TRUCK_VOLUME_M3 = 82  # Обновлено согласно новым правилам
 
 TRAIL_CAPACITY_KG = 40000
+TRAIL_LENGTH_MM = 16000  # Максимальная длина трала
+TRAIL_WIDTH_MM = 3500  # Общая ширина: 2500 мм + 500 мм по бокам
+TRAIL_HEIGHT_MM = 4500  # Высота трала
+TRAIL_VOLUME_M3 = 250  # Объем трала
+TRAIL_REAR_SPACE_MM = 2000  # Дополнительное пространство сзади
 
 # Пороговые значения
 MIN_WEIGHT_FOR_MAIN_CITIES_KG = 5000
@@ -63,6 +68,82 @@ def is_oversized(length_mm: float, width_mm: float, height_mm: float) -> bool:
         or width_mm > EURO_TRUCK_WIDTH_MM
         or height_mm > EURO_TRUCK_HEIGHT_MM
     )
+
+
+def fits_in_one_truck(
+    weight_kg: float,
+    length_mm: Optional[float] = None,
+    width_mm: Optional[float] = None,
+    height_mm: Optional[float] = None
+) -> bool:
+    """
+    Проверяет, помещается ли груз в одну фуру.
+    
+    Args:
+        weight_kg: Вес груза в кг
+        length_mm: Длина груза в мм (опционально)
+        width_mm: Ширина груза в мм (опционально)
+        height_mm: Высота груза в мм (опционально)
+    
+    Returns:
+        True если груз помещается в одну фуру, False если не помещается
+    """
+    # Проверка по весу
+    if weight_kg > EURO_TRUCK_CAPACITY_KG:
+        return False
+    
+    # Если габариты не указаны, проверяем только по весу
+    if length_mm is None or width_mm is None or height_mm is None:
+        return weight_kg <= EURO_TRUCK_CAPACITY_KG
+    
+    # Проверка габаритов
+    if is_oversized(length_mm, width_mm, height_mm):
+        return False
+    
+    # Проверка по объему
+    volume_m3 = calculate_cargo_volume(length_mm, width_mm, height_mm)
+    if volume_m3 > EURO_TRUCK_VOLUME_M3:
+        return False
+    
+    return True
+
+
+def is_oversized_for_trail(length_mm: float, width_mm: float, height_mm: float) -> Tuple[bool, Optional[str]]:
+    """
+    Проверяет, является ли груз негабаритным для трала.
+    
+    Args:
+        length_mm: Длина груза в мм
+        width_mm: Ширина груза в мм
+        height_mm: Высота груза в мм
+    
+    Returns:
+        Кортеж (is_oversized, error_message):
+        - is_oversized: True если груз не помещается в трал, False если помещается
+        - error_message: Сообщение об ошибке с указанием конкретного параметра, если превышен
+    """
+    issues = []
+    
+    # Проверка габаритов
+    if length_mm > TRAIL_LENGTH_MM:
+        issues.append(f'длина ({length_mm:,.0f} мм превышает максимальную {TRAIL_LENGTH_MM:,.0f} мм)')
+    
+    if width_mm > TRAIL_WIDTH_MM:
+        issues.append(f'ширина ({width_mm:,.0f} мм превышает максимальную {TRAIL_WIDTH_MM:,.0f} мм)')
+    
+    if height_mm > TRAIL_HEIGHT_MM:
+        issues.append(f'высота ({height_mm:,.0f} мм превышает максимальную {TRAIL_HEIGHT_MM:,.0f} мм)')
+    
+    # Проверка объема
+    volume_m3 = calculate_cargo_volume(length_mm, width_mm, height_mm)
+    if volume_m3 > TRAIL_VOLUME_M3:
+        issues.append(f'объем ({volume_m3:.2f} м³ превышает максимальный {TRAIL_VOLUME_M3} м³)')
+    
+    if issues:
+        error_message = 'Груз превышает параметры трала по ' + ', '.join(issues) + '. Пожалуйста, обратитесь к логисту для расчета индивидуальной стоимости.'
+        return True, error_message
+    
+    return False, None
 
 
 def is_heavy(weight_kg: float) -> bool:
@@ -301,7 +382,7 @@ def calculate_logistics(
         Словарь с результатами расчета
     """
     truck_capacity = TRAIL_CAPACITY_KG if transport_type == 'trail' else EURO_TRUCK_CAPACITY_KG
-    truck_volume = EURO_TRUCK_VOLUME_M3  # Объем одинаковый для фуры и трала
+    truck_volume = TRAIL_VOLUME_M3 if transport_type == 'trail' else EURO_TRUCK_VOLUME_M3
     
     # Для мелкогабаритных грузов (≤ 600 кг)
     if weight_kg <= SMALL_CARGO_THRESHOLD_KG:
@@ -313,13 +394,41 @@ def calculate_logistics(
             'message': f'Для грузов до {SMALL_CARGO_THRESHOLD_KG} кг рекомендуется транспортная компания «Деловые линии» (dellin.ru). Расчет от Забайкальска (погранпереход) до точки назначения. Логистика по Китаю + 30% к стоимости из просчета.',
         }
     
-    # Проверка доступности трала для города
-    if transport_type == 'trail':
+    # Проверка доступности трала для города (только если трал выбран явно, не при автопереключении)
+    # Автопереключение проверяется позже, когда известны габариты груза
+    if transport_type == 'trail' and (length_mm is None or width_mm is None or height_mm is None):
+        # Если трал выбран явно без габаритов, проверяем доступность
         if city_name and city_name not in TRAIL_AVAILABLE_CITIES:
             return {
                 'error': f'Трал доступен только до городов: {", ".join(TRAIL_AVAILABLE_CITIES)}. Для города {city_name} трал недоступен.',
                 'trail_not_available': True,
             }
+    
+    # Проверяем негабаритность груза ДО выбора алгоритма расчета
+    # Логика: если груз не помещается в одну фуру и негабаритный - это один большой груз
+    # Для городов вне основного маршрута (не ЕКБ/Москва) выдаем ошибку
+    if length_mm is not None and width_mm is not None and height_mm is not None:
+        oversized = is_oversized(length_mm, width_mm, height_mm)
+        fits_in_one = fits_in_one_truck(weight_kg, length_mm, width_mm, height_mm)
+        
+        # Если груз не помещается в одну фуру И негабаритный - это один большой груз
+        if not fits_in_one and oversized and transport_type == 'truck':
+            # Если груз негабаритный для фуры
+            if city_name and city_name in TRAIL_AVAILABLE_CITIES:
+                # Для ЕКБ и Москвы переключаемся на трал (проверка будет позже)
+                pass
+            elif not is_main_route:
+                # Для городов вне основного маршрута (не ЕКБ/Москва) - ошибка
+                return {
+                    'error': 'Негабаритный груз для городов вне основного маршрута (кроме Екатеринбурга и Москвы) требует индивидуального расчета. Пожалуйста, обратитесь к логисту.',
+                    'oversized': True,
+                    'weight_kg': weight_kg,
+                    'dimensions': {
+                        'length_mm': length_mm,
+                        'width_mm': width_mm,
+                        'height_mm': height_mm,
+                    },
+                }
     
     # Проверяем, находится ли город в справочнике ЕКБ+РФ
     from app.services.datasets import get_ekb_rf_city_distance, is_city_in_ekb_rf_catalog
@@ -360,6 +469,42 @@ def calculate_logistics(
     
     if use_ekb_plus_rf:
         # Используем алгоритм "До ЕКБ + по РФ"
+        # Проверяем негабаритность для алгоритма ЕКБ+РФ
+        # Логика: если груз не помещается в одну фуру и негабаритный - это один большой груз
+        if length_mm is not None and width_mm is not None and height_mm is not None:
+            oversized = is_oversized(length_mm, width_mm, height_mm)
+            fits_in_one = fits_in_one_truck(weight_kg, length_mm, width_mm, height_mm)
+            
+            # Если груз не помещается в одну фуру И негабаритный - это один большой груз
+            if not fits_in_one and oversized and transport_type == 'truck':
+                # Если груз негабаритный для фуры
+                if city_name and city_name in TRAIL_AVAILABLE_CITIES:
+                    # Для ЕКБ и Москвы переключаемся на трал
+                    transport_type = 'trail'
+                    truck_capacity = TRAIL_CAPACITY_KG
+                    # Обновляем city_price для трала
+                    if city_name:
+                        from app.services.datasets import load_trail_cities
+                        trail_cities = load_trail_cities()
+                        for city in trail_cities:
+                            if city.get('name') == city_name:
+                                trail_price = city.get('trail_price')
+                                if trail_price and trail_price > 0:
+                                    city_price = trail_price
+                                break
+                elif not is_main_route:
+                    # Для городов вне основного маршрута (не ЕКБ/Москва) - ошибка
+                    return {
+                        'error': 'Негабаритный груз для городов вне основного маршрута (кроме Екатеринбурга и Москвы) требует индивидуального расчета. Пожалуйста, обратитесь к логисту.',
+                        'oversized': True,
+                        'weight_kg': weight_kg,
+                        'dimensions': {
+                            'length_mm': length_mm,
+                            'width_mm': width_mm,
+                            'height_mm': height_mm,
+                        },
+                    }
+        
         # Преобразуем distance_from_ekb_km в int если он float
         distance_int = int(distance_from_ekb_km) if distance_from_ekb_km is not None else None
         result = calculate_ekb_plus_rf_route(weight_kg, distance_int, truck_capacity)
@@ -403,14 +548,76 @@ def calculate_logistics(
     oversized = is_oversized(length_mm, width_mm, height_mm)
     heavy = is_heavy(weight_kg)
     
-    # Для негабаритных или тяжеловесных грузов может потребоваться трал
-    if oversized or heavy:
-        if transport_type == 'truck' and heavy:
-            # Тяжеловесный груз требует трал
+    # Автоматическое переключение на трал для негабаритных грузов
+    auto_switched_to_trail = False
+    if transport_type == 'truck' and oversized and length_mm is not None and width_mm is not None and height_mm is not None:
+        # Проверяем доступность трала для города
+        if city_name and city_name in TRAIL_AVAILABLE_CITIES:
+            # Проверяем, помещается ли груз в трал
+            is_oversized_trail, trail_error_message = is_oversized_for_trail(length_mm, width_mm, height_mm)
+            if is_oversized_trail:
+                # Груз не помещается в трал - нужно обратиться к логисту
+                return {
+                    'error': trail_error_message or 'Груз превышает габариты или объем трала. Пожалуйста, обратитесь к логисту для расчета индивидуальной стоимости.',
+                    'exceeds_trail': True,
+                    'weight_kg': weight_kg,
+                    'dimensions': {
+                        'length_mm': length_mm,
+                        'width_mm': width_mm,
+                        'height_mm': height_mm,
+                    },
+                    'volume_m3': volume_m3,
+                }
+            else:
+                # Груз помещается в трал - автоматически переключаемся
+                transport_type = 'trail'
+                truck_capacity = TRAIL_CAPACITY_KG
+                truck_volume = TRAIL_VOLUME_M3
+                auto_switched_to_trail = True
+                # Обновляем city_price для трала, если доступен
+                if city_name:
+                    from app.services.datasets import load_trail_cities
+                    trail_cities = load_trail_cities()
+                    for city in trail_cities:
+                        if city.get('name') == city_name:
+                            trail_price = city.get('trail_price')
+                            if trail_price and trail_price > 0:
+                                city_price = trail_price
+                            break
+        elif city_name and city_name not in TRAIL_AVAILABLE_CITIES:
+            # Трал недоступен для этого города
+            return {
+                'error': f'Груз не помещается в фуру, но трал доступен только до городов: {", ".join(TRAIL_AVAILABLE_CITIES)}. Для города {city_name} трал недоступен.',
+                'trail_not_available': True,
+                'oversized': True,
+                'weight_kg': weight_kg,
+            }
+    
+    # Для тяжеловесных грузов также может потребоваться трал
+    if transport_type == 'truck' and heavy:
+        # Тяжеловесный груз требует трал
+        if city_name and city_name in TRAIL_AVAILABLE_CITIES:
+            transport_type = 'trail'
             truck_capacity = TRAIL_CAPACITY_KG
-        elif transport_type == 'truck' and oversized:
-            # Негабаритный груз может потребовать трал, но оставляем выбор пользователю
-            pass
+            truck_volume = TRAIL_VOLUME_M3
+            auto_switched_to_trail = True
+            # Обновляем city_price для трала
+            if city_name:
+                from app.services.datasets import load_trail_cities
+                trail_cities = load_trail_cities()
+                for city in trail_cities:
+                    if city.get('name') == city_name:
+                        trail_price = city.get('trail_price')
+                        if trail_price and trail_price > 0:
+                            city_price = trail_price
+                        break
+        elif city_name and city_name not in TRAIL_AVAILABLE_CITIES:
+            return {
+                'error': f'Груз превышает грузоподъемность фуры (20 тонн), но трал доступен только до городов: {", ".join(TRAIL_AVAILABLE_CITIES)}. Для города {city_name} трал недоступен.',
+                'trail_not_available': True,
+                'heavy': True,
+                'weight_kg': weight_kg,
+            }
     
     # Определяем базис расчета (вес или объем)
     basis = determine_calculation_basis(weight_kg, volume_m3, truck_capacity, truck_volume)
@@ -433,6 +640,7 @@ def calculate_logistics(
         'oversized': oversized,
         'heavy': heavy,
         'transport_type': transport_type,
+        'auto_switched_to_trail': auto_switched_to_trail,
         'distance_from_ekb_provided': False,
         'can_save_distance': distance_from_ekb_km is None and not is_main_route,
     })

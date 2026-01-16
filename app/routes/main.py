@@ -1227,7 +1227,15 @@ def calculate_logistics_api() -> Response:
         return jsonify(result)
     except Exception as exc:
         current_app.logger.exception('Error calculating logistics: %s', exc)
-        return jsonify({'error': f'Ошибка при расчете логистики: {str(exc)}'}), 500
+        error_message = str(exc)
+        # Улучшаем сообщение об ошибке для пользователя
+        if 'NoneType' in error_message or 'None' in error_message:
+            error_message = 'Ошибка: не указаны обязательные параметры для расчета'
+        elif 'division' in error_message.lower() or 'zero' in error_message.lower():
+            error_message = 'Ошибка: некорректные значения параметров (деление на ноль)'
+        elif 'key' in error_message.lower() or 'attribute' in error_message.lower():
+            error_message = 'Ошибка: отсутствуют необходимые данные для расчета'
+        return jsonify({'error': f'Ошибка при расчете логистики: {error_message}'}), 500
 
 
 @main_bp.route('/api/logistics/save-distance', methods=['POST'])

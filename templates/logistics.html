@@ -22,9 +22,14 @@
                             </ul>
                         </div>
                         <div>
-                            <strong>Трал:</strong>
+                            <strong>Трал (для негабаритных грузов):</strong>
                             <ul style="margin: 0.5rem 0 0 1.5rem; padding: 0;">
-                                <li>Грузоподъемность: 40 000 кг</li>
+                                <li>Длина: 14 000 - 16 000 мм (и более)</li>
+                                <li>Ширина: 2 500 мм (+ 500 мм по бокам) = 3 500 мм общая</li>
+                                <li>Высота: 4 500 мм</li>
+                                <li>Сзади: 2 000 мм (дополнительное пространство)</li>
+                                <li>Грузоподъемность: 40 тонн (40 000 кг)</li>
+                                <li>Объем: 250 м³</li>
                                 <li>Доступен только до: Екатеринбург, Москва</li>
                             </ul>
                         </div>
@@ -236,6 +241,12 @@
         </div>
         <div class="flash flash-error hidden mt-md" id="trailNotAvailableWarning">
             Трал доступен только до Екатеринбурга и Москвы. Для других городов выберите фуру.
+        </div>
+        <div class="flash flash-error hidden mt-md" id="exceedsTrailWarning">
+            Груз превышает габариты или объем трала. Пожалуйста, обратитесь к логисту для расчета индивидуальной стоимости.
+        </div>
+        <div class="flash flash-error hidden mt-md" id="generalError">
+            Ошибка при расчете логистики.
         </div>
     </div>
 
@@ -623,18 +634,22 @@
         const cargoHeightInput = document.getElementById('cargoHeight');
         const distanceFromEkbInput = document.getElementById('distanceFromEkb');
         const transportTypeField = document.querySelector('input[name="transportType"]:checked');
-        const transportType = transportTypeField ? transportTypeField.value : 'truck';
-        const transportName = transportType === 'trail' ? 'Трал' : 'Фура';
+        let transportType = transportTypeField ? transportTypeField.value : 'truck';
+        let transportName = transportType === 'trail' ? 'Трал' : 'Фура';
         const resultBlock = document.getElementById('result');
         const cityNotFound = document.getElementById('cityNotFound');
         const lowWeightWarning = document.getElementById('lowWeightWarning');
         const needsDistanceWarning = document.getElementById('needsDistanceWarning');
         const trailNotAvailableWarning = document.getElementById('trailNotAvailableWarning');
+        const exceedsTrailWarning = document.getElementById('exceedsTrailWarning');
+        const generalError = document.getElementById('generalError');
 
         hideElement(cityNotFound);
         hideElement(lowWeightWarning);
         hideElement(needsDistanceWarning);
         hideElement(trailNotAvailableWarning);
+        hideElement(exceedsTrailWarning);
+        hideElement(generalError);
         hideElement(resultBlock);
 
         const cargoWeight = parseFloat(cargoWeightInput ? cargoWeightInput.value : '');
@@ -726,20 +741,34 @@
 
             if (!response.ok) {
                 let errorData;
+                let errorMessage = '';
                 try {
                     const text = await response.text();
                     try {
                         errorData = JSON.parse(text);
+                        errorMessage = errorData.error || errorData.message || `Ошибка ${response.status}`;
                     } catch (e) {
-                        errorData = { error: `Ошибка ${response.status}: ${text || 'Неизвестная ошибка'}` };
+                        errorMessage = text || `Ошибка ${response.status}: Неизвестная ошибка`;
                     }
                 } catch (e) {
-                    errorData = { error: `Ошибка ${response.status}: Не удалось прочитать ответ сервера` };
+                    errorMessage = `Ошибка ${response.status}: Не удалось прочитать ответ сервера`;
                 }
-                console.error('Logistics calculation error:', errorData);
+                console.error('Logistics calculation error:', errorData || errorMessage);
                 
-                if (errorData.error) {
-                    alert(errorData.error);
+                // Пытаемся показать ошибку в соответствующем блоке предупреждений
+                if (errorData && errorData.needs_distance) {
+                    showElement(needsDistanceWarning);
+                    needsDistanceWarning.textContent = errorMessage;
+                } else if (errorData && errorData.trail_not_available) {
+                    showElement(trailNotAvailableWarning);
+                    trailNotAvailableWarning.textContent = errorMessage;
+                } else if (errorData && errorData.exceeds_trail) {
+                    showElement(exceedsTrailWarning);
+                    exceedsTrailWarning.textContent = errorMessage;
+                } else {
+                    // Показываем общую ошибку в блоке предупреждений
+                    showElement(generalError);
+                    generalError.textContent = errorMessage;
                 }
                 return;
             }
@@ -755,8 +784,13 @@
                 } else if (result.trail_not_available) {
                     showElement(trailNotAvailableWarning);
                     trailNotAvailableWarning.textContent = result.error;
+                } else if (result.exceeds_trail) {
+                    showElement(exceedsTrailWarning);
+                    exceedsTrailWarning.textContent = result.error;
                 } else {
-                    alert(result.error);
+                    // Показываем общую ошибку в блоке предупреждений
+                    showElement(generalError);
+                    generalError.textContent = result.error;
                 }
                 return;
             }
@@ -768,20 +802,53 @@
                 return;
             }
 
+            // Обновляем transportName, если было автопереключение на трал
+            if (result.auto_switched_to_trail && result.transport_type === 'trail') {
+                transportName = 'Трал';
+            } else if (result.transport_type === 'trail') {
+                transportName = 'Трал';
+            }
+            
             // Отображаем результаты
             displayResults(result, cityName, transportName, requestData.distance_from_ekb_km);
 
         } catch (error) {
             console.error('Error calculating logistics:', error);
-            alert('Ошибка при расчете логистики. Попробуйте еще раз.');
+            const errorMessage = error.message || 'Ошибка при расчете логистики. Попробуйте еще раз.';
+            const generalError = document.getElementById('generalError');
+            if (generalError) {
+                showElement(generalError);
+                generalError.textContent = errorMessage;
+            } else {
+                // Fallback на alert, если элемент не найден
+                alert(errorMessage);
+            }
         }
     }
 
     function displayResults(result, cityName, transportName, userProvidedDistance) {
         const resultBlock = document.getElementById('result');
         
+        // Обновляем тип транспорта, если было автопереключение на трал
+        let displayTransportName = transportName;
+        if (result.auto_switched_to_trail && result.transport_type === 'trail') {
+            displayTransportName = 'Трал';
+        } else if (result.transport_type === 'trail') {
+            displayTransportName = 'Трал';
+        } else if (result.transport_type === 'truck') {
+            displayTransportName = 'Фура';
+        }
+        
         document.getElementById('resultCityName').textContent = cityName;
-        document.getElementById('resultTransportType').textContent = transportName;
+        document.getElementById('resultTransportType').textContent = displayTransportName;
+        
+        // Показываем заметку об автопереключении, если было
+        const autoSwitchedNote = document.getElementById('autoSwitchedNote');
+        if (result.auto_switched_to_trail) {
+            showElement(autoSwitchedNote);
+        } else {
+            hideElement(autoSwitchedNote);
+        }
 
         // Тип расчета
         const calculationType = result.calculation_type;
@@ -839,8 +906,9 @@
 
         // Количество машин
         const trucksCount = result.trucks_count || 1;
+        const vehicleName = displayTransportName;
         document.getElementById('truckCount').textContent = 
-            trucksCount === 1 ? '1 машина' : `${trucksCount} ${getTruckWord(trucksCount, transportName)}`;
+            trucksCount === 1 ? `1 ${vehicleName.toLowerCase()}` : `${trucksCount} ${getTruckWord(trucksCount, vehicleName)}`;
 
         // Стоимость за единицу
         if (result.basis === 'weight' && result.price_per_kg) {

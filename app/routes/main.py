@@ -130,6 +130,16 @@ def margin_mockup() -> str:
     )
 
 
+@main_bp.route('/index-mockup')
+def index_mockup() -> str:
+    """Показывает тестовую страницу с вариантом D для управления маржой."""
+    cities = _load_logistics_cities_safe()
+    return render_template(
+        'index_mockup.html',
+        **build_context('index', 'Тестовая страница: Новое коммерческое предложение', cities=cities)
+    )
+
+
 @main_bp.route('/history/details/<int:record_id>')
 def history_details(record_id: int) -> Response:
     """Возвращает детальную информацию о сохранённой генерации в формате JSON."""

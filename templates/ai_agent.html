@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="content-container">
-    <div class="card">
+<div class="content-container ai-agent-container">
+    <div class="card ai-agent-card">
         <div class="card-header">
             <div>
                 <h2 class="section-title">AI Консультант</h2>
@@ -57,13 +57,37 @@
 </div>
 
 <style>
+.ai-agent-container {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 80px);
+    min-height: 600px;
+}
+
+.ai-agent-card {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    padding: 0;
+    border-radius: var(--radius-lg, 0.95rem);
+    overflow: hidden;
+}
+
+.ai-agent-card .card-header {
+    flex-shrink: 0;
+    padding: clamp(22px, 2.5vw, 32px);
+    padding-bottom: clamp(16px, 2vw, 24px);
+    border-bottom: 1px solid var(--border-color, #e5e7eb);
+    border-radius: var(--radius-lg, 0.95rem) var(--radius-lg, 0.95rem) 0 0;
+}
+
 .ai-chat-container {
     display: flex;
     flex-direction: column;
-    height: 600px;
-    max-height: 80vh;
-    border: 1px solid var(--border-color, #e5e7eb);
-    border-radius: 0.5rem;
+    flex: 1;
+    min-height: 0;
+    border-radius: 0 0 var(--radius-lg, 0.95rem) var(--radius-lg, 0.95rem);
     background: var(--bg, #ffffff);
     overflow: hidden;
 }
@@ -363,8 +387,33 @@ document.addEventListener('DOMContentLoaded', () => {
             contentDiv.style.color = '#991b1b';
         }
         
+        // Извлекаем изображения из markdown формата ![title](data:image/png;base64,...)
+        // Делаем это ДО escapeHtml, чтобы base64 данные не экранировались
+        const imagePlaceholders = [];
+        const imageRegex = /!\[([^\]]*)\]\((data:image\/[^)]+)\)/g;
+        let match;
+        let imageIndex = 0;
+        
+        // Заменяем изображения на плейсхолдеры и сохраняем их
+        let textWithPlaceholders = text.replace(imageRegex, function(match, alt, src) {
+            const placeholder = `__IMAGE_PLACEHOLDER_${imageIndex}__`;
+            imagePlaceholders.push({
+                placeholder: placeholder,
+                alt: alt || 'График',
+                src: src  // Оставляем src как есть, не экранируем
+            });
+            imageIndex++;
+            return placeholder;
+        });
+        
         // Форматируем текст (сохраняем переносы строк и форматирование)
-        let formattedText = escapeHtml(text);
+        let formattedText = escapeHtml(textWithPlaceholders);
+        
+        // Восстанавливаем изображения (теперь они не экранированы)
+        imagePlaceholders.forEach(img => {
+            const imgTag = `<img src="${img.src}" alt="${escapeHtml(img.alt)}" style="max-width: 100%; height: auto; margin: 1rem 0; border: 1px solid #ddd; border-radius: 4px;">`;
+            formattedText = formattedText.replace(img.placeholder, imgTag);
+        });
         
         // Поддержка markdown-like форматирования
         // **Жирный текст**
@@ -375,7 +424,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Эмодзи остаются как есть
         
-        // Заменяем двойные переносы на параграфы
+        // Заменяем двойные переносы на параграфы (но не внутри изображений)
         formattedText = formattedText.replace(/\n\n+/g, '</p><p>');
         
         // Заменяем одиночные переносы на <br>

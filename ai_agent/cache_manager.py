@@ -23,6 +23,12 @@ class AICacheManager:
     # Префикс для ключей кеша
     CACHE_PREFIX = 'ai_agent'
     
+    # Префикс для кеша запросов к данным 1С
+    ANALYTICS_CACHE_PREFIX = 'ai_agent:analytics'
+    
+    # Префикс для кеша графиков
+    CHART_CACHE_PREFIX = 'ai_agent:charts'
+    
     @classmethod
     def _normalize_message(cls, message: str) -> str:
         """
@@ -285,4 +291,211 @@ def invalidate_ai_cache(message: Optional[str] = None) -> bool:
         True если инвалидация успешна
     """
     return AICacheManager.invalidate_cache(message)
+
+
+def cache_analytics_query(
+    query_type: str,
+    params: dict,
+    result: str,
+    ttl: Optional[int] = None
+) -> bool:
+    """
+    Кеширует результат запроса к данным 1С.
+    
+    Args:
+        query_type: Тип запроса (search, statistics, top, etc.)
+        params: Параметры запроса
+        result: Результат запроса
+        ttl: Время жизни кеша в секундах
+        
+    Returns:
+        True если кеширование успешно
+    """
+    if not REDIS_AVAILABLE:
+        return False
+    
+    try:
+        redis_client = get_redis_client()
+        if not redis_client:
+            return False
+        
+        # Создаем ключ кеша на основе типа запроса и параметров
+        import hashlib
+        import json
+        cache_string = f"{query_type}:{json.dumps(params, sort_keys=True)}"
+        hash_hex = hashlib.sha256(cache_string.encode()).hexdigest()[:16]
+        cache_key = f"{AICacheManager.ANALYTICS_CACHE_PREFIX}:{hash_hex}"
+        
+        ttl = ttl or AICacheManager.DEFAULT_TTL
+        cache_data = {
+            'query_type': query_type,
+            'params': params,
+            'result': result
+        }
+        cache_value = json.dumps(cache_data, ensure_ascii=False)
+        
+        redis_client.setex(cache_key, ttl, cache_value)
+        logger.debug(f"Закеширован результат аналитики: {query_type} (TTL={ttl}s)")
+        return True
+    except Exception as e:
+        logger.warning(f"Ошибка при кешировании результата аналитики: {e}")
+        return False
+
+
+def get_cached_analytics_query(
+    query_type: str,
+    params: dict
+) -> Optional[str]:
+    """
+    Получает закешированный результат запроса к данным 1С.
+    
+    Args:
+        query_type: Тип запроса
+        params: Параметры запроса
+        
+    Returns:
+        Закешированный результат или None
+    """
+    if not REDIS_AVAILABLE:
+        return None
+    
+    try:
+        redis_client = get_redis_client()
+        if not redis_client:
+            return None
+        
+        import hashlib
+        import json
+        cache_string = f"{query_type}:{json.dumps(params, sort_keys=True)}"
+        hash_hex = hashlib.sha256(cache_string.encode()).hexdigest()[:16]
+        cache_key = f"{AICacheManager.ANALYTICS_CACHE_PREFIX}:{hash_hex}"
+        
+        cached_value = redis_client.get(cache_key)
+        if cached_value:
+            cached_data = json.loads(cached_value)
+            logger.debug(f"Cache HIT для аналитики: {query_type}")
+            return cached_data.get('result')
+        else:
+            logger.debug(f"Cache MISS для аналитики: {query_type}")
+            return None
+    except Exception as e:
+        logger.warning(f"Ошибка при получении из кеша аналитики: {e}")
+        return None
+
+
+def cache_chart(
+    chart_type: str,
+    params: dict,
+    chart_base64: str,
+    ttl: Optional[int] = None
+) -> bool:
+    """
+    Кеширует сгенерированный график.
+    
+    Args:
+        chart_type: Тип графика (customers, materials, etc.)
+        params: Параметры графика
+        chart_base64: Base64 строка изображения
+        ttl: Время жизни кеша в секундах (по умолчанию 7 дней для графиков)
+        
+    Returns:
+        True если кеширование успешно
+    """
+    if not REDIS_AVAILABLE:
+        return False
+    
+    try:
+        redis_client = get_redis_client()
+        if not redis_client:
+            return False
+        
+        import hashlib
+        import json
+        cache_string = f"{chart_type}:{json.dumps(params, sort_keys=True)}"
+        hash_hex = hashlib.sha256(cache_string.encode()).hexdigest()[:16]
+        cache_key = f"{AICacheManager.CHART_CACHE_PREFIX}:{hash_hex}"
+        
+        # Для графиков используем более длинный TTL (7 дней)
+        ttl = ttl or (7 * 24 * 60 * 60)
+        cache_data = {
+            'chart_type': chart_type,
+            'params': params,
+            'chart_base64': chart_base64
+        }
+        cache_value = json.dumps(cache_data, ensure_ascii=False)
+        
+        redis_client.setex(cache_key, ttl, cache_value)
+        logger.debug(f"Закеширован график: {chart_type} (TTL={ttl}s)")
+        return True
+    except Exception as e:
+        logger.warning(f"Ошибка при кешировании графика: {e}")
+        return False
+
+
+def get_cached_chart(
+    chart_type: str,
+    params: dict
+) -> Optional[str]:
+    """
+    Получает закешированный график.
+    
+    Args:
+        chart_type: Тип графика
+        params: Параметры графика
+        
+    Returns:
+        Base64 строка изображения или None
+    """
+    if not REDIS_AVAILABLE:
+        return None
+    
+    try:
+        redis_client = get_redis_client()
+        if not redis_client:
+            return None
+        
+        import hashlib
+        import json
+        cache_string = f"{chart_type}:{json.dumps(params, sort_keys=True)}"
+        hash_hex = hashlib.sha256(cache_string.encode()).hexdigest()[:16]
+        cache_key = f"{AICacheManager.CHART_CACHE_PREFIX}:{hash_hex}"
+        
+        cached_value = redis_client.get(cache_key)
+        if cached_value:
+            cached_data = json.loads(cached_value)
+            logger.debug(f"Cache HIT для графика: {chart_type}")
+            return cached_data.get('chart_base64')
+        else:
+            logger.debug(f"Cache MISS для графика: {chart_type}")
+            return None
+    except Exception as e:
+        logger.warning(f"Ошибка при получении графика из кеша: {e}")
+        return None
+
+
+def invalidate_analytics_cache() -> bool:
+    """
+    Инвалидирует весь кеш запросов к данным 1С.
+    
+    Returns:
+        True если инвалидация успешна
+    """
+    if not REDIS_AVAILABLE:
+        return False
+    
+    try:
+        redis_client = get_redis_client()
+        if not redis_client:
+            return False
+        
+        pattern = f"{AICacheManager.ANALYTICS_CACHE_PREFIX}:*"
+        keys = redis_client.keys(pattern)
+        if keys:
+            deleted = redis_client.delete(*keys)
+            logger.info(f"Инвалидировано {deleted} записей кеша аналитики")
+            return True
+        return False
+    except Exception as e:
+        logger.warning(f"Ошибка при инвалидации кеша аналитики: {e}")
+        return False
 

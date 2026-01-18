@@ -1,0 +1,430 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="content-container">
+    <div class="form-page-header">
+        <div class="form-page-header-text">
+            <h1 class="form-page-title">Тестовые макеты: Управление маржей</h1>
+            <p class="form-page-subtitle">Выберите лучший вариант отображения общей и индивидуальной маржи</p>
+        </div>
+    </div>
+
+    <!-- Вариант A: Кнопка "Настроить маржу" в позиции -->
+    <section class="section" style="margin-bottom: 3rem;">
+        <div class="card">
+            <div style="padding: 1.5rem; border-bottom: 2px solid var(--primary); margin-bottom: 1.5rem;">
+                <h2 style="margin: 0 0 0.5rem 0; font-size: 1.25rem; font-weight: 600; color: var(--primary);">Вариант A: Кнопка "Настроить маржу"</h2>
+                <p style="margin: 0; color: var(--muted-foreground); font-size: 0.9rem;">Кнопка в заголовке позиции открывает поле индивидуальной маржи</p>
+            </div>
+
+            <!-- Секция "Настройки расчета" с общей маржой -->
+            <div style="margin-bottom: 1.5rem; padding: 1.5rem; background: var(--muted); border-radius: var(--radius-md);">
+                <h3 style="margin: 0 0 1rem 0; font-size: 1.1rem; font-weight: 600;">Настройки расчета</h3>
+                <div class="field-group" style="max-width: 300px;">
+                    <label for="mockup-a-margin" class="field-label">Общая маржа бюджета, %</label>
+                    <input type="number" id="mockup-a-margin" min="0" max="100" step="0.1" value="30" style="width: 100%;">
+                    <p class="form-helper" style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--muted-foreground);">
+                        Применяется ко всем позициям, если не задана индивидуальная маржа
+                    </p>
+                </div>
+            </div>
+
+            <!-- Позиции -->
+            <div class="positions-card">
+                <div class="positions-card-header">
+                    <h3 class="positions-card-title">Товары и услуги</h3>
+                </div>
+                <div class="positions-card-body">
+                    <!-- Позиция 1: Общая маржа (по умолчанию) -->
+                    <div class="position-block">
+                        <div class="position-header">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div class="position-label">Позиция <span>1</span></div>
+                                <span style="padding: 0.25rem 0.5rem; background: var(--muted); border-radius: var(--radius-sm); font-size: 0.85rem; color: var(--muted-foreground);">
+                                    Маржа: общая (30%)
+                                </span>
+                            </div>
+                            <button type="button" class="btn btn-ghost btn-xs" style="pointer-events: none;">
+                                <span style="font-size: 0.85rem;">Настроить маржу</span>
+                            </button>
+                        </div>
+                        <div class="parameters-row">
+                            <div class="field-group parameter-wide">
+                                <label class="field-label">Наименование товара</label>
+                                <input type="text" value="Товар 1" readonly style="background: var(--muted);">
+                            </div>
+                            <div class="field-group slim-field">
+                                <label class="field-label">Сумма закупа</label>
+                                <input type="number" value="1000" readonly style="background: var(--muted);">
+                            </div>
+                            <div class="field-group slim-field">
+                                <label class="field-label">Количество, шт.</label>
+                                <input type="number" value="10" readonly style="background: var(--muted);">
+                            </div>
+                            <div class="field-group slim-field">
+                                <label class="field-label">Вес за шт. (кг)</label>
+                                <input type="number" value="5" readonly style="background: var(--muted);">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Позиция 2: Индивидуальная маржа (активна) -->
+                    <div class="position-block" style="border: 2px solid var(--primary);">
+                        <div class="position-header">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div class="position-label">Позиция <span>2</span></div>
+                                <span style="padding: 0.25rem 0.5rem; background: var(--primary); border-radius: var(--radius-sm); font-size: 0.85rem; color: var(--primary-foreground);">
+                                    Маржа: индивидуальная (25%)
+                                </span>
+                            </div>
+                            <button type="button" class="btn btn-ghost btn-xs" style="pointer-events: none;">
+                                <span style="font-size: 0.85rem;">Скрыть</span>
+                            </button>
+                        </div>
+                        <div class="parameters-row">
+                            <div class="field-group parameter-wide">
+                                <label class="field-label">Наименование товара</label>
+                                <input type="text" value="Товар 2" readonly style="background: var(--muted);">
+                            </div>
+                            <div class="field-group slim-field">
+                                <label class="field-label">Сумма закупа</label>
+                                <input type="number" value="2000" readonly style="background: var(--muted);">
+                            </div>
+                            <div class="field-group slim-field">
+                                <label class="field-label">Количество, шт.</label>
+                                <input type="number" value="5" readonly style="background: var(--muted);">
+                            </div>
+                            <div class="field-group slim-field">
+                                <label class="field-label">Вес за шт. (кг)</label>
+                                <input type="number" value="8" readonly style="background: var(--muted);">
+                            </div>
+                        </div>
+                        <!-- Поле индивидуальной маржи (показано) -->
+                        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                            <div class="field-group" style="max-width: 250px;">
+                                <label class="field-label">Маржа позиции, %</label>
+                                <input type="number" min="0" max="100" step="0.1" value="25" style="background: var(--input);">
+                                <p class="form-helper" style="margin-top: 0.25rem; font-size: 0.8rem; color: var(--muted-foreground);">
+                                    Переопределяет общую маржу
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Вариант B: Переключатель с иконкой в позиции -->
+    <section class="section" style="margin-bottom: 3rem;">
+        <div class="card">
+            <div style="padding: 1.5rem; border-bottom: 2px solid var(--primary); margin-bottom: 1.5rem;">
+                <h2 style="margin: 0 0 0.5rem 0; font-size: 1.25rem; font-weight: 600; color: var(--primary);">Вариант B: Переключатель "Индивидуальная маржа"</h2>
+                <p style="margin: 0; color: var(--muted-foreground); font-size: 0.9rem;">Toggle-переключатель в заголовке позиции включает индивидуальную маржу</p>
+            </div>
+
+            <!-- Секция "Настройки расчета" с общей маржой -->
+            <div style="margin-bottom: 1.5rem; padding: 1.5rem; background: var(--muted); border-radius: var(--radius-md);">
+                <h3 style="margin: 0 0 1rem 0; font-size: 1.1rem; font-weight: 600;">Настройки расчета</h3>
+                <div class="field-group" style="max-width: 300px;">
+                    <label for="mockup-b-margin" class="field-label">Общая маржа бюджета, %</label>
+                    <input type="number" id="mockup-b-margin" min="0" max="100" step="0.1" value="30" style="width: 100%;">
+                    <p class="form-helper" style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--muted-foreground);">
+                        Применяется ко всем позициям, если не задана индивидуальная маржа
+                    </p>
+                </div>
+            </div>
+
+            <!-- Позиции -->
+            <div class="positions-card">
+                <div class="positions-card-header">
+                    <h3 class="positions-card-title">Товары и услуги</h3>
+                </div>
+                <div class="positions-card-body">
+                    <!-- Позиция 1: Общая маржа (переключатель выключен) -->
+                    <div class="position-block">
+                        <div class="position-header">
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <div class="position-label">Позиция <span>1</span></div>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.9rem; user-select: none;">
+                                    <input type="checkbox" style="width: 1.25rem; height: 1.25rem; cursor: pointer;">
+                                    <span>Индивидуальная маржа</span>
+                                </label>
+                                <span style="padding: 0.25rem 0.5rem; background: var(--muted); border-radius: var(--radius-sm); font-size: 0.85rem; color: var(--muted-foreground);">
+                                    Используется общая (30%)
+                                </span>
+                            </div>
+                        </div>
+                        <div class="parameters-row">
+                            <div class="field-group parameter-wide">
+                                <label class="field-label">Наименование товара</label>
+                                <input type="text" value="Товар 1" readonly style="background: var(--muted);">
+                            </div>
+                            <div class="field-group slim-field">
+                                <label class="field-label">Сумма закупа</label>
+                                <input type="number" value="1000" readonly style="background: var(--muted);">
+                            </div>
+                            <div class="field-group slim-field">
+                                <label class="field-label">Количество, шт.</label>
+                                <input type="number" value="10" readonly style="background: var(--muted);">
+                            </div>
+                            <div class="field-group slim-field">
+                                <label class="field-label">Вес за шт. (кг)</label>
+                                <input type="number" value="5" readonly style="background: var(--muted);">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Позиция 2: Индивидуальная маржа (переключатель включен) -->
+                    <div class="position-block" style="border: 2px solid var(--primary);">
+                        <div class="position-header">
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <div class="position-label">Позиция <span>2</span></div>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.9rem; user-select: none;">
+                                    <input type="checkbox" checked style="width: 1.25rem; height: 1.25rem; cursor: pointer;">
+                                    <span style="color: var(--primary); font-weight: 500;">Индивидуальная маржа</span>
+                                </label>
+                                <span style="padding: 0.25rem 0.5rem; background: var(--primary); border-radius: var(--radius-sm); font-size: 0.85rem; color: var(--primary-foreground);">
+                                    Активна
+                                </span>
+                            </div>
+                        </div>
+                        <div class="parameters-row">
+                            <div class="field-group parameter-wide">
+                                <label class="field-label">Наименование товара</label>
+                                <input type="text" value="Товар 2" readonly style="background: var(--muted);">
+                            </div>
+                            <div class="field-group slim-field">
+                                <label class="field-label">Сумма закупа</label>
+                                <input type="number" value="2000" readonly style="background: var(--muted);">
+                            </div>
+                            <div class="field-group slim-field">
+                                <label class="field-label">Количество, шт.</label>
+                                <input type="number" value="5" readonly style="background: var(--muted);">
+                            </div>
+                            <div class="field-group slim-field">
+                                <label class="field-label">Вес за шт. (кг)</label>
+                                <input type="number" value="8" readonly style="background: var(--muted);">
+                            </div>
+                            <!-- Поле маржи в строке (показано) -->
+                            <div class="field-group slim-field">
+                                <label class="field-label">Маржа, %</label>
+                                <input type="number" min="0" max="100" step="0.1" value="25" style="background: var(--input);">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Вариант C: Выпадающий блок маржи в позиции -->
+    <section class="section" style="margin-bottom: 3rem;">
+        <div class="card">
+            <div style="padding: 1.5rem; border-bottom: 2px solid var(--primary); margin-bottom: 1.5rem;">
+                <h2 style="margin: 0 0 0.5rem 0; font-size: 1.25rem; font-weight: 600; color: var(--primary);">Вариант C: Выпадающий блок "Маржа"</h2>
+                <p style="margin: 0; color: var(--muted-foreground); font-size: 0.9rem;">Кнопка с текущим значением разворачивает блок настройки маржи</p>
+            </div>
+
+            <!-- Секция "Настройки расчета" с общей маржой -->
+            <div style="margin-bottom: 1.5rem; padding: 1.5rem; background: var(--muted); border-radius: var(--radius-md);">
+                <h3 style="margin: 0 0 1rem 0; font-size: 1.1rem; font-weight: 600;">Настройки расчета</h3>
+                <div class="field-group" style="max-width: 300px;">
+                    <label for="mockup-c-margin" class="field-label">Общая маржа бюджета, %</label>
+                    <input type="number" id="mockup-c-margin" min="0" max="100" step="0.1" value="30" style="width: 100%;">
+                    <p class="form-helper" style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--muted-foreground);">
+                        Применяется ко всем позициям, если не задана индивидуальная маржа
+                    </p>
+                </div>
+            </div>
+
+            <!-- Позиции -->
+            <div class="positions-card">
+                <div class="positions-card-header">
+                    <h3 class="positions-card-title">Товары и услуги</h3>
+                </div>
+                <div class="positions-card-body">
+                    <!-- Позиция 1: Общая маржа (блок свернут) -->
+                    <div class="position-block">
+                        <div class="position-header">
+                            <div class="position-label">Позиция <span>1</span></div>
+                            <button type="button" class="btn btn-ghost btn-xs" style="pointer-events: none; display: flex; align-items: center; gap: 0.5rem;">
+                                <span>Маржа: общая (30%)</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="m6 9 6 6 6-6"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="parameters-row">
+                            <div class="field-group parameter-wide">
+                                <label class="field-label">Наименование товара</label>
+                                <input type="text" value="Товар 1" readonly style="background: var(--muted);">
+                            </div>
+                            <div class="field-group slim-field">
+                                <label class="field-label">Сумма закупа</label>
+                                <input type="number" value="1000" readonly style="background: var(--muted);">
+                            </div>
+                            <div class="field-group slim-field">
+                                <label class="field-label">Количество, шт.</label>
+                                <input type="number" value="10" readonly style="background: var(--muted);">
+                            </div>
+                            <div class="field-group slim-field">
+                                <label class="field-label">Вес за шт. (кг)</label>
+                                <input type="number" value="5" readonly style="background: var(--muted);">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Позиция 2: Индивидуальная маржа (блок развернут) -->
+                    <div class="position-block" style="border: 2px solid var(--primary);">
+                        <div class="position-header">
+                            <div class="position-label">Позиция <span>2</span></div>
+                            <button type="button" class="btn btn-ghost btn-xs" style="pointer-events: none; display: flex; align-items: center; gap: 0.5rem;">
+                                <span style="color: var(--primary); font-weight: 500;">Маржа: индивидуальная (25%)</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transform: rotate(180deg);">
+                                    <path d="m6 9 6 6 6-6"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="parameters-row">
+                            <div class="field-group parameter-wide">
+                                <label class="field-label">Наименование товара</label>
+                                <input type="text" value="Товар 2" readonly style="background: var(--muted);">
+                            </div>
+                            <div class="field-group slim-field">
+                                <label class="field-label">Сумма закупа</label>
+                                <input type="number" value="2000" readonly style="background: var(--muted);">
+                            </div>
+                            <div class="field-group slim-field">
+                                <label class="field-label">Количество, шт.</label>
+                                <input type="number" value="5" readonly style="background: var(--muted);">
+                            </div>
+                            <div class="field-group slim-field">
+                                <label class="field-label">Вес за шт. (кг)</label>
+                                <input type="number" value="8" readonly style="background: var(--muted);">
+                            </div>
+                        </div>
+                        <!-- Выпадающий блок маржи (развернут) -->
+                        <div style="margin-top: 1rem; padding: 1rem; background: var(--muted); border-radius: var(--radius-md); border: 1px solid var(--border);">
+                            <div class="field-group" style="max-width: 300px;">
+                                <label class="field-label">Установить индивидуальную маржу, %</label>
+                                <input type="number" min="0" max="100" step="0.1" value="25" style="background: var(--input);">
+                                <p class="form-helper" style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--muted-foreground);">
+                                    Оставьте пустым, чтобы использовать общую маржу (30%)
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Вариант D: Компактное поле с подсказкой -->
+    <section class="section" style="margin-bottom: 3rem;">
+        <div class="card">
+            <div style="padding: 1.5rem; border-bottom: 2px solid var(--primary); margin-bottom: 1.5rem;">
+                <h2 style="margin: 0 0 0.5rem 0; font-size: 1.25rem; font-weight: 600; color: var(--primary);">Вариант D: Компактное поле с подсказкой</h2>
+                <p style="margin: 0; color: var(--muted-foreground); font-size: 0.9rem;">Поле маржи всегда видно, с placeholder и подсказкой при наведении</p>
+            </div>
+
+            <!-- Секция "Настройки расчета" с общей маржой -->
+            <div style="margin-bottom: 1.5rem; padding: 1.5rem; background: var(--muted); border-radius: var(--radius-md);">
+                <h3 style="margin: 0 0 1rem 0; font-size: 1.1rem; font-weight: 600;">Настройки расчета</h3>
+                <div class="field-group" style="max-width: 300px;">
+                    <label for="mockup-d-margin" class="field-label">Общая маржа бюджета, %</label>
+                    <input type="number" id="mockup-d-margin" min="0" max="100" step="0.1" value="30" style="width: 100%;">
+                    <p class="form-helper" style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--muted-foreground);">
+                        Применяется ко всем позициям, если не задана индивидуальная маржа
+                    </p>
+                </div>
+            </div>
+
+            <!-- Позиции -->
+            <div class="positions-card">
+                <div class="positions-card-header">
+                    <h3 class="positions-card-title">Товары и услуги</h3>
+                </div>
+                <div class="positions-card-body">
+                    <!-- Позиция 1: Общая маржа (поле пустое, placeholder) -->
+                    <div class="position-block">
+                        <div class="position-header">
+                            <div class="position-label">Позиция <span>1</span></div>
+                            <span style="padding: 0.25rem 0.5rem; background: var(--muted); border-radius: var(--radius-sm); font-size: 0.85rem; color: var(--muted-foreground);">
+                                Используется общая маржа
+                            </span>
+                        </div>
+                        <div class="parameters-row">
+                            <div class="field-group parameter-wide">
+                                <label class="field-label">Наименование товара</label>
+                                <input type="text" value="Товар 1" readonly style="background: var(--muted);">
+                            </div>
+                            <div class="field-group slim-field">
+                                <label class="field-label">Сумма закупа</label>
+                                <input type="number" value="1000" readonly style="background: var(--muted);">
+                            </div>
+                            <div class="field-group slim-field">
+                                <label class="field-label">Количество, шт.</label>
+                                <input type="number" value="10" readonly style="background: var(--muted);">
+                            </div>
+                            <div class="field-group slim-field">
+                                <label class="field-label">Вес за шт. (кг)</label>
+                                <input type="number" value="5" readonly style="background: var(--muted);">
+                            </div>
+                            <!-- Поле маржи с placeholder -->
+                            <div class="field-group slim-field" title="Оставьте пустым для использования общей маржи (30%)">
+                                <label class="field-label">Маржа, %</label>
+                                <input type="number" min="0" max="100" step="0.1" placeholder="Общая (30%)" style="background: var(--input);">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Позиция 2: Индивидуальная маржа (поле заполнено) -->
+                    <div class="position-block" style="border: 2px solid var(--primary);">
+                        <div class="position-header">
+                            <div class="position-label">Позиция <span>2</span></div>
+                            <span style="padding: 0.25rem 0.5rem; background: var(--primary); border-radius: var(--radius-sm); font-size: 0.85rem; color: var(--primary-foreground);">
+                                Индивидуальная маржа активна
+                            </span>
+                        </div>
+                        <div class="parameters-row">
+                            <div class="field-group parameter-wide">
+                                <label class="field-label">Наименование товара</label>
+                                <input type="text" value="Товар 2" readonly style="background: var(--muted);">
+                            </div>
+                            <div class="field-group slim-field">
+                                <label class="field-label">Сумма закупа</label>
+                                <input type="number" value="2000" readonly style="background: var(--muted);">
+                            </div>
+                            <div class="field-group slim-field">
+                                <label class="field-label">Количество, шт.</label>
+                                <input type="number" value="5" readonly style="background: var(--muted);">
+                            </div>
+                            <div class="field-group slim-field">
+                                <label class="field-label">Вес за шт. (кг)</label>
+                                <input type="number" value="8" readonly style="background: var(--muted);">
+                            </div>
+                            <!-- Поле маржи заполнено -->
+                            <div class="field-group slim-field">
+                                <label class="field-label">Маржа, %</label>
+                                <input type="number" min="0" max="100" step="0.1" value="25" style="background: var(--input); border-color: var(--primary);">
+                                <p class="form-helper" style="margin-top: 0.25rem; font-size: 0.75rem; color: var(--primary);">
+                                    ✓ Переопределяет общую маржу
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div style="padding: 2rem; background: var(--muted); border-radius: var(--radius-md); text-align: center;">
+        <p style="margin: 0; color: var(--muted-foreground);">
+            <strong>Примечание:</strong> Это тестовые макеты без функционала. Выберите лучший вариант для реализации.
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+

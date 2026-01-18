@@ -121,6 +121,15 @@ def index() -> str:
     )
 
 
+@main_bp.route('/margin-mockup')
+def margin_mockup() -> str:
+    """Показывает тестовые макеты для отображения общей и индивидуальной маржи."""
+    return render_template(
+        'margin_mockup.html',
+        **build_context('index', 'Тестовые макеты: Управление маржей')
+    )
+
+
 @main_bp.route('/history/details/<int:record_id>')
 def history_details(record_id: int) -> Response:
     """Возвращает детальную информацию о сохранённой генерации в формате JSON."""

@@ -70,14 +70,15 @@ def register_error_handlers(app) -> None:
     def handle_not_found(error: NotFoundError) -> tuple[str, int]:
         """Обрабатывает ошибки NotFoundError."""
         if _is_api_request():
-            return jsonify(
-                {
-                    'error': 'not_found',
-                    'message': error.message,
-                    'resource_type': error.resource_type,
-                    'resource_id': error.resource_id,
-                }
-            ), 404
+            payload = {
+                'error': 'not_found',
+                'message': error.message,
+            }
+            if hasattr(error, 'resource_type') and error.resource_type is not None:
+                payload['resource_type'] = error.resource_type
+            if hasattr(error, 'resource_id') and error.resource_id is not None:
+                payload['resource_id'] = error.resource_id
+            return jsonify(payload), 404
         flash(f'Ресурс не найден: {error.message}', 'danger')
         return render_template(
             '404.html',
@@ -92,9 +93,9 @@ def register_error_handlers(app) -> None:
                 'error': 'validation_error',
                 'message': error.message,
             }
-            if getattr(error, 'field', None):
+            if hasattr(error, 'field') and error.field is not None:
                 payload['field'] = error.field
-            if getattr(error, 'value', None) is not None:
+            if hasattr(error, 'value') and error.value is not None:
                 payload['value'] = error.value
             if error.details:
                 payload['details'] = error.details
@@ -114,7 +115,7 @@ def register_error_handlers(app) -> None:
                 'error': 'calculation_error',
                 'message': error.message,
             }
-            if error.calculation_type:
+            if hasattr(error, 'calculation_type') and error.calculation_type is not None:
                 payload['calculation_type'] = error.calculation_type
             if error.details:
                 payload['details'] = error.details
@@ -133,9 +134,9 @@ def register_error_handlers(app) -> None:
                 'error': 'document_generation_error',
                 'message': error.message,
             }
-            if error.document_type:
+            if hasattr(error, 'document_type') and error.document_type is not None:
                 payload['document_type'] = error.document_type
-            if error.template_path:
+            if hasattr(error, 'template_path') and error.template_path is not None:
                 payload['template_path'] = error.template_path
             if error.details:
                 payload['details'] = error.details
@@ -155,7 +156,7 @@ def register_error_handlers(app) -> None:
                 'error': 'database_error',
                 'message': error.message,
             }
-            if error.operation:
+            if hasattr(error, 'operation') and error.operation is not None:
                 payload['operation'] = error.operation
             if error.details:
                 payload['details'] = error.details
@@ -174,7 +175,7 @@ def register_error_handlers(app) -> None:
                 'error': 'permission_denied',
                 'message': error.message,
             }
-            if error.required_permission:
+            if hasattr(error, 'required_permission') and error.required_permission is not None:
                 payload['required_permission'] = error.required_permission
             if error.details:
                 payload['details'] = error.details

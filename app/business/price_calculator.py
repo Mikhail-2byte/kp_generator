@@ -65,6 +65,7 @@ def calculate_selling_price(
     LOGISTICS_RF_RATIO = calc_config.get('logistics_rf_ratio', 0.7)  # Доля логистики РФ
     CONVERSION_FEE_RATE = calc_config.get('conversion_fee_rate', 0.032)  # Комиссия за конвертацию 3.2%
     CREDIT_RATE = calc_config.get('credit_rate', 0.16)  # Ставка кредита 16%
+    VAT_RATE = calc_config.get('vat_rate', 0.22)  # Ставка НДС 22%
     
     # Расчет общего веса
     total_weight = weight * quantity
@@ -109,14 +110,14 @@ def calculate_selling_price(
         # Итеративный расчет с учетом банковской гарантии
         # В Excel формула: I24*3%/365*(I15+I16), где I15+I16 = delivery_time + payment_days
         # Банковская гарантия = (выручка с НДС) * 0.03 / 365 * (delivery_time + payment_days)
-        # Выручка с НДС = selling_price_per_unit * quantity * 1.2
+        # Выручка с НДС = selling_price_per_unit * quantity * (1 + VAT_RATE)
         # Начинаем с цены без банковской гарантии
         selling_price_per_unit = total_cost_per_unit / (1 - margin_percent / 100)
         
         # Итеративно уточняем цену с учетом банковской гарантии
         bank_guarantee_days = delivery_time + payment_days  # K15 = I15 + I16
         for _ in range(5):  # Максимум 5 итераций
-            revenue_with_vat = selling_price_per_unit * quantity * 1.2
+            revenue_with_vat = selling_price_per_unit * quantity * (1 + VAT_RATE)
             bank_guarantee_cost = revenue_with_vat * 0.03 / 365 * bank_guarantee_days
             bank_guarantee_cost_per_unit = bank_guarantee_cost / quantity
             

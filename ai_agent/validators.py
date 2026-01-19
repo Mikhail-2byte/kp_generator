@@ -49,13 +49,14 @@ class ParameterValidator:
                         corrected_params['weight_kg'] = corrected_weight
                         errors.append(f"Исправлено: вес был указан в граммах, переведен в {corrected_weight:.2f} кг")
         
-        # Валидация города
+        # Валидация города (обязательное поле)
         city_name = params.get('city_name')
-        if city_name:
-            if not isinstance(city_name, str):
-                errors.append("Название города должно быть строкой")
-            elif not self.CITY_NAME_PATTERN.match(city_name):
-                errors.append("Название города содержит недопустимые символы")
+        if not city_name:
+            errors.append("Не указан город доставки")
+        elif not isinstance(city_name, str):
+            errors.append("Название города должно быть строкой")
+        elif not self.CITY_NAME_PATTERN.match(city_name):
+            errors.append("Название города содержит недопустимые символы")
         
         # Валидация типа транспорта
         transport_type = params.get('transport_type')

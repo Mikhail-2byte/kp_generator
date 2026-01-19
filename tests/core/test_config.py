@@ -116,7 +116,8 @@ class TestLoadConfig:
         """Проверяет загрузку конфигурации с переменными окружения."""
         config = load_config(app)
         assert isinstance(config, dict)
-        assert 'database' in config or 'logging' in config
+        # Проверяем наличие основных ключей конфигурации
+        assert 'database_url' in config or 'calculation_constants' in config or 'profile' in config
 
     @patch.dict(os.environ, {'FLASK_ENV': 'development'}, clear=False)
     def test_load_config_development(self, app):
@@ -144,9 +145,8 @@ class TestSetupAppSecurity:
     @patch.dict(os.environ, {}, clear=True)
     def test_setup_security_without_secret_key_production(self, app):
         """Проверяет, что без SECRET_KEY в production выбрасывается ошибка."""
-        app.config['ENV'] = 'production'
-        config = {'secret_key': None}
-        with pytest.raises(RuntimeError, match='SECRET_KEY must be set'):
+        config = {'secret_key': None, 'profile': 'production'}
+        with pytest.raises(RuntimeError, match='SECRET_KEY'):
             setup_app_security(app, config)
 
     @patch.dict(os.environ, {}, clear=True)

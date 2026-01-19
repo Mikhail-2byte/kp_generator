@@ -8,6 +8,7 @@
     "logistics_cnr_ratio": 0.3,
     "logistics_rf_ratio": 0.7,
     "conversion_fee_rate": 0.032,
-    "credit_rate": 0.16
+    "credit_rate": 0.16,
+    "vat_rate": 0.22
   }
 }

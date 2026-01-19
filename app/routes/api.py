@@ -37,10 +37,11 @@ def health() -> Dict[str, Any]:
 
 @api_bp.route('/generations', methods=['GET'])
 @csrf.exempt
+@login_required
 def list_generations() -> Dict[str, Any]:
     """
     Получить список генераций с пагинацией.
-    Доступен для неавторизованных пользователей.
+    Требует аутентификации.
     
     Query Parameters:
         page: Номер страницы (по умолчанию 1)

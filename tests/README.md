@@ -3,10 +3,6 @@
 ## 📁 tests/
 Все pytest тесты находятся здесь:
 
-### tests/ai_agent/
-- `test_ai_agent_improvements.py` - Unit тесты AI агента (pytest + mock)
-- `test_ai_manual.py` - Ручное тестирование без mock (для отладки)
-
 ### tests/api/
 - API endpoints тесты
 
@@ -54,16 +50,6 @@ python ai_agent/test_imports.py
 ### Все тесты:
 ```bash
 pytest
-```
-
-### Только AI агент:
-```bash
-pytest tests/ai_agent/
-```
-
-### Ручное тестирование AI:
-```bash
-python tests/ai_agent/test_ai_manual.py
 ```
 
 ### Проверка импортов:

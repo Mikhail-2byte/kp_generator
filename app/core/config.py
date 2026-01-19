@@ -23,13 +23,23 @@ def _resolve_log_level_value(value: Any) -> int:
     Некорректные значения откатываются на INFO, чтобы не рушить инициализацию.
     """
     if isinstance(value, int):
-        return value
+        # Проверяем, что это валидный уровень логирования (обычно 0-50)
+        # Валидные уровни: NOTSET=0, DEBUG=10, INFO=20, WARNING=30, ERROR=40, CRITICAL=50
+        if 0 <= value <= 50:
+            return value
+        # Невалидное число - откатываемся на INFO
+        logging.getLogger(__name__).warning('Invalid log level "%s", fallback to INFO', value)
+        return logging.INFO
 
     if isinstance(value, str):
         normalized = value.strip().upper()
         resolved = logging.getLevelName(normalized)
         if isinstance(resolved, int):
             return resolved
+
+    if value is None:
+        logging.getLogger(__name__).warning('None log level, fallback to INFO')
+        return logging.INFO
 
     logging.getLogger(__name__).warning('Unknown log level "%s", fallback to INFO', value)
     return logging.INFO
@@ -55,7 +65,7 @@ def _load_json(path: Path, *, logger) -> Dict[str, Any]:
         logger.info('Config loaded successfully: %s', path.as_posix())
         return data
     except json.JSONDecodeError as exc:
-        logger.error('Failed to parse config file %s: %s', path.as_posix(), exc)
+        logger.warning('Failed to parse config file %s: %s', path.as_posix(), exc)
         return {}
 
 
@@ -108,10 +118,12 @@ def load_config(app):
 
 def setup_app_security(app, config):
     """Настраивает безопасность приложения"""
-    secret_key = config.get('secret_key')
+    # Сначала проверяем переменные окружения, затем config
+    secret_key = os.environ.get('SECRET_KEY') or config.get('secret_key')
 
     # В продакшене запрещаем автогенерацию ключа, чтобы не ронять сессии между рестартами
-    if (config.get('profile') or '').lower() == 'production' and not secret_key:
+    profile = (config.get('profile') or '').lower()
+    if profile == 'production' and not secret_key:
         raise RuntimeError('SECRET_KEY обязателен в production. Задайте переменную окружения SECRET_KEY')
 
     secret_key = secret_key or secrets.token_hex(32)

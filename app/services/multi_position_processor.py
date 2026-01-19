@@ -2,7 +2,7 @@
 import math
 from copy import copy
 from io import BytesIO
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import openpyxl
 from openpyxl.formula.translate import Translator
@@ -17,8 +17,11 @@ MAX_ROWS = 500
 class MultiPositionProcessor:
     """Обработчик множественных позиций для Excel файлов на основе excel_row_inserter.py"""
     
-    def __init__(self, template_path: str):
+    def __init__(self, template_path: str, config: Optional[Dict[str, Any]] = None):
         self.template_path = template_path
+        self.config = config or {}
+        calc_config = self.config.get('calculation_constants', {})
+        self.vat_rate = calc_config.get('vat_rate', 0.22)  # Ставка НДС 22%
     
     def _extract_days_from_payment_terms(self, payment_terms: str) -> int | None:
         """
@@ -206,7 +209,8 @@ class MultiPositionProcessor:
         )
 
         nds_row = total_row + 1
-        sheet[f"I{nds_row}"] = f"=I{total_row}*1.2"
+        vat_multiplier = 1 + self.vat_rate
+        sheet[f"I{nds_row}"] = f"=I{total_row}*{vat_multiplier}"
 
     def update_summary_block(self, sheet, rows_added: int = 0) -> None:
         """Обновляет формулы итоговых строк c учётом новой строки."""
@@ -232,7 +236,8 @@ class MultiPositionProcessor:
 
         # Обновляем формулы с динамическими ссылками
         sheet[f"I{total_row}"] = f"=SUM(I{DATA_START_ROW}:I{last_data_row})"
-        sheet[f"I{total_row + 1}"] = f"=I{total_row}*1.2"
+        vat_multiplier = 1 + self.vat_rate
+        sheet[f"I{total_row + 1}"] = f"=I{total_row}*{vat_multiplier}"
 
         sheet[f"K{k_formula_row}"] = f"=I{k_formula_row}+I{k_formula_row + 1}"
 
@@ -248,7 +253,10 @@ class MultiPositionProcessor:
 
         sheet[f"I{i25_row}"] = f"=I{total_row + 1}"
 
-        sheet[f"I{i26_row}"] = f"=I{i25_row}/120*20"
+        # Расчет НДС из суммы с НДС: сумма_с_НДС / (100 + vat_rate*100) * (vat_rate*100)
+        vat_base = int((1 + self.vat_rate) * 100)  # 122 для 22%
+        vat_percent = int(self.vat_rate * 100)  # 22 для 22%
+        sheet[f"I{i26_row}"] = f"=I{i25_row}/{vat_base}*{vat_percent}"
         sheet[f"I{i27_row}"] = f"=I{i25_row}-I{i26_row}"
         sheet[f"I{i28_row}"] = f"=SUM(I{i29_row}:I{i28_row + 10})"
         sheet[f"I{i29_row}"] = f"=O{total_row}"

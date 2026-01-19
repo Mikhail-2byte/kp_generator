@@ -151,6 +151,7 @@ class GenerationOrchestrator:
             total_general_price,
             position_prices=position_prices,
             manager_fio=manager_fio,
+            config=self.app_config,
         )
         word_file = generate_word_document(
             word_template_path,
@@ -280,7 +281,9 @@ class GenerationOrchestrator:
         # Шаг 5: Подготовка данных для документов
         first_position = position_prices[0]
         final_price = first_position['final_price']
-        final_price_nds = total_general_price * 1.2
+        # Получаем ставку НДС из конфигурации
+        vat_rate = self.app_config.get('calculation_constants', {}).get('vat_rate', 0.22)
+        final_price_nds = total_general_price * (1 + vat_rate)
         
         # Обновляем form_data с позициями
         cleaned_data['positions'] = positions

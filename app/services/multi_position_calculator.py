@@ -38,6 +38,7 @@ class MultiPositionCalculator(PriceCalculatorPort):
         self.LOGISTICS_RF_RATIO = self.calc_config.get('logistics_rf_ratio', 0.7)
         self.CONVERSION_FEE_RATE = self.calc_config.get('conversion_fee_rate', 0.032)
         self.CREDIT_RATE = self.calc_config.get('credit_rate', 0.16)
+        self.VAT_RATE = self.calc_config.get('vat_rate', 0.22)  # Ставка НДС 22%
     
     def calculate_position_costs(
         self, position: Dict[str, Any], logistics_rub: float, 
@@ -225,7 +226,7 @@ class MultiPositionCalculator(PriceCalculatorPort):
                     # В Excel формула: I24*3%/365*(I15+I16), где I15+I16 = delivery_time + payment_days
                     bank_guarantee_days = delivery_time + payment_days  # K15 = I15 + I16
                     for _ in range(5):  # Максимум 5 итераций
-                        revenue_with_vat = final_price * quantity * 1.2
+                        revenue_with_vat = final_price * quantity * (1 + self.VAT_RATE)
                         bank_guarantee_cost = revenue_with_vat * 0.03 / 365 * bank_guarantee_days
                         bank_guarantee_cost_per_unit = bank_guarantee_cost / quantity if quantity > 0 else 0
                         
@@ -289,7 +290,7 @@ class MultiPositionCalculator(PriceCalculatorPort):
                         costs['cost_per_unit'] * price_coefficient * int(pos_data['position']['quantity'])
                         for pos_data in position_costs
                     )
-                    revenue_with_vat = test_revenue * 1.2
+                    revenue_with_vat = test_revenue * (1 + self.VAT_RATE)
                     bank_guarantee_cost = revenue_with_vat * 0.03 / 365 * bank_guarantee_days
                     
                     # Пересчитываем коэффициент с учетом банковской гарантии

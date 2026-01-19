@@ -1,0 +1,16 @@
+{
+  "saved_at": "20260119T141104",
+  "actor": "test_user",
+  "data": {
+    "materials": [
+      {
+        "russian": "10",
+        "gb": "10",
+        "notes": "",
+        "gost": "ГОСТ 1050-2013",
+        "price": "4.30",
+        "workpiece_type": "Лист"
+      }
+    ]
+  }
+}

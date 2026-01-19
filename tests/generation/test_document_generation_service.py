@@ -13,8 +13,9 @@ from app.business.document_generator import DocumentGenerationService
 
 
 class _DummyProcessor:
-    def __init__(self, template_path):
+    def __init__(self, template_path, config=None):
         self.template_path = template_path
+        self.config = config
 
     def process_multiple_positions(self, *args, **kwargs):
         payload = {

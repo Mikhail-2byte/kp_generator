@@ -7,7 +7,6 @@ from docx import Document
 from docx.table import Table
 from io import BytesIO
 from datetime import datetime
-import math
 
 
 class WordMultiPositionProcessor:
@@ -277,8 +276,8 @@ class WordMultiPositionProcessor:
         if position_price and isinstance(position_price, dict):
             final_price = safe_float(position_price.get('final_price', 0))
             general_price = safe_float(position_price.get('general_price', 0))
-            # Округляем цену за единицу вверх до целого числа (чтобы маржа была не меньше целевой)
-            final_price_rounded = math.ceil(final_price) if final_price > 0 else 0
+            # Округляем цену за единицу до целого числа (как в Excel, для единообразия)
+            final_price_rounded = round(final_price) if final_price > 0 else 0
             # Форматируем цены с пробелами в качестве разделителей тысяч
             # Всегда добавляем final_price, даже если 0 (чтобы заменить плейсхолдер)
             position_data['{{ final_price }}'] = self.format_price(final_price_rounded)

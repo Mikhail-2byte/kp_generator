@@ -42,7 +42,6 @@ kp_generator.db
 
 # Runtime generated data
 logs/
-data/
 *.log
 
 # IDE

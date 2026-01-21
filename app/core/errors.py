@@ -14,6 +14,7 @@ from app.core.exceptions import (
 )
 from app.core.extensions import login_manager
 from app.presentation.ui import build_context
+from app.services import datasets
 
 
 def _is_api_request() -> bool:
@@ -61,9 +62,13 @@ def register_error_handlers(app) -> None:
                 'message': 'Загружаемый файл слишком большой. Максимальный размер: 10 МБ'
             }), 413
         flash('Загружаемый файл слишком большой. Максимальный размер: 10 МБ', 'danger')
+        try:
+            cities = datasets.load_logistics_cities()
+        except Exception:
+            cities = []
         return render_template(
             'index.html',
-            **build_context('index', 'Файл слишком большой')
+            **build_context('index', 'Файл слишком большой', cities=cities)
         ), 413
     
     @app.errorhandler(NotFoundError)
@@ -102,9 +107,13 @@ def register_error_handlers(app) -> None:
             return jsonify(payload), 400
         flash(f'Ошибка валидации: {error.message}', 'danger')
         # Перенаправляем на главную страницу или возвращаем форму с ошибками
+        try:
+            cities = datasets.load_logistics_cities()
+        except Exception:
+            cities = []
         return render_template(
             'index.html',
-            **build_context('index', 'Ошибка валидации')
+            **build_context('index', 'Ошибка валидации', cities=cities)
         ), 400
     
     @app.errorhandler(CalculationError)
@@ -121,9 +130,13 @@ def register_error_handlers(app) -> None:
                 payload['details'] = error.details
             return jsonify(payload), 500
         flash(f'Ошибка расчета: {error.message}', 'danger')
+        try:
+            cities = datasets.load_logistics_cities()
+        except Exception:
+            cities = []
         return render_template(
             'index.html',
-            **build_context('index', 'Ошибка расчета')
+            **build_context('index', 'Ошибка расчета', cities=cities)
         ), 500
     
     @app.errorhandler(DocumentGenerationError)
@@ -142,9 +155,13 @@ def register_error_handlers(app) -> None:
                 payload['details'] = error.details
             return jsonify(payload), 500
         flash(f'Ошибка генерации документа: {error.message}', 'danger')
+        try:
+            cities = datasets.load_logistics_cities()
+        except Exception:
+            cities = []
         return render_template(
             'index.html',
-            **build_context('index', 'Ошибка генерации')
+            **build_context('index', 'Ошибка генерации', cities=cities)
         ), 500
     
     @app.errorhandler(DatabaseError)
@@ -203,6 +220,25 @@ def register_error_handlers(app) -> None:
             '500.html',
             **build_context('index', 'Ошибка приложения')
         ), 500
+
+    @app.errorhandler(Exception)
+    def handle_exception(e: Exception) -> tuple[str, int]:
+        """Обрабатывает все необработанные исключения."""
+        # Если это уже обработанное исключение (HTTPException), пропускаем
+        from werkzeug.exceptions import HTTPException
+        if isinstance(e, HTTPException):
+            raise
+        
+        # Если это кастомное исключение приложения, оно должно обрабатываться отдельными обработчиками
+        from app.core.exceptions import KPGeneratorError
+        if isinstance(e, KPGeneratorError):
+            raise
+        
+        # Логируем исключение
+        app.logger.exception('Unhandled exception: %s', e)
+        
+        # Используем обработчик 500
+        return internal_error(e)
 
     @login_manager.unauthorized_handler
     def handle_unauthorized() -> Response:

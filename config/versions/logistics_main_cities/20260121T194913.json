@@ -1,0 +1,15 @@
+{
+  "saved_at": "20260121T194913",
+  "actor": "testadmin",
+  "data": {
+    "cities": [
+      {
+        "name": "Иркутск",
+        "region": "Иркутская область",
+        "truck_price": 60000.0,
+        "is_main_route": true,
+        "main_city": null
+      }
+    ]
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "saved_at": "20260121T190249",
+  "actor": "test_user",
+  "data": {
+    "cities": [
+      {
+        "name": "Город1",
+        "region": "Регион1",
+        "distance_from_ekb_km": null
+      },
+      {
+        "name": "Город2",
+        "region": "Регион2",
+        "distance_from_ekb_km": null
+      }
+    ]
+  }
+}

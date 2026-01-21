@@ -66,12 +66,12 @@ class TestErrorHandlers:
         """Проверяет обработку 500 для API запроса."""
         register_error_handlers(app)
 
-        @app.route('/test-error')
+        @app.route('/api/test-error')
         def test_error():
             raise ValueError('Test error')
 
         with app.test_client() as client:
-            response = client.get('/test-error')
+            response = client.get('/api/test-error')
             assert response.status_code == 500
             assert response.is_json
             data = response.get_json()
@@ -82,12 +82,12 @@ class TestErrorHandlers:
         """Проверяет обработку ValidationError для API."""
         register_error_handlers(app)
 
-        @app.route('/test-validation')
+        @app.route('/api/test-validation')
         def test_validation():
             raise ValidationError('Invalid data', field='test_field', value='test_value')
 
         with app.test_client() as client:
-            response = client.get('/test-validation')
+            response = client.get('/api/test-validation')
             assert response.status_code == 400
             assert response.is_json
             data = response.get_json()
@@ -99,12 +99,12 @@ class TestErrorHandlers:
         """Проверяет обработку CalculationError для API."""
         register_error_handlers(app)
 
-        @app.route('/test-calculation')
+        @app.route('/api/test-calculation')
         def test_calculation():
             raise CalculationError('Calculation failed', calculation_type='test')
 
         with app.test_client() as client:
-            response = client.get('/test-calculation')
+            response = client.get('/api/test-calculation')
             assert response.status_code == 500
             assert response.is_json
             data = response.get_json()
@@ -114,12 +114,12 @@ class TestErrorHandlers:
         """Проверяет обработку DocumentGenerationError для API."""
         register_error_handlers(app)
 
-        @app.route('/test-document')
+        @app.route('/api/test-document')
         def test_document():
             raise DocumentGenerationError('Document generation failed', document_type='test')
 
         with app.test_client() as client:
-            response = client.get('/test-document')
+            response = client.get('/api/test-document')
             assert response.status_code == 500
             assert response.is_json
             data = response.get_json()
@@ -129,12 +129,12 @@ class TestErrorHandlers:
         """Проверяет обработку NotFoundError для API."""
         register_error_handlers(app)
 
-        @app.route('/test-not-found')
+        @app.route('/api/test-not-found')
         def test_not_found():
             raise NotFoundError('Resource not found', resource_type='test', resource_id='123')
 
         with app.test_client() as client:
-            response = client.get('/test-not-found')
+            response = client.get('/api/test-not-found')
             assert response.status_code == 404
             assert response.is_json
             data = response.get_json()
@@ -145,12 +145,12 @@ class TestErrorHandlers:
         """Проверяет обработку DatabaseError для API."""
         register_error_handlers(app)
 
-        @app.route('/test-database')
+        @app.route('/api/test-database')
         def test_database():
             raise DatabaseError('Database error', operation='test')
 
         with app.test_client() as client:
-            response = client.get('/test-database')
+            response = client.get('/api/test-database')
             assert response.status_code == 500
             assert response.is_json
             data = response.get_json()
@@ -160,12 +160,12 @@ class TestErrorHandlers:
         """Проверяет обработку PermissionError для API."""
         register_error_handlers(app)
 
-        @app.route('/test-permission')
+        @app.route('/api/test-permission')
         def test_permission():
             raise PermissionError('Permission denied', required_permission='admin')
 
         with app.test_client() as client:
-            response = client.get('/test-permission')
+            response = client.get('/api/test-permission')
             assert response.status_code == 403
             assert response.is_json
             data = response.get_json()
@@ -175,12 +175,12 @@ class TestErrorHandlers:
         """Проверяет обработку RequestEntityTooLarge для API."""
         register_error_handlers(app)
 
-        @app.route('/test-large')
+        @app.route('/api/test-large')
         def test_large():
             raise RequestEntityTooLarge()
 
         with app.test_client() as client:
-            response = client.get('/test-large')
+            response = client.get('/api/test-large')
             assert response.status_code == 413
             assert response.is_json
             data = response.get_json()

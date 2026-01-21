@@ -426,7 +426,7 @@
                                 </div>
                                 <div class="field-group slim-field">
                                     <label class="field-label" data-label-for="duty_percent">Пошлина (%)</label>
-                                    <input type="number" data-field="duty_percent" min="0" max="100" step="0.1" class="position-duty">
+                                    <input type="number" data-field="duty_percent" min="0" max="100" step="0.1" class="position-duty" value="0">
                                 </div>
                                 <div class="field-group slim-field position-margin-field">
                                     <label class="field-label" data-label-for="position_margin">Маржа, %</label>
@@ -1812,7 +1812,11 @@
             positionFieldKeys.forEach(field => {
                 const input = block.querySelector(`[data-field="${field}"]`);
                 if (input) {
-                    input.value = position[field] ?? '';
+                    if (field === 'duty_percent') {
+                        input.value = position[field] ?? '0';
+                    } else {
+                        input.value = position[field] ?? '';
+                    }
                     clearFieldError(input);
                 }
             });
@@ -1888,7 +1892,11 @@
                 }
 
                 newBlock.querySelectorAll('input').forEach(input => {
-                    input.value = '';
+                    if (input.dataset.field === 'duty_percent') {
+                        input.value = '0';
+                    } else {
+                        input.value = '';
+                    }
                 });
 
                 positionsContainer.appendChild(newBlock);

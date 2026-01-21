@@ -80,6 +80,27 @@ class DutyDeleteForm(FlaskForm):
     submit = SubmitField('Удалить')
 
 
+class TNVEDItemForm(FlaskForm):
+    """Добавление новой записи в каталог ТН ВЭД."""
+    code = StringField('Код ТН ВЭД', validators=[DataRequired(), Length(min=1, max=50)])
+    description = StringField('Описание', validators=[DataRequired(), Length(min=1, max=500)])
+    keywords_display = StringField('Ключевые слова', validators=[Optional(), Length(max=500)])
+    examples = StringField('Примеры', validators=[Optional(), Length(max=500)])
+    duty_text = StringField('Пошлина (текст)', validators=[Optional(), Length(max=200)])
+    duty_percent = DecimalField(
+        'Пошлина, %', places=2, rounding=None, validators=[Optional(), NumberRange(min=0)]
+    )
+    action = HiddenField(default='add_tnved')
+    submit = SubmitField('Добавить запись')
+
+
+class TNVEDDeleteForm(FlaskForm):
+    """Удаление существующей записи из каталога ТН ВЭД."""
+    action = HiddenField(default='delete_tnved', validators=[DataRequired()])
+    index = HiddenField(validators=[DataRequired()])
+    submit = SubmitField('Удалить')
+
+
 class GBMaterialForm(FlaskForm):
     """Добавление аналога материала по стандарту GB."""
     russian = StringField('Наименование (RU)', validators=[DataRequired(), Length(min=1, max=200)])

@@ -95,7 +95,23 @@
             </div>
 
             <div class="card">
-                <h3 class="section-title">Справочник основных городов</h3>
+                <div class="section-header">
+                    <h3 class="section-title">Справочник основных городов</h3>
+                    <div style="display: flex; gap: 8px;">
+                        <a href="{{ url_for('admin.export_main_cities') }}" class="btn btn-outline">
+                            <span>{{ sidebar_icon('download')|safe }}</span>
+                            <span>Экспорт в Excel</span>
+                        </a>
+                        <form method="post" action="{{ url_for('admin.import_main_cities') }}" enctype="multipart/form-data" style="display: inline-block;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="file" id="mainExcelFileInput" name="excel_file" accept=".xlsx,.xls" style="display: none;" onchange="this.form.submit()">
+                            <button type="button" class="btn btn-primary" onclick="document.getElementById('mainExcelFileInput').click()">
+                                <span>{{ sidebar_icon('upload')|safe }}</span>
+                                <span>Импорт из Excel</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
                 {% if main_cities_groups %}
                     {% for group in main_cities_groups %}
                         <details class="city-group-details" style="margin-bottom: 1.5rem; border: 1px solid var(--border, #e5e7eb); border-radius: 0.5rem; overflow: hidden;">
@@ -228,7 +244,23 @@
             </div>
 
             <div class="card">
-                <h3 class="section-title">Справочник городов (ЕКБ+РФ)</h3>
+                <div class="section-header">
+                    <h3 class="section-title">Справочник городов (ЕКБ+РФ)</h3>
+                    <div style="display: flex; gap: 8px;">
+                        <a href="{{ url_for('admin.export_ekb_rf_cities') }}" class="btn btn-outline">
+                            <span>{{ sidebar_icon('download')|safe }}</span>
+                            <span>Экспорт в Excel</span>
+                        </a>
+                        <form method="post" action="{{ url_for('admin.import_ekb_rf_cities') }}" enctype="multipart/form-data" style="display: inline-block;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="file" id="ekbRfExcelFileInput" name="excel_file" accept=".xlsx,.xls" style="display: none;" onchange="this.form.submit()">
+                            <button type="button" class="btn btn-primary" onclick="document.getElementById('ekbRfExcelFileInput').click()">
+                                <span>{{ sidebar_icon('upload')|safe }}</span>
+                                <span>Импорт из Excel</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
                 <div class="history-table-wrapper">
                     <table class="data-table">
                         <thead>
@@ -312,7 +344,23 @@
             </div>
 
             <div class="card">
-                <h3 class="section-title">Справочник трала</h3>
+                <div class="section-header">
+                    <h3 class="section-title">Справочник трала</h3>
+                    <div style="display: flex; gap: 8px;">
+                        <a href="{{ url_for('admin.export_trail_cities') }}" class="btn btn-outline">
+                            <span>{{ sidebar_icon('download')|safe }}</span>
+                            <span>Экспорт в Excel</span>
+                        </a>
+                        <form method="post" action="{{ url_for('admin.import_trail_cities') }}" enctype="multipart/form-data" style="display: inline-block;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="file" id="trailExcelFileInput" name="excel_file" accept=".xlsx,.xls" style="display: none;" onchange="this.form.submit()">
+                            <button type="button" class="btn btn-primary" onclick="document.getElementById('trailExcelFileInput').click()">
+                                <span>{{ sidebar_icon('upload')|safe }}</span>
+                                <span>Импорт из Excel</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
                 <div class="history-table-wrapper">
                     <table class="data-table">
                         <thead>

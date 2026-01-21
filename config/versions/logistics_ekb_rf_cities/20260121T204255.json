@@ -1,0 +1,13 @@
+{
+  "saved_at": "20260121T204255",
+  "actor": "test_user",
+  "data": {
+    "cities": [
+      {
+        "name": "Москва",
+        "region": "Московская область",
+        "distance_from_ekb_km": 1800
+      }
+    ]
+  }
+}

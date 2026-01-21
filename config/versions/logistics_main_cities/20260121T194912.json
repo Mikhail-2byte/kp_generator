@@ -1,0 +1,15 @@
+{
+  "saved_at": "20260121T194912",
+  "actor": "test_user",
+  "data": {
+    "cities": [
+      {
+        "name": "Чита",
+        "region": "Забайкальский край",
+        "truck_price": 50000.0,
+        "is_main_route": true,
+        "main_city": null
+      }
+    ]
+  }
+}

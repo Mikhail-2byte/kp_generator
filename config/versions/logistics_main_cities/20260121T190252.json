@@ -1,0 +1,15 @@
+{
+  "saved_at": "20260121T190252",
+  "actor": "test_user",
+  "data": {
+    "cities": [
+      {
+        "name": "Город1",
+        "region": "Регион1",
+        "truck_price": 0.0,
+        "is_main_route": true,
+        "main_city": null
+      }
+    ]
+  }
+}

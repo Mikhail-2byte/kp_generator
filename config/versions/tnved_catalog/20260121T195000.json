@@ -1,0 +1,16 @@
+{
+  "saved_at": "20260121T195000",
+  "actor": "testadmin",
+  "data": {
+    "items": [
+      {
+        "code": "9999999999",
+        "description": "Импортированное описание",
+        "keywords_display": "Импортированные слова",
+        "examples": "Импортированные примеры",
+        "duty_text": "15%",
+        "duty_percent": 15.0
+      }
+    ]
+  }
+}

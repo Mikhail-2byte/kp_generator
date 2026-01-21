@@ -1,0 +1,16 @@
+{
+  "saved_at": "20260121T204252",
+  "actor": "test_user",
+  "data": {
+    "items": [
+      {
+        "code": "9031908500",
+        "description": "ЧАСТИ И ПРИНАДЛЕЖНОСТИ",
+        "keywords_display": "ШТОК",
+        "examples": "ШТОК",
+        "duty_text": "0%",
+        "duty_percent": 0.0
+      }
+    ]
+  }
+}

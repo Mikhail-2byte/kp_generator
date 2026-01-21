@@ -1,0 +1,29 @@
+{
+  "saved_at": "20260121T190247",
+  "actor": "test_user",
+  "data": {
+    "cities": [
+      {
+        "name": "Город1",
+        "region": "Регион1",
+        "truck_price": 50000.0,
+        "is_main_route": true,
+        "main_city": null
+      },
+      {
+        "name": "Город2",
+        "region": "Регион2",
+        "truck_price": 45000.0,
+        "is_main_route": true,
+        "main_city": "Город1"
+      },
+      {
+        "name": "Город3",
+        "region": "Регион3",
+        "truck_price": 40000.0,
+        "is_main_route": true,
+        "main_city": "Город1"
+      }
+    ]
+  }
+}

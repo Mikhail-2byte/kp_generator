@@ -1,0 +1,48 @@
+{
+  "saved_at": "20260121T201627",
+  "actor": "test_user",
+  "data": {
+    "materials": [
+      {
+        "russian": "10",
+        "gb": "10",
+        "notes": "",
+        "gost": "ГОСТ 1050-2013",
+        "price": "4.30",
+        "workpiece_type": "Лист"
+      },
+      {
+        "russian": "20",
+        "gb": "20",
+        "notes": "",
+        "gost": "ГОСТ 1050-2013",
+        "price": "4.30",
+        "workpiece_type": "Прокат"
+      },
+      {
+        "russian": "45",
+        "gb": "45",
+        "notes": "",
+        "gost": "ГОСТ 1050-2013",
+        "price": "4.40",
+        "workpiece_type": "Труба"
+      },
+      {
+        "russian": "09Г2С",
+        "gb": "12Mn",
+        "notes": "",
+        "gost": "ГОСТ 19281-2014",
+        "price": "4.00",
+        "workpiece_type": "Лист"
+      },
+      {
+        "russian": "40Х",
+        "gb": "40Cr",
+        "notes": "",
+        "gost": "ГОСТ 4543-2016",
+        "price": "4.90",
+        "workpiece_type": "Прокат"
+      }
+    ]
+  }
+}

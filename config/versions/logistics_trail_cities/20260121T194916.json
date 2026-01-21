@@ -1,0 +1,13 @@
+{
+  "saved_at": "20260121T194916",
+  "actor": "testadmin",
+  "data": {
+    "cities": [
+      {
+        "name": "Красноярск",
+        "region": "Красноярский край",
+        "trail_price": 100000.0
+      }
+    ]
+  }
+}

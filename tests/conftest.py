@@ -55,27 +55,39 @@ def client(app):
 
 
 @pytest.fixture
+def logged_in_client(client, admin_user, app):
+    """Клиент с авторизованным администратором."""
+    with app.app_context():
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(admin_user.id)
+            sess['_fresh'] = True
+    return client
+
+
+@pytest.fixture
 def admin_user(app):
     """Создает тестового администратора."""
     from app.database.service import DatabaseService
     from app.models.models import User
+    from werkzeug.security import generate_password_hash
     
     with app.app_context():
         db_service = DatabaseService()
         
         # Проверяем, существует ли уже пользователь
-        existing_user = db_service.get_user_by_username('testadmin')
-        if existing_user:
-            return existing_user
+        existing_user_data = db_service.get_user_by_username('testadmin')
+        if existing_user_data:
+            # get_user_by_username возвращает кортеж, преобразуем в User
+            return User.from_row(existing_user_data)
         
         # Создаем нового администратора
-        user = User(
+        password_hash = generate_password_hash('admin123')
+        user_id = db_service.create_user(
             username='testadmin',
-            is_admin=True
+            password_hash=password_hash,
+            role='admin'
         )
-        user.set_password('admin123')
         
-        db_service.session.add(user)
-        db_service.session.commit()
-        
-        return user
+        # Получаем созданного пользователя и преобразуем в User
+        user_data = db_service.get_user_by_id(user_id)
+        return User.from_row(user_data)

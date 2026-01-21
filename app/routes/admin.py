@@ -25,7 +25,9 @@ from app.presentation.forms import (
     EkbRfCityForm,
     EkbRfCityDeleteForm,
     TrailCityForm,
-    TrailCityDeleteForm
+    TrailCityDeleteForm,
+    TNVEDItemForm,
+    TNVEDDeleteForm
 )
 from app.auth.security import admin_required
 from app.services import datasets, datasets_validator
@@ -277,9 +279,18 @@ def admin_panel() -> Union[str, Response]:
 @admin_bp.route('/admin/duty', methods=['GET', 'POST'])
 @admin_required
 def manage_duty() -> Union[str, Response]:
-    duty_items = datasets.load_duty_rates()
+    # Загружаем все пошлины из единого файла
+    all_items = datasets.load_duty_rates()
+    
+    # Разделяем на простые записи и ТН ВЭД
+    duty_items = [item for item in all_items if not item.get('code')]
+    tnved_items = [item for item in all_items if item.get('code')]
+    
     duty_form = DutyItemForm(prefix='duty')
     duty_form.action.data = 'add_duty'
+    
+    tnved_form = TNVEDItemForm(prefix='tnved')
+    tnved_form.action.data = 'add_tnved'
 
     if request.method == 'POST':
         action = request.form.get('action', '')
@@ -360,6 +371,101 @@ def manage_duty() -> Union[str, Response]:
                 flash('Не удалось подтвердить удаление.', 'danger')
             return redirect(url_for('admin.manage_duty'))
 
+        elif action == 'add_tnved':
+            if tnved_form.validate():
+                code = tnved_form.code.data.strip()
+                description = tnved_form.description.data.strip()
+                keywords_display = tnved_form.keywords_display.data.strip() if tnved_form.keywords_display.data else ''
+                examples = tnved_form.examples.data.strip() if tnved_form.examples.data else ''
+                duty_text = tnved_form.duty_text.data.strip() if tnved_form.duty_text.data else ''
+                duty_percent_value = tnved_form.duty_percent.data
+                duty_percent = float(duty_percent_value) if duty_percent_value is not None else None
+
+                # Объединяем все записи и сохраняем в единый файл
+                all_items = duty_items + tnved_items
+                all_items.append({
+                    'code': code,
+                    'description': description,
+                    'keywords_display': keywords_display,
+                    'examples': examples,
+                    'duty_text': duty_text,
+                    'duty_percent': duty_percent
+                })
+                datasets.save_duty_rates(all_items, actor=_current_actor())
+                datasets.refresh_duty_rates()
+                datasets.refresh_tnved_catalog()
+                flash('Запись каталога ТН ВЭД добавлена.', 'success')
+                return redirect(url_for('admin.manage_duty'))
+            flash('Исправьте ошибки в форме.', 'danger')
+
+        elif action == 'edit_tnved':
+            if tnved_form.validate():
+                try:
+                    tnved_index = int(request.form.get('index', '-1'))
+                except (TypeError, ValueError):
+                    tnved_index = -1
+                if 0 <= tnved_index < len(tnved_items):
+                    code = tnved_form.code.data.strip()
+                    description = tnved_form.description.data.strip()
+                    keywords_display = tnved_form.keywords_display.data.strip() if tnved_form.keywords_display.data else ''
+                    examples = tnved_form.examples.data.strip() if tnved_form.examples.data else ''
+                    duty_text = tnved_form.duty_text.data.strip() if tnved_form.duty_text.data else ''
+                    duty_percent_value = tnved_form.duty_percent.data
+                    duty_percent = float(duty_percent_value) if duty_percent_value is not None else None
+
+                    # Объединяем все записи и сохраняем в единый файл
+                    all_items = duty_items + tnved_items
+                    # Индекс в объединенном списке = индекс простых записей + индекс в списке ТН ВЭД
+                    actual_index = len(duty_items) + tnved_index
+                    old_item = all_items[actual_index].copy()
+                    all_items[actual_index] = {
+                        'code': code,
+                        'description': description,
+                        'keywords_display': keywords_display,
+                        'examples': examples,
+                        'duty_text': duty_text,
+                        'duty_percent': duty_percent
+                    }
+                    datasets.save_duty_rates(all_items, actor=_current_actor())
+                    datasets.refresh_duty_rates()
+                    datasets.refresh_tnved_catalog()
+                    log_update(
+                        resource_type='tnved',
+                        resource_id=str(tnved_index),
+                        description=f'Обновлена запись каталога ТН ВЭД: {code}',
+                        data_before=old_item,
+                        data_after={'code': code, 'description': description, 'duty_percent': duty_percent},
+                    )
+                    flash('Запись каталога ТН ВЭД обновлена.', 'success')
+                else:
+                    flash('Не удалось найти запись для редактирования.', 'danger')
+            else:
+                flash('Исправьте ошибки в форме.', 'danger')
+            return redirect(url_for('admin.manage_duty'))
+
+        elif action == 'delete_tnved':
+            delete_form = TNVEDDeleteForm(formdata=request.form)
+            if delete_form.validate():
+                try:
+                    tnved_index = int(delete_form.index.data)
+                except (TypeError, ValueError):
+                    tnved_index = -1
+                if 0 <= tnved_index < len(tnved_items):
+                    # Объединяем все записи, удаляем нужную и сохраняем
+                    all_items = duty_items + tnved_items
+                    # Индекс в объединенном списке = индекс простых записей + индекс в списке ТН ВЭД
+                    actual_index = len(duty_items) + tnved_index
+                    all_items.pop(actual_index)
+                    datasets.save_duty_rates(all_items, actor=_current_actor())
+                    datasets.refresh_duty_rates()
+                    datasets.refresh_tnved_catalog()
+                    flash('Запись каталога ТН ВЭД удалена.', 'info')
+                else:
+                    flash('Не удалось найти запись для удаления.', 'danger')
+            else:
+                flash('Не удалось подтвердить удаление.', 'danger')
+            return redirect(url_for('admin.manage_duty'))
+
         else:
             flash('Неизвестное действие.', 'danger')
             return redirect(url_for('admin.manage_duty'))
@@ -371,8 +477,164 @@ def manage_duty() -> Union[str, Response]:
             'Ставки пошлин',
             duty_items=duty_items,
             duty_form=duty_form,
+            tnved_items=tnved_items,
+            tnved_form=tnved_form,
         )
     )
+
+
+@admin_bp.route('/admin/duty/import', methods=['POST'])
+@admin_required
+def import_duty() -> Response:
+    """Импортирует ставки пошлин из загруженного Excel файла."""
+    import tempfile
+    import os
+    from werkzeug.utils import secure_filename
+    
+    # Проверяем наличие файла в запросе
+    if 'excel_file' not in request.files:
+        flash('Файл не выбран.', 'danger')
+        return redirect(url_for('admin.manage_duty'))
+    
+    file = request.files['excel_file']
+    
+    # Проверяем, что файл выбран
+    if file.filename == '':
+        flash('Файл не выбран.', 'danger')
+        return redirect(url_for('admin.manage_duty'))
+    
+    # Проверяем расширение файла
+    if not (file.filename.lower().endswith('.xlsx') or file.filename.lower().endswith('.xls')):
+        flash('Неверный формат файла. Требуется Excel (.xlsx или .xls).', 'danger')
+        return redirect(url_for('admin.manage_duty'))
+    
+    temp_path = None
+    try:
+        # Сохраняем файл во временную директорию
+        temp_dir = tempfile.gettempdir()
+        filename = secure_filename(file.filename)
+        temp_path = Path(temp_dir) / f'temp_import_{datetime.now().strftime("%Y%m%d%H%M%S")}_{filename}'
+        file.save(str(temp_path))
+        
+        # Импортируем данные
+        count = datasets.import_duty_rates_from_excel(temp_path, actor=_current_actor())
+        
+        flash(f'Импортировано ставок пошлин: {count}.', 'success')
+    except Exception as exc:
+        flash(f'Ошибка при импорте: {str(exc)}', 'danger')
+    finally:
+        # Гарантированно удаляем временный файл после закрытия
+        if temp_path is not None and temp_path.exists():
+            try:
+                # Небольшая задержка для Windows, чтобы файл точно закрылся
+                import time
+                time.sleep(0.1)
+                os.remove(temp_path)
+            except (PermissionError, OSError):
+                # Если не удалось удалить сразу, пытаемся через некоторое время
+                # В реальном приложении можно добавить задачу на отложенное удаление
+                pass
+    
+    return redirect(url_for('admin.manage_duty'))
+
+
+@admin_bp.route('/admin/duty/export')
+@admin_required
+def export_duty() -> Response:
+    """Экспортирует ставки пошлин в Excel файл."""
+    from flask import Response
+    from datetime import datetime
+    
+    try:
+        excel_data = datasets.export_duty_rates_to_excel()
+        # Используем ASCII имя файла для совместимости с HTTP заголовками
+        filename = f'Duty_rates_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+        
+        return Response(
+            excel_data,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            headers={'Content-Disposition': f'attachment; filename="{filename}"'}
+        )
+    except Exception as exc:
+        flash(f'Ошибка при экспорте: {str(exc)}', 'danger')
+        return redirect(url_for('admin.manage_duty'))
+
+
+@admin_bp.route('/admin/duty/tnved/import', methods=['POST'])
+@admin_required
+def import_tnved() -> Response:
+    """Импортирует каталог ТН ВЭД из загруженного Excel файла."""
+    import tempfile
+    import os
+    from werkzeug.utils import secure_filename
+    
+    # Проверяем наличие файла в запросе
+    if 'excel_file' not in request.files:
+        flash('Файл не выбран.', 'danger')
+        return redirect(url_for('admin.manage_duty'))
+    
+    file = request.files['excel_file']
+    
+    # Проверяем, что файл выбран
+    if file.filename == '':
+        flash('Файл не выбран.', 'danger')
+        return redirect(url_for('admin.manage_duty'))
+    
+    # Проверяем расширение файла
+    if not (file.filename.lower().endswith('.xlsx') or file.filename.lower().endswith('.xls')):
+        flash('Неверный формат файла. Требуется Excel (.xlsx или .xls).', 'danger')
+        return redirect(url_for('admin.manage_duty'))
+    
+    temp_path = None
+    try:
+        # Сохраняем файл во временную директорию
+        temp_dir = tempfile.gettempdir()
+        filename = secure_filename(file.filename)
+        temp_path = Path(temp_dir) / f'temp_import_{datetime.now().strftime("%Y%m%d%H%M%S")}_{filename}'
+        file.save(str(temp_path))
+        
+        # Импортируем данные
+        count = datasets.import_tnved_catalog_from_excel(temp_path, actor=_current_actor())
+        
+        flash(f'Импортировано записей каталога ТН ВЭД: {count}.', 'success')
+    except Exception as exc:
+        flash(f'Ошибка при импорте: {str(exc)}', 'danger')
+    finally:
+        # Гарантированно удаляем временный файл после закрытия
+        if temp_path is not None and temp_path.exists():
+            try:
+                # Небольшая задержка для Windows, чтобы файл точно закрылся
+                import time
+                time.sleep(0.1)
+                os.remove(temp_path)
+            except (PermissionError, OSError):
+                # Если не удалось удалить сразу, пытаемся через некоторое время
+                # В реальном приложении можно добавить задачу на отложенное удаление
+                pass
+    
+    return redirect(url_for('admin.manage_duty'))
+
+
+@admin_bp.route('/admin/duty/tnved/export')
+@admin_required
+def export_tnved() -> Response:
+    """Экспортирует каталог ТН ВЭД в Excel файл."""
+    from flask import Response
+    from datetime import datetime
+    
+    try:
+        excel_data = datasets.export_tnved_catalog_to_excel()
+        # Используем ASCII имя файла для совместимости с HTTP заголовками
+        filename = f'TNVED_catalog_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+        
+        return Response(
+            excel_data,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            headers={'Content-Disposition': f'attachment; filename="{filename}"'}
+        )
+    except Exception as exc:
+        flash(f'Ошибка при экспорте: {str(exc)}', 'danger')
+        return redirect(url_for('admin.manage_duty'))
 
 
 @admin_bp.route('/admin/materials', methods=['GET', 'POST'])
@@ -799,6 +1061,241 @@ def manage_logistics() -> Union[str, Response]:
         else:
             flash('Неизвестное действие.', 'danger')
             return redirect(url_for('admin.manage_logistics', tab=tab))
+
+    # Рендерим страницу
+    return render_template('admin/logistics.html',
+                         active_tab=active_tab,
+                         main_form=main_form,
+                         ekb_rf_form=ekb_rf_form,
+                         trail_form=trail_form,
+                         main_cities_groups=main_cities_groups,
+                         ekb_rf_cities=ekb_rf_cities,
+                         trail_cities=trail_cities)
+
+
+@admin_bp.route('/admin/logistics/main/export')
+@admin_required
+def export_main_cities() -> Response:
+    """Экспортирует основные города в Excel файл."""
+    from flask import Response
+    from datetime import datetime
+    
+    try:
+        excel_data = datasets.export_main_cities_to_excel()
+        filename = f'logistics_main_cities_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+        return Response(
+            excel_data,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            headers={'Content-Disposition': f'attachment; filename="{filename}"'}
+        )
+    except Exception as exc:
+        flash(f'Ошибка при экспорте: {str(exc)}', 'danger')
+        return redirect(url_for('admin.manage_logistics', tab='main'))
+
+
+@admin_bp.route('/admin/logistics/main/import', methods=['POST'])
+@admin_required
+def import_main_cities() -> Response:
+    """Импортирует основные города из Excel файла."""
+    import tempfile
+    import os
+    import time
+    from pathlib import Path
+    from werkzeug.utils import secure_filename
+    from datetime import datetime
+    
+    if 'excel_file' not in request.files:
+        flash('Файл не выбран.', 'danger')
+        return redirect(url_for('admin.manage_logistics', tab='main'))
+    
+    file = request.files['excel_file']
+    
+    # Проверяем, что файл выбран
+    if file.filename == '':
+        flash('Файл не выбран.', 'danger')
+        return redirect(url_for('admin.manage_logistics', tab='main'))
+    
+    # Проверяем расширение файла
+    if not (file.filename.lower().endswith('.xlsx') or file.filename.lower().endswith('.xls')):
+        flash('Неверный формат файла. Требуется Excel (.xlsx или .xls).', 'danger')
+        return redirect(url_for('admin.manage_logistics', tab='main'))
+    
+    temp_path = None
+    try:
+        # Сохраняем файл во временную директорию
+        temp_dir = tempfile.gettempdir()
+        filename = secure_filename(file.filename)
+        temp_path = Path(temp_dir) / f'temp_import_{datetime.now().strftime("%Y%m%d%H%M%S")}_{filename}'
+        file.save(str(temp_path))
+        
+        # Импортируем данные
+        count = datasets.import_main_cities_from_excel(temp_path, actor=_current_actor())
+        
+        flash(f'Импортировано городов: {count}.', 'success')
+    except Exception as exc:
+        flash(f'Ошибка при импорте: {str(exc)}', 'danger')
+    finally:
+        # Гарантированно удаляем временный файл после закрытия
+        if temp_path is not None and temp_path.exists():
+            try:
+                # Небольшая задержка для Windows, чтобы файл точно закрылся
+                time.sleep(0.1)
+                os.remove(temp_path)
+            except (PermissionError, OSError):
+                # Если не удалось удалить сразу, пытаемся через некоторое время
+                pass
+    
+    return redirect(url_for('admin.manage_logistics', tab='main'))
+
+
+@admin_bp.route('/admin/logistics/ekb-rf/export')
+@admin_required
+def export_ekb_rf_cities() -> Response:
+    """Экспортирует города ЕКБ+РФ в Excel файл."""
+    from flask import Response
+    from datetime import datetime
+    
+    try:
+        excel_data = datasets.export_ekb_rf_cities_to_excel()
+        filename = f'logistics_ekb_rf_cities_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+        return Response(
+            excel_data,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            headers={'Content-Disposition': f'attachment; filename="{filename}"'}
+        )
+    except Exception as exc:
+        flash(f'Ошибка при экспорте: {str(exc)}', 'danger')
+        return redirect(url_for('admin.manage_logistics', tab='ekb_rf'))
+
+
+@admin_bp.route('/admin/logistics/ekb-rf/import', methods=['POST'])
+@admin_required
+def import_ekb_rf_cities() -> Response:
+    """Импортирует города ЕКБ+РФ из Excel файла."""
+    import tempfile
+    import os
+    import time
+    from pathlib import Path
+    from werkzeug.utils import secure_filename
+    from datetime import datetime
+    
+    if 'excel_file' not in request.files:
+        flash('Файл не выбран.', 'danger')
+        return redirect(url_for('admin.manage_logistics', tab='ekb_rf'))
+    
+    file = request.files['excel_file']
+    
+    # Проверяем, что файл выбран
+    if file.filename == '':
+        flash('Файл не выбран.', 'danger')
+        return redirect(url_for('admin.manage_logistics', tab='ekb_rf'))
+    
+    # Проверяем расширение файла
+    if not (file.filename.lower().endswith('.xlsx') or file.filename.lower().endswith('.xls')):
+        flash('Неверный формат файла. Требуется Excel (.xlsx или .xls).', 'danger')
+        return redirect(url_for('admin.manage_logistics', tab='ekb_rf'))
+    
+    temp_path = None
+    try:
+        # Сохраняем файл во временную директорию
+        temp_dir = tempfile.gettempdir()
+        filename = secure_filename(file.filename)
+        temp_path = Path(temp_dir) / f'temp_import_{datetime.now().strftime("%Y%m%d%H%M%S")}_{filename}'
+        file.save(str(temp_path))
+        
+        # Импортируем данные
+        count = datasets.import_ekb_rf_cities_from_excel(temp_path, actor=_current_actor())
+        
+        flash(f'Импортировано городов: {count}.', 'success')
+    except Exception as exc:
+        flash(f'Ошибка при импорте: {str(exc)}', 'danger')
+    finally:
+        # Гарантированно удаляем временный файл после закрытия
+        if temp_path is not None and temp_path.exists():
+            try:
+                # Небольшая задержка для Windows, чтобы файл точно закрылся
+                time.sleep(0.1)
+                os.remove(temp_path)
+            except (PermissionError, OSError):
+                # Если не удалось удалить сразу, пытаемся через некоторое время
+                pass
+    
+    return redirect(url_for('admin.manage_logistics', tab='ekb_rf'))
+
+
+@admin_bp.route('/admin/logistics/trail/export')
+@admin_required
+def export_trail_cities() -> Response:
+    """Экспортирует города трала в Excel файл."""
+    from flask import Response
+    from datetime import datetime
+    
+    try:
+        excel_data = datasets.export_trail_cities_to_excel()
+        filename = f'logistics_trail_cities_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+        return Response(
+            excel_data,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            headers={'Content-Disposition': f'attachment; filename="{filename}"'}
+        )
+    except Exception as exc:
+        flash(f'Ошибка при экспорте: {str(exc)}', 'danger')
+        return redirect(url_for('admin.manage_logistics', tab='trail'))
+
+
+@admin_bp.route('/admin/logistics/trail/import', methods=['POST'])
+@admin_required
+def import_trail_cities() -> Response:
+    """Импортирует города трала из Excel файла."""
+    import tempfile
+    import os
+    import time
+    from pathlib import Path
+    from werkzeug.utils import secure_filename
+    from datetime import datetime
+    
+    if 'excel_file' not in request.files:
+        flash('Файл не выбран.', 'danger')
+        return redirect(url_for('admin.manage_logistics', tab='trail'))
+    
+    file = request.files['excel_file']
+    
+    # Проверяем, что файл выбран
+    if file.filename == '':
+        flash('Файл не выбран.', 'danger')
+        return redirect(url_for('admin.manage_logistics', tab='trail'))
+    
+    # Проверяем расширение файла
+    if not (file.filename.lower().endswith('.xlsx') or file.filename.lower().endswith('.xls')):
+        flash('Неверный формат файла. Требуется Excel (.xlsx или .xls).', 'danger')
+        return redirect(url_for('admin.manage_logistics', tab='trail'))
+    
+    temp_path = None
+    try:
+        # Сохраняем файл во временную директорию
+        temp_dir = tempfile.gettempdir()
+        filename = secure_filename(file.filename)
+        temp_path = Path(temp_dir) / f'temp_import_{datetime.now().strftime("%Y%m%d%H%M%S")}_{filename}'
+        file.save(str(temp_path))
+        
+        # Импортируем данные
+        count = datasets.import_trail_cities_from_excel(temp_path, actor=_current_actor())
+        
+        flash(f'Импортировано городов: {count}.', 'success')
+    except Exception as exc:
+        flash(f'Ошибка при импорте: {str(exc)}', 'danger')
+    finally:
+        # Гарантированно удаляем временный файл после закрытия
+        if temp_path is not None and temp_path.exists():
+            try:
+                # Небольшая задержка для Windows, чтобы файл точно закрылся
+                time.sleep(0.1)
+                os.remove(temp_path)
+            except (PermissionError, OSError):
+                # Если не удалось удалить сразу, пытаемся через некоторое время
+                pass
+    
+    return redirect(url_for('admin.manage_logistics', tab='trail'))
 
     return render_template(
         'admin/logistics.html',

@@ -87,17 +87,66 @@ def get_gb_materials() -> List[Dict[str, Any]]:
 
 @cached_dataset(maxsize=1)
 def load_duty_rates() -> List[Dict[str, Any]]:
-    """Загружает ставки пошлин из JSON и готовит поля для поиска."""
-    duty_path = CONFIG_DIR / 'duty_rates.json'
+    """Загружает ставки пошлин из tnved_catalog.json и готовит поля для поиска.
+    
+    Все пошлины хранятся в едином файле tnved_catalog.json.
+    Поддерживает два типа записей:
+    - Простые: product, category, duty_percent
+    - Расширенные (ТН ВЭД): code, description, keywords_display, examples, duty_text, duty_percent
+    """
+    duty_path = CONFIG_DIR / 'tnved_catalog.json'
     try:
         with duty_path.open('r', encoding='utf-8') as file:
             data = json.load(file)
         items = data.get('items', [])
 
         for item in items:
-            item['product_search'] = str(item.get('product', '')).lower()
-            item['category_search'] = str(item.get('category', '')).lower()
-            item['duty_search'] = str(item.get('duty_percent', '')).lower()
+            # Определяем тип записи
+            if 'code' in item and item.get('code'):
+                # Расширенная запись (ТН ВЭД)
+                code = item.get('code', '')
+                description = item.get('description', '')
+                keywords_text = item.get('keywords_display', '')
+                examples_text = item.get('examples', '')
+                duty_text = item.get('duty_text', '') or '—'
+                duty_percent = item.get('duty_percent')
+                
+                # Если duty_percent не указан, пытаемся извлечь из duty_text
+                if duty_percent is None:
+                    duty_percent = _extract_percent_value(duty_text)
+                
+                keywords_list = _split_keywords(keywords_text)
+                
+                search_chunks = [
+                    code.lower(),
+                    keywords_text.lower(),
+                    description.lower(),
+                    examples_text.lower(),
+                    duty_text.lower(),
+                ]
+                
+                # Добавляем поля для совместимости
+                item.update({
+                    'keywords_list': keywords_list,
+                    'title': keywords_text or description or code,
+                    'title_search': (keywords_text or description or code).lower(),
+                    'description_search': description.lower(),
+                    'examples_search': examples_text.lower(),
+                    'duty_search': duty_text.lower(),
+                    'search_blob': ' '.join(filter(None, search_chunks)),
+                    'source': 'tnved',
+                    # Для обратной совместимости с get_duty_catalog
+                    'product': keywords_text or description or code,
+                    'category': description,
+                    'product_search': (keywords_text or description or code).lower(),
+                    'category_search': description.lower(),
+                })
+            else:
+                # Простая запись
+                item['product_search'] = str(item.get('product', '')).lower()
+                item['category_search'] = str(item.get('category', '')).lower()
+                item['duty_search'] = str(item.get('duty_percent', '')).lower()
+                item['source'] = 'manual'
 
         return items
     except FileNotFoundError:
@@ -179,7 +228,68 @@ def _format_percent_display(value: Optional[float]) -> str:
 
 @cached_dataset(maxsize=1)
 def load_tnved_catalog() -> List[Dict[str, Any]]:
-    """Загружает расширенный каталог ставок пошлин из CSV."""
+    """Загружает расширенный каталог ставок пошлин из JSON (основной источник) или CSV (fallback).
+    
+    Читает из единого файла tnved_catalog.json и возвращает только записи с полем 'code' (ТН ВЭД).
+    """
+    tnved_json_path = CONFIG_DIR / 'tnved_catalog.json'
+    
+    # Пытаемся загрузить из JSON (основной источник)
+    if tnved_json_path.exists():
+        try:
+            with tnved_json_path.open('r', encoding='utf-8') as file:
+                data = json.load(file)
+            items_data = data.get('items', [])
+            
+            items: List[Dict[str, Any]] = []
+            for item_data in items_data:
+                # Пропускаем простые записи (без code)
+                if 'code' not in item_data or not item_data.get('code'):
+                    continue
+                    
+                code = item_data.get('code', '').strip()
+                description = item_data.get('description', '').strip()
+                keywords_text = item_data.get('keywords_display', '').strip()
+                examples_text = item_data.get('examples', '').strip()
+                duty_text = item_data.get('duty_text', '').strip() or '—'
+                duty_percent = item_data.get('duty_percent')
+                
+                # Если duty_percent не указан, пытаемся извлечь из duty_text
+                if duty_percent is None:
+                    duty_percent = _extract_percent_value(duty_text)
+                
+                keywords_list = _split_keywords(keywords_text)
+                
+                search_chunks = [
+                    code.lower(),
+                    keywords_text.lower(),
+                    description.lower(),
+                    examples_text.lower(),
+                    duty_text.lower(),
+                ]
+                
+                items.append({
+                    'code': code,
+                    'description': description,
+                    'keywords_display': keywords_text,
+                    'keywords_list': keywords_list,
+                    'examples': examples_text,
+                    'duty_text': duty_text,
+                    'duty_percent': duty_percent,
+                    'title': keywords_text or description or code,
+                    'title_search': (keywords_text or description or code).lower(),
+                    'description_search': description.lower(),
+                    'examples_search': examples_text.lower(),
+                    'duty_search': duty_text.lower(),
+                    'search_blob': ' '.join(filter(None, search_chunks)),
+                    'source': 'tnved',
+                })
+            
+            return items
+        except (FileNotFoundError, json.JSONDecodeError) as exc:
+            _log_error(f'Failed to load TNVED catalog from JSON: {exc}')
+    
+    # Fallback: загружаем из CSV (для обратной совместимости)
     catalog_path = _tnved_catalog_path()
     if catalog_path is None:
         _log_error('TNVED catalog file not found.')
@@ -241,40 +351,95 @@ def load_tnved_catalog() -> List[Dict[str, Any]]:
     return items
 
 
+def save_tnved_catalog(items: List[Dict[str, Any]], *, actor: Optional[str] = None) -> None:
+    """Сохраняет каталог ТН ВЭД в JSON файл."""
+    tnved_path = CONFIG_DIR / 'tnved_catalog.json'
+    tnved_path.parent.mkdir(parents=True, exist_ok=True)
+    
+    def _coerce_float(value):
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return None
+    
+    payload = {
+        'items': [
+            {
+                'code': item.get('code', ''),
+                'description': item.get('description', ''),
+                'keywords_display': item.get('keywords_display', ''),
+                'examples': item.get('examples', ''),
+                'duty_text': item.get('duty_text', ''),
+                'duty_percent': _coerce_float(item.get('duty_percent'))
+            }
+            for item in items
+        ]
+    }
+    
+    _snapshot_version('tnved_catalog', payload, actor)
+    
+    with tnved_path.open('w', encoding='utf-8') as file:
+        json.dump(payload, file, ensure_ascii=False, indent=2)
+    
+    # Инвалидируем кэш после сохранения
+    load_tnved_catalog.cache_clear()  # type: ignore
+
+
 def save_duty_rates(items: List[Dict[str, Any]], *, actor: Optional[str] = None) -> None:
-    """Сохраняет изменённый список ставок пошлин в конфигурационный файл."""
-    duty_path = CONFIG_DIR / 'duty_rates.json'
+    """Сохраняет изменённый список ставок пошлин в tnved_catalog.json.
+    
+    Все пошлины хранятся в едином файле tnved_catalog.json.
+    Поддерживает два типа записей:
+    - Простые: product, category, duty_percent
+    - Расширенные (ТН ВЭД): code, description, keywords_display, examples, duty_text, duty_percent
+    """
+    duty_path = CONFIG_DIR / 'tnved_catalog.json'
     duty_path.parent.mkdir(parents=True, exist_ok=True)
 
     def _coerce_float(value):
         try:
             return float(value)
         except (TypeError, ValueError):
-            return 0.0
+            return None
 
-    payload = {
-        'items': [
-            {
+    payload_items = []
+    for item in items:
+        # Определяем тип записи: если есть code - это ТН ВЭД, иначе простая запись
+        if 'code' in item and item.get('code'):
+            # Расширенная запись (ТН ВЭД)
+            payload_items.append({
+                'code': item.get('code', ''),
+                'description': item.get('description', ''),
+                'keywords_display': item.get('keywords_display', ''),
+                'examples': item.get('examples', ''),
+                'duty_text': item.get('duty_text', ''),
+                'duty_percent': _coerce_float(item.get('duty_percent'))
+            })
+        else:
+            # Простая запись
+            payload_items.append({
                 'product': item.get('product', ''),
                 'category': item.get('category', ''),
-                'duty_percent': _coerce_float(item.get('duty_percent', 0))
-            }
-            for item in items
-        ]
-    }
+                'duty_percent': _coerce_float(item.get('duty_percent', 0)) or 0.0
+            })
 
-    _snapshot_version('duty_rates', payload, actor)
+    payload = {'items': payload_items}
+
+    _snapshot_version('tnved_catalog', payload, actor)
 
     with duty_path.open('w', encoding='utf-8') as file:
         json.dump(payload, file, ensure_ascii=False, indent=2)
     
     # Инвалидируем кэш после сохранения
     load_duty_rates.cache_clear()  # type: ignore
+    load_tnved_catalog.cache_clear()  # type: ignore
 
 
 def refresh_duty_rates() -> None:
     """Обновляет кэш ставок пошлин после изменения файлов."""
     global DUTY_RATES
+    # Очищаем кэш перед загрузкой
+    load_duty_rates.cache_clear()  # type: ignore
     DUTY_RATES = load_duty_rates()
 
 
@@ -286,12 +451,24 @@ def get_duty_rates() -> List[Dict[str, Any]]:
 def refresh_tnved_catalog() -> None:
     """Обновляет кэш расширенного каталога ставок пошлин."""
     global TNVED_CATALOG
+    # Очищаем кэш перед загрузкой
+    load_tnved_catalog.cache_clear()  # type: ignore
     TNVED_CATALOG = load_tnved_catalog()
 
 
 def get_tnved_catalog() -> List[Dict[str, Any]]:
     """Возвращает копию каталога ставок из CSV."""
     return list(TNVED_CATALOG)
+
+
+def _normalize_manual_duty_item(item: Dict[str, Any]) -> Dict[str, Any]:
+    """Нормализует одну простую запись пошлины для использования в get_duty_catalog."""
+    return {
+        **item,
+        'product': item.get('product', ''),
+        'category': item.get('category', ''),
+        'source': 'manual'
+    }
 
 
 def _normalize_manual_duty_items(manual_items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -349,11 +526,23 @@ def _duty_catalog_sort_key(item: Dict[str, Any]) -> tuple:
 
 
 def get_duty_catalog() -> List[Dict[str, Any]]:
-    """Возвращает объединённый каталог пошлин (ручные записи + ТН ВЭД)."""
-    manual = _normalize_manual_duty_items(get_duty_rates())
-    tnved = _normalize_tnved_items(get_tnved_catalog())
-    combined = manual + tnved
-    return sorted(combined, key=_duty_catalog_sort_key)
+    """Возвращает каталог пошлин из единого файла duty_rates.json.
+    
+    Все записи (и простые, и ТН ВЭД) теперь хранятся в одном файле.
+    """
+    items = load_duty_rates()
+    # Нормализуем записи для совместимости с существующим API
+    normalized = []
+    for item in items:
+        if item.get('code'):
+            # Расширенная запись (ТН ВЭД) - уже нормализована в load_duty_rates
+            normalized.append(item)
+        else:
+            # Простая запись - нормализуем через существующую функцию
+            normalized_items = _normalize_manual_duty_items([item])
+            if normalized_items:
+                normalized.append(normalized_items[0])
+    return sorted(normalized, key=_duty_catalog_sort_key)
 
 
 @cached_dataset(maxsize=1)
@@ -559,6 +748,438 @@ def save_trail_cities(cities: List[Dict[str, Any]], *, actor: Optional[str] = No
     load_trail_cities.cache_clear()  # type: ignore
     load_all_logistics_cities.cache_clear()  # type: ignore
     load_logistics_cities.cache_clear()  # type: ignore
+
+
+def export_main_cities_to_excel() -> bytes:
+    """Экспортирует основные города в Excel формат.
+    
+    Returns:
+        Байты Excel файла
+    """
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, Alignment, PatternFill
+    except ImportError as exc:
+        raise RuntimeError('openpyxl не установлен. Установите: pip install openpyxl') from exc
+    
+    from io import BytesIO
+    
+    cities = load_main_cities()
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Основные города'
+    
+    # Стили для заголовков
+    header_fill = PatternFill(start_color='366092', end_color='366092', fill_type='solid')
+    header_font = Font(bold=True, color='FFFFFF')
+    
+    # Заголовки
+    headers = ['Город', 'Регион', 'Фура, руб.', 'Основной маршрут', 'Основной город']
+    ws.append(headers)
+    
+    # Применяем стили к заголовкам
+    for col_num, _ in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+    
+    # Данные
+    for city in cities:
+        ws.append([
+            city.get('name', ''),
+            city.get('region', ''),
+            city.get('truck_price', 0) or 0,
+            'Да' if city.get('is_main_route') else 'Нет',
+            city.get('main_city', '') or ''
+        ])
+    
+    # Автоподбор ширины колонок
+    for column in ws.columns:
+        max_length = 0
+        column_letter = column[0].column_letter
+        for cell in column:
+            try:
+                if cell.value:
+                    max_length = max(max_length, len(str(cell.value)))
+            except (AttributeError, TypeError):
+                pass  # Игнорируем ошибки преобразования значений ячеек
+        adjusted_width = min(max_length + 2, 50)
+        ws.column_dimensions[column_letter].width = adjusted_width
+    
+    # Сохраняем в байты
+    buffer = BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    
+    return buffer.getvalue()
+
+
+def import_main_cities_from_excel(excel_path: Path, *, actor: Optional[str] = None) -> int:
+    """Импортирует основные города из Excel файла, заменяя все существующие данные.
+    
+    Args:
+        excel_path: Путь к Excel файлу
+        actor: Имя пользователя, выполняющего импорт (для версионирования)
+        
+    Returns:
+        Количество импортированных записей
+    """
+    try:
+        import openpyxl
+    except ImportError as exc:
+        raise RuntimeError('openpyxl не установлен. Установите: pip install openpyxl') from exc
+    
+    if not excel_path.exists():
+        raise FileNotFoundError(f'Файл не найден: {excel_path}')
+    
+    cities = []
+    
+    wb = None
+    try:
+        wb = openpyxl.load_workbook(excel_path, data_only=True)
+        ws = wb.active
+        
+        # Пропускаем заголовок (первая строка)
+        rows = list(ws.iter_rows(min_row=2, values_only=True))
+        
+        for row in rows:
+            if not row or len(row) < 3:
+                continue
+            
+            # Индексы колонок: 0-Город, 1-Регион, 2-Фура, руб., 3-Основной маршрут, 4-Основной город
+            name = str(row[0]).strip() if row[0] else ''
+            region = str(row[1]).strip() if row[1] else ''
+            truck_price_value = row[2] if len(row) > 2 else None
+            is_main_route_value = row[3] if len(row) > 3 else None
+            main_city = str(row[4]).strip() if len(row) > 4 and row[4] else None
+            
+            # Преобразуем цену фуры в число
+            try:
+                if truck_price_value is None:
+                    truck_price = 0.0
+                elif isinstance(truck_price_value, (int, float)):
+                    truck_price = float(truck_price_value)
+                else:
+                    truck_price = float(str(truck_price_value).strip().replace(',', '.'))
+            except (ValueError, TypeError):
+                truck_price = 0.0
+            
+            # Преобразуем флаг основного маршрута
+            is_main_route = False
+            if is_main_route_value is not None:
+                if isinstance(is_main_route_value, bool):
+                    is_main_route = is_main_route_value
+                elif isinstance(is_main_route_value, str):
+                    is_main_route = is_main_route_value.strip().lower() in ('да', 'yes', 'true', '1', 'y')
+                elif isinstance(is_main_route_value, (int, float)):
+                    is_main_route = bool(is_main_route_value)
+            
+            if name:
+                cities.append({
+                    'name': name,
+                    'region': region,
+                    'truck_price': truck_price,
+                    'is_main_route': is_main_route,
+                    'main_city': main_city if main_city else None
+                })
+        
+    except Exception as exc:
+        try:
+            current_app.logger.error(f'Ошибка при парсинге Excel: {exc}')
+        except RuntimeError:
+            pass
+        raise
+    finally:
+        # Гарантированно закрываем файл перед удалением
+        if wb is not None:
+            wb.close()
+    
+    if cities:
+        save_main_cities(cities, actor=actor)
+        load_main_cities.cache_clear()  # type: ignore
+        load_all_logistics_cities.cache_clear()  # type: ignore
+        load_logistics_cities.cache_clear()  # type: ignore
+    
+    return len(cities)
+
+
+def export_ekb_rf_cities_to_excel() -> bytes:
+    """Экспортирует города ЕКБ+РФ в Excel формат.
+    
+    Returns:
+        Байты Excel файла
+    """
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, Alignment, PatternFill
+    except ImportError as exc:
+        raise RuntimeError('openpyxl не установлен. Установите: pip install openpyxl') from exc
+    
+    from io import BytesIO
+    
+    cities = load_ekb_rf_cities()
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'ЕКБ+РФ города'
+    
+    # Стили для заголовков
+    header_fill = PatternFill(start_color='366092', end_color='366092', fill_type='solid')
+    header_font = Font(bold=True, color='FFFFFF')
+    
+    # Заголовки
+    headers = ['Город', 'Регион', 'Расстояние от ЕКБ, км']
+    ws.append(headers)
+    
+    # Применяем стили к заголовкам
+    for col_num, _ in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+    
+    # Данные
+    for city in cities:
+        ws.append([
+            city.get('name', ''),
+            city.get('region', ''),
+            city.get('distance_from_ekb_km') if city.get('distance_from_ekb_km') is not None else ''
+        ])
+    
+    # Автоподбор ширины колонок
+    for column in ws.columns:
+        max_length = 0
+        column_letter = column[0].column_letter
+        for cell in column:
+            try:
+                if cell.value:
+                    max_length = max(max_length, len(str(cell.value)))
+            except (AttributeError, TypeError):
+                pass  # Игнорируем ошибки преобразования значений ячеек
+        adjusted_width = min(max_length + 2, 50)
+        ws.column_dimensions[column_letter].width = adjusted_width
+    
+    # Сохраняем в байты
+    buffer = BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    
+    return buffer.getvalue()
+
+
+def import_ekb_rf_cities_from_excel(excel_path: Path, *, actor: Optional[str] = None) -> int:
+    """Импортирует города ЕКБ+РФ из Excel файла, заменяя все существующие данные.
+    
+    Args:
+        excel_path: Путь к Excel файлу
+        actor: Имя пользователя, выполняющего импорт (для версионирования)
+        
+    Returns:
+        Количество импортированных записей
+    """
+    try:
+        import openpyxl
+    except ImportError as exc:
+        raise RuntimeError('openpyxl не установлен. Установите: pip install openpyxl') from exc
+    
+    if not excel_path.exists():
+        raise FileNotFoundError(f'Файл не найден: {excel_path}')
+    
+    cities = []
+    
+    wb = None
+    try:
+        wb = openpyxl.load_workbook(excel_path, data_only=True)
+        ws = wb.active
+        
+        # Пропускаем заголовок (первая строка)
+        rows = list(ws.iter_rows(min_row=2, values_only=True))
+        
+        for row in rows:
+            if not row or len(row) < 2:
+                continue
+            
+            # Индексы колонок: 0-Город, 1-Регион, 2-Расстояние от ЕКБ, км
+            name = str(row[0]).strip() if row[0] else ''
+            region = str(row[1]).strip() if row[1] else ''
+            distance_value = row[2] if len(row) > 2 else None
+            
+            # Преобразуем расстояние в число (может быть пустым)
+            distance_from_ekb_km = None
+            if distance_value is not None:
+                try:
+                    if isinstance(distance_value, (int, float)):
+                        distance_from_ekb_km = int(distance_value)
+                    else:
+                        distance_str = str(distance_value).strip()
+                        if distance_str:
+                            distance_from_ekb_km = int(float(distance_str.replace(',', '.')))
+                except (ValueError, TypeError):
+                    distance_from_ekb_km = None
+            
+            if name:
+                cities.append({
+                    'name': name,
+                    'region': region,
+                    'distance_from_ekb_km': distance_from_ekb_km
+                })
+        
+    except Exception as exc:
+        try:
+            current_app.logger.error(f'Ошибка при парсинге Excel: {exc}')
+        except RuntimeError:
+            pass
+        raise
+    finally:
+        # Гарантированно закрываем файл перед удалением
+        if wb is not None:
+            wb.close()
+    
+    if cities:
+        save_ekb_rf_cities(cities, actor=actor)
+        load_ekb_rf_cities.cache_clear()  # type: ignore
+        load_all_logistics_cities.cache_clear()  # type: ignore
+        load_logistics_cities.cache_clear()  # type: ignore
+    
+    return len(cities)
+
+
+def export_trail_cities_to_excel() -> bytes:
+    """Экспортирует города трала в Excel формат.
+    
+    Returns:
+        Байты Excel файла
+    """
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, Alignment, PatternFill
+    except ImportError as exc:
+        raise RuntimeError('openpyxl не установлен. Установите: pip install openpyxl') from exc
+    
+    from io import BytesIO
+    
+    cities = load_trail_cities()
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Трал города'
+    
+    # Стили для заголовков
+    header_fill = PatternFill(start_color='366092', end_color='366092', fill_type='solid')
+    header_font = Font(bold=True, color='FFFFFF')
+    
+    # Заголовки
+    headers = ['Город', 'Регион', 'Цена трала, руб.']
+    ws.append(headers)
+    
+    # Применяем стили к заголовкам
+    for col_num, _ in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+    
+    # Данные
+    for city in cities:
+        ws.append([
+            city.get('name', ''),
+            city.get('region', ''),
+            city.get('trail_price', 0) or 0
+        ])
+    
+    # Автоподбор ширины колонок
+    for column in ws.columns:
+        max_length = 0
+        column_letter = column[0].column_letter
+        for cell in column:
+            try:
+                if cell.value:
+                    max_length = max(max_length, len(str(cell.value)))
+            except (AttributeError, TypeError):
+                pass  # Игнорируем ошибки преобразования значений ячеек
+        adjusted_width = min(max_length + 2, 50)
+        ws.column_dimensions[column_letter].width = adjusted_width
+    
+    # Сохраняем в байты
+    buffer = BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    
+    return buffer.getvalue()
+
+
+def import_trail_cities_from_excel(excel_path: Path, *, actor: Optional[str] = None) -> int:
+    """Импортирует города трала из Excel файла, заменяя все существующие данные.
+    
+    Args:
+        excel_path: Путь к Excel файлу
+        actor: Имя пользователя, выполняющего импорт (для версионирования)
+        
+    Returns:
+        Количество импортированных записей
+    """
+    try:
+        import openpyxl
+    except ImportError as exc:
+        raise RuntimeError('openpyxl не установлен. Установите: pip install openpyxl') from exc
+    
+    if not excel_path.exists():
+        raise FileNotFoundError(f'Файл не найден: {excel_path}')
+    
+    cities = []
+    
+    wb = None
+    try:
+        wb = openpyxl.load_workbook(excel_path, data_only=True)
+        ws = wb.active
+        
+        # Пропускаем заголовок (первая строка)
+        rows = list(ws.iter_rows(min_row=2, values_only=True))
+        
+        for row in rows:
+            if not row or len(row) < 3:
+                continue
+            
+            # Индексы колонок: 0-Город, 1-Регион, 2-Цена трала, руб.
+            name = str(row[0]).strip() if row[0] else ''
+            region = str(row[1]).strip() if row[1] else ''
+            trail_price_value = row[2]
+            
+            # Преобразуем цену трала в число
+            try:
+                if trail_price_value is None:
+                    trail_price = 0.0
+                elif isinstance(trail_price_value, (int, float)):
+                    trail_price = float(trail_price_value)
+                else:
+                    trail_price = float(str(trail_price_value).strip().replace(',', '.'))
+            except (ValueError, TypeError):
+                trail_price = 0.0
+            
+            if name:
+                cities.append({
+                    'name': name,
+                    'region': region,
+                    'trail_price': trail_price
+                })
+        
+    except Exception as exc:
+        try:
+            current_app.logger.error(f'Ошибка при парсинге Excel: {exc}')
+        except RuntimeError:
+            pass
+        raise
+    finally:
+        # Гарантированно закрываем файл перед удалением
+        if wb is not None:
+            wb.close()
+    
+    if cities:
+        save_trail_cities(cities, actor=actor)
+        load_trail_cities.cache_clear()  # type: ignore
+        load_all_logistics_cities.cache_clear()  # type: ignore
+        load_logistics_cities.cache_clear()  # type: ignore
+    
+    return len(cities)
 
 
 @cached_dataset(maxsize=1)
@@ -1095,6 +1716,304 @@ def export_gb_materials_to_excel() -> bytes:
     buffer.seek(0)
     
     return buffer.getvalue()
+
+
+def export_duty_rates_to_excel() -> bytes:
+    """Экспортирует простые ставки пошлин (без кода ТН ВЭД) в Excel формат.
+    
+    Returns:
+        Байты Excel файла
+    """
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, Alignment, PatternFill
+    except ImportError as exc:
+        raise RuntimeError('openpyxl не установлен. Установите: pip install openpyxl') from exc
+    
+    from io import BytesIO
+    
+    # Загружаем все пошлины и фильтруем только простые (без code)
+    all_items = load_duty_rates()
+    duty_items = [item for item in all_items if not item.get('code')]
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Пошлины'
+    
+    # Стили для заголовков
+    header_fill = PatternFill(start_color='366092', end_color='366092', fill_type='solid')
+    header_font = Font(bold=True, color='FFFFFF')
+    
+    # Заголовки
+    headers = ['Товар', 'Категория', 'Пошлина, %']
+    ws.append(headers)
+    
+    # Применяем стили к заголовкам
+    for col_num, _ in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+    
+    # Данные
+    for item in duty_items:
+        ws.append([
+            item.get('product', ''),
+            item.get('category', ''),
+            item.get('duty_percent', 0.0)
+        ])
+    
+    # Автоподбор ширины колонок
+    for column in ws.columns:
+        max_length = 0
+        column_letter = column[0].column_letter
+        for cell in column:
+            try:
+                if cell.value:
+                    max_length = max(max_length, len(str(cell.value)))
+            except (AttributeError, TypeError):
+                pass  # Игнорируем ошибки преобразования значений ячеек
+        adjusted_width = min(max_length + 2, 50)
+        ws.column_dimensions[column_letter].width = adjusted_width
+    
+    # Сохраняем в байты
+    buffer = BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    
+    return buffer.getvalue()
+
+
+def import_duty_rates_from_excel(excel_path: Path, *, actor: Optional[str] = None) -> int:
+    """Импортирует ставки пошлин из Excel файла, заменяя все существующие данные.
+    
+    Args:
+        excel_path: Путь к Excel файлу
+        actor: Имя пользователя, выполняющего импорт (для версионирования)
+        
+    Returns:
+        Количество импортированных записей
+    """
+    try:
+        import openpyxl
+    except ImportError as exc:
+        raise RuntimeError('openpyxl не установлен. Установите: pip install openpyxl') from exc
+    
+    if not excel_path.exists():
+        raise FileNotFoundError(f'Файл не найден: {excel_path}')
+    
+    duty_items = []
+    
+    wb = None
+    try:
+        wb = openpyxl.load_workbook(excel_path, data_only=True)
+        ws = wb.active
+        
+        # Пропускаем заголовок (первая строка)
+        rows = list(ws.iter_rows(min_row=2, values_only=True))
+        
+        for row in rows:
+            if not row or len(row) < 3:
+                continue
+            
+            # Индексы колонок: 0-Товар, 1-Категория, 2-Пошлина, %
+            product = str(row[0]).strip() if row[0] else ''
+            category = str(row[1]).strip() if row[1] else ''
+            duty_percent_value = row[2]
+            
+            # Преобразуем пошлину в число
+            try:
+                if duty_percent_value is None:
+                    duty_percent = 0.0
+                elif isinstance(duty_percent_value, (int, float)):
+                    duty_percent = float(duty_percent_value)
+                else:
+                    duty_percent = float(str(duty_percent_value).strip().replace(',', '.'))
+            except (ValueError, TypeError):
+                duty_percent = 0.0
+            
+            if product and category:
+                duty_items.append({
+                    'product': product,
+                    'category': category,
+                    'duty_percent': duty_percent
+                })
+        
+    except Exception as exc:
+        try:
+            current_app.logger.error(f'Ошибка при парсинге Excel: {exc}')
+        except RuntimeError:
+            pass
+        raise
+    finally:
+        # Гарантированно закрываем файл перед удалением
+        if wb is not None:
+            wb.close()
+    
+    if duty_items:
+        # Сохраняем в единый файл tnved_catalog.json
+        # Загружаем существующие записи и добавляем новые
+        all_items = load_duty_rates()
+        # Заменяем только простые записи (без code), сохраняем ТН ВЭД
+        tnved_items = [item for item in all_items if item.get('code')]
+        all_items = duty_items + tnved_items
+        save_duty_rates(all_items, actor=actor)
+        refresh_duty_rates()
+    
+    return len(duty_items)
+
+
+def export_tnved_catalog_to_excel() -> bytes:
+    """Экспортирует каталог ТН ВЭД в Excel формат.
+    
+    Экспортирует только записи с полем 'code' (ТН ВЭД) из duty_rates.json.
+    
+    Returns:
+        Байты Excel файла
+    """
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, Alignment, PatternFill
+    except ImportError as exc:
+        raise RuntimeError('openpyxl не установлен. Установите: pip install openpyxl') from exc
+    
+    from io import BytesIO
+    
+    # Загружаем все пошлины и фильтруем только ТН ВЭД (с полем code)
+    all_items = load_duty_rates()
+    tnved_items = [item for item in all_items if item.get('code')]
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'ТН ВЭД'
+    
+    # Стили для заголовков
+    header_fill = PatternFill(start_color='366092', end_color='366092', fill_type='solid')
+    header_font = Font(bold=True, color='FFFFFF')
+    
+    # Заголовки
+    headers = ['Код ТН ВЭД', 'Описание', 'Ключевые слова', 'Примеры', 'Пошлина', 'Пошлина, %']
+    ws.append(headers)
+    
+    # Применяем стили к заголовкам
+    for col_num, _ in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+    
+    # Данные
+    for item in tnved_items:
+        ws.append([
+            item.get('code', ''),
+            item.get('description', ''),
+            item.get('keywords_display', ''),
+            item.get('examples', ''),
+            item.get('duty_text', ''),
+            item.get('duty_percent') if item.get('duty_percent') is not None else ''
+        ])
+    
+    # Автоподбор ширины колонок
+    for column in ws.columns:
+        max_length = 0
+        column_letter = column[0].column_letter
+        for cell in column:
+            try:
+                if cell.value:
+                    max_length = max(max_length, len(str(cell.value)))
+            except (AttributeError, TypeError):
+                pass  # Игнорируем ошибки преобразования значений ячеек
+        adjusted_width = min(max_length + 2, 50)
+        ws.column_dimensions[column_letter].width = adjusted_width
+    
+    # Сохраняем в байты
+    buffer = BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    
+    return buffer.getvalue()
+
+
+def import_tnved_catalog_from_excel(excel_path: Path, *, actor: Optional[str] = None) -> int:
+    """Импортирует каталог ТН ВЭД из Excel файла, заменяя все существующие данные.
+    
+    Args:
+        excel_path: Путь к Excel файлу
+        actor: Имя пользователя, выполняющего импорт (для версионирования)
+        
+    Returns:
+        Количество импортированных записей
+    """
+    try:
+        import openpyxl
+    except ImportError as exc:
+        raise RuntimeError('openpyxl не установлен. Установите: pip install openpyxl') from exc
+    
+    if not excel_path.exists():
+        raise FileNotFoundError(f'Файл не найден: {excel_path}')
+    
+    tnved_items = []
+    
+    wb = None
+    try:
+        wb = openpyxl.load_workbook(excel_path, data_only=True)
+        ws = wb.active
+        
+        # Пропускаем заголовок (первая строка)
+        rows = list(ws.iter_rows(min_row=2, values_only=True))
+        
+        for row in rows:
+            if not row or len(row) < 5:
+                continue
+            
+            # Индексы колонок: 0-Код ТН ВЭД, 1-Описание, 2-Ключевые слова, 3-Примеры, 4-Пошлина, 5-Пошлина, %
+            code = str(row[0]).strip() if row[0] else ''
+            description = str(row[1]).strip() if row[1] else ''
+            keywords_text = str(row[2]).strip() if row[2] else ''
+            examples_text = str(row[3]).strip() if row[3] else ''
+            duty_text = str(row[4]).strip() if row[4] else ''
+            duty_percent_value = row[5] if len(row) > 5 else None
+            
+            # Преобразуем пошлину в число
+            duty_percent = None
+            if duty_percent_value is not None:
+                try:
+                    if isinstance(duty_percent_value, (int, float)):
+                        duty_percent = float(duty_percent_value)
+                    else:
+                        duty_percent = float(str(duty_percent_value).strip().replace(',', '.'))
+                except (ValueError, TypeError):
+                    # Если не удалось преобразовать, пытаемся извлечь из duty_text
+                    duty_percent = _extract_percent_value(duty_text)
+            else:
+                # Если не указано, пытаемся извлечь из duty_text
+                duty_percent = _extract_percent_value(duty_text)
+            
+            if code:
+                tnved_items.append({
+                    'code': code,
+                    'description': description,
+                    'keywords_display': keywords_text,
+                    'examples': examples_text,
+                    'duty_text': duty_text,
+                    'duty_percent': duty_percent
+                })
+        
+    except Exception as exc:
+        try:
+            current_app.logger.error(f'Ошибка при парсинге Excel: {exc}')
+        except RuntimeError:
+            pass
+        raise
+    finally:
+        # Гарантированно закрываем файл перед удалением
+        if wb is not None:
+            wb.close()
+    
+    if tnved_items:
+        # Сохраняем в единый файл tnved_catalog.json
+        save_duty_rates(tnved_items, actor=actor)
+        refresh_duty_rates()
+    
+    return len(tnved_items)
 
 
 def save_orders_documents(orders: List[Dict[str, Any]], *, actor: Optional[str] = None) -> None:

@@ -4,7 +4,8 @@
       "name": "Чита",
       "region": "Забайкальский край",
       "truck_price": 400000.0,
-      "is_main_route": true
+      "is_main_route": true,
+      "main_city": null
     },
     {
       "name": "Агинское",
@@ -136,7 +137,8 @@
       "name": "Улан-Удэ",
       "region": "Республика Бурятия",
       "truck_price": 500000.0,
-      "is_main_route": true
+      "is_main_route": true,
+      "main_city": null
     },
     {
       "name": "Гусиноозёрск",
@@ -268,7 +270,8 @@
       "name": "Иркутск",
       "region": "Иркутская область",
       "truck_price": 600000.0,
-      "is_main_route": true
+      "is_main_route": true,
+      "main_city": null
     },
     {
       "name": "Ангарск",
@@ -484,7 +487,8 @@
       "name": "Красноярск",
       "region": "Красноярский край",
       "truck_price": 800000.0,
-      "is_main_route": true
+      "is_main_route": true,
+      "main_city": null
     },
     {
       "name": "Ачинск",
@@ -700,7 +704,8 @@
       "name": "Новосибирск",
       "region": "Новосибирская область",
       "truck_price": 900000.0,
-      "is_main_route": true
+      "is_main_route": true,
+      "main_city": null
     },
     {
       "name": "Бердск",
@@ -1007,7 +1012,8 @@
       "name": "Омск",
       "region": "Омская область",
       "truck_price": 1000000.0,
-      "is_main_route": true
+      "is_main_route": true,
+      "main_city": null
     },
     {
       "name": "Тара",
@@ -1329,8 +1335,7 @@
       "region": "Свердловская область",
       "truck_price": 1100000.0,
       "is_main_route": true,
-      "allows_trail": true,
-      "trail_price": 2000000.0
+      "main_city": null
     },
     {
       "name": "Челябинск",
@@ -1634,13 +1639,6 @@
       "main_city": "Екатеринбург"
     },
     {
-      "name": "Лангепас",
-      "region": "Свердловская область",
-      "truck_price": 1100000.0,
-      "is_main_route": false,
-      "main_city": "Екатеринбург"
-    },
-    {
       "name": "Когалым",
       "region": "Свердловская область",
       "truck_price": 1100000.0,
@@ -1652,8 +1650,7 @@
       "region": "Московская область",
       "truck_price": 1200000.0,
       "is_main_route": true,
-      "allows_trail": true,
-      "trail_price": 2100000.0
+      "main_city": null
     },
     {
       "name": "Тверь",
@@ -2884,7 +2881,8 @@
       "name": "Санкт-Петербург",
       "region": "Ленинградская область",
       "truck_price": 1300000.0,
-      "is_main_route": true
+      "is_main_route": true,
+      "main_city": null
     },
     {
       "name": "Великий Новгород",
@@ -3536,6 +3534,62 @@
       "truck_price": 1300000.0,
       "is_main_route": false,
       "main_city": "Санкт-Петербург"
+    },
+    {
+      "name": "Минск",
+      "region": "Беларусь",
+      "truck_price": 1300000.0,
+      "is_main_route": true,
+      "main_city": null
+    },
+    {
+      "name": "Брест",
+      "region": "Брестская область, Беларусь",
+      "truck_price": 1300000.0,
+      "is_main_route": false,
+      "main_city": "Минск"
+    },
+    {
+      "name": "Гродно",
+      "region": "Гродненская область, Беларусь",
+      "truck_price": 1300000.0,
+      "is_main_route": false,
+      "main_city": "Минск"
+    },
+    {
+      "name": "Гомель",
+      "region": "Гомельская область, Беларусь",
+      "truck_price": 1300000.0,
+      "is_main_route": false,
+      "main_city": "Минск"
+    },
+    {
+      "name": "Могилёв",
+      "region": "Могилёвская область, Беларусь",
+      "truck_price": 1300000.0,
+      "is_main_route": false,
+      "main_city": "Минск"
+    },
+    {
+      "name": "Витебск",
+      "region": "Витебская область, Беларусь",
+      "truck_price": 1300000.0,
+      "is_main_route": false,
+      "main_city": "Минск"
+    },
+    {
+      "name": "Бобруйск",
+      "region": "Могилёвская область",
+      "truck_price": 1300000.0,
+      "is_main_route": false,
+      "main_city": null
+    },
+    {
+      "name": "Бобруйск",
+      "region": "Могилёвская область",
+      "truck_price": 1300000.0,
+      "is_main_route": false,
+      "main_city": "Минск"
     }
   ]
 }

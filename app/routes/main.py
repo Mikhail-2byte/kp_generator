@@ -226,6 +226,7 @@ def _build_tender_groups(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 
 
 @main_bp.route('/history')
+@login_required
 def history() -> str:
     """Отображает список последних генераций пользователя."""
     app_config = current_app.config['APP_SETTINGS']

@@ -950,6 +950,19 @@ def generate() -> Union[str, Response]:
     """Выполняет расчёт КП, сохраняет историю и формирует пакет документов."""
     form_data = request.form.to_dict()
     form_data['comment'] = form_data.get('comment', '').strip()
+    
+    # Обрабатываем дополнительные расходы из JSON строки
+    additional_expenses_str = form_data.get('additional_expenses', '')
+    if additional_expenses_str:
+        try:
+            import json
+            additional_expenses = json.loads(additional_expenses_str)
+            if isinstance(additional_expenses, list):
+                form_data['additional_expenses'] = additional_expenses
+        except (json.JSONDecodeError, TypeError):
+            form_data['additional_expenses'] = []
+    else:
+        form_data['additional_expenses'] = []
 
     app_config = current_app.config['APP_SETTINGS']
     orchestrator = GenerationOrchestrator(app_config)

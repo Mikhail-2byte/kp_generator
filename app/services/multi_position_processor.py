@@ -292,6 +292,69 @@ class MultiPositionProcessor:
         sheet[f"I{difference_row}"] = f"=I{i27_row}-I{i28_row}"
         sheet[f"I{ratio_row}"] = f"=I{difference_row}/I{i27_row}"
 
+    def fill_additional_expenses(self, sheet, form_data: Dict[str, Any], rows_added: int = 0) -> None:
+        """
+        Заполняет дополнительные расходы в Excel.
+        
+        Записывает названия расходов в ячейки B34-B36 и суммы в I34-I36.
+        Ячейки перемещаются динамически в зависимости от количества позиций.
+        
+        Args:
+            sheet: Лист Excel
+            form_data: Данные формы с дополнительными расходами
+            rows_added: Количество добавленных строк (не используется, но оставлено для совместимости)
+        """
+        last_data_row = max(self.find_last_data_row(sheet), DATA_START_ROW)
+        total_row = last_data_row + 1
+        
+        # Вычисляем номера строк как в update_summary_block
+        # i33_row = total_row + 21
+        # i34_row = i33_row + 1 = total_row + 22
+        # Но при одной позиции (total_row=11) должно быть 34, значит формула: total_row + 23
+        # Проверяем: при одной позиции total_row=11, i34_row должно быть 34, значит 11+23=34 ✓
+        i34_row = total_row + 23
+        i35_row = total_row + 24
+        i36_row = total_row + 25
+        
+        # Получаем дополнительные расходы из form_data
+        additional_expenses = form_data.get('additional_expenses', [])
+        
+        # Ограничиваем до 3 расходов
+        expenses = additional_expenses[:3] if isinstance(additional_expenses, list) else []
+        
+        # Логирование для отладки
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.debug(f"fill_additional_expenses: last_data_row={last_data_row}, total_row={total_row}, "
+                    f"i34_row={i34_row}, expenses={expenses}")
+        
+        # Заполняем расходы
+        expense_rows = [i34_row, i35_row, i36_row]
+        for i, expense in enumerate(expenses):
+            if i >= len(expense_rows):
+                break
+            
+            row = expense_rows[i]
+            name = expense.get('name', '').strip() if isinstance(expense, dict) else ''
+            amount = expense.get('amount', 0) if isinstance(expense, dict) else 0
+            
+            logger.debug(f"Filling expense {i+1}: row={row}, name={name}, amount={amount}")
+            
+            # Заполняем название в столбец B
+            if name:
+                sheet[f"B{row}"] = name
+                logger.debug(f"Set B{row} = {name}")
+            
+            # Заполняем сумму в столбец I
+            try:
+                amount_float = float(amount)
+                if amount_float > 0:
+                    sheet[f"I{row}"] = amount_float
+                    logger.debug(f"Set I{row} = {amount_float}")
+            except (ValueError, TypeError):
+                logger.warning(f"Invalid amount for expense {i+1}: {amount}")
+                pass  # Пропускаем некорректные значения
+
     def fill_finance_flags(self, sheet, form_data: Dict[str, Any], rows_added: int = 0) -> None:
         """
         Заполняет флаги финансирования в Excel.
@@ -523,6 +586,8 @@ class MultiPositionProcessor:
         # Заполняем флаги финансирования (после update_summary_block, чтобы номера строк были правильными)
         if form_data:
             self.fill_finance_flags(sheet, form_data, positions_to_add)
+            # Заполняем дополнительные расходы (после update_summary_block, чтобы номера строк были правильными)
+            self.fill_additional_expenses(sheet, form_data, positions_to_add)
         
         # Сохраняем в BytesIO
         excel_file = BytesIO()

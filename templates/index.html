@@ -193,9 +193,22 @@
                                value="{{ form_data.warranty_period if form_data and form_data.warranty_period else '12 месяцев со дня ввода в эксплуатацию, но не более 18 месяцев со дня поставки.' }}"
                                placeholder="12 месяцев со дня ввода в эксплуатацию, но не более 18 месяцев со дня поставки.">
                     </div>
-                    <div class="field-group">
-                        <label for="delivery_address" class="field-label">Адрес доставки</label>
-                        <textarea id="delivery_address" name="delivery_address" rows="2" placeholder="123458, город Москва, ул. Маршала Прошлякова, д. 30, офис 605">{{ form_data.delivery_address.strip() if form_data and form_data.delivery_address else '' }}</textarea>
+                    <div class="delivery-row">
+                        <div class="field-group delivery-address-group">
+                            <label for="delivery_address" class="field-label">Адрес доставки</label>
+                            <textarea id="delivery_address" name="delivery_address" rows="2" placeholder="123458, город Москва, ул. Маршала Прошлякова, д. 30, офис 605">{{ form_data.delivery_address.strip() if form_data and form_data.delivery_address else '' }}</textarea>
+                        </div>
+                        <div class="field-group additional-expenses-group">
+                            <label class="field-label">Дополнительные расходы</label>
+                            <div class="expenses-content">
+                                <div class="expenses-form-row">
+                                    <input type="text" id="expenseName" class="expense-name-input" placeholder="Название расхода">
+                                    <input type="number" id="expenseAmount" class="expense-amount-input" placeholder="Сумма" min="0" step="0.01">
+                                    <button type="button" class="btn btn-sm btn-primary" onclick="addExpense()">Добавить</button>
+                                </div>
+                                <div class="expenses-list" id="expensesList"></div>
+                            </div>
+                        </div>
                     </div>
                     <div class="field-group logistics-panel">
                         <div class="logistics-toggle-group">
@@ -834,6 +847,16 @@
                 positions.push(pos);
             }
         });
+
+        // Сохраняем дополнительные расходы (максимум 3)
+        if (expensesList && expensesList.length > 0) {
+            data.additional_expenses = expensesList.map(exp => ({
+                name: exp.name,
+                amount: exp.amount
+            })).slice(0, 3); // Ограничиваем до 3 элементов
+        } else {
+            data.additional_expenses = [];
+        }
 
         return { form_data: data, positions };
     }
@@ -2895,6 +2918,16 @@
 
             try {
                 const formData = new FormData(form);
+                
+                // Добавляем дополнительные расходы как JSON строку
+                if (expensesList && expensesList.length > 0) {
+                    const expensesJson = JSON.stringify(expensesList.map(exp => ({
+                        name: exp.name,
+                        amount: exp.amount
+                    })).slice(0, 3));
+                    formData.append('additional_expenses', expensesJson);
+                }
+                
                 const response = await fetch(form.action, {
                     method: 'POST',
                     body: formData
@@ -3065,6 +3098,126 @@
 
         // Запускаем обработку данных после загрузки DOM
         processFormData();
+    });
+
+    // ============================================
+    // Additional Expenses Management (UI only)
+    // ============================================
+    
+    // Store expenses in memory (not saved to session yet)
+    let expensesList = [];
+
+    function addExpense() {
+        const nameInput = document.getElementById('expenseName');
+        const amountInput = document.getElementById('expenseAmount');
+        
+        if (!nameInput || !amountInput) {
+            return;
+        }
+        
+        // Validation: максимум 3 расхода
+        if (expensesList.length >= 3) {
+            alert('Можно добавить максимум 3 дополнительных расхода');
+            return;
+        }
+        
+        const name = nameInput.value.trim();
+        const amount = parseFloat(amountInput.value);
+        
+        // Validation
+        if (!name) {
+            alert('Введите название расхода');
+            nameInput.focus();
+            return;
+        }
+        
+        if (!amountInput.value || isNaN(amount) || amount <= 0) {
+            alert('Введите корректную положительную сумму');
+            amountInput.focus();
+            return;
+        }
+        
+        // Add expense to list
+        const expense = {
+            id: Date.now(),
+            name: name,
+            amount: amount
+        };
+        
+        expensesList.push(expense);
+        
+        // Clear inputs
+        nameInput.value = '';
+        amountInput.value = '';
+        
+        // Update UI
+        renderExpensesList();
+    }
+
+    function removeExpense(expenseId) {
+        expensesList = expensesList.filter(exp => exp.id !== expenseId);
+        renderExpensesList();
+    }
+
+    function renderExpensesList() {
+        const listContainer = document.getElementById('expensesList');
+        if (!listContainer) {
+            return;
+        }
+        
+        listContainer.innerHTML = '';
+        
+        if (expensesList.length === 0) {
+            return;
+        }
+        
+        expensesList.forEach(expense => {
+            const item = document.createElement('div');
+            item.className = 'expense-item';
+            item.innerHTML = `
+                <div class="expense-item-info">
+                    <div class="expense-item-name">${escapeHtml(expense.name)}</div>
+                    <div class="expense-item-amount">${formatNumber(expense.amount)} руб.</div>
+                </div>
+                <button type="button" class="expense-item-remove" onclick="removeExpense(${expense.id})" title="Удалить">×</button>
+            `;
+            listContainer.appendChild(item);
+        });
+    }
+
+    function formatNumber(num) {
+        return new Intl.NumberFormat('ru-RU', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(num);
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Allow Enter key to add expense
+    document.addEventListener('DOMContentLoaded', function() {
+        const expenseNameInput = document.getElementById('expenseName');
+        const expenseAmountInput = document.getElementById('expenseAmount');
+        
+        if (expenseNameInput && expenseAmountInput) {
+            expenseNameInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    expenseAmountInput.focus();
+                }
+            });
+            
+            expenseAmountInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addExpense();
+                }
+            });
+        }
     });
 </script>
 {% endblock %}

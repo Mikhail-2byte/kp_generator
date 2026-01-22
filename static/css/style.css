@@ -1531,6 +1531,130 @@ h1 {
   }
 }
 
+/* Delivery row with address and additional expenses */
+.delivery-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  grid-column: span 2;
+}
+
+@media (min-width: 1000px) {
+  .delivery-row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.delivery-row .delivery-address-group {
+  grid-column: span 1 !important;
+}
+
+/* Additional expenses group - styled as regular field-group */
+.additional-expenses-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.expenses-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.expenses-form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+@media (min-width: 600px) {
+  .expenses-form-row {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+}
+
+.expense-name-input,
+.expense-amount-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.expense-amount-input {
+  max-width: 150px;
+}
+
+.expenses-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.expense-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  transition: border-color var(--transition);
+}
+
+.expense-item:hover {
+  border-color: var(--primary);
+}
+
+.expense-item-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.expense-item-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--foreground);
+  flex: 1;
+}
+
+.expense-item-amount {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary);
+  white-space: nowrap;
+}
+
+.expense-item-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--muted-foreground);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: all var(--transition);
+  flex-shrink: 0;
+}
+
+.expense-item-remove:hover {
+  background: var(--destructive);
+  border-color: var(--destructive);
+  color: var(--destructive-foreground);
+}
+
 .field-group {
   display: flex;
   flex-direction: column;

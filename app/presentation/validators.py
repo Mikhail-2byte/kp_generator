@@ -129,6 +129,46 @@ def validate_form_data(form_data: Dict[str, Any]) -> FormValidationResult:
     if isinstance(delivery_address, str):
         cleaned_data['delivery_address'] = delivery_address.strip()
 
+    # Валидация дополнительных расходов
+    additional_expenses = cleaned_data.get('additional_expenses', [])
+    if additional_expenses:
+        if not isinstance(additional_expenses, list):
+            errors.append('Дополнительные расходы должны быть списком.')
+            invalid_fields.add('additional_expenses')
+        elif len(additional_expenses) > 3:
+            errors.append('Можно указать максимум 3 дополнительных расхода.')
+            invalid_fields.add('additional_expenses')
+        else:
+            validated_expenses = []
+            for i, expense in enumerate(additional_expenses):
+                if not isinstance(expense, dict):
+                    errors.append(f'Дополнительный расход #{i+1} должен быть объектом.')
+                    invalid_fields.add('additional_expenses')
+                    continue
+                
+                name = expense.get('name', '').strip() if isinstance(expense.get('name'), str) else ''
+                amount = expense.get('amount', 0)
+                
+                if not name:
+                    errors.append(f'Название дополнительного расхода #{i+1} не может быть пустым.')
+                    invalid_fields.add('additional_expenses')
+                    continue
+                
+                try:
+                    amount_float = float(amount)
+                    if amount_float <= 0:
+                        errors.append(f'Сумма дополнительного расхода #{i+1} должна быть положительным числом.')
+                        invalid_fields.add('additional_expenses')
+                        continue
+                    validated_expenses.append({'name': name, 'amount': amount_float})
+                except (ValueError, TypeError):
+                    errors.append(f'Некорректная сумма дополнительного расхода #{i+1}.')
+                    invalid_fields.add('additional_expenses')
+            
+            cleaned_data['additional_expenses'] = validated_expenses
+    else:
+        cleaned_data['additional_expenses'] = []
+
     payment_terms = cleaned_data.get('payment_terms', '') or ''
     if payment_terms and len(payment_terms) > 500:
         errors.append('Условия оплаты не должны превышать 500 символов.')

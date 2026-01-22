@@ -220,7 +220,8 @@ class MultiPositionProcessor:
         # Динамически вычисляем все позиции на основе total_row
         k_formula_row = total_row + 4
         i20_row = total_row + 8
-        i25_row = total_row + 13
+        i24_row = total_row + 13
+        i25_row = i24_row + 1
         i26_row = i25_row + 1
         i27_row = i26_row + 1
         i28_row = i27_row + 1
@@ -232,7 +233,9 @@ class MultiPositionProcessor:
         i34_row = i33_row + 1
         i35_row = i34_row + 1
         i36_row = i35_row + 1
-        i37_row = i36_row + 1
+        
+        # Вычисляем номер строки банковской гарантии (I37 при одной позиции)
+        bank_guarantee_row = 37 + rows_added
 
         # Обновляем формулы с динамическими ссылками
         sheet[f"I{total_row}"] = f"=SUM(I{DATA_START_ROW}:I{last_data_row})"
@@ -251,46 +254,47 @@ class MultiPositionProcessor:
 
         sheet[f"I{i20_row}"] = f"=I{total_row}"
 
-        sheet[f"I{i25_row}"] = f"=I{total_row + 1}"
+        sheet[f"I{i24_row}"] = f"=I{total_row + 1}"
 
         # Расчет НДС из суммы с НДС: сумма_с_НДС / (100 + vat_rate*100) * (vat_rate*100)
         vat_base = int((1 + self.vat_rate) * 100)  # 122 для 22%
         vat_percent = int(self.vat_rate * 100)  # 22 для 22%
-        sheet[f"I{i26_row}"] = f"=I{i25_row}/{vat_base}*{vat_percent}"
-        sheet[f"I{i27_row}"] = f"=I{i25_row}-I{i26_row}"
-        sheet[f"I{i28_row}"] = f"=SUM(I{i29_row}:I{i28_row + 10})"
-        sheet[f"I{i29_row}"] = f"=O{total_row}"
+        sheet[f"I{i25_row}"] = f"=I{i24_row}/{vat_base}*{vat_percent}"
+        sheet[f"I{i26_row}"] = f"=I{i24_row}-I{i25_row}"
+        # I27 суммирует все затраты от I28 до I37 (включая банковскую гарантию)
+        sheet[f"I{i27_row}"] = f"=SUM(I{i28_row}:I{bank_guarantee_row})"
+        sheet[f"I{i28_row}"] = f"=O{total_row}"
 
         # Динамическая формула ЕСЛИ для строки I29/I30/... в зависимости от числа позиций
         positions_count = max(0, last_data_row - DATA_START_ROW + 1)
-        # Формула должна всегда стоять в строке шаблона I29, которая динамически равна i30_row
-        target_if_row = i30_row
+        # Формула должна всегда стоять в строке шаблона I29, которая динамически равна i29_row
+        target_if_row = i29_row
         sheet[f"I{target_if_row}"] = (
             f"=IF(H{target_if_row}=D{target_if_row + 14},I{target_if_row - 1}*3.2%,0)"
         )
         
-        # Формулы для I30-I33 ссылаются на итоги по соответствующим столбцам
-        sheet[f"I{i31_row}"] = f"=Y{total_row}"
-        sheet[f"I{i32_row}"] = f"=S{total_row}"
-        sheet[f"I{i33_row}"] = f"=U{total_row}"
+        # Формулы для I30-I32 ссылаются на итоги по соответствующим столбцам
+        sheet[f"I{i30_row}"] = f"=Y{total_row}"
+        sheet[f"I{i31_row}"] = f"=S{total_row}"
+        sheet[f"I{i32_row}"] = f"=U{total_row}"
 
-        sheet[f"I{i34_row}"] = f"=IF(H{i34_row}=\"ДА\",I{i29_row}*16%/365*K{k_formula_row},0)"
-        sheet[f"I{i35_row}"] = f"=AA{total_row}"
-        sheet[f"I{i36_row}"] = f"=AB{total_row}"
-        sheet[f"I{i37_row}"] = f"=AC{total_row}"
+        # Формула для I33 (кредит) с условием
+        sheet[f"I{i33_row}"] = f"=IF(H{i33_row}=\"ДА\",I{i28_row}*16%/365*K{k_formula_row},0)"
+        sheet[f"I{i34_row}"] = f"=AA{total_row}"
+        sheet[f"I{i35_row}"] = f"=AB{total_row}"
+        sheet[f"I{i36_row}"] = f"=AC{total_row}"
 
-        # Формула банковской гарантии
-        bank_guarantee_row = 37 + rows_added
+        # Формула банковской гарантии (I37 при одной позиции)
         sheet[f"I{bank_guarantee_row}"] = (
-            f"=IF(H{bank_guarantee_row}=\"ДА\",I{i25_row}*3%/365*(I{k_formula_row}+I{k_formula_row + 1}),0)"
+            f"=IF(H{bank_guarantee_row}=\"ДА\",I{i24_row}*3%/365*(I{k_formula_row}+I{k_formula_row + 1}),0)"
         )
 
         # Обновляем остальные формулы после банковской гарантии
         difference_row = bank_guarantee_row + 1
         ratio_row = difference_row + 2
         
-        sheet[f"I{difference_row}"] = f"=I{i27_row}-I{i28_row}"
-        sheet[f"I{ratio_row}"] = f"=I{difference_row}/I{i27_row}"
+        sheet[f"I{difference_row}"] = f"=I{i26_row}-I{i27_row}"
+        sheet[f"I{ratio_row}"] = f"=I{difference_row}/I{i26_row}"
 
     def fill_additional_expenses(self, sheet, form_data: Dict[str, Any], rows_added: int = 0) -> None:
         """
@@ -308,13 +312,14 @@ class MultiPositionProcessor:
         total_row = last_data_row + 1
         
         # Вычисляем номера строк как в update_summary_block
-        # i33_row = total_row + 21
-        # i34_row = i33_row + 1 = total_row + 22
-        # Но при одной позиции (total_row=11) должно быть 34, значит формула: total_row + 23
-        # Проверяем: при одной позиции total_row=11, i34_row должно быть 34, значит 11+23=34 ✓
-        i34_row = total_row + 23
-        i35_row = total_row + 24
-        i36_row = total_row + 25
+        # i33_row = total_row + 22 (строка для кредита)
+        # i34_row = i33_row + 1 (первая строка дополнительных расходов)
+        # i35_row = i34_row + 1 (вторая строка дополнительных расходов)
+        # i36_row = i35_row + 1 (третья строка дополнительных расходов)
+        i33_row = total_row + 22
+        i34_row = i33_row + 1
+        i35_row = i34_row + 1
+        i36_row = i35_row + 1
         
         # Получаем дополнительные расходы из form_data
         additional_expenses = form_data.get('additional_expenses', [])
@@ -371,17 +376,17 @@ class MultiPositionProcessor:
         total_row = last_data_row + 1
         
         # Вычисляем номера строк как в update_summary_block
-        # i25_row = total_row + 13
-        # i26_row = i25_row + 1 = total_row + 14
-        # i27_row = i26_row + 1 = total_row + 15
-        # i28_row = i27_row + 1 = total_row + 16
-        # i29_row = i28_row + 1 = total_row + 17
-        # i30_row = i29_row + 1 = total_row + 18
-        # i31_row = i30_row + 1 = total_row + 19
-        # i32_row = i31_row + 1 = total_row + 20
-        # i33_row = i32_row + 1 = total_row + 21
-        # i34_row = i33_row + 1 = total_row + 22 (строка для кредита)
-        i34_row = total_row + 22
+        # i24_row = total_row + 13
+        # i25_row = i24_row + 1 = total_row + 14
+        # i26_row = i25_row + 1 = total_row + 15
+        # i27_row = i26_row + 1 = total_row + 16
+        # i28_row = i27_row + 1 = total_row + 17
+        # i29_row = i28_row + 1 = total_row + 18
+        # i30_row = i29_row + 1 = total_row + 19
+        # i31_row = i30_row + 1 = total_row + 20
+        # i32_row = i31_row + 1 = total_row + 21
+        # i33_row = i32_row + 1 = total_row + 22 (строка для кредита)
+        i33_row = total_row + 22
         
         # bank_guarantee_row = 37 + rows_added (как в update_summary_block)
         bank_guarantee_row = 37 + rows_added
@@ -392,7 +397,7 @@ class MultiPositionProcessor:
         
         # Записываем "ДА" если чекбоксы отмечены
         if finance_credit and str(finance_credit).lower() in ['1', 'true', 'on', 'yes']:
-            sheet[f"H{i34_row}"] = "ДА"
+            sheet[f"H{i33_row}"] = "ДА"
         
         if finance_bank_guarantee and str(finance_bank_guarantee).lower() in ['1', 'true', 'on', 'yes']:
             sheet[f"H{bank_guarantee_row}"] = "ДА"

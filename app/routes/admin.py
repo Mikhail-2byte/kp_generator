@@ -49,20 +49,6 @@ from app.presentation.ui import build_context
 admin_bp = Blueprint('admin', __name__)  # Управление справочниками через административный интерфейс
 
 
-@admin_bp.route('/admin/stats')
-@admin_required
-def manage_stats() -> str:
-    user_activity = admin_stats_repository.get_user_activity()
-    return render_template(
-        'admin/stats.html',
-        **build_context(
-            'admin_stats',
-            'Статистика активности',
-            user_activity=user_activity,
-        )
-    )
-
-
 @admin_bp.route('/admin/settings', methods=['GET', 'POST'])
 @admin_required
 def manage_settings() -> Union[str, Response]:

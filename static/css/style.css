@@ -1154,7 +1154,8 @@ h1 {
   gap: 8px;
 }
 
-.stats-list li {
+.stats-list li,
+.stats-row {
   display: flex;
   justify-content: space-between;
   align-items: center;

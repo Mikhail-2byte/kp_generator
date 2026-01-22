@@ -153,7 +153,8 @@ class MultiPositionCalculator(PriceCalculatorPort):
         target_margin_percent: float,
         use_credit: bool = False,
         use_bank_guarantee: bool = False,
-        payment_days: Optional[int] = None
+        payment_days: Optional[int] = None,
+        additional_expenses_total_yuan: float = 0
     ) -> Dict[str, Any]:
         """
         Рассчитывает цены для множественных позиций с единой итоговой маржой.
@@ -163,6 +164,10 @@ class MultiPositionCalculator(PriceCalculatorPort):
             logistics_rub: Общая стоимость логистики (в рублях)
             delivery_time: Время доставки (в днях)
             target_margin_percent: Целевая маржа в процентах
+            use_credit: Использовать ли кредит в расчете
+            use_bank_guarantee: Использовать ли банковскую гарантию в расчете
+            payment_days: Количество дней оплаты (для банковской гарантии)
+            additional_expenses_total_yuan: Общая сумма дополнительных расходов (в юанях)
         
         Returns:
             Словарь с результатами расчета:
@@ -201,6 +206,23 @@ class MultiPositionCalculator(PriceCalculatorPort):
                 'costs': costs
             })
             total_costs += costs['total_cost']
+        
+        # Распределяем дополнительные расходы пропорционально затратам каждой позиции
+        # Дополнительные расходы уже в юанях, все затраты тоже в юанях
+        # Распределяем дополнительные расходы между позициями пропорционально их затратам
+        if total_costs > 0 and additional_expenses_total_yuan > 0:
+            for pos_data in position_costs:
+                # Доля затрат позиции от общих затрат
+                cost_ratio = pos_data['costs']['total_cost'] / total_costs
+                # Дополнительные расходы для этой позиции (в юанях)
+                position_additional_expenses_yuan = additional_expenses_total_yuan * cost_ratio
+                # Добавляем к затратам на единицу (в юанях)
+                pos_data['costs']['cost_per_unit'] += position_additional_expenses_yuan / int(pos_data['position']['quantity'])
+                # Обновляем общие затраты позиции (в юанях)
+                pos_data['costs']['total_cost'] += position_additional_expenses_yuan
+        
+        # Обновляем общие затраты с учетом дополнительных расходов (в юанях)
+        total_costs += additional_expenses_total_yuan
         
         result_positions = []
         total_revenue = 0
@@ -340,7 +362,8 @@ class MultiPositionCalculator(PriceCalculatorPort):
         margin_percent: float,
         use_credit: bool = False,
         use_bank_guarantee: bool = False,
-        payment_days: Optional[int] = None
+        payment_days: Optional[int] = None,
+        additional_expenses_total_yuan: float = 0
     ) -> Dict[str, Any]:
         """
         Рассчитывает цену для одной позиции (старый метод для совместимости).
@@ -355,6 +378,7 @@ class MultiPositionCalculator(PriceCalculatorPort):
             use_credit: Использовать ли кредит в расчете
             use_bank_guarantee: Использовать ли банковскую гарантию в расчете
             payment_days: Количество дней оплаты (для банковской гарантии)
+            additional_expenses_total_yuan: Общая сумма дополнительных расходов (в юанях)
         
         Returns:
             Словарь с результатами:
@@ -390,7 +414,8 @@ class MultiPositionCalculator(PriceCalculatorPort):
             config=self.config,
             use_credit=use_credit,
             use_bank_guarantee=use_bank_guarantee,
-            payment_days=payment_days
+            payment_days=payment_days,
+            additional_expenses_total_yuan=additional_expenses_total_yuan
         )
         
         general_price = final_price * quantity

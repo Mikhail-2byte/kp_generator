@@ -74,7 +74,8 @@ class GenerationOrchestrator:
         margin_percent: float,
         use_credit: bool = False,
         use_bank_guarantee: bool = False,
-        payment_days: Optional[int] = None
+        payment_days: Optional[int] = None,
+        additional_expenses: Optional[List[Dict[str, Any]]] = None
     ) -> Tuple[List[Dict[str, Any]], float]:
         """
         Рассчитывает цены для позиций.
@@ -87,16 +88,29 @@ class GenerationOrchestrator:
             use_credit: Использовать ли кредит в расчете
             use_bank_guarantee: Использовать ли банковскую гарантию в расчете
             payment_days: Количество дней оплаты (для банковской гарантии)
+            additional_expenses: Список дополнительных расходов [{'name': str, 'amount': float}]
         
         Returns:
             Tuple[position_prices, total_general_price]
         """
+        # Вычисляем общую сумму дополнительных расходов в юанях
+        # Дополнительные расходы в форме вводятся в юанях
+        additional_expenses_total_yuan = 0
+        if additional_expenses:
+            for expense in additional_expenses:
+                if isinstance(expense, dict):
+                    amount = expense.get('amount', 0)
+                    try:
+                        additional_expenses_total_yuan += float(amount)
+                    except (ValueError, TypeError):
+                        pass
         if len(positions) == 1:
             # Для одной позиции используем старый метод
             result = self.calculator.calculate_legacy_single_position(
                 positions[0], logistics_rub, delivery_time, margin_percent,
                 use_credit=use_credit, use_bank_guarantee=use_bank_guarantee,
-                payment_days=payment_days
+                payment_days=payment_days,
+                additional_expenses_total_yuan=additional_expenses_total_yuan
             )
             position_prices = [result]
             # Используем точное значение цены без округления
@@ -107,7 +121,8 @@ class GenerationOrchestrator:
             calculation_result = self.calculator.calculate_multi_position_prices(
                 positions, logistics_rub, delivery_time, margin_percent,
                 use_credit=use_credit, use_bank_guarantee=use_bank_guarantee,
-                payment_days=payment_days
+                payment_days=payment_days,
+                additional_expenses_total_yuan=additional_expenses_total_yuan
             )
             position_prices = calculation_result['positions']
             # Рассчитываем total_general_price без округления
@@ -263,11 +278,17 @@ class GenerationOrchestrator:
             )
         
         # Шаг 4: Расчет цен
+        # Извлекаем дополнительные расходы из cleaned_data
+        additional_expenses = cleaned_data.get('additional_expenses', [])
+        if not isinstance(additional_expenses, list):
+            additional_expenses = []
+        
         try:
             position_prices, total_general_price = self.calculate_prices(
                 positions, logistics_rub, delivery_time, margin_percent,
                 use_credit=use_credit, use_bank_guarantee=use_bank_guarantee,
-                payment_days=payment_days
+                payment_days=payment_days,
+                additional_expenses=additional_expenses
             )
         except Exception as exc:
             raise CalculationError(

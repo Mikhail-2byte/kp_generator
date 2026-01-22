@@ -49,6 +49,7 @@ class GenerationHistoryRecord(Base):
     proposal_validity = Column(Text)
     warranty_period = Column(Text)
     comment = Column(Text)
+    additional_expenses = Column(Text)  # JSON массив дополнительных расходов [{"name": str, "amount": float}]
     user_id = Column(Integer, ForeignKey('users.id'))
     
     # Новые поля для множественных позиций

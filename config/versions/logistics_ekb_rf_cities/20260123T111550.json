@@ -1,0 +1,113 @@
+{
+  "saved_at": "20260123T111550",
+  "actor": "tsc_perm@mail.ru",
+  "data": {
+    "cities": [
+      {
+        "name": "Самара",
+        "region": "Самарской области",
+        "distance_from_ekb_km": 900
+      },
+      {
+        "name": "Сыктывкар",
+        "region": "Республика Коми",
+        "distance_from_ekb_km": 1270
+      },
+      {
+        "name": "Таганрог",
+        "region": "Ростовская область",
+        "distance_from_ekb_km": 2320
+      },
+      {
+        "name": "Челябинск",
+        "region": "Челябинская область",
+        "distance_from_ekb_km": 212
+      },
+      {
+        "name": "Старый Оскол",
+        "region": "Белгородская область",
+        "distance_from_ekb_km": 2000
+      },
+      {
+        "name": "Кирово-Чепецк",
+        "region": "Кировская область",
+        "distance_from_ekb_km": 850
+      },
+      {
+        "name": "Краснотурьинск",
+        "region": "Свердловская область",
+        "distance_from_ekb_km": 390
+      },
+      {
+        "name": "Нижнекамск",
+        "region": "Республика Татарстан",
+        "distance_from_ekb_km": 670
+      },
+      {
+        "name": "Асбест",
+        "region": "Свердловская область",
+        "distance_from_ekb_km": 107
+      },
+      {
+        "name": "Саранск",
+        "region": "респ. Мордовия",
+        "distance_from_ekb_km": 1250
+      },
+      {
+        "name": "Заинск",
+        "region": "Татарстан",
+        "distance_from_ekb_km": 680
+      },
+      {
+        "name": "Усть-Джегута",
+        "region": "Черкесская Республика",
+        "distance_from_ekb_km": 2400
+      },
+      {
+        "name": "Салават",
+        "region": "Респ Башкортостан",
+        "distance_from_ekb_km": 700
+      },
+      {
+        "name": "Каменск-Шахтинский",
+        "region": "Ростовская область",
+        "distance_from_ekb_km": 2050
+      },
+      {
+        "name": "Димитровград",
+        "region": "Самарская область",
+        "distance_from_ekb_km": 930
+      },
+      {
+        "name": "Железногорск",
+        "region": "Курская область",
+        "distance_from_ekb_km": 2120
+      },
+      {
+        "name": "Новотроицк",
+        "region": "Оренбургская область",
+        "distance_from_ekb_km": 840
+      },
+      {
+        "name": "Лангепас",
+        "region": "Ханты-Мансийский автономный округ",
+        "distance_from_ekb_km": 1250
+      },
+      {
+        "name": "Губкин",
+        "region": "Белгородская область",
+        "distance_from_ekb_km": 1940
+      },
+      {
+        "name": "Волгоград",
+        "region": "Волгоградская область",
+        "distance_from_ekb_km": 1720
+      },
+      {
+        "name": "Березники",
+        "region": "Пермскомий край",
+        "distance_from_ekb_km": 550
+      }
+    ]
+  }
+}

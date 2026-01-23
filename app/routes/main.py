@@ -14,6 +14,7 @@ from flask import (
     render_template,
     request,
     send_file,
+    send_from_directory,
     session,
     url_for
 )
@@ -96,6 +97,16 @@ def _load_form_session() -> Tuple[Dict[str, Any], Optional[List[Dict[str, Any]]]
         return {}, None
 
     return form_data, imported_positions
+
+
+@main_bp.route('/favicon.ico')
+def favicon() -> Response:
+    """Отдаёт favicon.ico для браузера."""
+    return send_from_directory(
+        current_app.static_folder,
+        'favicon.ico',
+        mimetype='image/vnd.microsoft.icon'
+    )
 
 
 @main_bp.route('/')

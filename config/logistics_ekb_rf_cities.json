@@ -89,6 +89,21 @@
       "name": "Лангепас",
       "region": "Ханты-Мансийский автономный округ",
       "distance_from_ekb_km": 1250
+    },
+    {
+      "name": "Губкин",
+      "region": "Белгородская область",
+      "distance_from_ekb_km": 1940
+    },
+    {
+      "name": "Волгоград",
+      "region": "Волгоградская область",
+      "distance_from_ekb_km": 1720
+    },
+    {
+      "name": "Березники",
+      "region": "Пермскомий край",
+      "distance_from_ekb_km": 550
     }
   ]
 }

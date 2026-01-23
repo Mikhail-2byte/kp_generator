@@ -847,6 +847,10 @@ def import_main_cities_from_excel(excel_path: Path, *, actor: Optional[str] = No
             if not row or len(row) < 3:
                 continue
             
+            # Пропускаем полностью пустые строки
+            if not any(cell for cell in row if cell is not None and str(cell).strip()):
+                continue
+            
             # Индексы колонок: 0-Город, 1-Регион, 2-Фура, руб., 3-Основной маршрут, 4-Основной город
             name = str(row[0]).strip() if row[0] else ''
             region = str(row[1]).strip() if row[1] else ''
@@ -895,11 +899,18 @@ def import_main_cities_from_excel(excel_path: Path, *, actor: Optional[str] = No
         if wb is not None:
             wb.close()
     
+    # Защита от удаления всех городов: сохраняем только если есть хотя бы одна валидная запись
     if cities:
         save_main_cities(cities, actor=actor)
         load_main_cities.cache_clear()  # type: ignore
         load_all_logistics_cities.cache_clear()  # type: ignore
         load_logistics_cities.cache_clear()  # type: ignore
+    elif rows_count > 0:
+        # Если были строки в файле, но ни одна не была валидной - это ошибка
+        raise ValueError(
+            'Не удалось импортировать ни одной записи. '
+            'Проверьте, что файл содержит данные и все обязательные поля заполнены.'
+        )
     
     return len(cities)
 
@@ -986,6 +997,7 @@ def import_ekb_rf_cities_from_excel(excel_path: Path, *, actor: Optional[str] = 
         raise FileNotFoundError(f'Файл не найден: {excel_path}')
     
     cities = []
+    rows_count = 0
     
     wb = None
     try:
@@ -994,9 +1006,14 @@ def import_ekb_rf_cities_from_excel(excel_path: Path, *, actor: Optional[str] = 
         
         # Пропускаем заголовок (первая строка)
         rows = list(ws.iter_rows(min_row=2, values_only=True))
+        rows_count = len(rows)
         
         for row in rows:
             if not row or len(row) < 2:
+                continue
+            
+            # Пропускаем полностью пустые строки
+            if not any(cell for cell in row if cell is not None and str(cell).strip()):
                 continue
             
             # Индексы колонок: 0-Город, 1-Регион, 2-Расстояние от ЕКБ, км
@@ -1035,11 +1052,18 @@ def import_ekb_rf_cities_from_excel(excel_path: Path, *, actor: Optional[str] = 
         if wb is not None:
             wb.close()
     
+    # Защита от удаления всех городов: сохраняем только если есть хотя бы одна валидная запись
     if cities:
         save_ekb_rf_cities(cities, actor=actor)
         load_ekb_rf_cities.cache_clear()  # type: ignore
         load_all_logistics_cities.cache_clear()  # type: ignore
         load_logistics_cities.cache_clear()  # type: ignore
+    elif rows_count > 0:
+        # Если были строки в файле, но ни одна не была валидной - это ошибка
+        raise ValueError(
+            'Не удалось импортировать ни одной записи. '
+            'Проверьте, что файл содержит данные и все обязательные поля заполнены.'
+        )
     
     return len(cities)
 
@@ -1126,6 +1150,7 @@ def import_trail_cities_from_excel(excel_path: Path, *, actor: Optional[str] = N
         raise FileNotFoundError(f'Файл не найден: {excel_path}')
     
     cities = []
+    rows_count = 0
     
     wb = None
     try:
@@ -1134,9 +1159,14 @@ def import_trail_cities_from_excel(excel_path: Path, *, actor: Optional[str] = N
         
         # Пропускаем заголовок (первая строка)
         rows = list(ws.iter_rows(min_row=2, values_only=True))
+        rows_count = len(rows)
         
         for row in rows:
             if not row or len(row) < 3:
+                continue
+            
+            # Пропускаем полностью пустые строки
+            if not any(cell for cell in row if cell is not None and str(cell).strip()):
                 continue
             
             # Индексы колонок: 0-Город, 1-Регион, 2-Цена трала, руб.
@@ -1173,11 +1203,18 @@ def import_trail_cities_from_excel(excel_path: Path, *, actor: Optional[str] = N
         if wb is not None:
             wb.close()
     
+    # Защита от удаления всех городов: сохраняем только если есть хотя бы одна валидная запись
     if cities:
         save_trail_cities(cities, actor=actor)
         load_trail_cities.cache_clear()  # type: ignore
         load_all_logistics_cities.cache_clear()  # type: ignore
         load_logistics_cities.cache_clear()  # type: ignore
+    elif rows_count > 0:
+        # Если были строки в файле, но ни одна не была валидной - это ошибка
+        raise ValueError(
+            'Не удалось импортировать ни одной записи. '
+            'Проверьте, что файл содержит данные и все обязательные поля заполнены.'
+        )
     
     return len(cities)
 

@@ -821,6 +821,11 @@
             const formatCurrency = (value) => Number(value || 0).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const formatCurrencyInt = (value) => Math.round(Number(value || 0)).toLocaleString('ru-RU');
             const formatNumber = (value) => Number(value || 0).toLocaleString('ru-RU');
+            const escapeHtml = (text) => {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            };
             const authorName = [data.last_name, data.first_name].filter(Boolean).join(' ').trim();
             const authorDisplay = authorName || data.username || 'Не указан';
             
@@ -1073,6 +1078,30 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Дополнительные расходы -->
+                    ${data.additional_expenses && data.additional_expenses.length > 0 ? `
+                    <div class="info-section additional-expenses-section">
+                        <div class="section-header">
+                            <h4 class="section-title">
+                                <span class="section-icon">{{ sidebar_icon('dollar-sign')|safe }}</span>
+                                Дополнительные расходы
+                            </h4>
+                        </div>
+                        <div class="expenses-list">
+                            ${data.additional_expenses.map(expense => {
+                                const expenseName = expense.name || 'Не указано';
+                                const expenseAmount = Number(expense.amount || 0);
+                                return `
+                                    <div class="expense-item-detail">
+                                        <div class="expense-item-name">${escapeHtml(expenseName)}</div>
+                                        <div class="expense-item-amount">¥${formatCurrency(expenseAmount)}</div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                    ` : ''}
 
                     ${renderPositionsTable()}
 

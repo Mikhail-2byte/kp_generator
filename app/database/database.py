@@ -293,6 +293,18 @@ def _build_generation_detail(record: Optional[GenerationHistoryRecord]):
         'first_name': record.user.first_name if record.user else None,
     }
     
+    # Парсим дополнительные расходы из JSON
+    additional_expenses = []
+    if record.additional_expenses:
+        try:
+            additional_expenses = json.loads(record.additional_expenses)
+            if not isinstance(additional_expenses, list):
+                additional_expenses = []
+        except (json.JSONDecodeError, TypeError) as exc:
+            logging.warning('Failed to parse additional_expenses JSON for record %d: %s', record.id, exc)
+            additional_expenses = []
+    data['additional_expenses'] = additional_expenses
+    
     # Если есть данные множественных позиций, добавляем их
     if record.positions_data and record.positions_count and record.positions_count > 1:
         try:
@@ -787,6 +799,19 @@ def save_generation_history(form_data, final_price, config, user_id=None, total_
         # Рассчитываем общий вес всех позиций
         total_weight = sum(float(p.get('weight', 0)) * int(p.get('quantity', 0)) for p in positions)
         
+        # Извлекаем и сохраняем дополнительные расходы
+        additional_expenses = form_data.get('additional_expenses', [])
+        additional_expenses_json = None
+        if additional_expenses and isinstance(additional_expenses, list):
+            # Фильтруем только расходы с ненулевой суммой или непустым названием
+            valid_expenses = [
+                {'name': exp.get('name', '').strip(), 'amount': float(exp.get('amount', 0))}
+                for exp in additional_expenses
+                if isinstance(exp, dict) and (exp.get('name', '').strip() or float(exp.get('amount', 0)) > 0)
+            ]
+            if valid_expenses:
+                additional_expenses_json = json.dumps(valid_expenses, ensure_ascii=False)
+        
         with _session_scope() as session:
             record = GenerationHistoryRecord(
                 tender_number=form_data.get('tender_number', ''),
@@ -807,6 +832,7 @@ def save_generation_history(form_data, final_price, config, user_id=None, total_
                 proposal_validity=form_data.get('proposal_validity', ''),
                 warranty_period=form_data.get('warranty_period', ''),
                 comment=form_data.get('comment', ''),
+                additional_expenses=additional_expenses_json,
                 user_id=user_id,
                 # Новые поля для множественных позиций
                 positions_data=json.dumps(positions, ensure_ascii=False),
@@ -897,6 +923,18 @@ def load_generation_data(gen_id: int) -> Optional[Dict[str, object]]:
                 'comment': record.comment,
                 'user_id': record.user_id,
             }
+            
+            # Парсим дополнительные расходы из JSON
+            additional_expenses = []
+            if record.additional_expenses:
+                try:
+                    additional_expenses = json.loads(record.additional_expenses)
+                    if not isinstance(additional_expenses, list):
+                        additional_expenses = []
+                except (json.JSONDecodeError, TypeError) as exc:
+                    logging.warning('Failed to parse additional_expenses JSON for record %d in load_generation_data: %s', record.id, exc)
+                    additional_expenses = []
+            data['additional_expenses'] = additional_expenses
             
             # Если есть данные позиций, используем их
             if record.positions_data:

@@ -3177,7 +3177,7 @@
             item.innerHTML = `
                 <div class="expense-item-info">
                     <div class="expense-item-name">${escapeHtml(expense.name)}</div>
-                    <div class="expense-item-amount">${formatNumber(expense.amount)} руб.</div>
+                    <div class="expense-item-amount">¥${formatNumber(expense.amount)}</div>
                 </div>
                 <button type="button" class="expense-item-remove" onclick="removeExpense(${expense.id})" title="Удалить">×</button>
             `;
@@ -3217,6 +3217,24 @@
                     addExpense();
                 }
             });
+        }
+        
+        // Загружаем дополнительные расходы из form_data, если они есть
+        const formDataElement = document.getElementById('form-data');
+        if (formDataElement) {
+            try {
+                const formData = JSON.parse(formDataElement.textContent || '{}');
+                if (formData.additional_expenses && Array.isArray(formData.additional_expenses)) {
+                    expensesList = formData.additional_expenses.map((exp, index) => ({
+                        id: Date.now() + index,
+                        name: exp.name || '',
+                        amount: parseFloat(exp.amount || 0)
+                    })).filter(exp => exp.name || exp.amount > 0);
+                    renderExpensesList();
+                }
+            } catch (error) {
+                console.error('Error loading additional expenses from form_data:', error);
+            }
         }
     });
 </script>

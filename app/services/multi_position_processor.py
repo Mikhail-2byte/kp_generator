@@ -280,9 +280,8 @@ class MultiPositionProcessor:
 
         # Формула для I33 (кредит) с условием
         sheet[f"I{i33_row}"] = f"=IF(H{i33_row}=\"ДА\",I{i28_row}*16%/365*K{k_formula_row},0)"
-        sheet[f"I{i34_row}"] = f"=AA{total_row}"
-        sheet[f"I{i35_row}"] = f"=AB{total_row}"
-        sheet[f"I{i36_row}"] = f"=AC{total_row}"
+        # I34-I36 оставляем пустыми - они будут заполнены дополнительными расходами через fill_additional_expenses
+        # Формула I27 = SUM(I28:I37) уже включает I34-I36
 
         # Формула банковской гарантии (I37 при одной позиции)
         sheet[f"I{bank_guarantee_row}"] = (
@@ -351,6 +350,7 @@ class MultiPositionProcessor:
                 logger.debug(f"Set B{row} = {name}")
             
             # Заполняем сумму в столбец I
+            # Дополнительные расходы в форме вводятся в юанях
             try:
                 amount_float = float(amount)
                 if amount_float > 0:

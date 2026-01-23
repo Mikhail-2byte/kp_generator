@@ -237,7 +237,7 @@
             const sidebarAdminLink = document.querySelector('.sidebar-link[data-nav="admin"]');
             if (sidebarAdminLink) {
                 // Подсвечиваем админскую ссылку для всех админских страниц
-                const adminPages = ['admin', 'admin_stats', 'admin_duty', 'admin_materials', 'admin_logistics', 'admin_orders', 'admin_templates', 'admin_instructions'];
+                const adminPages = ['admin', 'admin_duty', 'admin_materials', 'admin_logistics', 'admin_orders', 'admin_templates', 'admin_instructions'];
                 if (adminPages.includes(activePage)) {
                     sidebarAdminLink.classList.add('is-active');
                     sidebarAdminLink.setAttribute('aria-current', 'page');

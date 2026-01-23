@@ -14,7 +14,8 @@ def calculate_selling_price(
     config: Optional[Dict[str, Any]] = None,
     use_credit: bool = False,
     use_bank_guarantee: bool = False,
-    payment_days: Optional[int] = None
+    payment_days: Optional[int] = None,
+    additional_expenses_total_yuan: float = 0
 ) -> float:
     """
     Выполняет расчет продажной цены с учетом всех параметров бюджета.
@@ -25,6 +26,7 @@ def calculate_selling_price(
     - пошлины
     - комиссии за конвертацию валюты
     - кредитных затрат
+    - дополнительных расходов
     - целевой маржинальности
     
     Args:
@@ -36,6 +38,10 @@ def calculate_selling_price(
         delivery_time: Время доставки (в днях)
         margin_percent: Целевая маржа в процентах (по умолчанию 30%)
         config: Словарь с конфигурацией расчета (курсы, коэффициенты и т.д.)
+        use_credit: Использовать ли кредит в расчете
+        use_bank_guarantee: Использовать ли банковскую гарантию в расчете
+        payment_days: Количество дней оплаты (для банковской гарантии)
+        additional_expenses_total_yuan: Общая сумма дополнительных расходов (в юанях)
     
     Returns:
         Продажная цена за единицу товара (в рублях)
@@ -94,15 +100,23 @@ def calculate_selling_price(
     else:
         credit_cost_per_unit = 0
     
-    # Общие затраты на единицу товара (без банковской гарантии, т.к. она зависит от выручки)
-    total_cost_per_unit = (
+    # Расчет дополнительных расходов на единицу товара
+    # Дополнительные расходы приходят в юанях, добавляем к затратам в юанях
+    additional_expenses_per_unit_yuan = additional_expenses_total_yuan / quantity if quantity > 0 else 0
+    
+    # Общие затраты на единицу товара в юанях (без банковской гарантии, т.к. она зависит от выручки)
+    total_cost_per_unit_yuan = (
         purchase_cost +
         logistics_cnr_per_unit +
         logistics_rf_per_unit +
         duty_per_unit +
         conversion_fee_per_unit +
-        credit_cost_per_unit
+        credit_cost_per_unit +
+        additional_expenses_per_unit_yuan
     )
+    
+    # Конвертируем затраты из юаней в рубли для расчета цены в рублях
+    total_cost_per_unit = total_cost_per_unit_yuan * CONVERSION_RATE
     
     # Расчет цены для маржи margin_percent%
     # Если используется банковская гарантия, нужно учесть её в итеративном расчете

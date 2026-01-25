@@ -582,6 +582,14 @@ class MultiPositionProcessor:
                     sheet[f"H{row_number}"] = round(float(fp))
                 # Вставляем формулу для выручки: цена за единицу * количество
                 sheet[f"I{row_number}"] = f"=H{row_number}*G{row_number}"
+            
+            # Добавляем формулу маржи для позиции: (I-O-S-U-Y-AA-AC-AB)/I
+            sheet[f"Z{row_number}"] = (
+                f"=(I{row_number}-O{row_number}-S{row_number}-U{row_number}-"
+                f"Y{row_number}-AA{row_number}-AC{row_number}-AB{row_number})/I{row_number}"
+            )
+            # Форматируем как проценты
+            sheet[f"Z{row_number}"].number_format = '0%'
         
         # Гарантируем обновление формул и сводного блока даже при одной позиции
         self.update_total_row_formulas(sheet)

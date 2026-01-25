@@ -1,0 +1,13 @@
+{
+  "saved_at": "20260125T125022",
+  "actor": "testadmin",
+  "data": {
+    "cities": [
+      {
+        "name": "Санкт-Петербург",
+        "region": "Ленинградская область",
+        "distance_from_ekb_km": 2100
+      }
+    ]
+  }
+}

@@ -332,7 +332,46 @@ def validate_form_data(form_data: Dict[str, Any]) -> FormValidationResult:
 
         if normalized_position:
             normalized_positions.append(normalized_position)
-
+    
+    # Валидация индивидуальных марж позиций (опциональные поля)
+    for index in range(1, len(normalized_positions) + 1):
+        # Для первой позиции проверяем оба варианта: position_margin и position_margin_1
+        if index == 1:
+            margin_keys = ["position_margin", "position_margin_1"]
+        else:
+            margin_keys = [f"position_margin_{index}"]
+        
+        margin_value = None
+        margin_key_used = None
+        
+        # Ищем значение в любом из возможных ключей
+        for key in margin_keys:
+            value = cleaned_data.get(key, '').strip()
+            if value:
+                margin_value = value
+                margin_key_used = key
+                break
+        
+        if margin_value:  # Поле опциональное, валидируем только если заполнено
+            try:
+                margin_float = float(margin_value)
+                if margin_float < 0:
+                    errors.append(f'Позиция {index}: индивидуальная маржа должна быть неотрицательной.')
+                    invalid_fields.add(margin_key_used)
+                elif margin_float > 100:
+                    errors.append(f'Позиция {index}: индивидуальная маржа не может превышать 100%.')
+                    invalid_fields.add(margin_key_used)
+                else:
+                    # Сохраняем валидное значение в стандартном формате (position_margin_1 для первой позиции)
+                    standard_key = f"position_margin_{index}"
+                    cleaned_data[standard_key] = str(margin_float)
+                    # Удаляем альтернативный ключ, если он был использован
+                    if margin_key_used != standard_key and margin_key_used in cleaned_data:
+                        del cleaned_data[margin_key_used]
+            except (ValueError, TypeError):
+                errors.append(f'Позиция {index}: индивидуальная маржа должна быть числом.')
+                invalid_fields.add(margin_key_used or margin_keys[0])
+    
     return FormValidationResult(
         errors=errors,
         invalid_fields=sorted(invalid_fields),

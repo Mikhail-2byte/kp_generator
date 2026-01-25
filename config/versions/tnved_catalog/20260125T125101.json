@@ -1,0 +1,16 @@
+{
+  "saved_at": "20260125T125101",
+  "actor": "test_user",
+  "data": {
+    "items": [
+      {
+        "code": "1234567890",
+        "description": "Тестовое описание",
+        "keywords_display": "Ключевые слова",
+        "examples": "Примеры",
+        "duty_text": "10%",
+        "duty_percent": 10.0
+      }
+    ]
+  }
+}

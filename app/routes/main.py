@@ -1046,6 +1046,184 @@ def generate() -> Union[str, Response]:
         )
 
 
+def _parse_additional_expenses(form_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """
+    Парсит дополнительные расходы из данных формы.
+    
+    Args:
+        form_data: Словарь данных формы
+        
+    Returns:
+        Список словарей с дополнительными расходами [{'name': str, 'amount': float}]
+    """
+    additional_expenses_str = form_data.get('additional_expenses', '')
+    if additional_expenses_str:
+        try:
+            import json
+            if isinstance(additional_expenses_str, str):
+                additional_expenses = json.loads(additional_expenses_str)
+            else:
+                additional_expenses = additional_expenses_str
+            if isinstance(additional_expenses, list):
+                return additional_expenses
+            else:
+                return []
+        except (json.JSONDecodeError, TypeError):
+            return []
+    else:
+        return []
+
+
+@main_bp.route('/api/preview-prices', methods=['POST'])
+def preview_prices() -> Response:
+    """Выполняет предварительный расчет цен для всех позиций без генерации документов."""
+    try:
+        # Получаем данные формы
+        if request.is_json:
+            form_data = request.get_json()
+        else:
+            form_data = request.form.to_dict()
+        
+        # Обрабатываем дополнительные расходы из JSON строки
+        form_data['additional_expenses'] = _parse_additional_expenses(form_data)
+        
+        app_config = current_app.config['APP_SETTINGS']
+        orchestrator = GenerationOrchestrator(app_config)
+        
+        # Валидация (более мягкая для preview)
+        try:
+            cleaned_data, positions, errors = orchestrator.validate_request(form_data)
+        except Exception as exc:
+            return jsonify({
+                'error': f'Ошибка валидации: {str(exc)}',
+                'positions': [],
+                'summary': None
+            }), 400
+        
+        if not positions:
+            return jsonify({
+                'error': 'Не указаны позиции для расчета',
+                'positions': [],
+                'summary': None
+            }), 400
+        
+        # Извлечение параметров
+        try:
+            logistics_rub = float(cleaned_data.get('logistics', 0))
+            margin_percent = float(cleaned_data.get('margin_percent', 30))
+            delivery_time = int(cleaned_data.get('delivery_time', 150))
+        except (TypeError, ValueError) as e:
+            return jsonify({
+                'error': f'Ошибка в параметрах расчета: {str(e)}',
+                'positions': [],
+                'summary': None
+            }), 400
+        
+        # Извлекаем флаги финансирования
+        finance_credit = cleaned_data.get('finance_credit', '')
+        finance_bank_guarantee = cleaned_data.get('finance_bank_guarantee', '')
+        use_credit = finance_credit and str(finance_credit).lower() in ['1', 'true', 'on', 'yes']
+        use_bank_guarantee = finance_bank_guarantee and str(finance_bank_guarantee).lower() in ['1', 'true', 'on', 'yes']
+        
+        # Извлекаем количество дней оплаты
+        payment_terms = cleaned_data.get('payment_terms', '').strip()
+        payment_days = None
+        if (use_credit or use_bank_guarantee) and payment_terms:
+            from app.services.multi_position_processor import MultiPositionProcessor
+            processor = MultiPositionProcessor('templates_docs/template.xlsx', config=app_config)
+            payment_days = processor._extract_days_from_payment_terms(payment_terms)
+        
+        # Извлекаем дополнительные расходы (уже обработаны выше)
+        additional_expenses = cleaned_data.get('additional_expenses', [])
+        if not isinstance(additional_expenses, list):
+            additional_expenses = []
+        
+        # Извлекаем индивидуальные маржи позиций
+        from app.presentation.helpers import extract_position_margins
+        position_margins = extract_position_margins(cleaned_data, len(positions))
+        
+        # Расчет цен
+        try:
+            position_prices, total_general_price = orchestrator.calculate_prices(
+                positions, logistics_rub, delivery_time, margin_percent,
+                use_credit=use_credit, use_bank_guarantee=use_bank_guarantee,
+                payment_days=payment_days,
+                additional_expenses=additional_expenses,
+                position_margins=position_margins
+            )
+        except Exception as calc_exc:
+            return jsonify({
+                'error': f'Ошибка расчета цен: {str(calc_exc)}',
+                'positions': [],
+                'summary': None
+            }), 500
+        
+        # Формируем ответ
+        positions_result = []
+        total_purchase_cost = 0
+        
+        for i, pos_price in enumerate(position_prices):
+            position = pos_price.get('position', {})
+            final_price = pos_price.get('final_price', 0)
+            quantity = float(position.get('quantity', 0))
+            cost_price = float(position.get('cost_price', 0))
+            
+            total_price = final_price * quantity
+            total_purchase_cost += cost_price * quantity
+            
+            positions_result.append({
+                'index': i,
+                'product_name': position.get('product', f'Позиция {i + 1}'),
+                'final_price': round(final_price, 2),
+                'total_price': round(total_price, 2),
+                'margin': round(pos_price.get('actual_margin', margin_percent), 2)
+            })
+        
+        # Рассчитываем общую маржу
+        total_costs = total_purchase_cost
+        # Добавляем логистику (конвертируем в юани)
+        conversion_rate = app_config.get('calculation_constants', {}).get('conversion_rate', 10.0)
+        total_costs += logistics_rub / conversion_rate
+        
+        # Рассчитываем сумму дополнительных расходов
+        total_additional_expenses = 0
+        # Добавляем дополнительные расходы (уже в юанях)
+        for expense in additional_expenses:
+            if isinstance(expense, dict):
+                amount = expense.get('amount', 0)
+                try:
+                    expense_amount = float(amount)
+                    total_additional_expenses += expense_amount
+                    total_costs += expense_amount
+                except (ValueError, TypeError):
+                    pass
+        
+        actual_margin_percent = 0
+        if total_costs > 0:
+            actual_margin_percent = ((total_general_price - total_costs) / total_general_price * 100) if total_general_price > 0 else 0
+        
+        return jsonify({
+            'positions': positions_result,
+            'summary': {
+                'total_purchase_cost': round(total_purchase_cost, 2),
+                'total_logistics_cost': round(logistics_rub, 2),
+                'total_additional_expenses': round(total_additional_expenses, 2),
+                'total_final_price': round(total_general_price, 2),
+                'target_margin_percent': round(margin_percent, 2),
+                'actual_margin_percent': round(actual_margin_percent, 2),
+                'conversion_rate': conversion_rate
+            }
+        })
+    
+    except Exception as exc:
+        current_app.logger.error('Error in preview_prices: %s', exc, exc_info=True)
+        return jsonify({
+            'error': f'Произошла ошибка при расчете: {str(exc)}',
+            'positions': [],
+            'summary': None
+        }), 500
+
+
 @main_bp.route('/import-positions', methods=['POST'])
 def import_positions() -> Response:
     """Импортирует позиции из Excel шаблона и возвращает их в формате JSON."""

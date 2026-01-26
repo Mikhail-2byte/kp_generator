@@ -439,10 +439,13 @@
                             </div>
                             <div class="field-group slim-field">
                                 <label for="cost_price_per_kg" class="field-label" data-label-for="cost_price_per_kg">Цена за кг</label>
-                                <input type="number" id="cost_price_per_kg" name="cost_price_per_kg" data-field="cost_price_per_kg" min="0" step="0.01"
-                                value="{{ form_data.cost_price_per_kg if form_data and form_data.cost_price_per_kg else '' }}"
-                                class="{% if invalid_fields and 'cost_price_per_kg' in invalid_fields %}is-invalid{% endif %}"
-                                aria-invalid="{{ 'true' if invalid_fields and 'cost_price_per_kg' in invalid_fields else 'false' }}">
+                                <div class="price-input-wrapper">
+                                    <input type="number" id="cost_price_per_kg" name="cost_price_per_kg" data-field="cost_price_per_kg" min="0" step="0.01"
+                                    value="{{ form_data.cost_price_per_kg if form_data and form_data.cost_price_per_kg else '' }}"
+                                    class="{% if invalid_fields and 'cost_price_per_kg' in invalid_fields %}is-invalid{% endif %}"
+                                    aria-invalid="{{ 'true' if invalid_fields and 'cost_price_per_kg' in invalid_fields else 'false' }}">
+                                    <span class="price-icon" aria-hidden="true">¥/кг</span>
+                                </div>
                             </div>
                             <div class="field-group slim-field">
                                 <label for="quantity" class="field-label" data-label-for="quantity">Количество, шт.</label>
@@ -453,10 +456,15 @@
                             </div>
                             <div class="field-group slim-field">
                                 <label for="weight" class="field-label" data-label-for="weight">Вес за шт. (кг)</label>
-                                <input type="number" id="weight" name="weight" data-field="weight" min="0" step="0.01" required
-                                value="{{ form_data.weight if form_data and form_data.weight else '' }}"
-                                class="position-weight{% if invalid_fields and 'weight' in invalid_fields %} is-invalid{% endif %}"
-                                aria-invalid="{{ 'true' if invalid_fields and 'weight' in invalid_fields else 'false' }}">
+                                <div class="weight-input-wrapper">
+                                    <input type="number" id="weight" name="weight" data-field="weight" min="0" step="0.01" required
+                                    value="{{ form_data.weight if form_data and form_data.weight else '' }}"
+                                    class="position-weight{% if invalid_fields and 'weight' in invalid_fields %} is-invalid{% endif %}"
+                                    aria-invalid="{{ 'true' if invalid_fields and 'weight' in invalid_fields else 'false' }}">
+                                    <span class="weight-icon" aria-hidden="true">
+                                        <img src="{{ url_for('static', filename='images/weight-icon.png') }}" alt="Вес" width="16" height="16">
+                                    </span>
+                                </div>
                             </div>
                             <div class="field-group slim-field">
                                 <label for="duty_percent" class="field-label" data-label-for="duty_percent">Пошлина (%)</label>
@@ -511,7 +519,10 @@
                                 </div>
                                 <div class="field-group slim-field">
                                     <label class="field-label" data-label-for="cost_price_per_kg">Цена за кг</label>
-                                    <input type="number" data-field="cost_price_per_kg" min="0" step="0.01">
+                                    <div class="price-input-wrapper">
+                                        <input type="number" data-field="cost_price_per_kg" min="0" step="0.01">
+                                        <span class="price-icon" aria-hidden="true">¥/кг</span>
+                                    </div>
                                 </div>
                                 <div class="field-group slim-field">
                                     <label class="field-label" data-label-for="quantity">Количество, шт.</label>
@@ -519,7 +530,12 @@
                                 </div>
                                 <div class="field-group slim-field">
                                     <label class="field-label" data-label-for="weight">Вес за шт. (кг)</label>
-                                    <input type="number" data-field="weight" min="0" step="0.01" required class="position-weight">
+                                    <div class="weight-input-wrapper">
+                                        <input type="number" data-field="weight" min="0" step="0.01" required class="position-weight">
+                                        <span class="weight-icon" aria-hidden="true">
+                                            <img src="{{ url_for('static', filename='images/weight-icon.png') }}" alt="Вес" width="16" height="16">
+                                        </span>
+                                    </div>
                                 </div>
                                 <div class="field-group slim-field">
                                     <label class="field-label" data-label-for="duty_percent">Пошлина (%)</label>
@@ -815,6 +831,10 @@
 
             const logisticsHelperValue = document.getElementById('logisticsHelperValue');
             if (logisticsHelperValue) logisticsHelperValue.textContent = '';
+
+            // Скрываем уведомление о низком весе
+            const mainLowWeightWarningReset = document.getElementById('mainLowWeightWarning');
+            if (mainLowWeightWarningReset) mainLowWeightWarningReset.classList.add('hidden');
 
             // Сбрасываем оценочный вес
             const totalWeightValue = document.getElementById('totalWeightValue');
@@ -1295,6 +1315,7 @@
         const deliveryAddressInput = document.getElementById('delivery_address');
         const mainSelectedCityPrice = document.getElementById('mainSelectedCityPrice');
         const mainSelectedCityName = document.getElementById('mainSelectedCityName');
+        const mainLowWeightWarning = document.getElementById('mainLowWeightWarning');
         const addPositionBtn = document.getElementById('addPositionBtn');
         const importExcelBtn = document.getElementById('importExcelBtn');
         const importExcelInput = document.getElementById('importExcelInput');
@@ -1869,6 +1890,47 @@
                 const roundedCost = Math.round(totalCost);
                 summaryTotalCost.textContent = `${roundedCost.toLocaleString('ru-RU')} ¥`;
             }
+            
+            // Проверка веса и показ уведомления о рекомендации Деловых линий
+            if (mainLowWeightWarning) {
+                if (total > 0 && total < 600) {
+                    mainLowWeightWarning.classList.remove('hidden');
+                    
+                    // Сбрасываем расчет логистики при весе < 600 кг
+                    if (logisticsInput) {
+                        logisticsInput.value = '';
+                    }
+                    
+                    // Скрываем результаты расчета логистики
+                    const mainLogisticsResult = document.getElementById('mainLogisticsResult');
+                    if (mainLogisticsResult) {
+                        mainLogisticsResult.classList.add('hidden');
+                    }
+                    const mainLogisticsResultDetails = document.getElementById('mainLogisticsResultDetails');
+                    if (mainLogisticsResultDetails) {
+                        mainLogisticsResultDetails.classList.add('hidden');
+                    }
+                    
+                    // Скрываем подсказку логистики
+                    if (logisticsHelper) {
+                        logisticsHelper.hidden = true;
+                    }
+                    if (logisticsHelperValue) {
+                        logisticsHelperValue.textContent = '';
+                    }
+                    
+                    // Очищаем сохраненную цену города
+                    if (mainSelectedCityPrice) {
+                        mainSelectedCityPrice.value = '';
+                    }
+                    
+                    // Обновляем summary логистики
+                    updateLogisticsSummary();
+                } else {
+                    mainLowWeightWarning.classList.add('hidden');
+                }
+            }
+            
             updateSummaryStats();
         };
 

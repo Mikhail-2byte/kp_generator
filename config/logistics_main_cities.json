@@ -3597,6 +3597,13 @@
       "truck_price": 1300000.0,
       "is_main_route": false,
       "main_city": "Минск"
+    },
+    {
+      "name": "Новокузнецк",
+      "region": "Кемеровская область",
+      "truck_price": 900000.0,
+      "is_main_route": false,
+      "main_city": "Новосибирск"
     }
   ]
 }

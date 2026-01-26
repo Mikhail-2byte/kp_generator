@@ -1731,6 +1731,76 @@ textarea {
   text-align: left;
 }
 
+/* Контейнер для поля веса с иконкой */
+.weight-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.weight-input-wrapper .position-weight {
+  padding-right: 32px;
+}
+
+.weight-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  color: var(--muted-foreground);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.weight-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.weight-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* Контейнер для поля цены с иконкой */
+.price-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.price-input-wrapper input {
+  padding-right: 32px;
+}
+
+.price-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted-foreground);
+  pointer-events: none;
+  z-index: 1;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.price-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
 @media (max-width: 999px) {
   .parameters-row .slim-field {
     flex: 1 1 140px;

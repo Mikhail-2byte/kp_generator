@@ -191,10 +191,6 @@
                         {{ sidebar_icon('save')|safe }}
                         <span>Сохранить</span>
                     </button>
-                    <button type="submit" form="generateForm" class="btn btn-primary btn-sm" id="generateBtn">
-                        {{ sidebar_icon('download')|safe }}
-                        <span id="generateText">Сгенерировать КП</span>
-                    </button>
                 </div>
             </header>
 
@@ -306,30 +302,32 @@
                             <h2 class="proposal-section-title">Логистика</h2>
                         </div>
                         <div class="field-group logistics-panel">
-                                <!-- Tabs for transport type -->
-                                <div class="logistics-tabs-wrapper">
-                                    <div class="logistics-tabs" role="tablist" aria-label="Тип транспорта">
-                                        <button type="button" class="logistics-tab active" role="tab" aria-selected="true" aria-controls="truck-panel" id="truck-tab" data-transport="truck">
-                                            Фура
-                                        </button>
-                                        <button type="button" class="logistics-tab" role="tab" aria-selected="false" aria-controls="trail-panel" id="trail-tab" data-transport="trail">
-                                            Трал
-                                        </button>
+                                <div class="logistics-controls-row">
+                                    <div class="logistics-toggle-group">
+                                        <label class="field-label">Тип расчета</label>
+                                        <div class="toggle-row">
+                                            <div class="toggle-group" role="group" aria-label="Тип расчета">
+                                                <input type="radio" id="mainWeight" name="mainCalcType" value="weight" checked>
+                                                <label for="mainWeight">Вес</label>
+                                                <input type="radio" id="mainDim" name="mainCalcType" value="dimension">
+                                                <label for="mainDim">Габарит</label>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <!-- Hidden radio buttons for form submission -->
-                                    <div class="visually-hidden">
-                                        <input type="radio" id="mainTruck" name="mainTransport" value="truck" checked>
-                                        <input type="radio" id="mainTrail" name="mainTransport" value="trail">
-                                    </div>
-                                </div>
-                                <div class="logistics-toggle-group">
-                                    <label class="field-label">Тип расчета</label>
-                                    <div class="toggle-row">
-                                        <div class="toggle-group" role="group" aria-label="Тип расчета">
-                                            <input type="radio" id="mainWeight" name="mainCalcType" value="weight" checked>
-                                            <label for="mainWeight">Вес</label>
-                                            <input type="radio" id="mainDim" name="mainCalcType" value="dimension">
-                                            <label for="mainDim">Габарит</label>
+                                    <!-- Tabs for transport type -->
+                                    <div class="logistics-tabs-wrapper">
+                                        <div class="logistics-tabs" role="tablist" aria-label="Тип транспорта">
+                                            <button type="button" class="logistics-tab active" role="tab" aria-selected="true" aria-controls="truck-panel" id="truck-tab" data-transport="truck">
+                                                Фура
+                                            </button>
+                                            <button type="button" class="logistics-tab" role="tab" aria-selected="false" aria-controls="trail-panel" id="trail-tab" data-transport="trail">
+                                                Трал
+                                            </button>
+                                        </div>
+                                        <!-- Hidden radio buttons for form submission -->
+                                        <div class="visually-hidden">
+                                            <input type="radio" id="mainTruck" name="mainTransport" value="truck" checked>
+                                            <input type="radio" id="mainTrail" name="mainTransport" value="trail">
                                         </div>
                                     </div>
                                 </div>
@@ -422,23 +420,6 @@
                                 </button>
                             </div>
                         </div>
-                        <!-- Common margin toggle -->
-                            <div class="common-margin-toggle">
-                                <label class="margin-switch-label">
-                                    <input type="checkbox" id="useCommonMargin" class="margin-switch-input" checked>
-                                    <span class="margin-switch-slider"></span>
-                                    <span class="margin-switch-text">Общая маржа для всех позиций</span>
-                                </label>
-                                <div class="margin-input-group" id="commonMarginInputGroup">
-                                    <label for="margin_percent" class="margin-field">
-                                        <span>Маржа, %</span>
-                                        <input type="number" id="margin_percent" name="margin_percent" min="0" max="100" step="0.1" required
-                                               value="{{ form_data.margin_percent if form_data and form_data.margin_percent else '30' }}"
-                                               class="{% if invalid_fields and 'margin_percent' in invalid_fields %}is-invalid{% endif %}"
-                                               aria-invalid="{{ 'true' if invalid_fields and 'margin_percent' in invalid_fields else 'false' }}">
-                                    </label>
-                                </div>
-                            </div>
                             <div class="positions-card-header">
                                 <h3 class="positions-card-title">Позиции</h3>
                                 <button type="button" class="btn btn-secondary add-position-btn" id="addPositionBtn">
@@ -630,7 +611,7 @@
                 <!-- Key Metrics -->
                 <div class="summary-metrics">
                     <div class="summary-metric-card">
-                        <div class="metric-icon">{{ sidebar_icon('dollar-sign')|safe }}</div>
+                        <div class="metric-icon">¥</div>
                         <span class="metric-label">Итого</span>
                         <p class="summary-metric-value" id="summaryTotal">0</p>
                         <p class="metric-unit" id="summaryTotalUnit">юаней</p>
@@ -643,11 +624,19 @@
                     </div>
                 </div>
                 
-                <!-- Profitability Badge -->
-                <div class="summary-profitability">
-                    <span class="profitability-icon">{{ sidebar_icon('percent')|safe }}</span>
-                    <span class="profitability-label">Рентабельность:</span>
-                    <span class="badge badge-secondary" id="summaryProfitability">0%</span>
+                <!-- Final Price in Rubles -->
+                <div class="summary-final-price-rubles">
+                    <div class="final-price-rubles-content">
+                        <span class="final-price-rubles-label">Итоговая продажная цена</span>
+                        <span class="final-price-rubles-value" id="summaryFinalPriceRubles">0 ₽</span>
+                    </div>
+                </div>
+                
+                <!-- Exchange Rate -->
+                <div class="summary-exchange-rate">
+                    <span class="exchange-icon">{{ sidebar_icon('scale')|safe }}</span>
+                    <span class="exchange-label">Курс:</span>
+                    <span class="exchange-value" id="summaryExchangeRate">1 ¥ = 14 ₽</span>
                 </div>
                 
                 <!-- Separator -->
@@ -658,36 +647,18 @@
                     <h4 class="summary-breakdown-title">Детализация</h4>
                     <div class="breakdown-list">
                         <div class="breakdown-item">
-                            <span class="breakdown-label">Себестоимость ед.</span>
-                            <span class="breakdown-value" id="summaryUnitCost">0 ¥</span>
+                            <span class="breakdown-label">Общая цена закупа</span>
+                            <span class="breakdown-value" id="summaryTotalPurchaseCost">0 ¥</span>
                         </div>
                         <div class="breakdown-item">
                             <span class="breakdown-label">Логистика</span>
                             <span class="breakdown-value" id="summaryLogisticsCost">0 ₽</span>
                         </div>
                         <div class="breakdown-item">
-                            <span class="breakdown-label">НДС (15% от маржи)</span>
-                            <span class="breakdown-value" id="summaryVAT">0 ¥</span>
-                        </div>
-                        <div class="breakdown-item">
-                            <span class="breakdown-label">Таможенные платежи</span>
+                            <span class="breakdown-label">Пошлина</span>
                             <span class="breakdown-value" id="summaryDuty">0 ¥</span>
                         </div>
-                        <div class="breakdown-item">
-                            <span class="breakdown-label">Маржа</span>
-                            <span class="breakdown-value" id="summaryMargin">0 ¥</span>
-                        </div>
                     </div>
-                </div>
-                
-                <!-- Separator -->
-                <div class="summary-separator"></div>
-                
-                <!-- Exchange Rate -->
-                <div class="summary-exchange-rate">
-                    <span class="exchange-icon">{{ sidebar_icon('scale')|safe }}</span>
-                    <span class="exchange-label">Курс:</span>
-                    <span class="exchange-value" id="summaryExchangeRate">1 ¥ = 14 ₽</span>
                 </div>
                 
                 <!-- Separator -->
@@ -723,12 +694,24 @@
             </div>
             
             <div class="summary-actions">
+                <!-- Margin input -->
+                <div class="summary-margin-control">
+                    <label for="margin_percent" class="summary-margin-field">
+                        <span class="summary-margin-label">Итоговая маржа</span>
+                        <input type="number" id="margin_percent" name="margin_percent" min="0" max="100" step="0.1" required
+                               value="{{ form_data.margin_percent if form_data and form_data.margin_percent else '30' }}"
+                               class="summary-margin-input {% if invalid_fields and 'margin_percent' in invalid_fields %}is-invalid{% endif %}"
+                               aria-invalid="{{ 'true' if invalid_fields and 'margin_percent' in invalid_fields else 'false' }}">
+                    </label>
+                    <input type="hidden" id="useCommonMargin" checked>
+                </div>
                 <button type="button" class="btn btn-primary" id="summaryPreviewBtn">
                     {{ sidebar_icon('calculator')|safe }}
                     <span>Предварительный расчёт</span>
                 </button>
-                <button type="button" class="btn btn-outline" id="summaryDetailsBtn">
-                    <span>Показать подробно</span>
+                <button type="submit" form="generateForm" class="btn btn-primary" id="generateBtn">
+                    {{ sidebar_icon('download')|safe }}
+                    <span id="generateText">Сгенерировать КП</span>
                 </button>
             </div>
         </aside>

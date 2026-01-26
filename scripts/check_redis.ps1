@@ -42,3 +42,4 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host "Приложение будет работать без Redis, но с предупреждениями о размере cookie." -ForegroundColor Cyan
 }
 
+

@@ -11,8 +11,8 @@
     
     // Cache DOM elements
     let summaryTotalEl, summaryProfitEl, summaryProfitabilityEl;
-    let summaryUnitCostEl, summaryLogisticsCostEl, summaryVATEl, summaryDutyEl, summaryMarginEl;
-    let summaryExchangeRateEl;
+    let summaryTotalPurchaseCostEl, summaryLogisticsCostEl, summaryVATEl, summaryDutyEl, summaryMarginEl;
+    let summaryFinalPriceRublesEl, summaryExchangeRateEl;
     let summaryExpensesListEl;
     
     // Initialize
@@ -24,12 +24,13 @@
         summaryTotalUnitEl = document.getElementById('summaryTotalUnit');
         summaryProfitUnitEl = document.getElementById('summaryProfitUnit');
         
-        summaryUnitCostEl = document.getElementById('summaryUnitCost');
+        summaryTotalPurchaseCostEl = document.getElementById('summaryTotalPurchaseCost');
         summaryLogisticsCostEl = document.getElementById('summaryLogisticsCost');
         summaryVATEl = document.getElementById('summaryVAT');
         summaryDutyEl = document.getElementById('summaryDuty');
         summaryMarginEl = document.getElementById('summaryMargin');
         
+        summaryFinalPriceRublesEl = document.getElementById('summaryFinalPriceRubles');
         summaryExchangeRateEl = document.getElementById('summaryExchangeRate');
         summaryExpensesListEl = document.getElementById('summaryExpensesList');
         
@@ -88,21 +89,6 @@
             // Calculate margin amount
             const marginAmount = totalPurchaseCost * (marginPercent / 100);
             
-            // Calculate final price
-            const logisticsInCurrency = isCN ? (logisticsCost / CONVERSION_RATE) : logisticsCost;
-            const finalPrice = totalPurchaseCost + logisticsInCurrency + marginAmount;
-            
-            // Calculate profit (simplified - margin amount)
-            const profit = marginAmount;
-            
-            // Calculate profitability
-            const profitability = totalPurchaseCost > 0 
-                ? ((profit / finalPrice) * 100).toFixed(2)
-                : 0;
-            
-            // Calculate VAT (15% of margin)
-            const vatAmount = marginAmount * 0.15;
-            
             // Calculate duty (simplified - sum of all position duties)
             let totalDuty = 0;
             positionBlocks.forEach(block => {
@@ -123,16 +109,36 @@
             const totalExpenses = additionalExpenses.reduce((sum, exp) => sum + (parseFloat(exp.amount) || 0), 0);
             const expensesInCurrency = isCN ? (totalExpenses / CONVERSION_RATE) : totalExpenses;
             
+            // Calculate final price
+            const logisticsInCurrency = isCN ? (logisticsCost / CONVERSION_RATE) : logisticsCost;
+            const dutyInCurrency = isCN ? totalDuty : (totalDuty * CONVERSION_RATE);
+            const finalPrice = totalPurchaseCost + logisticsInCurrency + dutyInCurrency + marginAmount + expensesInCurrency;
+            
+            // Calculate final price in rubles
+            const finalPriceInRubles = isCN ? (finalPrice * CONVERSION_RATE) : finalPrice;
+            
+            // Calculate profit (simplified - margin amount)
+            const profit = marginAmount;
+            
+            // Calculate profitability
+            const profitability = totalPurchaseCost > 0 
+                ? ((profit / finalPrice) * 100).toFixed(2)
+                : 0;
+            
+            // Calculate VAT (15% of margin)
+            const vatAmount = marginAmount * 0.15;
+            
             // Update UI
             updateMetrics({
                 total: finalPrice + expensesInCurrency,
                 profit: profit,
                 profitability: profitability,
-                unitCost: totalPurchaseCost > 0 && positionCount > 0 ? totalPurchaseCost / positionCount : 0,
+                totalPurchaseCost: totalPurchaseCost,
                 logistics: logisticsCost,
                 vat: vatAmount,
                 duty: totalDuty,
                 margin: marginAmount,
+                finalPriceRubles: finalPriceInRubles,
                 currency: isCN ? '¥' : '₽',
                 exchangeRate: CONVERSION_RATE
             });
@@ -210,8 +216,8 @@
             summaryProfitabilityEl.textContent = data.profitability + '%';
         }
         
-        if (summaryUnitCostEl) {
-            summaryUnitCostEl.textContent = formatCurrency(data.unitCost, data.currency);
+        if (summaryTotalPurchaseCostEl) {
+            summaryTotalPurchaseCostEl.textContent = formatCurrency(data.totalPurchaseCost, data.currency);
         }
         
         if (summaryLogisticsCostEl) {
@@ -228,6 +234,10 @@
         
         if (summaryMarginEl) {
             summaryMarginEl.textContent = formatCurrency(data.margin, data.currency);
+        }
+        
+        if (summaryFinalPriceRublesEl) {
+            summaryFinalPriceRublesEl.textContent = formatCurrency(data.finalPriceRubles, '₽');
         }
         
         if (summaryExchangeRateEl) {

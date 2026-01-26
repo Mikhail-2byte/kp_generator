@@ -1507,10 +1507,20 @@ body[data-page="index"] .app-content {
   }
 }
 
+.logistics-controls-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
 .logistics-toggle-group {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  flex: 1;
+  min-width: 200px;
 }
 
 .toggle-row {
@@ -5617,21 +5627,21 @@ body[data-page="index"] .proposal-header-brand {
 }
 
 .summary-header {
-  padding: 24px;
+  padding: 16px 20px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 
 .summary-header-title {
-  margin: 0 0 4px 0;
-  font-size: 18px;
+  margin: 0 0 2px 0;
+  font-size: 16px;
   font-weight: 600;
   color: var(--foreground);
 }
 
 .summary-header-subtitle {
   margin: 0;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--muted-foreground);
 }
 
@@ -5650,13 +5660,13 @@ body[data-page="index"] .proposal-header-brand {
 }
 
 .summary-metric-card {
-  padding: 16px;
+  padding: 12px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
   background: var(--muted);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
   transition: all var(--transition);
   position: relative;
 }
@@ -5711,10 +5721,13 @@ body[data-page="index"] .proposal-header-brand {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   color: var(--primary);
-  margin-bottom: 4px;
+  margin-bottom: 2px;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1;
 }
 
 .metric-icon svg {
@@ -5723,7 +5736,7 @@ body[data-page="index"] .proposal-header-brand {
 }
 
 .metric-label {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   color: var(--muted-foreground);
   text-transform: uppercase;
@@ -5731,15 +5744,15 @@ body[data-page="index"] .proposal-header-brand {
 }
 
 .summary-metric-value {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--foreground);
   line-height: 1.2;
-  margin: 4px 0 0 0;
+  margin: 2px 0 0 0;
 }
 
 .metric-unit {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--muted-foreground);
   margin: 0;
 }
@@ -5781,6 +5794,35 @@ body[data-page="index"] .proposal-header-brand {
   background: var(--border);
   margin: 20px 0;
   border: none;
+}
+
+/* Final Price in Rubles */
+.summary-final-price-rubles {
+  padding: 12px 16px;
+  background: var(--muted);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  margin-top: 12px;
+  margin-bottom: 8px;
+}
+
+.final-price-rubles-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.final-price-rubles-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted-foreground);
+}
+
+.final-price-rubles-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--foreground);
 }
 
 /* Breakdown */
@@ -5828,7 +5870,7 @@ body[data-page="index"] .proposal-header-brand {
   padding: 12px;
   background: var(--muted);
   border-radius: var(--radius-md);
-  margin-bottom: 20px;
+  margin-bottom: 0;
 }
 
 .exchange-icon {
@@ -5962,6 +6004,56 @@ body[data-page="index"] .proposal-header-brand {
   background: var(--card);
 }
 
+.summary-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.summary-margin-control {
+  padding: 10px 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  margin-bottom: 0;
+}
+
+.summary-margin-field {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.summary-margin-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--foreground);
+  white-space: nowrap;
+}
+
+.summary-margin-input {
+  width: 80px;
+  padding: 6px 10px;
+  font-size: 16px;
+  font-weight: 700;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--input);
+  color: var(--foreground);
+  transition: border-color var(--transition);
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.summary-margin-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb, 59, 130, 246), 0.1);
+}
+
 .summary-actions .btn {
   width: 100%;
   justify-content: center;
@@ -5969,7 +6061,8 @@ body[data-page="index"] .proposal-header-brand {
 
 /* Logistics Tabs */
 .logistics-tabs-wrapper {
-  margin-bottom: 16px;
+  margin-bottom: 0;
+  flex-shrink: 0;
 }
 
 .logistics-tabs {

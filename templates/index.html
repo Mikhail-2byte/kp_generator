@@ -158,7 +158,7 @@
 }
 </style>
 
-<div class="content-container">
+<div class="content-container proposal-page-container">
     <div id="cities-data" class="hidden">{{ cities | tojson }}</div>
     <div id="form-data" class="hidden">{{ form_data | tojson }}</div>
     {% set invalid_fields = form_data.get('_invalid_fields', []) if form_data else [] %}
@@ -167,36 +167,22 @@
     {% set finance_bank_guarantee_raw = form_data.finance_bank_guarantee if form_data and form_data.finance_bank_guarantee is not none else '' %}
     {% set finance_credit_checked = (finance_credit_raw|string|lower) in ['1', 'true', 'on', 'yes'] if finance_credit_raw else True %}
     {% set finance_bank_guarantee_checked = (finance_bank_guarantee_raw|string|lower) in ['1', 'true', 'on', 'yes'] %}
-    <form action="{{ url_for('main.generate') }}" method="post" novalidate class="card-stack" id="generateForm">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-        <div class="form-page-header">
-            <div class="form-page-header-text">
-                <h1 class="form-page-title">Новое коммерческое предложение</h1>
-                <p class="form-page-subtitle">Заполните форму для создания нового коммерческого предложения</p>
-            </div>
-            <div class="form-page-actions">
-                <div class="generate-action-group">
+    
+    <!-- Two-column layout -->
+    <div class="proposal-layout">
+        <!-- Left Panel - Form -->
+        <div class="proposal-form-panel">
+            <!-- Header -->
+            <header class="proposal-header">
+                <div class="proposal-header-brand">
+                    <div class="proposal-icon">{{ sidebar_icon('file-text')|safe }}</div>
+                    <div>
+                        <h1 class="proposal-header-title">Коммерческое предложение</h1>
+                        <p class="proposal-header-subtitle">Тендер {{ form_data.tender_number if form_data and form_data.tender_number else '' }}</p>
+                    </div>
+                </div>
+                <div class="proposal-header-actions">
                     <input type="file" id="importExcelInput" class="visually-hidden" accept=".xlsx,.xlsm">
-                    <button type="button" class="btn btn-outline btn-sm" id="importExcelBtn">
-                        {{ sidebar_icon('file-text')|safe }}
-                        <span>Импорт из Excel</span>
-                    </button>
-                    <button type="submit" class="btn btn-primary btn-sm" id="generateBtn">
-                        {{ sidebar_icon('download')|safe }}
-                        <span id="generateText">Сгенерировать КП</span>
-                    </button>
-                    <label for="margin_percent" class="margin-field">
-                        <span>Маржа, %</span>
-                        <input type="number" id="margin_percent" name="margin_percent" min="0" max="100" step="0.1" required
-                               value="{{ form_data.margin_percent if form_data and form_data.margin_percent else '30' }}"
-                               class="{% if invalid_fields and 'margin_percent' in invalid_fields %}is-invalid{% endif %}"
-                               aria-invalid="{{ 'true' if invalid_fields and 'margin_percent' in invalid_fields else 'false' }}">
-                    </label>
-                    <button type="button" class="btn btn-outline btn-sm" id="previewPricesBtn" title="Предварительный расчет цен">
-                        {{ sidebar_icon('calculator')|safe }}
-                        <span>Предварительный расчет</span>
-                    </button>
                     <button type="button" class="btn btn-ghost btn-sm" id="resetFormBtn" title="Очистить черновик">
                         {{ sidebar_icon('rotate-ccw')|safe }}
                         <span>Сбросить</span>
@@ -205,41 +191,53 @@
                         {{ sidebar_icon('save')|safe }}
                         <span>Сохранить</span>
                     </button>
+                    <button type="submit" form="generateForm" class="btn btn-primary btn-sm" id="generateBtn">
+                        {{ sidebar_icon('download')|safe }}
+                        <span id="generateText">Сгенерировать КП</span>
+                    </button>
                 </div>
-            </div>
-        </div>
+            </header>
 
-        <section class="section">
-            <div class="card">
-                <div class="form-grid three-columns">
-                    <div class="span-3 budget-finance-row">
-                        <fieldset class="field-group budget-region-selector">
-                            <legend class="field-label">Регион бюджета</legend>
-                            <div class="budget-region-options" role="radiogroup" aria-label="Регион бюджета">
-                                <label class="budget-region-chip">
-                                    <input type="radio" name="budget_region" value="cn" {% if selected_budget_region == 'cn' %}checked{% endif %}>
-                                    <span>Бюджет в юанях (Китай)</span>
-                                </label>
-                                <label class="budget-region-chip">
-                                    <input type="radio" name="budget_region" value="ru" {% if selected_budget_region == 'ru' %}checked{% endif %}>
-                                    <span>Бюджет в рублях (РФ)</span>
-                                </label>
-                            </div>
-                        </fieldset>
-                        <fieldset class="field-group finance-options-selector">
-                            <legend class="field-label">Финансирование</legend>
-                            <div class="finance-options" role="group" aria-label="Варианты финансирования">
-                                <label class="finance-option-chip">
-                                    <input type="checkbox" name="finance_credit" value="1" {% if finance_credit_checked %}checked{% endif %}>
-                                    <span>Кредит</span>
-                                </label>
-                                <label class="finance-option-chip">
-                                    <input type="checkbox" name="finance_bank_guarantee" value="1" {% if finance_bank_guarantee_checked %}checked{% endif %}>
-                                    <span>Банковская гарантия</span>
-                                </label>
-                            </div>
-                        </fieldset>
-                    </div>
+            <!-- Form Content -->
+            <div class="proposal-form-content scroll-area">
+                <form action="{{ url_for('main.generate') }}" method="post" novalidate class="card-stack" id="generateForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <!-- Section: Client & Conditions -->
+                    <section class="proposal-section">
+                        <div class="proposal-section-header">
+                            <div class="proposal-section-icon">{{ sidebar_icon('building2')|safe }}</div>
+                            <h2 class="proposal-section-title">Клиент и условия</h2>
+                        </div>
+                        <div class="form-grid three-columns">
+                                <div class="span-3 budget-finance-row">
+                                    <fieldset class="field-group budget-region-selector">
+                                        <legend class="field-label">Регион бюджета</legend>
+                                        <div class="budget-region-options" role="radiogroup" aria-label="Регион бюджета">
+                                            <label class="budget-region-chip">
+                                                <input type="radio" name="budget_region" value="cn" {% if selected_budget_region == 'cn' %}checked{% endif %}>
+                                                <span>Бюджет в юанях (Китай)</span>
+                                            </label>
+                                            <label class="budget-region-chip">
+                                                <input type="radio" name="budget_region" value="ru" {% if selected_budget_region == 'ru' %}checked{% endif %}>
+                                                <span>Бюджет в рублях (РФ)</span>
+                                            </label>
+                                        </div>
+                                    </fieldset>
+                                    <fieldset class="field-group finance-options-selector">
+                                        <legend class="field-label">Финансирование</legend>
+                                        <div class="finance-options" role="group" aria-label="Варианты финансирования">
+                                            <label class="finance-option-chip">
+                                                <input type="checkbox" name="finance_credit" value="1" {% if finance_credit_checked %}checked{% endif %}>
+                                                <span>Кредит</span>
+                                            </label>
+                                            <label class="finance-option-chip">
+                                                <input type="checkbox" name="finance_bank_guarantee" value="1" {% if finance_bank_guarantee_checked %}checked{% endif %}>
+                                                <span>Банковская гарантия</span>
+                                            </label>
+                                        </div>
+                                    </fieldset>
+                                </div>
                     <div class="field-group">
                         <label for="company" class="field-label">Название компании</label>
                         <input type="text" id="company" name="company" required
@@ -294,25 +292,48 @@
                             </div>
                         </div>
                     </div>
-                    <div class="field-group logistics-panel">
-                        <div class="logistics-toggle-group">
-                            <label class="field-label">Расчет логистики</label>
-                            <div class="toggle-row">
-                                <div class="toggle-group" role="group" aria-label="Тип транспорта">
-                                    <input type="radio" id="mainTruck" name="mainTransport" value="truck" checked>
-                                    <label for="mainTruck">Фура</label>
-                                    <input type="radio" id="mainTrail" name="mainTransport" value="trail">
-                                    <label for="mainTrail">Трал</label>
-                                </div>
-                                <div class="toggle-group" role="group" aria-label="Тип расчета">
-                                    <input type="radio" id="mainWeight" name="mainCalcType" value="weight" checked>
-                                    <label for="mainWeight">Вес</label>
-                                    <input type="radio" id="mainDim" name="mainCalcType" value="dimension">
-                                    <label for="mainDim">Габарит</label>
-                                </div>
                             </div>
                         </div>
-                        <div class="logistics-inline-fields">
+                    </section>
+
+                    <!-- Separator -->
+                    <div class="proposal-separator"></div>
+
+                    <!-- Section: Logistics -->
+                    <section class="proposal-section">
+                        <div class="proposal-section-header">
+                            <div class="proposal-section-icon">{{ sidebar_icon('truck')|safe }}</div>
+                            <h2 class="proposal-section-title">Логистика</h2>
+                        </div>
+                        <div class="field-group logistics-panel">
+                                <!-- Tabs for transport type -->
+                                <div class="logistics-tabs-wrapper">
+                                    <div class="logistics-tabs" role="tablist" aria-label="Тип транспорта">
+                                        <button type="button" class="logistics-tab active" role="tab" aria-selected="true" aria-controls="truck-panel" id="truck-tab" data-transport="truck">
+                                            Фура
+                                        </button>
+                                        <button type="button" class="logistics-tab" role="tab" aria-selected="false" aria-controls="trail-panel" id="trail-tab" data-transport="trail">
+                                            Трал
+                                        </button>
+                                    </div>
+                                    <!-- Hidden radio buttons for form submission -->
+                                    <div class="visually-hidden">
+                                        <input type="radio" id="mainTruck" name="mainTransport" value="truck" checked>
+                                        <input type="radio" id="mainTrail" name="mainTransport" value="trail">
+                                    </div>
+                                </div>
+                                <div class="logistics-toggle-group">
+                                    <label class="field-label">Тип расчета</label>
+                                    <div class="toggle-row">
+                                        <div class="toggle-group" role="group" aria-label="Тип расчета">
+                                            <input type="radio" id="mainWeight" name="mainCalcType" value="weight" checked>
+                                            <label for="mainWeight">Вес</label>
+                                            <input type="radio" id="mainDim" name="mainCalcType" value="dimension">
+                                            <label for="mainDim">Габарит</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="logistics-inline-fields">
                             <div class="field-group inline">
                                 <label for="logistics_city" class="field-label">Город доставки</label>
                                 <div class="autocomplete">
@@ -341,10 +362,10 @@
                                 <button type="button" class="btn btn-ghost btn-xs" id="applyLogisticsSuggestion">Использовать подсказку</button>
                             </div>
                         </div>
-                        <button type="button" class="btn btn-ghost btn-sm" id="calculateMainLogistics">Пересчитать логистику</button>
-                        
-                        <!-- Панель результатов расчета логистики -->
-                        <div class="callout mt-md hidden" id="mainLogisticsResult">
+                                <button type="button" class="btn btn-ghost btn-sm" id="calculateMainLogistics">Пересчитать логистику</button>
+                                
+                                <!-- Панель результатов расчета логистики -->
+                                <div class="callout mt-md hidden" id="mainLogisticsResult">
                             
                             <!-- Подробный вид (скрыт по умолчанию) -->
                             <div id="mainLogisticsResultDetails" class="hidden" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color, #e5e7eb);">
@@ -383,19 +404,48 @@
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
         </section>
 
-        <section class="section">
-            <div class="card positions-card">
-                <div class="positions-card-header">
-                    <h3 class="positions-card-title">Товары и услуги</h3>
-                    <button type="button" class="btn btn-secondary add-position-btn" id="addPositionBtn">
-                        {{ sidebar_icon('plus')|safe }}
-                        <span>Добавить позицию</span>
-                    </button>
-                </div>
+                    <!-- Separator -->
+                    <div class="proposal-separator"></div>
+
+                    <!-- Section: Products -->
+                    <section class="proposal-section">
+                        <div class="proposal-section-header">
+                            <div class="proposal-section-icon">{{ sidebar_icon('package')|safe }}</div>
+                            <h2 class="proposal-section-title">Товары и услуги</h2>
+                            <div class="proposal-section-actions">
+                                <input type="file" id="importExcelInput" class="visually-hidden" accept=".xlsx,.xlsm">
+                                <button type="button" class="btn btn-outline btn-sm" id="importExcelBtn">
+                                    {{ sidebar_icon('file-text')|safe }}
+                                    <span>Импорт из Excel</span>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Common margin toggle -->
+                            <div class="common-margin-toggle">
+                                <label class="margin-switch-label">
+                                    <input type="checkbox" id="useCommonMargin" class="margin-switch-input" checked>
+                                    <span class="margin-switch-slider"></span>
+                                    <span class="margin-switch-text">Общая маржа для всех позиций</span>
+                                </label>
+                                <div class="margin-input-group" id="commonMarginInputGroup">
+                                    <label for="margin_percent" class="margin-field">
+                                        <span>Маржа, %</span>
+                                        <input type="number" id="margin_percent" name="margin_percent" min="0" max="100" step="0.1" required
+                                               value="{{ form_data.margin_percent if form_data and form_data.margin_percent else '30' }}"
+                                               class="{% if invalid_fields and 'margin_percent' in invalid_fields %}is-invalid{% endif %}"
+                                               aria-invalid="{{ 'true' if invalid_fields and 'margin_percent' in invalid_fields else 'false' }}">
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="positions-card-header">
+                                <h3 class="positions-card-title">Позиции</h3>
+                                <button type="button" class="btn btn-secondary add-position-btn" id="addPositionBtn">
+                                    {{ sidebar_icon('plus')|safe }}
+                                    <span>Добавить позицию</span>
+                                </button>
+                            </div>
                 <div class="positions-card-body" id="positionsContainer">
                     <div class="position-block" data-position="1">
                         <div class="position-header">
@@ -553,90 +603,136 @@
                         </div>
                     </template>
                 </div>
-            </div>
         </section>
 
+        <!-- Separator -->
+        <div class="proposal-separator"></div>
 
-        <section class="section">
-            <div class="card">
-                <div class="field-group">
-                    <label for="comment" class="field-label">Комментарий</label>
-                    <textarea id="comment" name="comment" rows="4" placeholder="Дополнительная информация или пожелания для истории.">{{ form_data.comment.strip() if form_data and form_data.comment else '' }}</textarea>
-                </div>
+        <!-- Section: Comment -->
+        <section class="proposal-section">
+            <div class="field-group">
+                <label for="comment" class="field-label">Комментарий</label>
+                <textarea id="comment" name="comment" rows="4" placeholder="Дополнительная информация или пожелания для истории.">{{ form_data.comment.strip() if form_data and form_data.comment else '' }}</textarea>
             </div>
         </section>
+                </form>
+            </div>
+        </div>
 
-        <section class="section">
-            <div class="card summary-card">
-                <div class="summary-card-header">
-                    <h3 class="summary-card-title">Итоговые показатели</h3>
-                    <p class="summary-card-subtitle">Проверьте ключевые значения перед генерацией документов.</p>
+        <!-- Right Panel - Summary -->
+        <aside class="proposal-summary-panel">
+            <div class="summary-header">
+                <h3 class="summary-header-title">Итоговый расчёт</h3>
+                <p class="summary-header-subtitle">Предварительная калькуляция</p>
+            </div>
+            
+            <div class="summary-content scroll-area">
+                <!-- Key Metrics -->
+                <div class="summary-metrics">
+                    <div class="summary-metric-card">
+                        <div class="metric-icon">{{ sidebar_icon('dollar-sign')|safe }}</div>
+                        <span class="metric-label">Итого</span>
+                        <p class="summary-metric-value" id="summaryTotal">0</p>
+                        <p class="metric-unit" id="summaryTotalUnit">юаней</p>
+                    </div>
+                    <div class="summary-metric-card">
+                        <div class="metric-icon">{{ sidebar_icon('trending-up')|safe }}</div>
+                        <span class="metric-label">Прибыль</span>
+                        <p class="summary-metric-value" id="summaryProfit">0</p>
+                        <p class="metric-unit" id="summaryProfitUnit">юаней</p>
+                    </div>
                 </div>
-                <div class="summary-grid">
-                    <div class="summary-metric">
-                        <span class="summary-label">Всего товаров</span>
-                        <div class="summary-value-block">
-                            <span class="summary-value" id="summaryTotalItems">0 позиций</span>
-                            <span class="summary-meta" id="summaryRegionTag">{% if selected_budget_region == 'ru' %}по РФ{% else %}по КНР{% endif %}</span>
+                
+                <!-- Profitability Badge -->
+                <div class="summary-profitability">
+                    <span class="profitability-icon">{{ sidebar_icon('percent')|safe }}</span>
+                    <span class="profitability-label">Рентабельность:</span>
+                    <span class="badge badge-secondary" id="summaryProfitability">0%</span>
+                </div>
+                
+                <!-- Separator -->
+                <div class="summary-separator"></div>
+                
+                <!-- Breakdown -->
+                <div class="summary-breakdown">
+                    <h4 class="summary-breakdown-title">Детализация</h4>
+                    <div class="breakdown-list">
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">Себестоимость ед.</span>
+                            <span class="breakdown-value" id="summaryUnitCost">0 ¥</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">Логистика</span>
+                            <span class="breakdown-value" id="summaryLogisticsCost">0 ₽</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">НДС (15% от маржи)</span>
+                            <span class="breakdown-value" id="summaryVAT">0 ¥</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">Таможенные платежи</span>
+                            <span class="breakdown-value" id="summaryDuty">0 ¥</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">Маржа</span>
+                            <span class="breakdown-value" id="summaryMargin">0 ¥</span>
                         </div>
                     </div>
-                    <div class="summary-metric">
-                        <span class="summary-label">Финансирование</span>
-                        <span class="summary-value" id="summaryFinance">—</span>
+                </div>
+                
+                <!-- Separator -->
+                <div class="summary-separator"></div>
+                
+                <!-- Exchange Rate -->
+                <div class="summary-exchange-rate">
+                    <span class="exchange-icon">{{ sidebar_icon('scale')|safe }}</span>
+                    <span class="exchange-label">Курс:</span>
+                    <span class="exchange-value" id="summaryExchangeRate">1 ¥ = 14 ₽</span>
+                </div>
+                
+                <!-- Separator -->
+                <div class="summary-separator"></div>
+                
+                <!-- Financing -->
+                <div class="summary-financing">
+                    <h4 class="summary-financing-title">Финансирование</h4>
+                    <div class="financing-options">
+                        <label class="financing-checkbox">
+                            <input type="checkbox" name="finance_credit" value="1" {% if finance_credit_checked %}checked{% endif %}>
+                            <span>Кредит</span>
+                        </label>
+                        <label class="financing-checkbox">
+                            <input type="checkbox" name="finance_bank_guarantee" value="1" {% if finance_bank_guarantee_checked %}checked{% endif %}>
+                            <span>Банковская гарантия</span>
+                        </label>
                     </div>
-                    <div class="summary-metric">
-                        <span class="summary-label">Общий вес</span>
-                        <span class="summary-value" id="summaryTotalWeight">0 кг</span>
-                    </div>
-                    <div class="summary-metric">
-                        <span class="summary-label">Общая стоимость закупа</span>
-                        <span class="summary-value" id="summaryTotalCost">0 ¥</span>
-                    </div>
-                    <div class="summary-metric">
-                        <span class="summary-label">Стоимость логистики</span>
-                        <span class="summary-value" id="summaryLogistics">{{ form_data.logistics if form_data and form_data.logistics else '0' }}</span>
-                    </div>
+                </div>
+                
+                <!-- Separator -->
+                <div class="summary-separator"></div>
+                
+                <!-- Additional Expenses -->
+                <div class="summary-additional-expenses">
+                    <h4 class="summary-expenses-title">Дополнительные расходы</h4>
+                    <button type="button" class="btn btn-outline btn-sm btn-add-expense" onclick="addExpense()">
+                        {{ sidebar_icon('plus')|safe }}
+                        <span>Добавить расход</span>
+                    </button>
+                    <div class="expenses-list-summary" id="summaryExpensesList"></div>
                 </div>
             </div>
-        </section>
-
-        <!-- Selling Price Preview Section -->
-        <section class="section">
-            <div class="card selling-price-card">
-                <div class="selling-price-header">
-                    <h3 class="selling-price-title">Предварительный расчет продажной цены</h3>
-                </div>
-                <div id="previewLoadingIndicator" class="preview-loading" style="display: none; padding: 1.5rem; text-align: center; color: var(--muted-foreground);">
-                    <span>Выполняется расчет...</span>
-                </div>
-                <div id="previewContent">
-                    <div class="selling-price-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; padding: 1.5rem;">
-                        <div class="selling-price-metric">
-                            <span class="selling-price-label" style="font-size: 0.875rem; color: var(--muted-foreground); display: block; margin-bottom: 0.5rem;">Общая стоимость закупа</span>
-                            <span class="selling-price-value" id="previewPurchaseCost" style="font-size: 1.25rem; font-weight: 600;">—</span>
-                        </div>
-                        <div class="selling-price-metric">
-                            <span class="selling-price-label" style="font-size: 0.875rem; color: var(--muted-foreground); display: block; margin-bottom: 0.5rem;">Стоимость логистики</span>
-                            <span class="selling-price-value" id="previewLogisticsCost" style="font-size: 1.25rem; font-weight: 600;">—</span>
-                        </div>
-                        <div class="selling-price-metric">
-                            <span class="selling-price-label" style="font-size: 0.875rem; color: var(--muted-foreground); display: block; margin-bottom: 0.5rem;">Сумма маржи</span>
-                            <span class="selling-price-value" id="previewMarginAmount" style="font-size: 1.25rem; font-weight: 600;">—</span>
-                            <span class="selling-price-meta" style="font-size: 0.75rem; color: var(--muted-foreground); display: block; margin-top: 0.25rem;" id="previewMarginMeta"></span>
-                        </div>
-                        <div class="selling-price-metric selling-price-final" style="background: var(--primary); color: var(--primary-foreground); padding: 1rem; border-radius: var(--radius); margin: -1rem;">
-                            <span class="selling-price-label" style="font-size: 0.875rem; opacity: 0.9; display: block; margin-bottom: 0.5rem;">ИТОГОВАЯ ПРОДАЖНАЯ ЦЕНА</span>
-                            <span class="selling-price-value" id="previewFinalPrice" style="font-size: 1.75rem; font-weight: 700;">—</span>
-                        </div>
-                    </div>
-                    <div id="previewPositionsTable" class="preview-positions-table" style="display: none; margin-top: 1.5rem; padding: 0 1.5rem 1.5rem;">
-                        <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 1rem; color: var(--foreground);">Цены по позициям:</h4>
-                        <div class="preview-positions-list" id="previewPositionsList"></div>
-                    </div>
-                </div>
+            
+            <div class="summary-actions">
+                <button type="button" class="btn btn-primary" id="summaryPreviewBtn">
+                    {{ sidebar_icon('calculator')|safe }}
+                    <span>Предварительный расчёт</span>
+                </button>
+                <button type="button" class="btn btn-outline" id="summaryDetailsBtn">
+                    <span>Показать подробно</span>
+                </button>
             </div>
-        </section>
-    </form>
+        </aside>
+    </div>
 </div>
 {% endblock %}
 
@@ -3654,6 +3750,183 @@
                 console.error('Error loading additional expenses from form_data:', error);
             }
         }
+        
+        // ============================================
+        // New Design Integration
+        // ============================================
+        
+        // Link summary panel buttons to existing functions
+        const summaryPreviewBtn = document.getElementById('summaryPreviewBtn');
+        const previewPricesBtn = document.getElementById('previewPricesBtn');
+        if (summaryPreviewBtn && previewPricesBtn) {
+            summaryPreviewBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                previewPricesBtn.click();
+            });
+        }
+        
+        const summaryDetailsBtn = document.getElementById('summaryDetailsBtn');
+        if (summaryDetailsBtn) {
+            summaryDetailsBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                // Show preview content or scroll to it
+                const previewContent = document.getElementById('previewContent');
+                if (previewContent) {
+                    previewContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } else {
+                    // If preview section doesn't exist, scroll to form
+                    const form = document.getElementById('generateForm');
+                    if (form) {
+                        form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }
+            });
+        }
+        
+        // Logistics Tabs functionality
+        const logisticsTabs = document.querySelectorAll('.logistics-tab');
+        const logisticsRadios = document.querySelectorAll('input[name="mainTransport"]');
+        
+        logisticsTabs.forEach((tab, index) => {
+            tab.addEventListener('click', () => {
+                // Update active state
+                logisticsTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                tab.setAttribute('aria-selected', 'true');
+                logisticsTabs.forEach(t => {
+                    if (t !== tab) t.setAttribute('aria-selected', 'false');
+                });
+                
+                // Update radio buttons
+                const transportType = tab.dataset.transport;
+                logisticsRadios.forEach(radio => {
+                    if (radio.value === transportType) {
+                        radio.checked = true;
+                    }
+                });
+            });
+        });
+        
+        // Sync radio buttons with tabs
+        logisticsRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                if (radio.checked) {
+                    const tab = document.querySelector(`.logistics-tab[data-transport="${radio.value}"]`);
+                    if (tab) {
+                        logisticsTabs.forEach(t => {
+                            t.classList.remove('active');
+                            t.setAttribute('aria-selected', 'false');
+                        });
+                        tab.classList.add('active');
+                        tab.setAttribute('aria-selected', 'true');
+                    }
+                }
+            });
+        });
+        
+        // Common margin switch functionality
+        const useCommonMarginCheckbox = document.getElementById('useCommonMargin');
+        const commonMarginInputGroup = document.getElementById('commonMarginInputGroup');
+        const marginInputs = document.querySelectorAll('.position-margin-input');
+        
+        if (useCommonMarginCheckbox && commonMarginInputGroup) {
+            const updateMarginFields = () => {
+                const isChecked = useCommonMarginCheckbox.checked;
+                marginInputs.forEach(input => {
+                    input.disabled = isChecked;
+                    if (isChecked) {
+                        input.placeholder = 'Общая (' + (document.getElementById('margin_percent')?.value || '30') + '%)';
+                    } else {
+                        input.placeholder = '';
+                    }
+                });
+                
+                // Update margin badges
+                const marginBadges = document.querySelectorAll('[data-role="margin-badge"]');
+                marginBadges.forEach(badge => {
+                    if (isChecked) {
+                        badge.textContent = 'Используется общая маржа';
+                        badge.className = 'margin-status-badge margin-status-global';
+                    } else {
+                        badge.textContent = 'Индивидуальная маржа';
+                        badge.className = 'margin-status-badge margin-status-individual';
+                    }
+                });
+            };
+            
+            useCommonMarginCheckbox.addEventListener('change', updateMarginFields);
+            updateMarginFields(); // Initial update
+            
+            // Update when margin_percent changes
+            const marginPercentInput = document.getElementById('margin_percent');
+            if (marginPercentInput) {
+                marginPercentInput.addEventListener('input', () => {
+                    if (useCommonMarginCheckbox.checked) {
+                        marginInputs.forEach(input => {
+                            input.placeholder = 'Общая (' + marginPercentInput.value + '%)';
+                        });
+                    }
+                });
+            }
+        }
+        
+        // Update summary panel when form changes
+        const updateSummaryPanel = () => {
+            // This will be called from existing functions
+            // For now, we'll set up the structure
+        };
+        
+        // Watch for form changes and update summary panel
+        const form = document.getElementById('generateForm');
+        if (form) {
+            // Debounce function
+            let updateTimeout;
+            const debouncedUpdate = () => {
+                clearTimeout(updateTimeout);
+                updateTimeout = setTimeout(() => {
+                    updateSummaryPanel();
+                }, 300);
+            };
+            
+            // Watch for changes in key fields
+            const watchedFields = [
+                'margin_percent',
+                'logistics',
+                'cost_price',
+                'quantity',
+                'weight',
+                'duty_percent'
+            ];
+            
+            watchedFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.addEventListener('input', debouncedUpdate);
+                }
+            });
+            
+            // Watch for position changes
+            const positionsContainer = document.getElementById('positionsContainer');
+            if (positionsContainer) {
+                const observer = new MutationObserver(debouncedUpdate);
+                observer.observe(positionsContainer, {
+                    childList: true,
+                    subtree: true,
+                    attributes: true
+                });
+            }
+        }
+        
+        // Initial update
+        updateSummaryPanel();
+        
+        // Load proposal calculator
+        const calculatorScript = document.createElement('script');
+        calculatorScript.src = "{{ url_for('static', filename='js/proposal-calculator.js') }}";
+        calculatorScript.onload = function() {
+            // Calculator will initialize automatically
+        };
+        document.head.appendChild(calculatorScript);
     });
 </script>
 {% endblock %}

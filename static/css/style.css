@@ -438,6 +438,17 @@ button, input, textarea, select {
   z-index: 3;
 }
 
+/* Adjust sidebar toggle position on index page to align with proposal-header */
+body[data-page="index"] .sidebar-toggle {
+  top: 20px; /* Align with proposal-header top position */
+  z-index: 15; /* Much higher than proposal-header z-index: 10 to stay visible */
+  left: calc(220px - 1px); /* Keep original left position */
+  display: grid !important; /* Ensure button is visible */
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: absolute !important; /* Ensure absolute positioning */
+}
+
 .sidebar-toggle .chevron {
   display: none;
 }
@@ -461,6 +472,12 @@ body.sidebar-collapsed .sidebar {
 body.sidebar-collapsed .sidebar-toggle {
   transform: translateX(-220px);
   border-radius: var(--radius-md);
+}
+
+/* Adjust collapsed sidebar toggle position on index page */
+body[data-page="index"].sidebar-collapsed .sidebar-toggle {
+  transform: translateX(-220px);
+  top: 20px; /* Align with proposal-header when collapsed */
 }
 
 body.sidebar-collapsed .sidebar-toggle .chevron-left {
@@ -544,12 +561,55 @@ h1 {
   padding: 20px 32px 32px;
 }
 
+/* Remove padding when proposal layout is present - let it fill full width */
+body[data-page="index"] .app-content {
+  padding-left: 0;
+  padding-right: 0;
+}
+
 .content-container {
   width: min(100%, 1440px);
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 20px;
+}
+
+/* When content-container contains proposal-layout, remove width restriction and margins */
+.content-container.proposal-page-container,
+.content-container:has(.proposal-layout) {
+  flex-direction: row !important;
+  align-items: flex-start !important;
+  gap: 0 !important;
+  overflow: visible !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Ensure proposal-layout is horizontal on desktop */
+.content-container.proposal-page-container .proposal-layout,
+.content-container .proposal-layout {
+  display: flex !important;
+  flex-direction: row !important;
+  width: 100% !important;
+  margin: 0 !important;
+  gap: 0 !important;
+  min-width: 0;
+  padding: 0 !important;
+}
+
+@media (max-width: 768px) {
+  .content-container.proposal-page-container,
+  .content-container:has(.proposal-layout) {
+    flex-direction: column;
+  }
+  
+  .content-container.proposal-page-container .proposal-layout,
+  .content-container .proposal-layout {
+    flex-direction: column !important;
+  }
 }
 
 [data-page="history"] .content-container {
@@ -1191,7 +1251,7 @@ h1 {
 
 .form-grid {
   display: grid;
-  gap: 20px;
+  gap: 12px;
   position: relative;
 }
 
@@ -1212,7 +1272,7 @@ h1 {
 .parameters-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 12px;
 }
 
 .position-header {
@@ -1358,7 +1418,7 @@ h1 {
 .budget-finance-row {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .budget-finance-row fieldset {
@@ -1675,7 +1735,7 @@ select {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--card);
-  padding: 12px 14px;
+  padding: 8px 12px;
   font-size: 14px;
   color: var(--foreground);
   transition: border var(--transition), box-shadow var(--transition), background var(--transition);
@@ -5302,5 +5362,849 @@ body[data-page="index"] .summary-pill {
 
   .margin-badge {
     border: 1px solid currentColor;
+  }
+}
+
+/* ============================================
+   Proposal Layout - New Design
+   ============================================ */
+
+/* Two-column layout */
+.proposal-layout {
+  display: flex;
+  flex-direction: row;
+  min-height: 100vh;
+  background: var(--background);
+  gap: 0;
+}
+
+/* Left Panel - Form */
+.proposal-form-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--background);
+  overflow-x: hidden;
+  padding-left: 28px; /* Add left padding to move content away from left edge */
+  padding-top: 0;
+  padding-bottom: 24px;
+}
+
+/* Header */
+.proposal-header {
+  height: 64px;
+  border-bottom: 1px solid var(--border);
+  background: var(--card);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px 0 24px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  margin-left: 0;
+  width: 100%;
+}
+
+/* Ensure header doesn't overlap sidebar toggle button on index page */
+body[data-page="index"] .proposal-header {
+  margin-left: 0;
+  padding-left: 24px;
+  position: relative; /* Ensure proper stacking context */
+}
+
+/* Make sure sidebar toggle is always visible on index page */
+body[data-page="index"] .sidebar-toggle {
+  top: 20px !important;
+  z-index: 15 !important;
+  left: calc(220px - 1px) !important;
+  display: grid !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: absolute !important;
+  pointer-events: auto !important;
+}
+
+.proposal-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Add margin to avoid overlap with sidebar toggle button on index page */
+body[data-page="index"] .proposal-header-brand {
+  margin-left: 50px; /* Space for sidebar toggle button (40px width + 10px gap) */
+}
+
+.proposal-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-foreground);
+  flex-shrink: 0;
+}
+
+.proposal-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.proposal-header-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--foreground);
+  line-height: 1.2;
+}
+
+.proposal-header-subtitle {
+  margin: 2px 0 0 0;
+  font-size: 12px;
+  color: var(--muted-foreground);
+  line-height: 1.2;
+}
+
+.proposal-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Form Content */
+.proposal-form-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 24px 24px 48px; /* Increased left padding to move elements away from left edge */
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+}
+
+
+/* ScrollArea */
+.scroll-area {
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+}
+
+.scroll-area::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scroll-area::-webkit-scrollbar-track {
+  background: var(--muted);
+}
+
+.scroll-area::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 4px;
+}
+
+.scroll-area::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
+/* Form Content */
+.proposal-form-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 24px 24px 0; /* Right and bottom padding only, left padding is on parent */
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+}
+
+/* Remove card padding and margins for proposal sections */
+.proposal-section .card,
+.proposal-section > .card {
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.proposal-section {
+  margin-bottom: 16px;
+}
+
+.proposal-section:last-child {
+  margin-bottom: 0;
+}
+
+.proposal-section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.proposal-separator {
+  margin: 12px 0;
+  height: 1px;
+  background: var(--border);
+  border: none;
+}
+
+.proposal-section-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.proposal-section-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.proposal-section-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--foreground);
+  flex: 1;
+}
+
+.proposal-section-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+/* Separator */
+.proposal-separator {
+  height: 1px;
+  background: var(--border);
+  margin: 24px 0;
+  border: none;
+}
+
+/* Right Panel - Summary */
+.proposal-summary-panel {
+  width: 320px;
+  min-width: 320px;
+  max-width: 320px;
+  flex-shrink: 0;
+  flex-grow: 0;
+  border-left: 1px solid var(--border);
+  background: var(--card);
+  display: flex !important;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  height: 100vh;
+  max-height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 1;
+  margin-right: 0 !important;
+  padding-right: 0 !important;
+}
+
+.summary-header {
+  padding: 24px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.summary-header-title {
+  margin: 0 0 4px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.summary-header-subtitle {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted-foreground);
+}
+
+.summary-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+/* Summary Metrics */
+.summary-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.summary-metric-card {
+  padding: 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--muted);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: all var(--transition);
+  position: relative;
+}
+
+.summary-metric-card:first-child {
+  background: var(--card);
+  border-color: var(--primary);
+}
+
+.summary-metric-card:first-child::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--primary);
+  opacity: 0.05;
+  border-radius: var(--radius-md);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.summary-metric-card:first-child > * {
+  position: relative;
+  z-index: 1;
+}
+
+.summary-metric-card:last-child {
+  background: var(--card);
+}
+
+.summary-metric-card:last-child::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--accent);
+  opacity: 0.1;
+  border-radius: var(--radius-md);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.summary-metric-card:last-child > * {
+  position: relative;
+  z-index: 1;
+}
+
+.summary-metric-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
+}
+
+.metric-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: var(--primary);
+  margin-bottom: 4px;
+}
+
+.metric-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.metric-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.summary-metric-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--foreground);
+  line-height: 1.2;
+  margin: 4px 0 0 0;
+}
+
+.metric-unit {
+  font-size: 11px;
+  color: var(--muted-foreground);
+  margin: 0;
+}
+
+/* Profitability Badge */
+.summary-profitability {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: var(--muted);
+  border-radius: var(--radius-md);
+  margin-bottom: 20px;
+}
+
+.profitability-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  color: var(--muted-foreground);
+}
+
+.profitability-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.profitability-label {
+  font-size: 13px;
+  color: var(--muted-foreground);
+  flex: 1;
+}
+
+/* Summary Separator */
+.summary-separator {
+  height: 1px;
+  background: var(--border);
+  margin: 20px 0;
+  border: none;
+}
+
+/* Breakdown */
+.summary-breakdown {
+  margin-bottom: 20px;
+}
+
+.summary-breakdown-title {
+  margin: 0 0 12px 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.breakdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.breakdown-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 13px;
+}
+
+.breakdown-label {
+  color: var(--muted-foreground);
+}
+
+.breakdown-value {
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+/* Exchange Rate */
+.summary-exchange-rate {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: var(--muted);
+  border-radius: var(--radius-md);
+  margin-bottom: 20px;
+}
+
+.exchange-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  color: var(--muted-foreground);
+}
+
+.exchange-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.exchange-label {
+  font-size: 13px;
+  color: var(--muted-foreground);
+}
+
+.exchange-value {
+  font-family: monospace;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-left: auto;
+}
+
+/* Financing */
+.summary-financing {
+  margin-bottom: 20px;
+}
+
+.summary-financing-title {
+  margin: 0 0 12px 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.financing-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.financing-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition);
+  background: var(--card);
+}
+
+.financing-checkbox:hover {
+  background: var(--muted);
+  border-color: var(--primary);
+}
+
+.financing-checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+.financing-checkbox span {
+  font-size: 13px;
+  color: var(--foreground);
+  user-select: none;
+}
+
+/* Additional Expenses */
+.summary-additional-expenses {
+  margin-bottom: 20px;
+}
+
+.summary-expenses-title {
+  margin: 0 0 12px 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-add-expense {
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.expenses-list-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.expense-item-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--muted);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+}
+
+.expense-item-name {
+  color: var(--foreground);
+}
+
+.expense-item-amount {
+  font-weight: 600;
+  color: var(--primary);
+}
+
+/* Summary Actions */
+.summary-actions {
+  padding: 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+  background: var(--card);
+}
+
+.summary-actions .btn {
+  width: 100%;
+  justify-content: center;
+}
+
+/* Logistics Tabs */
+.logistics-tabs-wrapper {
+  margin-bottom: 16px;
+}
+
+.logistics-tabs {
+  display: inline-flex;
+  background: var(--muted);
+  border-radius: var(--radius-md);
+  padding: 4px;
+  gap: 4px;
+}
+
+.logistics-tab {
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.logistics-tab:hover {
+  color: var(--foreground);
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.logistics-tab.active {
+  background: var(--card);
+  color: var(--foreground);
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Common Margin Switch */
+.common-margin-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--secondary);
+  border-radius: var(--radius-md);
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.margin-switch-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  flex: 1;
+  min-width: 200px;
+}
+
+.margin-switch-input {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  appearance: none;
+  background: var(--input);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all var(--transition);
+  flex-shrink: 0;
+}
+
+.margin-switch-input:checked {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.margin-switch-input::before {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--card);
+  top: 2px;
+  left: 2px;
+  transition: transform var(--transition);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.margin-switch-input:checked::before {
+  transform: translateX(20px);
+}
+
+.margin-switch-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--foreground);
+  user-select: none;
+}
+
+.margin-input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .proposal-layout,
+  .content-container > .proposal-layout {
+    flex-direction: column;
+  }
+  
+  .proposal-summary-panel {
+    width: 100%;
+    position: relative;
+    height: auto;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    max-height: 50vh;
+  }
+  
+  .proposal-summary-panel.collapsed {
+    display: none;
+  }
+  
+  .summary-toggle {
+    display: block;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 100;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: var(--primary-foreground);
+    border: none;
+    box-shadow: var(--shadow-md);
+    cursor: pointer;
+  }
+  
+  .proposal-header {
+    padding: 0 16px;
+  }
+  
+  .proposal-form-content {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .proposal-header {
+    padding: 0 16px;
+    flex-wrap: wrap;
+    height: auto;
+    min-height: 64px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+  
+  .proposal-header-brand {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+  
+  .proposal-header-actions {
+    width: 100%;
+    margin-top: 8px;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+  
+  .proposal-header-actions .btn {
+    flex: 1;
+    min-width: 120px;
+  }
+  
+  .proposal-form-content {
+    padding: 16px;
+  }
+  
+  .summary-header {
+    padding: 16px;
+  }
+  
+  .summary-content {
+    padding: 16px;
+  }
+  
+  .summary-metrics {
+    grid-template-columns: 1fr;
+  }
+  
+  .proposal-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .proposal-section-actions {
+    margin-left: 0;
+    width: 100%;
+  }
+  
+  .proposal-section-actions .btn {
+    width: 100%;
+  }
+  
+  .logistics-tabs {
+    width: 100%;
+    justify-content: stretch;
+  }
+  
+  .logistics-tab {
+    flex: 1;
+    text-align: center;
+  }
+  
+  .common-margin-toggle {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .margin-switch-label {
+    width: 100%;
+  }
+  
+  .margin-input-group {
+    width: 100%;
+  }
+  
+  .summary-actions {
+    padding: 12px;
+  }
+  
+  .summary-actions .btn {
+    width: 100%;
   }
 }

@@ -257,8 +257,9 @@ class TestBudgetCreation:
             position, 50000, 30, target_margin
         )
         
-        # Проверяем, что маржа соответствует целевой
-        assert result['margin'] == target_margin
+        # Проверяем, что маржа соответствует целевой (с допуском для float)
+        assert abs(result['margin'] - target_margin) < 0.01, \
+            f"Маржа {result['margin']} не соответствует целевой {target_margin}"
         
         # Проверяем, что цена рассчитана корректно
         assert result['final_price'] > 0

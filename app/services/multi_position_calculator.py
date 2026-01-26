@@ -154,7 +154,8 @@ class MultiPositionCalculator(PriceCalculatorPort):
         use_credit: bool = False,
         use_bank_guarantee: bool = False,
         payment_days: Optional[int] = None,
-        additional_expenses_total_yuan: float = 0
+        additional_expenses_total_yuan: float = 0,
+        position_margins: Optional[Dict[int, float]] = None
     ) -> Dict[str, Any]:
         """
         Рассчитывает цены для множественных позиций с единой итоговой маржой.
@@ -168,6 +169,7 @@ class MultiPositionCalculator(PriceCalculatorPort):
             use_bank_guarantee: Использовать ли банковскую гарантию в расчете
             payment_days: Количество дней оплаты (для банковской гарантии)
             additional_expenses_total_yuan: Общая сумма дополнительных расходов (в юанях)
+            position_margins: Словарь индивидуальных марж {position_index: margin_value}
         
         Returns:
             Словарь с результатами расчета:
@@ -221,45 +223,53 @@ class MultiPositionCalculator(PriceCalculatorPort):
                 # Обновляем общие затраты позиции (в юанях)
                 pos_data['costs']['total_cost'] += position_additional_expenses_yuan
         
-        # Обновляем общие затраты с учетом дополнительных расходов (в юанях)
-        total_costs += additional_expenses_total_yuan
+        # Пересчитываем общие затраты как сумму всех позиций (уже включающих дополнительные расходы)
+        # Это гарантирует, что дополнительные расходы учитываются только один раз
+        total_costs = sum(pos_data['costs']['total_cost'] for pos_data in position_costs)
+        
+        # Разделяем позиции на фиксированные (с индивидуальной маржой) и пересчитываемые
+        individual_margins = position_margins or {}
+        fixed_position_indices = set(individual_margins.keys())
+        variable_position_indices = set(range(len(position_costs))) - fixed_position_indices
         
         result_positions = []
         total_revenue = 0
 
         if self.pricing_mode == 'per_position':
             # Ценообразование: каждая позиция достигает целевой маржи
+            # Если есть индивидуальные маржи, используем их для соответствующих позиций
+            # ВАЖНО: все расчеты в юанях (как в Excel файле)
             # Если используется банковская гарантия, нужен итеративный расчет
             if use_bank_guarantee and payment_days is not None:
                 # Итеративный расчет с учетом банковской гарантии для каждой позиции
-                for pos_data in position_costs:
+                for idx, pos_data in enumerate(position_costs):
                     position = pos_data['position']
                     costs = pos_data['costs']
                     cost_per_unit = costs['cost_per_unit']
                     quantity = int(position['quantity'])
                     
+                    # Определяем маржу для этой позиции
+                    margin = individual_margins.get(idx, target_margin_percent)
+                    
                     # Начинаем с цены без банковской гарантии
-                    if target_margin_percent >= 100:
+                    if margin >= 100:
                         final_price = cost_per_unit
                     else:
-                        final_price = cost_per_unit / (1 - target_margin_percent / 100)
+                        final_price = cost_per_unit / (1 - margin / 100)
                     
                     # Итеративно уточняем цену с учетом банковской гарантии
-                    # В Excel формула: I24*3%/365*(I15+I16), где I15+I16 = delivery_time + payment_days
-                    bank_guarantee_days = delivery_time + payment_days  # K15 = I15 + I16
+                    bank_guarantee_days = delivery_time + payment_days
                     for _ in range(5):  # Максимум 5 итераций
                         revenue_with_vat = final_price * quantity * (1 + self.VAT_RATE)
                         bank_guarantee_cost = revenue_with_vat * 0.03 / 365 * bank_guarantee_days
                         bank_guarantee_cost_per_unit = bank_guarantee_cost / quantity if quantity > 0 else 0
                         
-                        # Пересчитываем цену с учетом банковской гарантии
                         total_cost_with_guarantee = cost_per_unit + bank_guarantee_cost_per_unit
-                        if target_margin_percent >= 100:
+                        if margin >= 100:
                             new_price = total_cost_with_guarantee
                         else:
-                            new_price = total_cost_with_guarantee / (1 - target_margin_percent / 100)
+                            new_price = total_cost_with_guarantee / (1 - margin / 100)
                         
-                        # Проверяем сходимость (разница менее 0.01)
                         if abs(new_price - final_price) < 0.01:
                             break
                         final_price = new_price
@@ -275,14 +285,18 @@ class MultiPositionCalculator(PriceCalculatorPort):
                     })
             else:
                 # Обычный расчет без банковской гарантии
-                for pos_data in position_costs:
+                for idx, pos_data in enumerate(position_costs):
                     position = pos_data['position']
                     costs = pos_data['costs']
                     cost_per_unit = costs['cost_per_unit']
-                    if target_margin_percent >= 100:
-                        final_price = cost_per_unit  # защита от деления на ноль; не повышаем цену
+                    
+                    # Определяем маржу для этой позиции
+                    margin = individual_margins.get(idx, target_margin_percent)
+                    
+                    if margin >= 100:
+                        final_price = cost_per_unit
                     else:
-                        final_price = cost_per_unit / (1 - target_margin_percent / 100)
+                        final_price = cost_per_unit / (1 - margin / 100)
                     quantity = int(position['quantity'])
                     general_price = final_price * quantity
                     total_revenue += general_price
@@ -296,60 +310,180 @@ class MultiPositionCalculator(PriceCalculatorPort):
             price_coefficient = None
         else:
             # Ценообразование: общий коэффициент по целевой суммарной марже
-            # Если используется банковская гарантия, нужен итеративный расчет
-            if use_bank_guarantee and payment_days is not None:
-                # Итеративный расчет с учетом банковской гарантии
-                # В Excel формула: I24*3%/365*(I15+I16), где I15+I16 = delivery_time + payment_days
-                # Банковская гарантия = (выручка с НДС) * 0.03 / 365 * (delivery_time + payment_days)
-                bank_guarantee_days = delivery_time + payment_days  # K15 = I15 + I16
-                target_revenue = total_costs / (1 - target_margin_percent / 100)
-                price_coefficient = target_revenue / total_costs if total_costs > 0 else 1
-                
-                # Итеративно уточняем коэффициент с учетом банковской гарантии
-                for _ in range(5):  # Максимум 5 итераций
-                    # Рассчитываем выручку с текущим коэффициентом
-                    test_revenue = sum(
-                        costs['cost_per_unit'] * price_coefficient * int(pos_data['position']['quantity'])
-                        for pos_data in position_costs
-                    )
-                    revenue_with_vat = test_revenue * (1 + self.VAT_RATE)
-                    bank_guarantee_cost = revenue_with_vat * 0.03 / 365 * bank_guarantee_days
-                    
-                    # Пересчитываем коэффициент с учетом банковской гарантии
-                    total_costs_with_guarantee = total_costs + bank_guarantee_cost
-                    new_target_revenue = total_costs_with_guarantee / (1 - target_margin_percent / 100)
-                    new_coefficient = new_target_revenue / total_costs if total_costs > 0 else 1
-                    
-                    # Проверяем сходимость (разница менее 0.0001)
-                    if abs(new_coefficient - price_coefficient) < 0.0001:
-                        break
-                    price_coefficient = new_coefficient
-            else:
-                # Обычный расчет без банковской гарантии
-                target_revenue = total_costs / (1 - target_margin_percent / 100)
-                price_coefficient = target_revenue / total_costs if total_costs > 0 else 1
+            # ВАЖНО: все расчеты в юанях (как в Excel файле)
             
-            for pos_data in position_costs:
-                position = pos_data['position']
-                costs = pos_data['costs']
-                final_price = costs['cost_per_unit'] * price_coefficient
-                quantity = int(position['quantity'])
-                general_price = final_price * quantity
-                total_revenue += general_price
-                result_positions.append({
-                    'position': position,
-                    'final_price': final_price,
-                    'general_price': general_price,
-                    'costs': costs,
-                    'margin': (final_price - costs['cost_per_unit']) / final_price * 100 if final_price > 0 else 0
-                })
+            # Если есть индивидуальные маржи, разделяем позиции на фиксированные и пересчитываемые
+            if individual_margins:
+                # Рассчитываем цены для фиксированных позиций (с индивидуальной маржой)
+                fixed_revenue = 0
+                fixed_costs = 0
+                fixed_positions_results = []
+                
+                for idx in fixed_position_indices:
+                    if idx < len(position_costs):
+                        pos_data = position_costs[idx]
+                        position = pos_data['position']
+                        costs = pos_data['costs']
+                        cost_per_unit = costs['cost_per_unit']
+                        quantity = int(position['quantity'])
+                        margin = individual_margins[idx]
+                        
+                        # Рассчитываем цену с индивидуальной маржой
+                        if margin >= 100:
+                            final_price = cost_per_unit
+                        else:
+                            final_price = cost_per_unit / (1 - margin / 100)
+                        
+                        general_price = final_price * quantity
+                        fixed_revenue += general_price
+                        fixed_costs += costs['total_cost']
+                        
+                        fixed_positions_results.append({
+                            'index': idx,
+                            'position': position,
+                            'final_price': final_price,
+                            'general_price': general_price,
+                            'costs': costs,
+                            'margin': margin
+                        })
+                
+                # Рассчитываем оставшиеся затраты и целевую выручку для пересчитываемых позиций
+                remaining_costs = total_costs - fixed_costs
+                
+                if remaining_costs <= 0:
+                    # Все позиции имеют индивидуальную маржу, используем их как есть
+                    for fixed_result in fixed_positions_results:
+                        result_positions.append({
+                            'position': fixed_result['position'],
+                            'final_price': fixed_result['final_price'],
+                            'general_price': fixed_result['general_price'],
+                            'costs': fixed_result['costs'],
+                            'margin': fixed_result['margin']
+                        })
+                    total_revenue = fixed_revenue
+                    price_coefficient = None
+                else:
+                    # Рассчитываем коэффициент для пересчитываемых позиций
+                    # Целевая общая выручка для достижения целевой маржи
+                    total_target_revenue = total_costs / (1 - target_margin_percent / 100)
+                    remaining_target_revenue = total_target_revenue - fixed_revenue
+                    
+                    # Проверяем возможность достижения целевой маржи
+                    if remaining_target_revenue <= remaining_costs:
+                        # Невозможно достичь целевой маржи - используем максимально возможную
+                        # Выбрасываем предупреждение через коэффициент близкий к 1
+                        price_coefficient = 1.0
+                    else:
+                        price_coefficient = remaining_target_revenue / remaining_costs if remaining_costs > 0 else 1
+                    
+                    # Если используется банковская гарантия, нужен итеративный расчет
+                    if use_bank_guarantee and payment_days is not None:
+                        bank_guarantee_days = delivery_time + payment_days
+                        
+                        # Итеративно уточняем коэффициент с учетом банковской гарантии
+                        for _ in range(5):  # Максимум 5 итераций
+                            # Рассчитываем выручку пересчитываемых позиций с текущим коэффициентом
+                            variable_revenue = sum(
+                                position_costs[idx]['costs']['cost_per_unit'] * price_coefficient * 
+                                int(position_costs[idx]['position']['quantity'])
+                                for idx in variable_position_indices
+                            )
+                            
+                            # Общая выручка (фиксированные + пересчитываемые)
+                            test_total_revenue = fixed_revenue + variable_revenue
+                            revenue_with_vat = test_total_revenue * (1 + self.VAT_RATE)
+                            bank_guarantee_cost = revenue_with_vat * 0.03 / 365 * bank_guarantee_days
+                            
+                            # Пересчитываем коэффициент с учетом банковской гарантии
+                            total_costs_with_guarantee = total_costs + bank_guarantee_cost
+                            new_total_target_revenue = total_costs_with_guarantee / (1 - target_margin_percent / 100)
+                            new_remaining_target_revenue = new_total_target_revenue - fixed_revenue
+                            
+                            if new_remaining_target_revenue <= remaining_costs:
+                                new_coefficient = 1.0
+                            else:
+                                new_coefficient = new_remaining_target_revenue / remaining_costs if remaining_costs > 0 else 1
+                            
+                            # Проверяем сходимость
+                            if abs(new_coefficient - price_coefficient) < 0.0001:
+                                break
+                            price_coefficient = new_coefficient
+                    
+                    # Собираем результаты: сначала фиксированные позиции, потом пересчитываемые
+                    result_dict = {res['index']: res for res in fixed_positions_results}
+                    
+                    for idx in variable_position_indices:
+                        if idx < len(position_costs):
+                            pos_data = position_costs[idx]
+                            position = pos_data['position']
+                            costs = pos_data['costs']
+                            cost_per_unit = costs['cost_per_unit']
+                            final_price = cost_per_unit * price_coefficient
+                            quantity = int(position['quantity'])
+                            general_price = final_price * quantity
+                            
+                            result_dict[idx] = {
+                                'position': position,
+                                'final_price': final_price,
+                                'general_price': general_price,
+                                'costs': costs,
+                                'margin': (final_price - cost_per_unit) / final_price * 100 if final_price > 0 else 0
+                            }
+                    
+                    # Сортируем результаты по индексу позиции
+                    result_positions = [result_dict[i] for i in sorted(result_dict.keys())]
+                    total_revenue = sum(pos['general_price'] for pos in result_positions)
+            else:
+                # Нет индивидуальных марж - используем стандартную логику
+                if use_bank_guarantee and payment_days is not None:
+                    # Итеративный расчет с учетом банковской гарантии
+                    bank_guarantee_days = delivery_time + payment_days
+                    target_revenue = total_costs / (1 - target_margin_percent / 100)
+                    price_coefficient = target_revenue / total_costs if total_costs > 0 else 1
+                    
+                    # Итеративно уточняем коэффициент с учетом банковской гарантии
+                    for _ in range(5):  # Максимум 5 итераций
+                        test_revenue = sum(
+                            costs['cost_per_unit'] * price_coefficient * int(pos_data['position']['quantity'])
+                            for pos_data in position_costs
+                        )
+                        revenue_with_vat = test_revenue * (1 + self.VAT_RATE)
+                        bank_guarantee_cost = revenue_with_vat * 0.03 / 365 * bank_guarantee_days
+                        
+                        total_costs_with_guarantee = total_costs + bank_guarantee_cost
+                        new_target_revenue = total_costs_with_guarantee / (1 - target_margin_percent / 100)
+                        new_coefficient = new_target_revenue / total_costs if total_costs > 0 else 1
+                        
+                        if abs(new_coefficient - price_coefficient) < 0.0001:
+                            break
+                        price_coefficient = new_coefficient
+                else:
+                    # Обычный расчет без банковской гарантии
+                    target_revenue = total_costs / (1 - target_margin_percent / 100)
+                    price_coefficient = target_revenue / total_costs if total_costs > 0 else 1
+                
+                for pos_data in position_costs:
+                    position = pos_data['position']
+                    costs = pos_data['costs']
+                    cost_per_unit = costs['cost_per_unit']
+                    final_price = cost_per_unit * price_coefficient
+                    quantity = int(position['quantity'])
+                    general_price = final_price * quantity
+                    total_revenue += general_price
+                    result_positions.append({
+                        'position': position,
+                        'final_price': final_price,
+                        'general_price': general_price,
+                        'costs': costs,
+                        'margin': (final_price - cost_per_unit) / final_price * 100 if final_price > 0 else 0
+                    })
         
-        # Проверяем итоговую маржу
+        # Проверяем итоговую маржу (все в юанях)
         actual_margin = (total_revenue - total_costs) / total_revenue * 100 if total_revenue > 0 else 0
         
         return {
             'positions': result_positions,
-            'total_costs': total_costs,
+            'total_costs': total_costs,  # Возвращаем в юанях (как в Excel файле)
             'total_revenue': total_revenue,
             'target_margin': target_margin_percent,
             'actual_margin': actual_margin,
@@ -403,6 +537,8 @@ class MultiPositionCalculator(PriceCalculatorPort):
             }
         
         # Используем старую логику расчета
+        # calculate_selling_price возвращает цену в юанях
+        # ВАЖНО: final_price должен быть в юанях для Excel файла (затраты там тоже в юанях)
         final_price = calculate_selling_price(
             quantity=quantity,
             purchase_cost=cost_price,
@@ -418,11 +554,38 @@ class MultiPositionCalculator(PriceCalculatorPort):
             additional_expenses_total_yuan=additional_expenses_total_yuan
         )
         
+        # Рассчитываем затраты для расчета фактической маржи
+        # Используем calculate_position_costs для получения базовых затрат
+        total_weight = weight * quantity
+        costs = self.calculate_position_costs(
+            position, logistics_rub, delivery_time, total_weight,
+            use_credit=use_credit, payment_days=payment_days
+        )
+        
+        # Добавляем дополнительные расходы к затратам на единицу (в юанях)
+        cost_per_unit_yuan = costs['cost_per_unit']
+        if additional_expenses_total_yuan > 0:
+            cost_per_unit_yuan += additional_expenses_total_yuan / quantity
+        
+        # Если используется банковская гарантия, нужно учесть её в затратах
+        if use_bank_guarantee and payment_days is not None:
+            # Рассчитываем стоимость банковской гарантии
+            # В Excel формула: I24*3%/365*(I15+I16), где I15+I16 = delivery_time + payment_days
+            # Выручка рассчитывается от цены в юанях
+            bank_guarantee_days = delivery_time + payment_days
+            revenue_with_vat = final_price * quantity * (1 + self.VAT_RATE)
+            bank_guarantee_cost = revenue_with_vat * 0.03 / 365 * bank_guarantee_days
+            bank_guarantee_cost_per_unit = bank_guarantee_cost / quantity if quantity > 0 else 0
+            cost_per_unit_yuan += bank_guarantee_cost_per_unit
+        
+        # Рассчитываем фактическую маржу (все в юанях)
+        actual_margin = (final_price - cost_per_unit_yuan) / final_price * 100 if final_price > 0 else 0
+        
         general_price = final_price * quantity
         
         return {
             'position': position,
             'final_price': final_price,
             'general_price': general_price,
-            'margin': margin_percent
+            'margin': actual_margin
         }

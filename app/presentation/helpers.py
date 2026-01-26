@@ -141,3 +141,57 @@ def extract_positions_from_form(
     if include_field_keys:
         return positions, field_keys
     return positions
+
+
+def extract_position_margins(
+    form_data: Dict[str, Any],
+    positions_count: int
+) -> Dict[int, float]:
+    """
+    Извлекает индивидуальные маржи позиций из данных формы.
+    
+    Ищет поля position_margin_1, position_margin_2, etc. в form_data.
+    Если поле пустое или отсутствует, позиция не включается в результат.
+    
+    Args:
+        form_data: Данные формы
+        positions_count: Количество позиций (для определения диапазона поиска)
+    
+    Returns:
+        Словарь {position_index: margin_value}, где position_index - индекс позиции (0-based),
+        margin_value - значение маржи в процентах (0-100)
+    
+    Example:
+        Если form_data содержит:
+        - position_margin_1 = "25.5"
+        - position_margin_3 = "30"
+        
+        То результат будет:
+        {0: 25.5, 2: 30.0}
+    """
+    position_margins: Dict[int, float] = {}
+    
+    # Проверяем поля position_margin, position_margin_1, position_margin_2, etc.
+    for i in range(1, positions_count + 1):
+        # Для первой позиции проверяем оба варианта: position_margin и position_margin_1
+        if i == 1:
+            keys_to_check = ["position_margin", "position_margin_1"]
+        else:
+            keys_to_check = [f"position_margin_{i}"]
+        
+        for key in keys_to_check:
+            value = form_data.get(key)
+            if value:
+                try:
+                    margin_value = float(value)
+                    # Валидация диапазона [0, 100]
+                    if 0 <= margin_value <= 100:
+                        # Индекс позиции (0-based)
+                        position_index = i - 1
+                        position_margins[position_index] = margin_value
+                        break  # Используем первое найденное значение
+                except (ValueError, TypeError):
+                    # Пропускаем некорректные значения
+                    pass
+    
+    return position_margins

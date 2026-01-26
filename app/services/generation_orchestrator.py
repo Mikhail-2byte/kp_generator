@@ -7,7 +7,7 @@ from flask import current_app
 
 from app.business.document_generator import create_zip_archive, generate_excel_document, generate_word_document
 from app.core.exceptions import CalculationError, DocumentGenerationError, ValidationError
-from app.presentation.helpers import check_templates_exist, extract_positions_from_form
+from app.presentation.helpers import check_templates_exist, extract_positions_from_form, extract_position_margins
 from app.presentation.validators import validate_form_data
 from app.services.multi_position_calculator import MultiPositionCalculator
 from app.services.repositories import generation_repository
@@ -75,7 +75,8 @@ class GenerationOrchestrator:
         use_credit: bool = False,
         use_bank_guarantee: bool = False,
         payment_days: Optional[int] = None,
-        additional_expenses: Optional[List[Dict[str, Any]]] = None
+        additional_expenses: Optional[List[Dict[str, Any]]] = None,
+        position_margins: Optional[Dict[int, float]] = None
     ) -> Tuple[List[Dict[str, Any]], float]:
         """
         Рассчитывает цены для позиций.
@@ -89,6 +90,7 @@ class GenerationOrchestrator:
             use_bank_guarantee: Использовать ли банковскую гарантию в расчете
             payment_days: Количество дней оплаты (для банковской гарантии)
             additional_expenses: Список дополнительных расходов [{'name': str, 'amount': float}]
+            position_margins: Словарь индивидуальных марж {position_index: margin_value}
         
         Returns:
             Tuple[position_prices, total_general_price]
@@ -106,8 +108,13 @@ class GenerationOrchestrator:
                         pass
         if len(positions) == 1:
             # Для одной позиции используем старый метод
+            # Если указана индивидуальная маржа, используем её
+            single_margin = margin_percent
+            if position_margins and 0 in position_margins:
+                single_margin = position_margins[0]
+            
             result = self.calculator.calculate_legacy_single_position(
-                positions[0], logistics_rub, delivery_time, margin_percent,
+                positions[0], logistics_rub, delivery_time, single_margin,
                 use_credit=use_credit, use_bank_guarantee=use_bank_guarantee,
                 payment_days=payment_days,
                 additional_expenses_total_yuan=additional_expenses_total_yuan
@@ -122,7 +129,8 @@ class GenerationOrchestrator:
                 positions, logistics_rub, delivery_time, margin_percent,
                 use_credit=use_credit, use_bank_guarantee=use_bank_guarantee,
                 payment_days=payment_days,
-                additional_expenses_total_yuan=additional_expenses_total_yuan
+                additional_expenses_total_yuan=additional_expenses_total_yuan,
+                position_margins=position_margins
             )
             position_prices = calculation_result['positions']
             # Рассчитываем total_general_price без округления
@@ -283,12 +291,16 @@ class GenerationOrchestrator:
         if not isinstance(additional_expenses, list):
             additional_expenses = []
         
+        # Извлекаем индивидуальные маржи позиций
+        position_margins = extract_position_margins(cleaned_data, len(positions))
+        
         try:
             position_prices, total_general_price = self.calculate_prices(
                 positions, logistics_rub, delivery_time, margin_percent,
                 use_credit=use_credit, use_bank_guarantee=use_bank_guarantee,
                 payment_days=payment_days,
-                additional_expenses=additional_expenses
+                additional_expenses=additional_expenses,
+                position_margins=position_margins if position_margins else None
             )
         except Exception as exc:
             raise CalculationError(

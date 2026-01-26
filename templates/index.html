@@ -76,6 +76,86 @@
 .position-header .remove-position-btn {
     flex-shrink: 0;
 }
+
+/* Preview Calculation Styles */
+.preview-loading {
+    padding: 1.5rem;
+    text-align: center;
+    color: var(--muted-foreground);
+}
+
+.preview-positions-table {
+    margin-top: 1.5rem;
+    padding: 0 1.5rem 1.5rem;
+    border-top: 1px solid var(--border);
+}
+
+.preview-positions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.preview-position-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto auto;
+    gap: 1rem;
+    align-items: center;
+    padding: 0.75rem;
+    background: var(--muted);
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+}
+
+.preview-position-number {
+    font-weight: 600;
+    color: var(--primary);
+    min-width: 2rem;
+}
+
+.preview-position-name {
+    color: var(--foreground);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.preview-position-price {
+    font-weight: 600;
+    color: var(--foreground);
+    text-align: right;
+    min-width: 8rem;
+}
+
+.preview-position-total {
+    font-weight: 600;
+    color: var(--accent);
+    text-align: right;
+    min-width: 10rem;
+}
+
+.preview-position-margin {
+    font-weight: 500;
+    color: var(--muted-foreground);
+    text-align: right;
+    min-width: 5rem;
+    font-size: 0.8125rem;
+}
+
+@media (max-width: 768px) {
+    .preview-position-row {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+    
+    .preview-position-number,
+    .preview-position-price,
+    .preview-position-total,
+    .preview-position-margin {
+        min-width: auto;
+        text-align: left;
+    }
+}
 </style>
 
 <div class="content-container">
@@ -113,6 +193,10 @@
                                class="{% if invalid_fields and 'margin_percent' in invalid_fields %}is-invalid{% endif %}"
                                aria-invalid="{{ 'true' if invalid_fields and 'margin_percent' in invalid_fields else 'false' }}">
                     </label>
+                    <button type="button" class="btn btn-outline btn-sm" id="previewPricesBtn" title="Предварительный расчет цен">
+                        {{ sidebar_icon('calculator')|safe }}
+                        <span>Предварительный расчет</span>
+                    </button>
                     <button type="button" class="btn btn-ghost btn-sm" id="resetFormBtn" title="Очистить черновик">
                         {{ sidebar_icon('rotate-ccw')|safe }}
                         <span>Сбросить</span>
@@ -506,23 +590,32 @@
                 <div class="selling-price-header">
                     <h3 class="selling-price-title">Предварительный расчет продажной цены</h3>
                 </div>
-                <div class="selling-price-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; padding: 1.5rem;">
-                    <div class="selling-price-metric">
-                        <span class="selling-price-label" style="font-size: 0.875rem; color: var(--muted-foreground); display: block; margin-bottom: 0.5rem;">Общая стоимость закупа</span>
-                        <span class="selling-price-value" id="previewPurchaseCost" style="font-size: 1.25rem; font-weight: 600;">125 000 ¥</span>
+                <div id="previewLoadingIndicator" class="preview-loading" style="display: none; padding: 1.5rem; text-align: center; color: var(--muted-foreground);">
+                    <span>Выполняется расчет...</span>
+                </div>
+                <div id="previewContent">
+                    <div class="selling-price-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; padding: 1.5rem;">
+                        <div class="selling-price-metric">
+                            <span class="selling-price-label" style="font-size: 0.875rem; color: var(--muted-foreground); display: block; margin-bottom: 0.5rem;">Общая стоимость закупа</span>
+                            <span class="selling-price-value" id="previewPurchaseCost" style="font-size: 1.25rem; font-weight: 600;">—</span>
+                        </div>
+                        <div class="selling-price-metric">
+                            <span class="selling-price-label" style="font-size: 0.875rem; color: var(--muted-foreground); display: block; margin-bottom: 0.5rem;">Стоимость логистики</span>
+                            <span class="selling-price-value" id="previewLogisticsCost" style="font-size: 1.25rem; font-weight: 600;">—</span>
+                        </div>
+                        <div class="selling-price-metric">
+                            <span class="selling-price-label" style="font-size: 0.875rem; color: var(--muted-foreground); display: block; margin-bottom: 0.5rem;">Сумма маржи</span>
+                            <span class="selling-price-value" id="previewMarginAmount" style="font-size: 1.25rem; font-weight: 600;">—</span>
+                            <span class="selling-price-meta" style="font-size: 0.75rem; color: var(--muted-foreground); display: block; margin-top: 0.25rem;" id="previewMarginMeta"></span>
+                        </div>
+                        <div class="selling-price-metric selling-price-final" style="background: var(--primary); color: var(--primary-foreground); padding: 1rem; border-radius: var(--radius); margin: -1rem;">
+                            <span class="selling-price-label" style="font-size: 0.875rem; opacity: 0.9; display: block; margin-bottom: 0.5rem;">ИТОГОВАЯ ПРОДАЖНАЯ ЦЕНА</span>
+                            <span class="selling-price-value" id="previewFinalPrice" style="font-size: 1.75rem; font-weight: 700;">—</span>
+                        </div>
                     </div>
-                    <div class="selling-price-metric">
-                        <span class="selling-price-label" style="font-size: 0.875rem; color: var(--muted-foreground); display: block; margin-bottom: 0.5rem;">Стоимость логистики</span>
-                        <span class="selling-price-value" id="previewLogisticsCost" style="font-size: 1.25rem; font-weight: 600;">85 000 ₽</span>
-                    </div>
-                    <div class="selling-price-metric">
-                        <span class="selling-price-label" style="font-size: 0.875rem; color: var(--muted-foreground); display: block; margin-bottom: 0.5rem;">Сумма маржи</span>
-                        <span class="selling-price-value" id="previewMarginAmount" style="font-size: 1.25rem; font-weight: 600;">37 500 ¥</span>
-                        <span class="selling-price-meta" style="font-size: 0.75rem; color: var(--muted-foreground); display: block; margin-top: 0.25rem;">(30% от закупа)</span>
-                    </div>
-                    <div class="selling-price-metric selling-price-final" style="background: var(--primary); color: var(--primary-foreground); padding: 1rem; border-radius: var(--radius); margin: -1rem;">
-                        <span class="selling-price-label" style="font-size: 0.875rem; opacity: 0.9; display: block; margin-bottom: 0.5rem;">ИТОГОВАЯ ПРОДАЖНАЯ ЦЕНА</span>
-                        <span class="selling-price-value" id="previewFinalPrice" style="font-size: 1.75rem; font-weight: 700;">162 500 ¥</span>
+                    <div id="previewPositionsTable" class="preview-positions-table" style="display: none; margin-top: 1.5rem; padding: 0 1.5rem 1.5rem;">
+                        <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 1rem; color: var(--foreground);">Цены по позициям:</h4>
+                        <div class="preview-positions-list" id="previewPositionsList"></div>
                     </div>
                 </div>
             </div>
@@ -886,6 +979,245 @@
             clearTimeout(timeout);
             timeout = setTimeout(() => fn(...args), wait);
         };
+    }
+
+    function validateFormForPreview() {
+        // Проверяем наличие хотя бы одной позиции с заполненными обязательными полями
+        const positionsContainer = document.getElementById('positionsContainer');
+        if (!positionsContainer) {
+            return { valid: false, error: 'Контейнер позиций не найден' };
+        }
+        
+        const blocks = positionsContainer.querySelectorAll('.position-block');
+        let hasValidPosition = false;
+        
+        for (const block of blocks) {
+            const costInput = block.querySelector('[data-field="cost_price"]');
+            const quantityInput = block.querySelector('.position-quantity');
+            const productInput = block.querySelector('[data-field="product"]');
+            
+            const cost = parseFloat(costInput?.value || 0);
+            const quantity = parseFloat(quantityInput?.value || 0);
+            const product = productInput?.value?.trim() || '';
+            
+            if (product && cost > 0 && quantity > 0) {
+                hasValidPosition = true;
+                break;
+            }
+        }
+        
+        if (!hasValidPosition) {
+            return { valid: false, error: 'Заполните хотя бы одну позицию с обязательными полями (наименование, стоимость закупа, количество)' };
+        }
+        
+        // Проверяем наличие логистики
+        const logisticsInput = document.getElementById('logistics');
+        const logistics = parseFloat(logisticsInput?.value || 0);
+        if (!logistics || logistics <= 0) {
+            return { valid: false, error: 'Укажите стоимость логистики' };
+        }
+        
+        // Проверяем наличие маржи
+        const marginInput = document.getElementById('margin_percent');
+        const margin = parseFloat(marginInput?.value || 0);
+        if (!marginInput || margin <= 0 || margin > 100) {
+            return { valid: false, error: 'Укажите корректную маржу (от 0 до 100%)' };
+        }
+        
+        return { valid: true };
+    }
+
+    async function performPreCalculation() {
+        const previewBtn = document.getElementById('previewPricesBtn');
+        const loadingIndicator = document.getElementById('previewLoadingIndicator');
+        const previewContent = document.getElementById('previewContent');
+        const previewPositionsTable = document.getElementById('previewPositionsTable');
+        const previewPositionsList = document.getElementById('previewPositionsList');
+        
+        if (!previewBtn || !loadingIndicator || !previewContent) return;
+        
+        // Валидация формы перед отправкой
+        const validation = validateFormForPreview();
+        if (!validation.valid) {
+            alert(validation.error);
+            return;
+        }
+        
+        // Показываем индикатор загрузки
+        previewBtn.disabled = true;
+        loadingIndicator.style.display = 'block';
+        previewContent.style.display = 'none';
+        
+        try {
+            // Собираем данные формы
+            const payload = collectFormData();
+            
+            // Преобразуем дополнительные расходы в JSON строку, если это массив
+            if (payload.form_data.additional_expenses && Array.isArray(payload.form_data.additional_expenses)) {
+                payload.form_data.additional_expenses = JSON.stringify(payload.form_data.additional_expenses);
+            }
+            
+            // Отправляем запрос
+            const response = await fetch('{{ url_for("main.preview_prices") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('input[name="csrf_token"]')?.value || ''
+                },
+                body: JSON.stringify(payload.form_data)
+            });
+            
+            // Проверяем Content-Type перед парсингом
+            const contentType = response.headers.get('content-type') || '';
+            let data;
+            
+            if (contentType.includes('application/json')) {
+                try {
+                    data = await response.json();
+                } catch (jsonError) {
+                    throw new Error('Ошибка при обработке ответа сервера. Попробуйте еще раз.');
+                }
+            } else {
+                throw new Error('Неожиданный формат ответа от сервера.');
+            }
+            
+            if (!response.ok) {
+                throw new Error(data.error || 'Ошибка при расчете цен');
+            }
+            
+            // Отображаем результаты
+            displayPreCalculationResults(data);
+            
+        } catch (error) {
+            console.error('Ошибка предварительного расчета:', error);
+            
+            // Улучшенное отображение ошибок
+            const errorMessage = error.message || 'Произошла ошибка при расчете цен';
+            
+            // Показываем ошибку в секции предварительного расчета
+            const previewContent = document.getElementById('previewContent');
+            if (previewContent) {
+                let errorDiv = document.getElementById('previewError');
+                if (!errorDiv) {
+                    errorDiv = document.createElement('div');
+                    errorDiv.id = 'previewError';
+                    errorDiv.className = 'flash flash-error';
+                    errorDiv.style.margin = '1rem 1.5rem';
+                    previewContent.insertBefore(errorDiv, previewContent.firstChild);
+                }
+                errorDiv.textContent = errorMessage;
+                errorDiv.style.display = 'block';
+                
+                // Скрываем ошибку через 5 секунд
+                setTimeout(() => {
+                    if (errorDiv) {
+                        errorDiv.style.display = 'none';
+                    }
+                }, 5000);
+            } else {
+                // Fallback на alert если секция не найдена
+                alert('Ошибка при расчете цен: ' + errorMessage);
+            }
+        } finally {
+            previewBtn.disabled = false;
+            loadingIndicator.style.display = 'none';
+            previewContent.style.display = 'block';
+        }
+    }
+    
+    function displayPreCalculationResults(data) {
+        if (!data || !data.summary) return;
+        
+        // Скрываем ошибку, если она была показана
+        const errorDiv = document.getElementById('previewError');
+        if (errorDiv) {
+            errorDiv.style.display = 'none';
+        }
+        
+        const formatCurrency = (value, currency) => {
+            return Number(value || 0).toLocaleString('ru-RU', { 
+                minimumFractionDigits: 0, 
+                maximumFractionDigits: 0 
+            }) + ' ' + currency;
+        };
+        
+        // Обновляем общие метрики
+        const previewPurchaseCost = document.getElementById('previewPurchaseCost');
+        const previewLogisticsCost = document.getElementById('previewLogisticsCost');
+        const previewMarginAmount = document.getElementById('previewMarginAmount');
+        const previewFinalPrice = document.getElementById('previewFinalPrice');
+        const previewMarginMeta = document.getElementById('previewMarginMeta');
+        
+        if (previewPurchaseCost) {
+            previewPurchaseCost.textContent = formatCurrency(data.summary.total_purchase_cost, '¥');
+        }
+        if (previewLogisticsCost) {
+            previewLogisticsCost.textContent = formatCurrency(data.summary.total_logistics_cost, '₽');
+        }
+        if (previewMarginAmount) {
+            // Рассчитываем сумму маржи: итоговая цена - стоимость закупа - логистика (в юанях) - дополнительные расходы
+            const conversionRate = data.summary.conversion_rate || 10; // курс конвертации из API
+            const logisticsInYuan = data.summary.total_logistics_cost / conversionRate;
+            const additionalExpenses = data.summary.total_additional_expenses || 0;
+            const marginValue = data.summary.total_final_price - data.summary.total_purchase_cost - logisticsInYuan - additionalExpenses;
+            previewMarginAmount.textContent = formatCurrency(marginValue, '¥');
+        }
+        if (previewFinalPrice) {
+            previewFinalPrice.textContent = formatCurrency(data.summary.total_final_price, '¥');
+        }
+        if (previewMarginMeta) {
+            previewMarginMeta.textContent = `(${data.summary.actual_margin_percent.toFixed(1)}% фактическая маржа)`;
+        }
+        
+        // Отображаем позиции
+        const previewPositionsTable = document.getElementById('previewPositionsTable');
+        const previewPositionsList = document.getElementById('previewPositionsList');
+        
+        if (previewPositionsTable && previewPositionsList && data.positions && data.positions.length > 0) {
+            previewPositionsList.innerHTML = '';
+            
+            data.positions.forEach((pos, index) => {
+                // Используем название из API вместо поиска по DOM
+                const productName = pos.product_name || `Позиция ${index + 1}`;
+                
+                // Безопасное создание элементов вместо innerHTML для предотвращения XSS
+                const row = document.createElement('div');
+                row.className = 'preview-position-row';
+                
+                const numberSpan = document.createElement('span');
+                numberSpan.className = 'preview-position-number';
+                numberSpan.textContent = index + 1;
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'preview-position-name';
+                nameSpan.textContent = productName;
+                nameSpan.title = productName;
+                
+                const priceSpan = document.createElement('span');
+                priceSpan.className = 'preview-position-price';
+                priceSpan.textContent = formatCurrency(pos.final_price, '¥') + ' / шт';
+                
+                const totalSpan = document.createElement('span');
+                totalSpan.className = 'preview-position-total';
+                totalSpan.textContent = formatCurrency(pos.total_price, '¥');
+                
+                const marginSpan = document.createElement('span');
+                marginSpan.className = 'preview-position-margin';
+                marginSpan.textContent = 'Маржа: ' + pos.margin.toFixed(1) + '%';
+                
+                row.appendChild(numberSpan);
+                row.appendChild(nameSpan);
+                row.appendChild(priceSpan);
+                row.appendChild(totalSpan);
+                row.appendChild(marginSpan);
+                
+                previewPositionsList.appendChild(row);
+            });
+            
+            previewPositionsTable.style.display = 'block';
+        } else if (previewPositionsTable) {
+            previewPositionsTable.style.display = 'none';
+        }
     }
 
     let draftDirty = false;
@@ -1964,6 +2296,30 @@
                 positionsContainer.querySelectorAll('.position-block').forEach(block => updateMarginBadge(block));
                 updateSellingPricePreview();
             });
+            
+            // Автоматическое обновление предварительного расчета при изменении маржи (с debounce)
+            let lastMarginValue = marginPercentInput.value;
+            const debouncedPreviewUpdate = debounce(() => {
+                const currentMarginValue = marginPercentInput.value;
+                // Обновляем только если значение действительно изменилось
+                if (currentMarginValue !== lastMarginValue) {
+                    lastMarginValue = currentMarginValue;
+                    const previewPositionsTable = document.getElementById('previewPositionsTable');
+                    if (previewPositionsTable && previewPositionsTable.style.display !== 'none') {
+                        performPreCalculation();
+                    }
+                }
+            }, 800); // Увеличено до 800ms для уменьшения количества запросов
+            
+            marginPercentInput.addEventListener('input', () => {
+                debouncedPreviewUpdate();
+            });
+        }
+        
+        // Обработчик кнопки "Предварительный расчет"
+        const previewPricesBtn = document.getElementById('previewPricesBtn');
+        if (previewPricesBtn) {
+            previewPricesBtn.addEventListener('click', performPreCalculation);
         }
 
         // Обновление preview при изменении логистики

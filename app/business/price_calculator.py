@@ -44,7 +44,7 @@ def calculate_selling_price(
         additional_expenses_total_yuan: Общая сумма дополнительных расходов (в юанях)
     
     Returns:
-        Продажная цена за единицу товара (в рублях)
+        Продажная цена за единицу товара (в юанях)
     
     Raises:
         ValidationError: Если quantity <= 0 или weight <= 0
@@ -115,10 +115,7 @@ def calculate_selling_price(
         additional_expenses_per_unit_yuan
     )
     
-    # Конвертируем затраты из юаней в рубли для расчета цены в рублях
-    total_cost_per_unit = total_cost_per_unit_yuan * CONVERSION_RATE
-    
-    # Расчет цены для маржи margin_percent%
+    # Расчет цены для маржи margin_percent% (цена в юанях)
     # Если используется банковская гарантия, нужно учесть её в итеративном расчете
     if use_bank_guarantee and payment_days is not None:
         # Итеративный расчет с учетом банковской гарантии
@@ -126,7 +123,7 @@ def calculate_selling_price(
         # Банковская гарантия = (выручка с НДС) * 0.03 / 365 * (delivery_time + payment_days)
         # Выручка с НДС = selling_price_per_unit * quantity * (1 + VAT_RATE)
         # Начинаем с цены без банковской гарантии
-        selling_price_per_unit = total_cost_per_unit / (1 - margin_percent / 100)
+        selling_price_per_unit = total_cost_per_unit_yuan / (1 - margin_percent / 100)
         
         # Итеративно уточняем цену с учетом банковской гарантии
         bank_guarantee_days = delivery_time + payment_days  # K15 = I15 + I16
@@ -136,7 +133,7 @@ def calculate_selling_price(
             bank_guarantee_cost_per_unit = bank_guarantee_cost / quantity
             
             # Пересчитываем цену с учетом банковской гарантии
-            total_cost_with_guarantee = total_cost_per_unit + bank_guarantee_cost_per_unit
+            total_cost_with_guarantee = total_cost_per_unit_yuan + bank_guarantee_cost_per_unit
             new_price = total_cost_with_guarantee / (1 - margin_percent / 100)
             
             # Проверяем сходимость (разница менее 0.01)
@@ -145,6 +142,6 @@ def calculate_selling_price(
             selling_price_per_unit = new_price
     else:
         # Обычный расчет без банковской гарантии
-        selling_price_per_unit = total_cost_per_unit / (1 - margin_percent / 100)
+        selling_price_per_unit = total_cost_per_unit_yuan / (1 - margin_percent / 100)
     
     return selling_price_per_unit

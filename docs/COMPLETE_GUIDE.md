@@ -37,145 +37,80 @@
 
 ## Установка и настройка
 
+Подробная инструкция по установке доступна в [SETUP.md](SETUP.md). Ниже краткое описание основных шагов.
+
 ### Требования
 
-- Python 3.9+
-- SQLite (или PostgreSQL для production)
-- Git
+- **Python**: 3.12 или выше
+- **База данных**: SQLite (по умолчанию) или PostgreSQL (для production)
+- **Redis**: Опционально, для хранения сессий (рекомендуется)
 
-### Шаг 1: Клонирование репозитория
+### Быстрый старт
 
-```bash
-git clone <repository-url>
-cd kp_generator
-```
+1. **Создайте виртуальное окружение:**
+   ```bash
+   python -m venv venv
+   # Windows PowerShell:
+   .\venv\Scripts\Activate.ps1
+   # Linux/macOS:
+   source venv/bin/activate
+   ```
 
-### Шаг 2: Создание виртуального окружения
+2. **Установите зависимости:**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-```bash
-python -m venv venv
+3. **Создайте файл `.env`:**
+   ```env
+   APP_ENV=development
+   DATABASE_URL=sqlite:///kp_generator.db
+   SECRET_KEY=your-secret-key-change-in-production
+   FLASK_RUN_HOST=0.0.0.0
+   FLASK_RUN_PORT=5000
+   ```
 
-# Windows
-venv\Scripts\activate
+4. **Примените миграции:**
+   ```bash
+   alembic upgrade head
+   ```
 
-# Linux/Mac
-source venv/bin/activate
-```
+5. **Запустите приложение:**
+   ```bash
+   python app.py
+   ```
 
-### Шаг 3: Установка зависимостей
+6. **Создайте первого пользователя:**
+   - Откройте `http://localhost:5000/profile`
+   - Зарегистрируйтесь (первый пользователь автоматически становится администратором)
 
-```bash
-pip install -r requirements.txt
-```
-
-### Шаг 4: Настройка конфигурации
-
-Создайте файл `.env` в корне проекта:
-
-```env
-# База данных
-DATABASE_URL=sqlite:///kp_generator.db
-
-# Секретный ключ (сгенерируйте случайную строку)
-SECRET_KEY=your-secret-key-here
-
-# Окружение
-FLASK_ENV=development
-FLASK_DEBUG=True
-
-# Сервер
-FLASK_RUN_HOST=0.0.0.0
-FLASK_RUN_PORT=5000
-```
-
-### Шаг 5: Инициализация базы данных
-
-```bash
-# Применение миграций
-python -m alembic upgrade head
-```
-
-### Шаг 6: Запуск приложения
-
-```bash
-# Режим разработки
-python app.py
-
-# Production режим (с Waitress)
-set USE_WAITRESS=True
-python app.py
-```
-
-Приложение будет доступно по адресу: `http://localhost:5000`
-
-### Шаг 7: Создание первого пользователя
-
-1. Откройте `http://localhost:5000/profile`
-2. Зарегистрируйтесь (первый пользователь автоматически становится администратором)
-3. Войдите в систему
+**Подробнее:** См. [SETUP.md](SETUP.md) для полной инструкции, включая настройку Redis и production развертывание.
 
 ---
 
 ## Структура проекта
 
-```
-kp_generator/
-├── app/                          # Основное приложение
-│   ├── __init__.py              # Фабрика приложения Flask
-│   ├── business/                 # Бизнес-логика
-│   │   ├── price_calculator.py  # Расчет цен
-│   │   ├── document_generator.py # Генерация документов
-│   │   └── interfaces.py        # Интерфейсы
-│   ├── core/                    # Ядро приложения
-│   │   ├── config.py           # Конфигурация
-│   │   ├── exceptions.py       # Исключения
-│   │   ├── extensions.py       # Расширения Flask
-│   │   ├── errors.py           # Обработка ошибок
-│   │   └── cache.py            # Кэширование
-│   ├── database/                # Работа с БД
-│   │   ├── database.py         # CRUD операции
-│   │   └── service.py          # Сервис БД
-│   ├── models/                  # Модели данных
-│   │   └── models.py           # SQLAlchemy модели
-│   ├── presentation/            # Представление
-│   │   ├── forms.py            # WTForms формы
-│   │   ├── helpers.py          # Вспомогательные функции
-│   │   ├── validators.py       # Валидаторы
-│   │   └── ui.py               # UI регистрация
-│   ├── routes/                  # Маршруты
-│   │   ├── main.py             # Основные маршруты
-│   │   ├── auth.py             # Авторизация
-│   │   ├── admin.py            # Админ-панель
-│   │   ├── api.py              # REST API
-│   │   ├── api_docs.py         # Swagger документация
-│   │   └── health.py           # Health check
-│   ├── services/               # Сервисы
-│   │   ├── repositories.py     # Репозитории
-│   │   ├── multi_position_calculator.py # Калькулятор позиций
-│   │   ├── generation_orchestrator.py   # Оркестратор генерации
-│   │   ├── logistics_calculator.py     # Расчет логистики
-│   │   ├── excel_importer.py           # Импорт Excel
-│   │   ├── analytics_service.py         # Аналитика
-│   │   ├── analytics_enhancements.py   # Расширенная аналитика
-│   │   ├── datasets.py                  # Справочники
-│   │   └── audit_service.py             # Аудит
-│   └── static/                  # Статические файлы
-│   └── templates/              # Шаблоны Jinja2
-├── config/                      # Конфигурационные файлы
-│   ├── settings.json           # Основные настройки
-│   ├── development.json        # Настройки разработки
-│   ├── production.json         # Настройки production
-│   └── ...                     # Справочники (JSON)
-├── migrations/                  # Миграции Alembic
-├── tests/                       # Тесты
-├── docs/                        # Документация
-├── logs/                        # Логи (создается автоматически)
-├── templates_docs/             # Шаблоны документов
-├── alembic.ini                  # Конфигурация Alembic
-├── app.py                       # Точка входа
-├── requirements.txt            # Зависимости
-└── pyproject.toml              # Настройки линтера/форматтера
-```
+Подробное описание структуры проекта доступно в [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md).
+
+### Основные директории
+
+- **`app/core/`** - Ядро приложения (конфигурация, расширения Flask, обработка ошибок)
+- **`app/models/`** - Доменные модели (UserRecord, GenerationHistoryRecord, CustomerContactRecord, AuditLogRecord)
+- **`app/database/`** - Работа с базой данных (CRUD операции, репозитории)
+- **`app/auth/`** - Аутентификация и авторизация
+- **`app/business/`** - Бизнес-логика (расчет цен, генерация документов)
+- **`app/presentation/`** - Слой представления (формы, валидаторы, UI хелперы)
+- **`app/routes/`** - Маршруты (blueprints для основных страниц, API, админ-панели)
+- **`app/services/`** - Сервисы (оркестрация генерации, аналитика, логистика, импорт)
+- **`ai_agent/`** - AI консультант для работы с данными и консультаций
+- **`config/`** - Конфигурационные файлы и справочники
+- **`migrations/`** - Миграции Alembic
+- **`templates/`** - HTML шаблоны Jinja2
+- **`templates_docs/`** - Шаблоны документов (Excel, Word)
+- **`tests/`** - Тесты
+- **`scripts/`** - Утилиты управления (пользователи, миграции)
+
+**Подробнее:** См. [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) для полного описания структуры и принципов организации.
 
 ---
 
@@ -1273,6 +1208,18 @@ print(response.json())
 
 ---
 
-**Версия документа:** 1.0  
+## Дополнительная документация
+
+- **[SETUP.md](SETUP.md)** — подробная инструкция по установке и настройке
+- **[PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)** — описание архитектуры и структуры проекта
+- **[USER_MANAGEMENT.md](USER_MANAGEMENT.md)** — управление пользователями через CLI
+- **[REDIS_SETUP.md](REDIS_SETUP.md)** — настройка Redis для сессий
+- **[AI_AGENT_SETUP.md](AI_AGENT_SETUP.md)** — настройка AI консультанта
+- **[AI_AGENT_USER_GUIDE.md](AI_AGENT_USER_GUIDE.md)** — руководство пользователя AI агента
+- **[CHANGELOG.md](CHANGELOG.md)** — журнал изменений проекта
+
+---
+
+**Версия документа:** 2.0  
 **Дата обновления:** 2025-01-15
 

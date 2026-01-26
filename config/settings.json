@@ -10,5 +10,19 @@
     "conversion_fee_rate": 0.032,
     "credit_rate": 0.16,
     "vat_rate": 0.22
+  },
+  "redis": {
+    "host": "localhost",
+    "port": 6379,
+    "password": null,
+    "db": 0,
+    "socket_timeout": 5,
+    "socket_connect_timeout": 5,
+    "retry_on_timeout": true
+  },
+  "session": {
+    "type": "redis",
+    "permanent": true,
+    "lifetime": 86400
   }
 }

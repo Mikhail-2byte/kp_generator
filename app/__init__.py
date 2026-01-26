@@ -5,6 +5,7 @@ from flask import Flask
 from app.core.config import load_config, setup_app_security, setup_logging
 from app.core.errors import register_error_handlers
 from app.core.extensions import csrf, init_db_engine, login_manager
+from app.core.redis_session import setup_redis_session
 from app.database import init_db
 from app.presentation.ui import register_ui
 from app.routes import register_blueprints
@@ -32,6 +33,16 @@ def create_app() -> Flask:
     # Настраиваем защиту, логирование и подключаем расширения к приложению
     setup_app_security(app, app_config)
     setup_logging(app, app_config)
+
+    # Настраиваем Redis сессии (с fallback на cookie-based сессии)
+    redis_session_enabled = setup_redis_session(app, app_config)
+    if not redis_session_enabled:
+        # Fallback на cookie-based сессии, если Redis недоступен
+        import os
+        session_type = os.environ.get('SESSION_TYPE', 'null')
+        if session_type != 'null':
+            app.config['SESSION_TYPE'] = session_type
+        app.logger.info('Используются cookie-based сессии (Redis недоступен)')
 
     init_db_engine(app)
     csrf.init_app(app)

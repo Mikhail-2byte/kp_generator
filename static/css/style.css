@@ -561,8 +561,9 @@ h1 {
   padding: 20px 32px 32px;
 }
 
-/* Remove padding when proposal layout is present - let it fill full width */
+/* Remove padding when proposal layout is present - let it fill full width; pin content to top */
 body[data-page="index"] .app-content {
+  padding-top: 0;
   padding-left: 0;
   padding-right: 0;
 }
@@ -5766,7 +5767,7 @@ body[data-page="index"] .proposal-form-content #positionsContainer {
 /* Общая сетка колонок для заголовка и строк — колонки ПОШЛИНА/МАРЖА % не съезжают */
 body[data-page="index"] .proposal-form-content #positionsContainer {
   display: grid;
-  grid-template-columns: 32px 1.8fr 1.8fr 1.8fr 120px 120px 120px 120px 60px 56px auto;
+  grid-template-columns: 32px 1.8fr 1.8fr 1.8fr 120px 120px 100px 100px 60px 56px auto;
   gap: 10px 8px;
   flex-direction: unset;
 }

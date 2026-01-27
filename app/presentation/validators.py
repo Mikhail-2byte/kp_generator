@@ -200,9 +200,9 @@ def validate_form_data(form_data: Dict[str, Any]) -> FormValidationResult:
         },
         'margin_percent': {
             'min': 0,
-            'max': 100,
+            'max': 200,
             'message_min': 'Маржа должна быть неотрицательной.',
-            'message_max': 'Маржа не может превышать 100%.',
+            'message_max': 'Маржа не может превышать 200%.',
         },
         'delivery_time': {
             'min': 1,

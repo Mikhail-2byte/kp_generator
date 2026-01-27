@@ -1360,23 +1360,38 @@ body[data-page="index"] .app-content {
   max-width: 140px;
 }
 
-/* Пошлина — уже остальных slim-field (маржа в заголовке позиции) */
+/* Пошлина — уже остальных slim-field */
 .parameters-row .slim-field.position-duty-field {
   flex: 0 0 60px;
   max-width: 70px;
 }
 
-/* Заголовки таблицы позиций — одна строка над всеми позициями */
+/* Маржа по позиции — между пошлиной и действиями */
+.parameters-row .slim-field.position-margin-field {
+  flex: 0 0 56px;
+  max-width: 64px;
+}
+.parameters-row .position-margin-field .position-margin-input {
+  width: 4em;
+  min-width: 4em;
+  padding: 4px 8px;
+  font-size: 13px;
+  text-align: center;
+}
+
+/* Заголовки таблицы позиций — высота и выравнивание как у строки параметров */
 .positions-table-header.parameters-row {
   align-items: center;
-  margin-bottom: 8px;
-  padding-bottom: 8px;
+  min-height: 34px;
+  margin-bottom: 4px;
+  padding-bottom: 4px;
   border-bottom: 1px solid var(--border);
 }
 .positions-table-header .positions-th,
 .positions-table-header .positions-th-cell {
   display: flex;
   align-items: center;
+  min-height: 34px;
 }
 .positions-table-header .positions-th.parameter-wide {
   flex: 1.8 1 200px;
@@ -1390,7 +1405,14 @@ body[data-page="index"] .app-content {
   flex: 0 0 60px;
   max-width: 70px;
 }
-.positions-table-header .position-number-cell.positions-th-cell,
+.positions-table-header .positions-th.slim-field.position-margin-field {
+  flex: 0 0 56px;
+  max-width: 64px;
+}
+.positions-table-header .position-number-cell.positions-th-cell {
+  flex: 0 0 32px;
+  min-width: 32px;
+}
 .positions-table-header .positions-th-cell.position-actions-cell {
   flex: 0 0 auto;
 }
@@ -1411,20 +1433,20 @@ body[data-page="index"] .app-content {
   gap: 0;
 }
 
-/* Номер позиции — простая цифра, без бейджа */
+/* Номер позиции — крупная цифра */
 .parameters-row .position-number-cell {
   flex: 0 0 32px;
   min-width: 32px;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
   padding-bottom: 2px;
 }
 .parameters-row .position-number-cell [data-role="position-number"] {
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 20px;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
-  color: var(--muted-foreground);
+  color: var(--foreground);
   line-height: 1.2;
 }
 
@@ -5736,6 +5758,37 @@ body[data-page="index"] .proposal-form-content .positions-card-body {
   min-width: 0;
   overflow-x: hidden;
   padding-right: 64px;
+}
+body[data-page="index"] .proposal-form-content #positionsContainer {
+  gap: 10px;
+}
+
+/* Общая сетка колонок для заголовка и строк — колонки ПОШЛИНА/МАРЖА % не съезжают */
+body[data-page="index"] .proposal-form-content #positionsContainer {
+  display: grid;
+  grid-template-columns: 32px 1.8fr 1.8fr 1.8fr 120px 120px 120px 120px 60px 56px auto;
+  gap: 10px 8px;
+  flex-direction: unset;
+}
+body[data-page="index"] .proposal-form-content .positions-table-header.parameters-row {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: center;
+  padding-bottom: 4px;
+  margin-bottom: 4px;
+}
+body[data-page="index"] .proposal-form-content .position-block {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  grid-template-rows: auto;
+}
+body[data-page="index"] .proposal-form-content .position-block > .parameters-row {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: center;
 }
 
 body[data-page="index"] .proposal-form-content .positions-card-header {

@@ -10,8 +10,10 @@
     const CONVERSION_RATE = 14; // 1 ¥ = 14 ₽ (should be loaded from config)
     
     // Cache DOM elements
-    let summaryTotalEl, summaryProfitEl, summaryProfitabilityEl;
-    let summaryTotalPurchaseCostEl, summaryLogisticsCostEl, summaryVATEl, summaryDutyEl, summaryMarginEl;
+    let summaryTotalEl, summaryProfitEl;
+    let summaryTotalUnitEl, summaryProfitUnitEl;
+    let summaryTotalPurchaseCostEl, summaryLogisticsCostEl, summaryDutyEl;
+    let summaryCreditEl, summaryBankGuaranteeEl;
     let summaryFinalPriceRublesEl, summaryExchangeRateEl;
     let summaryExpensesListEl;
     
@@ -20,15 +22,14 @@
         // Cache summary panel elements
         summaryTotalEl = document.getElementById('summaryTotal');
         summaryProfitEl = document.getElementById('summaryProfit');
-        summaryProfitabilityEl = document.getElementById('summaryProfitability');
         summaryTotalUnitEl = document.getElementById('summaryTotalUnit');
         summaryProfitUnitEl = document.getElementById('summaryProfitUnit');
         
         summaryTotalPurchaseCostEl = document.getElementById('summaryTotalPurchaseCost');
         summaryLogisticsCostEl = document.getElementById('summaryLogisticsCost');
-        summaryVATEl = document.getElementById('summaryVAT');
         summaryDutyEl = document.getElementById('summaryDuty');
-        summaryMarginEl = document.getElementById('summaryMargin');
+        summaryCreditEl = document.getElementById('summaryCredit');
+        summaryBankGuaranteeEl = document.getElementById('summaryBankGuarantee');
         
         summaryFinalPriceRublesEl = document.getElementById('summaryFinalPriceRubles');
         summaryExchangeRateEl = document.getElementById('summaryExchangeRate');
@@ -128,6 +129,27 @@
             // Calculate VAT (15% of margin)
             const vatAmount = marginAmount * 0.15;
             
+            // Credit and bank guarantee (after duty in breakdown)
+            const CREDIT_RATE = 0.16;
+            const deliveryTime = parseFloat(document.getElementById('delivery_time')?.value) || 0;
+            const paymentDays = 30; // из условий оплаты по умолчанию
+            const financeCreditChecked = document.querySelector('input[name="finance_credit"]')?.checked;
+            const financeBankGuaranteeChecked = document.querySelector('input[name="finance_bank_guarantee"]')?.checked;
+            const creditBankDays = deliveryTime + paymentDays;
+            
+            // Кредит и банковская гарантия — в юанях для детализации
+            let creditYuan = 0;
+            if (financeCreditChecked && creditBankDays > 0) {
+                const creditCostBase = totalPurchaseCost * (CREDIT_RATE / 365) * creditBankDays;
+                creditYuan = isCN ? creditCostBase : (creditCostBase / CONVERSION_RATE);
+            }
+            let bankGuaranteeYuan = 0;
+            if (financeBankGuaranteeChecked && creditBankDays > 0) {
+                const revenueWithVat = finalPrice;
+                const bankGuaranteeBase = revenueWithVat * (0.03 / 365) * creditBankDays;
+                bankGuaranteeYuan = isCN ? bankGuaranteeBase : (bankGuaranteeBase / CONVERSION_RATE);
+            }
+            
             // Update UI
             updateMetrics({
                 total: finalPrice + expensesInCurrency,
@@ -138,10 +160,21 @@
                 vat: vatAmount,
                 duty: totalDuty,
                 margin: marginAmount,
+                credit: creditYuan,
+                bankGuarantee: bankGuaranteeYuan,
                 finalPriceRubles: finalPriceInRubles,
                 currency: isCN ? '¥' : '₽',
                 exchangeRate: CONVERSION_RATE
             });
+            
+            // Синхронизация оценочного веса в блоке логистики
+            const totalWeightValueEl = document.getElementById('totalWeightValue');
+            if (totalWeightValueEl) {
+                const formatted = Number.isFinite(totalWeight) 
+                    ? totalWeight.toLocaleString('ru-RU', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) 
+                    : '0';
+                totalWeightValueEl.value = `${formatted} кг`;
+            }
             
             // Update expenses list in summary
             updateExpensesList(additionalExpenses, isCN);
@@ -212,10 +245,6 @@
             summaryProfitUnitEl.textContent = data.currency === '¥' ? 'юаней' : 'рублей';
         }
         
-        if (summaryProfitabilityEl) {
-            summaryProfitabilityEl.textContent = data.profitability + '%';
-        }
-        
         if (summaryTotalPurchaseCostEl) {
             summaryTotalPurchaseCostEl.textContent = formatCurrency(data.totalPurchaseCost, data.currency);
         }
@@ -224,16 +253,15 @@
             summaryLogisticsCostEl.textContent = formatCurrency(data.logistics, '₽');
         }
         
-        if (summaryVATEl) {
-            summaryVATEl.textContent = formatCurrency(data.vat, data.currency);
-        }
-        
         if (summaryDutyEl) {
             summaryDutyEl.textContent = formatCurrency(data.duty, data.currency);
         }
         
-        if (summaryMarginEl) {
-            summaryMarginEl.textContent = formatCurrency(data.margin, data.currency);
+        if (summaryCreditEl) {
+            summaryCreditEl.textContent = formatCurrency(data.credit ?? 0, '¥');
+        }
+        if (summaryBankGuaranteeEl) {
+            summaryBankGuaranteeEl.textContent = formatCurrency(data.bankGuarantee ?? 0, '¥');
         }
         
         if (summaryFinalPriceRublesEl) {
@@ -301,11 +329,14 @@
         const watchedSelectors = [
             '#margin_percent',
             '#logistics',
+            '#delivery_time',
             '[data-field="cost_price"]',
             '[data-field="quantity"]',
             '[data-field="weight"]',
             '[data-field="duty_percent"]',
-            'input[name="budget_region"]'
+            'input[name="budget_region"]',
+            'input[name="finance_credit"]',
+            'input[name="finance_bank_guarantee"]'
         ];
         
         watchedSelectors.forEach(selector => {

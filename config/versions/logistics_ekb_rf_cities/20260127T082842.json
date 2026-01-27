@@ -1,0 +1,23 @@
+{
+  "saved_at": "20260127T082842",
+  "actor": "test_user",
+  "data": {
+    "cities": [
+      {
+        "name": "Москва",
+        "region": "Московская область",
+        "distance_from_ekb_km": 1800
+      },
+      {
+        "name": "Санкт-Петербург",
+        "region": "Ленинградская область",
+        "distance_from_ekb_km": 2100
+      },
+      {
+        "name": "Город без расстояния",
+        "region": "Регион",
+        "distance_from_ekb_km": null
+      }
+    ]
+  }
+}

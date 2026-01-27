@@ -181,8 +181,22 @@
                         <p class="proposal-header-subtitle">Тендер {{ form_data.tender_number if form_data and form_data.tender_number else '' }}</p>
                     </div>
                 </div>
+                <div class="proposal-header-region">
+                    <fieldset class="field-group budget-region-selector budget-region-selector-inline">
+                        <legend class="visually-hidden">Регион бюджета</legend>
+                        <div class="budget-region-options" role="radiogroup" aria-label="Регион бюджета">
+                            <label class="budget-region-chip">
+                                <input type="radio" name="budget_region" value="cn" form="generateForm" {% if selected_budget_region == 'cn' %}checked{% endif %}>
+                                <span>¥ Китай</span>
+                            </label>
+                            <label class="budget-region-chip">
+                                <input type="radio" name="budget_region" value="ru" form="generateForm" {% if selected_budget_region == 'ru' %}checked{% endif %}>
+                                <span>₽ РФ</span>
+                            </label>
+                        </div>
+                    </fieldset>
+                </div>
                 <div class="proposal-header-actions">
-                    <input type="file" id="importExcelInput" class="visually-hidden" accept=".xlsx,.xlsm">
                     <button type="button" class="btn btn-ghost btn-sm" id="resetFormBtn" title="Очистить черновик">
                         {{ sidebar_icon('rotate-ccw')|safe }}
                         <span>Сбросить</span>
@@ -206,34 +220,6 @@
                             <h2 class="proposal-section-title">Клиент и условия</h2>
                         </div>
                         <div class="form-grid three-columns">
-                                <div class="span-3 budget-finance-row">
-                                    <fieldset class="field-group budget-region-selector">
-                                        <legend class="field-label">Регион бюджета</legend>
-                                        <div class="budget-region-options" role="radiogroup" aria-label="Регион бюджета">
-                                            <label class="budget-region-chip">
-                                                <input type="radio" name="budget_region" value="cn" {% if selected_budget_region == 'cn' %}checked{% endif %}>
-                                                <span>Бюджет в юанях (Китай)</span>
-                                            </label>
-                                            <label class="budget-region-chip">
-                                                <input type="radio" name="budget_region" value="ru" {% if selected_budget_region == 'ru' %}checked{% endif %}>
-                                                <span>Бюджет в рублях (РФ)</span>
-                                            </label>
-                                        </div>
-                                    </fieldset>
-                                    <fieldset class="field-group finance-options-selector">
-                                        <legend class="field-label">Финансирование</legend>
-                                        <div class="finance-options" role="group" aria-label="Варианты финансирования">
-                                            <label class="finance-option-chip">
-                                                <input type="checkbox" name="finance_credit" value="1" {% if finance_credit_checked %}checked{% endif %}>
-                                                <span>Кредит</span>
-                                            </label>
-                                            <label class="finance-option-chip">
-                                                <input type="checkbox" name="finance_bank_guarantee" value="1" {% if finance_bank_guarantee_checked %}checked{% endif %}>
-                                                <span>Банковская гарантия</span>
-                                            </label>
-                                        </div>
-                                    </fieldset>
-                                </div>
                     <div class="field-group">
                         <label for="company" class="field-label">Название компании</label>
                         <input type="text" id="company" name="company" required
@@ -271,21 +257,10 @@
                                value="{{ form_data.warranty_period if form_data and form_data.warranty_period else '12 месяцев со дня ввода в эксплуатацию, но не более 18 месяцев со дня поставки.' }}"
                                placeholder="12 месяцев со дня ввода в эксплуатацию, но не более 18 месяцев со дня поставки.">
                     </div>
-                    <div class="delivery-row">
+                        <div class="delivery-row">
                         <div class="field-group delivery-address-group">
                             <label for="delivery_address" class="field-label">Адрес доставки</label>
                             <textarea id="delivery_address" name="delivery_address" rows="2" placeholder="123458, город Москва, ул. Маршала Прошлякова, д. 30, офис 605">{{ form_data.delivery_address.strip() if form_data and form_data.delivery_address else '' }}</textarea>
-                        </div>
-                        <div class="field-group additional-expenses-group">
-                            <label class="field-label">Дополнительные расходы</label>
-                            <div class="expenses-content">
-                                <div class="expenses-form-row">
-                                    <input type="text" id="expenseName" class="expense-name-input" placeholder="Название расхода">
-                                    <input type="number" id="expenseAmount" class="expense-amount-input" placeholder="Сумма" min="0" step="0.01">
-                                    <button type="button" class="btn btn-sm btn-primary" onclick="addExpense()">Добавить</button>
-                                </div>
-                                <div class="expenses-list" id="expensesList"></div>
-                            </div>
                         </div>
                     </div>
                             </div>
@@ -304,7 +279,6 @@
                         <div class="field-group logistics-panel">
                                 <div class="logistics-controls-row">
                                     <div class="logistics-toggle-group">
-                                        <label class="field-label">Тип расчета</label>
                                         <div class="toggle-row">
                                             <div class="toggle-group" role="group" aria-label="Тип расчета">
                                                 <input type="radio" id="mainWeight" name="mainCalcType" value="weight" checked>
@@ -409,10 +383,10 @@
 
                     <!-- Section: Products -->
                     <section class="proposal-section">
-                        <div class="proposal-section-header">
+                        <div class="proposal-section-header proposal-section-header-products">
                             <div class="proposal-section-icon">{{ sidebar_icon('package')|safe }}</div>
                             <h2 class="proposal-section-title">Товары и услуги</h2>
-                            <div class="proposal-section-actions">
+                            <div class="proposal-section-header-actions">
                                 <input type="file" id="importExcelInput" class="visually-hidden" accept=".xlsx,.xlsm">
                                 <button type="button" class="btn btn-outline btn-sm" id="importExcelBtn">
                                     {{ sidebar_icon('file-text')|safe }}
@@ -420,170 +394,164 @@
                                 </button>
                             </div>
                         </div>
-                            <div class="positions-card-header">
-                                <h3 class="positions-card-title">Позиции</h3>
-                                <button type="button" class="btn btn-secondary add-position-btn" id="addPositionBtn">
-                                    {{ sidebar_icon('plus')|safe }}
-                                    <span>Добавить позицию</span>
-                                </button>
-                            </div>
                 <div class="positions-card-body" id="positionsContainer">
+                    <div class="positions-table-header parameters-row" role="row" aria-hidden="true">
+                        <div class="position-number-cell positions-th-cell"><span>№</span></div>
+                        <div class="positions-th parameter-wide"><span>НАИМЕНОВАНИЕ</span></div>
+                        <div class="positions-th parameter-wide"><span>НОМЕР ЧЕРТЕЖА</span></div>
+                        <div class="positions-th parameter-wide"><span>МАТЕРИАЛ</span></div>
+                        <div class="positions-th slim-field"><span>СУММА ЗАКУПА</span></div>
+                        <div class="positions-th slim-field"><span>ЦЕНА ЗА КГ</span></div>
+                        <div class="positions-th slim-field"><span>КОЛ-ВО</span></div>
+                        <div class="positions-th slim-field"><span>ВЕС (КГ)</span></div>
+                        <div class="positions-th slim-field position-duty-field"><span>ПОШЛИНА</span></div>
+                        <div class="position-actions-cell positions-th-cell"><span aria-hidden="true"></span></div>
+                    </div>
                     <div class="position-block" data-position="1">
                         <div class="position-header">
-                            <div class="position-label">Позиция <span data-role="position-number">1</span></div>
-                            <span class="margin-status-badge margin-status-global" data-role="margin-badge" style="padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); font-size: 0.85rem; background: var(--muted); color: var(--muted-foreground);">Используется общая маржа</span>
-                            <button type="button" class="btn btn-ghost btn-xs remove-position-btn" data-role="remove-position" title="Удалить позицию" disabled>
-                                {{ sidebar_icon('trash2')|safe }}
-                                <span class="visually-hidden">Удалить позицию</span>
-                            </button>
+                            <div class="position-header-margin-slot" data-role="margin-slot" data-use-personal-margin="false">
+                                <button type="button" class="btn btn-ghost btn-xs margin-use-individual-trigger" data-role="margin-use-individual" title="Включить индивидуальную маржу">Использовать персональную маржу</button>
+                                <div class="position-margin-inline" data-role="margin-input-wrap" hidden>
+                                    <input type="number" id="position_margin" name="position_margin" data-field="position_margin" min="0" max="100" step="0.1" value="{{ form_data.position_margin if form_data and form_data.position_margin else '' }}" placeholder="%" class="position-margin-input" style="background: var(--input); width: 4em;">
+                                </div>
+                            </div>
                         </div>
                         <div class="parameters-row">
-                            <div class="field-group parameter-wide">
-                                <label for="product" class="field-label" data-label-for="product">Наименование товара</label>
+                            <div class="position-number-cell" data-role="position-number-wrap" aria-hidden="true"><span data-role="position-number">1</span></div>
+                            <div class="field-group parameter-wide position-input-cell">
                                 <input type="text" id="product" name="product" data-field="product" required
                                 value="{{ form_data.product if form_data and form_data.product else '' }}"
                                 class="{% if invalid_fields and 'product' in invalid_fields %}is-invalid{% endif %}"
+                                aria-label="Наименование товара"
                                 aria-invalid="{{ 'true' if invalid_fields and 'product' in invalid_fields else 'false' }}">
                             </div>
-                            <div class="field-group parameter-wide drawing-field">
-                                <label for="drawing_number" class="field-label" data-label-for="drawing_number">
-                                    Номер чертежа
-                                    <button type="button" class="drawing-alert" data-role="drawing-alert" hidden title="Показать найденные бюджеты">
-                                        <span aria-hidden="true">!</span>
-                                        <span class="visually-hidden">Найдены ранее созданные бюджеты с этим номером чертежа</span>
-                                    </button>
-                                </label>
+                            <div class="field-group parameter-wide drawing-field position-input-cell">
                                 <input type="text" id="drawing_number" name="drawing_number" data-field="drawing_number"
-                                value="{{ form_data.drawing_number if form_data and form_data.drawing_number else '' }}">
+                                value="{{ form_data.drawing_number if form_data and form_data.drawing_number else '' }}"
+                                aria-label="Номер чертежа">
+                                <button type="button" class="drawing-alert" data-role="drawing-alert" hidden title="Показать найденные бюджеты" aria-label="Найдены ранее созданные бюджеты с этим номером чертежа">
+                                    <span aria-hidden="true">!</span>
+                                </button>
                             </div>
-                            <div class="field-group parameter-wide">
-                                <label for="material" class="field-label" data-label-for="material">Материал</label>
+                            <div class="field-group parameter-wide position-input-cell">
                                 <input type="text" id="material" name="material" data-field="material"
-                                value="{{ form_data.material if form_data and form_data.material else '' }}">
+                                value="{{ form_data.material if form_data and form_data.material else '' }}"
+                                aria-label="Материал">
                             </div>
-                            <div class="field-group slim-field">
-                                <label for="cost_price" class="field-label" data-label-for="cost_price">Сумма закупа</label>
+                            <div class="field-group slim-field position-input-cell">
                                 <input type="number" id="cost_price" name="cost_price" data-field="cost_price" min="0" step="0.01" required
                                 value="{{ form_data.cost_price if form_data and form_data.cost_price else '' }}"
                                 class="{% if invalid_fields and 'cost_price' in invalid_fields %}is-invalid{% endif %}"
+                                aria-label="Сумма закупа"
                                 aria-invalid="{{ 'true' if invalid_fields and 'cost_price' in invalid_fields else 'false' }}">
                             </div>
-                            <div class="field-group slim-field">
-                                <label for="cost_price_per_kg" class="field-label" data-label-for="cost_price_per_kg">Цена за кг</label>
+                            <div class="field-group slim-field position-input-cell">
                                 <div class="price-input-wrapper">
                                     <input type="number" id="cost_price_per_kg" name="cost_price_per_kg" data-field="cost_price_per_kg" min="0" step="0.01"
                                     value="{{ form_data.cost_price_per_kg if form_data and form_data.cost_price_per_kg else '' }}"
                                     class="{% if invalid_fields and 'cost_price_per_kg' in invalid_fields %}is-invalid{% endif %}"
+                                    aria-label="Цена за кг"
                                     aria-invalid="{{ 'true' if invalid_fields and 'cost_price_per_kg' in invalid_fields else 'false' }}">
                                     <span class="price-icon" aria-hidden="true">¥/кг</span>
                                 </div>
                             </div>
-                            <div class="field-group slim-field">
-                                <label for="quantity" class="field-label" data-label-for="quantity">Количество, шт.</label>
+                            <div class="field-group slim-field position-input-cell">
                                 <input type="number" id="quantity" name="quantity" data-field="quantity" min="1" step="1" required
                                 value="{{ form_data.quantity if form_data and form_data.quantity else '' }}"
                                 class="position-quantity{% if invalid_fields and 'quantity' in invalid_fields %} is-invalid{% endif %}"
+                                aria-label="Количество, шт."
                                 aria-invalid="{{ 'true' if invalid_fields and 'quantity' in invalid_fields else 'false' }}">
                             </div>
-                            <div class="field-group slim-field">
-                                <label for="weight" class="field-label" data-label-for="weight">Вес за шт. (кг)</label>
+                            <div class="field-group slim-field position-input-cell">
                                 <div class="weight-input-wrapper">
                                     <input type="number" id="weight" name="weight" data-field="weight" min="0" step="0.01" required
                                     value="{{ form_data.weight if form_data and form_data.weight else '' }}"
                                     class="position-weight{% if invalid_fields and 'weight' in invalid_fields %} is-invalid{% endif %}"
+                                    aria-label="Вес за шт. (кг)"
                                     aria-invalid="{{ 'true' if invalid_fields and 'weight' in invalid_fields else 'false' }}">
                                     <span class="weight-icon" aria-hidden="true">
-                                        <img src="{{ url_for('static', filename='images/weight-icon.png') }}" alt="Вес" width="16" height="16">
+                                        <img src="{{ url_for('static', filename='images/weight-icon.png') }}" alt="" width="16" height="16">
                                     </span>
                                 </div>
                             </div>
-                            <div class="field-group slim-field">
-                                <label for="duty_percent" class="field-label" data-label-for="duty_percent">Пошлина (%)</label>
+                            <div class="field-group slim-field position-duty-field position-input-cell">
                                 <input type="number" id="duty_percent" name="duty_percent" data-field="duty_percent" min="0" max="100" step="0.1"
                                 value="{{ form_data.duty_percent if form_data and form_data.duty_percent else '0' }}"
                                 class="position-duty{% if invalid_fields and 'duty_percent' in invalid_fields %} is-invalid{% endif %}"
+                                aria-label="Пошлина, %"
                                 aria-invalid="{{ 'true' if invalid_fields and 'duty_percent' in invalid_fields else 'false' }}">
                             </div>
-                            <div class="field-group slim-field position-margin-field">
-                                <label for="position_margin" class="field-label" data-label-for="position_margin">Маржа, %</label>
-                                <input type="number" id="position_margin" name="position_margin" data-field="position_margin" min="0" max="100" step="0.1"
-                                value="{{ form_data.position_margin if form_data and form_data.position_margin else '' }}"
-                                placeholder="Общая (30%)"
-                                class="position-margin-input"
-                                style="background: var(--input);">
-                                <p class="form-helper margin-override-hint" data-role="margin-hint" style="display: none; color: var(--primary); font-size: 0.75rem; margin-top: 0.25rem;">✓ Переопределяет общую маржу</p>
+                            <div class="position-actions-cell">
+                                <button type="button" class="btn btn-ghost btn-xs remove-position-btn" data-role="remove-position" title="Удалить позицию" disabled>
+                                    {{ sidebar_icon('trash2')|safe }}
+                                    <span class="visually-hidden">Удалить позицию</span>
+                                </button>
                             </div>
                         </div>
                     </div>
                     <template id="positionTemplate">
                         <div class="position-block" data-position>
                             <div class="position-header">
-                                <div class="position-label">Позиция <span data-role="position-number"></span></div>
-                                <span class="margin-status-badge margin-status-global" data-role="margin-badge" style="padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); font-size: 0.85rem; background: var(--muted); color: var(--muted-foreground);">Используется общая маржа</span>
-                                <button type="button" class="btn btn-ghost btn-xs remove-position-btn" data-role="remove-position" title="Удалить позицию">
-                                    {{ sidebar_icon('trash2')|safe }}
-                                    <span class="visually-hidden">Удалить позицию</span>
-                                </button>
+                                <div class="position-header-margin-slot" data-role="margin-slot" data-use-personal-margin="false">
+                                    <button type="button" class="btn btn-ghost btn-xs margin-use-individual-trigger" data-role="margin-use-individual" title="Включить индивидуальную маржу">Использовать персональную маржу</button>
+                                    <div class="position-margin-inline" data-role="margin-input-wrap" hidden>
+                                        <input type="number" data-field="position_margin" name="position_margin" min="0" max="100" step="0.1" placeholder="%" class="position-margin-input" style="background: var(--input); width: 4em;">
+                                    </div>
+                                </div>
                             </div>
                             <div class="parameters-row">
-                                <div class="field-group parameter-wide">
-                                    <label class="field-label" data-label-for="product">Наименование товара</label>
-                                    <input type="text" data-field="product" required>
+                                <div class="position-number-cell" data-role="position-number-wrap" aria-hidden="true"><span data-role="position-number"></span></div>
+                                <div class="field-group parameter-wide position-input-cell">
+                                    <input type="text" data-field="product" required aria-label="Наименование товара">
                                 </div>
-                                <div class="field-group parameter-wide drawing-field">
-                                    <label class="field-label" data-label-for="drawing_number">
-                                        Номер чертежа
-                                        <button type="button" class="drawing-alert" data-role="drawing-alert" hidden title="Показать найденные бюджеты">
-                                            <span aria-hidden="true">!</span>
-                                            <span class="visually-hidden">Найдены ранее созданные бюджеты с этим номером чертежа</span>
-                                        </button>
-                                    </label>
-                                    <input type="text" data-field="drawing_number">
+                                <div class="field-group parameter-wide drawing-field position-input-cell">
+                                    <input type="text" data-field="drawing_number" aria-label="Номер чертежа">
+                                    <button type="button" class="drawing-alert" data-role="drawing-alert" hidden title="Показать найденные бюджеты" aria-label="Найдены ранее созданные бюджеты с этим номером чертежа">
+                                        <span aria-hidden="true">!</span>
+                                    </button>
                                 </div>
-                                <div class="field-group parameter-wide">
-                                    <label class="field-label" data-label-for="material">Материал</label>
-                                    <input type="text" data-field="material">
+                                <div class="field-group parameter-wide position-input-cell">
+                                    <input type="text" data-field="material" aria-label="Материал">
                                 </div>
-                                <div class="field-group slim-field">
-                                    <label class="field-label" data-label-for="cost_price">Сумма закупа</label>
-                                    <input type="number" data-field="cost_price" min="0" step="0.01" required>
+                                <div class="field-group slim-field position-input-cell">
+                                    <input type="number" data-field="cost_price" min="0" step="0.01" required aria-label="Сумма закупа">
                                 </div>
-                                <div class="field-group slim-field">
-                                    <label class="field-label" data-label-for="cost_price_per_kg">Цена за кг</label>
+                                <div class="field-group slim-field position-input-cell">
                                     <div class="price-input-wrapper">
-                                        <input type="number" data-field="cost_price_per_kg" min="0" step="0.01">
+                                        <input type="number" data-field="cost_price_per_kg" min="0" step="0.01" aria-label="Цена за кг">
                                         <span class="price-icon" aria-hidden="true">¥/кг</span>
                                     </div>
                                 </div>
-                                <div class="field-group slim-field">
-                                    <label class="field-label" data-label-for="quantity">Количество, шт.</label>
-                                    <input type="number" data-field="quantity" min="1" step="1" required class="position-quantity">
+                                <div class="field-group slim-field position-input-cell">
+                                    <input type="number" data-field="quantity" min="1" step="1" required class="position-quantity" aria-label="Количество, шт.">
                                 </div>
-                                <div class="field-group slim-field">
-                                    <label class="field-label" data-label-for="weight">Вес за шт. (кг)</label>
+                                <div class="field-group slim-field position-input-cell">
                                     <div class="weight-input-wrapper">
-                                        <input type="number" data-field="weight" min="0" step="0.01" required class="position-weight">
+                                        <input type="number" data-field="weight" min="0" step="0.01" required class="position-weight" aria-label="Вес за шт. (кг)">
                                         <span class="weight-icon" aria-hidden="true">
-                                            <img src="{{ url_for('static', filename='images/weight-icon.png') }}" alt="Вес" width="16" height="16">
+                                            <img src="{{ url_for('static', filename='images/weight-icon.png') }}" alt="" width="16" height="16">
                                         </span>
                                     </div>
                                 </div>
-                                <div class="field-group slim-field">
-                                    <label class="field-label" data-label-for="duty_percent">Пошлина (%)</label>
-                                    <input type="number" data-field="duty_percent" min="0" max="100" step="0.1" class="position-duty" value="0">
+                                <div class="field-group slim-field position-duty-field position-input-cell">
+                                    <input type="number" data-field="duty_percent" min="0" max="100" step="0.1" class="position-duty" value="0" aria-label="Пошлина, %">
                                 </div>
-                                <div class="field-group slim-field position-margin-field">
-                                    <label class="field-label" data-label-for="position_margin">Маржа, %</label>
-                                    <input type="number" data-field="position_margin" min="0" max="100" step="0.1"
-                                    placeholder="Общая (30%)"
-                                    class="position-margin-input"
-                                    style="background: var(--input);">
-                                    <p class="form-helper margin-override-hint" data-role="margin-hint" style="display: none; color: var(--primary); font-size: 0.75rem; margin-top: 0.25rem;">✓ Переопределяет общую маржу</p>
+                                <div class="position-actions-cell">
+                                    <button type="button" class="btn btn-ghost btn-xs remove-position-btn" data-role="remove-position" title="Удалить позицию">
+                                        {{ sidebar_icon('trash2')|safe }}
+                                        <span class="visually-hidden">Удалить позицию</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </template>
                 </div>
+                        <div class="positions-add-footer">
+                            <button type="button" class="btn btn-secondary add-position-btn positions-add-btn" id="addPositionBtn">
+                                {{ sidebar_icon('plus')|safe }}
+                                <span>Добавить позицию</span>
+                            </button>
+                        </div>
         </section>
 
         <!-- Separator -->
@@ -627,7 +595,7 @@
                 <!-- Final Price in Rubles -->
                 <div class="summary-final-price-rubles">
                     <div class="final-price-rubles-content">
-                        <span class="final-price-rubles-label">Итоговая продажная цена</span>
+                        <span class="final-price-rubles-label">Итоговая цена</span>
                         <span class="final-price-rubles-value" id="summaryFinalPriceRubles">0 ₽</span>
                     </div>
                 </div>
@@ -647,8 +615,16 @@
                     <h4 class="summary-breakdown-title">Детализация</h4>
                     <div class="breakdown-list">
                         <div class="breakdown-item">
-                            <span class="breakdown-label">Общая цена закупа</span>
-                            <span class="breakdown-value" id="summaryTotalPurchaseCost">0 ¥</span>
+                            <span class="breakdown-label">Позиций</span>
+                            <span class="breakdown-value" id="summaryTotalItems">0</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">Вес</span>
+                            <span class="breakdown-value" id="summaryTotalWeight">0 кг</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">Закуп</span>
+                            <span class="breakdown-value" id="summaryTotalCost">0 ¥</span>
                         </div>
                         <div class="breakdown-item">
                             <span class="breakdown-label">Логистика</span>
@@ -657,6 +633,14 @@
                         <div class="breakdown-item">
                             <span class="breakdown-label">Пошлина</span>
                             <span class="breakdown-value" id="summaryDuty">0 ¥</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">Кредит</span>
+                            <span class="breakdown-value" id="summaryCredit">0 ¥</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">Банковская гарантия</span>
+                            <span class="breakdown-value" id="summaryBankGuarantee">0 ¥</span>
                         </div>
                     </div>
                 </div>
@@ -669,11 +653,11 @@
                     <h4 class="summary-financing-title">Финансирование</h4>
                     <div class="financing-options">
                         <label class="financing-checkbox">
-                            <input type="checkbox" name="finance_credit" value="1" {% if finance_credit_checked %}checked{% endif %}>
+                            <input type="checkbox" name="finance_credit" value="1" form="generateForm" {% if finance_credit_checked %}checked{% endif %}>
                             <span>Кредит</span>
                         </label>
                         <label class="financing-checkbox">
-                            <input type="checkbox" name="finance_bank_guarantee" value="1" {% if finance_bank_guarantee_checked %}checked{% endif %}>
+                            <input type="checkbox" name="finance_bank_guarantee" value="1" form="generateForm" {% if finance_bank_guarantee_checked %}checked{% endif %}>
                             <span>Банковская гарантия</span>
                         </label>
                     </div>
@@ -682,13 +666,18 @@
                 <!-- Separator -->
                 <div class="summary-separator"></div>
                 
-                <!-- Additional Expenses -->
+                <!-- Additional Expenses (единственное место: форма добавления и список в правой панели) -->
                 <div class="summary-additional-expenses">
                     <h4 class="summary-expenses-title">Дополнительные расходы</h4>
-                    <button type="button" class="btn btn-outline btn-sm btn-add-expense" onclick="addExpense()">
-                        {{ sidebar_icon('plus')|safe }}
-                        <span>Добавить расход</span>
-                    </button>
+                    <div class="expenses-form-row">
+                        <input type="text" id="expenseName" class="expense-name-input" placeholder="Название расхода">
+                        <input type="number" id="expenseAmount" class="expense-amount-input" placeholder="Сумма" min="0" step="0.01">
+                        <button type="button" class="btn btn-outline btn-sm btn-add-expense" onclick="addExpense()">
+                            {{ sidebar_icon('plus')|safe }}
+                            <span>Добавить расход</span>
+                        </button>
+                    </div>
+                    <div class="expenses-list" id="expensesList" aria-hidden="true" hidden></div>
                     <div class="expenses-list-summary" id="summaryExpensesList"></div>
                 </div>
             </div>
@@ -698,12 +687,12 @@
                 <div class="summary-margin-control">
                     <label for="margin_percent" class="summary-margin-field">
                         <span class="summary-margin-label">Итоговая маржа</span>
-                        <input type="number" id="margin_percent" name="margin_percent" min="0" max="100" step="0.1" required
+                        <input type="number" id="margin_percent" name="margin_percent" form="generateForm" min="0" max="100" step="0.1" required
                                value="{{ form_data.margin_percent if form_data and form_data.margin_percent else '30' }}"
                                class="summary-margin-input {% if invalid_fields and 'margin_percent' in invalid_fields %}is-invalid{% endif %}"
                                aria-invalid="{{ 'true' if invalid_fields and 'margin_percent' in invalid_fields else 'false' }}">
                     </label>
-                    <input type="hidden" id="useCommonMargin" checked>
+                    <input type="checkbox" id="useCommonMargin" checked class="visually-hidden" aria-hidden="true">
                 </div>
                 <button type="button" class="btn btn-primary" id="summaryPreviewBtn">
                     {{ sidebar_icon('calculator')|safe }}
@@ -860,16 +849,17 @@
             if (logisticsInput) logisticsInput.value = '';
 
             // Сбрасываем радио-кнопки региона бюджета
-            const budgetRegionCn = form.querySelector('input[name="budget_region"][value="cn"]');
-            const budgetRegionRu = form.querySelector('input[name="budget_region"][value="ru"]');
+            // Регион бюджета — в шапке, вне формы
+            const budgetRegionCn = document.querySelector('input[name="budget_region"][value="cn"]');
+            const budgetRegionRu = document.querySelector('input[name="budget_region"][value="ru"]');
             if (budgetRegionCn) budgetRegionCn.checked = true;
             if (budgetRegionRu) budgetRegionRu.checked = false;
 
-            // Сбрасываем чекбоксы финансирования
-            const financeCredit = form.querySelector('input[name="finance_credit"]');
+            // Сбрасываем чекбоксы финансирования (в summary-панели, вне формы)
+            const financeCredit = document.querySelector('input[name="finance_credit"]');
             if (financeCredit) financeCredit.checked = true;
 
-            const financeBankGuarantee = form.querySelector('input[name="finance_bank_guarantee"]');
+            const financeBankGuarantee = document.querySelector('input[name="finance_bank_guarantee"]');
             if (financeBankGuarantee) financeBankGuarantee.checked = false;
 
             // Сбрасываем радио-кнопки типа транспорта
@@ -1018,6 +1008,14 @@
                 data[name] = el.value;
             }
         });
+
+        // Регион бюджета и финансирование — в шапке/summary, вне формы
+        const budgetRegionChecked = document.querySelector('input[name="budget_region"]:checked');
+        if (budgetRegionChecked) data.budget_region = budgetRegionChecked.value;
+        const financeCreditEl = document.querySelector('input[name="finance_credit"]');
+        const financeBankGuaranteeEl = document.querySelector('input[name="finance_bank_guarantee"]');
+        if (financeCreditEl) data.finance_credit = financeCreditEl.checked ? (financeCreditEl.value || '1') : '';
+        if (financeBankGuaranteeEl) data.finance_bank_guarantee = financeBankGuaranteeEl.checked ? (financeBankGuaranteeEl.value || '1') : '';
 
         // Динамические позиции
         const positions = [];
@@ -1326,7 +1324,7 @@
         await saveDraft();
     }, 2000);
 
-    document.addEventListener('DOMContentLoaded', function() {
+    function initFormHandlers() {
         const form = document.getElementById('generateForm');
         if (!form) {
             return;
@@ -1928,14 +1926,15 @@
         const updateWeight = () => {
             let total = 0;
             let totalCost = 0;
-            const positionBlocks = form.querySelectorAll('.position-block');
+            const container = positionsContainer || form;
+            const positionBlocks = container ? container.querySelectorAll('.position-block') : [];
             
             // Проверяем необходимость автоматического переключения на трал
             if (positionBlocks.length === 1) {
                 const firstBlock = positionBlocks[0];
                 if (firstBlock) {
-                    const weightInput = firstBlock.querySelector('.position-weight');
-                    const quantityInput = firstBlock.querySelector('.position-quantity');
+                    const weightInput = firstBlock.querySelector('.position-weight') || firstBlock.querySelector('[data-field="weight"]');
+                    const quantityInput = firstBlock.querySelector('.position-quantity') || firstBlock.querySelector('[data-field="quantity"]');
                     const weightPerUnit = parseFloat(weightInput?.value || 0);
                     const quantity = parseFloat(quantityInput?.value || 0);
                     
@@ -1950,8 +1949,10 @@
             }
             
             positionBlocks.forEach(block => {
-                const qty = parseFloat(block.querySelector('.position-quantity')?.value) || 0;
-                const weight = parseFloat(block.querySelector('.position-weight')?.value) || 0;
+                const qtyEl = block.querySelector('.position-quantity') || block.querySelector('[data-field="quantity"]');
+                const weightEl = block.querySelector('.position-weight') || block.querySelector('[data-field="weight"]');
+                const qty = parseFloat(qtyEl?.value || 0) || 0;
+                const weight = parseFloat(weightEl?.value || 0) || 0;
                 total += qty * weight;
                 const costInput = block.querySelector('[data-field="cost_price"]');
                 const rawCost = (costInput?.value || '').replace(/\s+/g, '').replace(',', '.');
@@ -1961,7 +1962,10 @@
                 }
             });
             const formatted = formatWeight(total);
-            weightOutputField.value = `${formatted} кг`;
+            const totalWeightEl = document.getElementById('totalWeightValue');
+            if (totalWeightEl) {
+                totalWeightEl.value = `${formatted} кг`;
+            }
             if (summaryTotalWeight) {
                 summaryTotalWeight.textContent = `${formatted} кг`;
             }
@@ -2192,9 +2196,9 @@
         const updateMarginBadge = (block) => {
             const marginInput = block.querySelector('[data-field="position_margin"]');
             const badge = block.querySelector('[data-role="margin-badge"]');
+            if (!badge) return;
             const marginPercentInput = document.getElementById('margin_percent');
-            
-            if (!badge || !marginInput) return;
+            if (!marginInput) return;
             
             const positionMargin = parseFloat(marginInput.value) || 0;
             const globalMargin = parseFloat(marginPercentInput?.value) || 30;
@@ -2400,6 +2404,7 @@
                 registerPositionBlock(newBlock, true);
                 updateWeight();
                 refreshLogisticsValue();
+                if (typeof window.__kpUpdateMarginSlots === 'function') window.__kpUpdateMarginSlots();
             });
         }
 
@@ -2426,6 +2431,21 @@
             const initialBlocks = positionsContainer.querySelectorAll('.position-block');
             initialBlocks.forEach(block => registerPositionBlock(block, false));
             reindexPositions();
+
+            // Прямая привязка к контейнеру позиций: при вводе в количество/вес сразу обновлять «Оценочный вес»
+            positionsContainer.addEventListener('input', function(e) {
+                const t = e.target;
+                if (t && (t.matches('[data-field="quantity"], [data-field="weight"]') || t.matches('.position-quantity, .position-weight'))) {
+                    updateWeight();
+                    refreshLogisticsValue();
+                }
+            });
+            positionsContainer.addEventListener('change', function(e) {
+                const t = e.target;
+                if (t && (t.matches('[data-field="quantity"], [data-field="weight"]') || t.matches('.position-quantity, .position-weight'))) {
+                    updateWeight();
+                }
+            });
         }
 
         form.querySelectorAll(requiredSelector).forEach(field => attachValidation(field));
@@ -2468,16 +2488,34 @@
             logisticsInput.addEventListener('input', updateSellingPricePreview);
         }
 
-        // Обновление preview при изменении стоимости позиций
+        // Обновление при изменении полей позиций: закуп, количество, вес — чтобы «Оценочный вес» и сводка обновлялись
         form.addEventListener('input', (e) => {
-            if (e.target.matches('[data-field="cost_price"]')) {
+            const t = e.target;
+            if (t.matches('[data-field="cost_price"]')) {
+                updateWeight();
                 updateSellingPricePreview();
+            } else if (t.matches('[data-field="quantity"], [data-field="weight"], .position-quantity, .position-weight')) {
+                updateWeight();
+                refreshLogisticsValue();
+                if (t.matches('[data-field="quantity"], .position-quantity')) {
+                    updateSellingPricePreview();
+                }
+            }
+        });
+        form.addEventListener('change', (e) => {
+            const t = e.target;
+            if (t.matches('[data-field="quantity"], [data-field="weight"], .position-quantity, .position-weight')) {
+                updateWeight();
             }
         });
 
         updateWeight();
         updateLogisticsSummary();
         updateSellingPricePreview();
+
+        // Expose for summary-panel watcher (second DOMContentLoaded)
+        window.__kpUpdateWeight = updateWeight;
+        window.__kpUpdateSummaryStats = updateSummaryStats;
 
         const applyImportedPositions = (positions) => {
             if (!positionsContainer || !Array.isArray(positions) || !positions.length) {
@@ -2515,6 +2553,7 @@
             reindexPositions();
             updateWeight();
             refreshLogisticsValue();
+            if (typeof window.__kpUpdateMarginSlots === 'function') window.__kpUpdateMarginSlots();
         };
 
         
@@ -3364,22 +3403,18 @@
             return true;
         }
 
-        function showFieldError(field, message) {
+        function showFieldError(field, _message) {
             field.classList.add('is-invalid');
-            let feedback = field.nextElementSibling;
-            if (!feedback || !feedback.classList.contains('field-error')) {
-                feedback = document.createElement('div');
-                feedback.className = 'field-error';
-                field.parentNode.appendChild(feedback);
-            }
-            feedback.textContent = message;
+            field.setAttribute('aria-invalid', 'true');
+            /* Текст «Это поле обязательно…» не показываем — только красная подсветка ячейки */
         }
 
         function clearFieldError(field) {
             field.classList.remove('is-invalid');
+            field.setAttribute('aria-invalid', 'false');
             const feedback = field.nextElementSibling;
             if (feedback && feedback.classList.contains('field-error')) {
-                feedback.textContent = '';
+                feedback.remove();
             }
         }
 
@@ -3488,6 +3523,15 @@
             }
         });
 
+        // Явная отправка по клику: кнопка вне формы (form="generateForm"),
+        // в части сред нативный submit не срабатывает — вызываем requestSubmit().
+        if (generateBtn && typeof form.requestSubmit === 'function') {
+            generateBtn.addEventListener('click', function(ev) {
+                ev.preventDefault();
+                form.requestSubmit();
+            });
+        }
+
         const firstField = form.querySelector('input:not([type="hidden"])');
         if (firstField) {
             firstField.focus();
@@ -3582,6 +3626,7 @@
                 reindexPositions();
                 updateWeight();
                 refreshLogisticsValue();
+                if (typeof window.__kpUpdateMarginSlots === 'function') window.__kpUpdateMarginSlots();
 
                 if (Array.isArray(formData._invalid_fields)) {
                     highlightInvalidFields(formData._invalid_fields);
@@ -3595,7 +3640,13 @@
 
         // Запускаем обработку данных после загрузки DOM
         processFormData();
-    });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initFormHandlers);
+    } else {
+        initFormHandlers();
+    }
 
     // ============================================
     // Additional Expenses Management (UI only)
@@ -3741,10 +3792,14 @@
         // Link summary panel buttons to existing functions
         const summaryPreviewBtn = document.getElementById('summaryPreviewBtn');
         const previewPricesBtn = document.getElementById('previewPricesBtn');
-        if (summaryPreviewBtn && previewPricesBtn) {
+        if (summaryPreviewBtn) {
             summaryPreviewBtn.addEventListener('click', function(e) {
                 e.preventDefault();
-                previewPricesBtn.click();
+                if (previewPricesBtn) {
+                    previewPricesBtn.click();
+                } else {
+                    performPreCalculation();
+                }
             });
         }
         
@@ -3807,56 +3862,67 @@
             });
         });
         
-        // Common margin switch functionality
-        const useCommonMarginCheckbox = document.getElementById('useCommonMargin');
-        const commonMarginInputGroup = document.getElementById('commonMarginInputGroup');
-        const marginInputs = document.querySelectorAll('.position-margin-input');
-        
-        if (useCommonMarginCheckbox && commonMarginInputGroup) {
-            const updateMarginFields = () => {
-                const isChecked = useCommonMarginCheckbox.checked;
-                marginInputs.forEach(input => {
-                    input.disabled = isChecked;
-                    if (isChecked) {
-                        input.placeholder = 'Общая (' + (document.getElementById('margin_percent')?.value || '30') + '%)';
-                    } else {
-                        input.placeholder = '';
-                    }
-                });
-                
-                // Update margin badges
-                const marginBadges = document.querySelectorAll('[data-role="margin-badge"]');
-                marginBadges.forEach(badge => {
-                    if (isChecked) {
-                        badge.textContent = 'Используется общая маржа';
-                        badge.className = 'margin-status-badge margin-status-global';
-                    } else {
-                        badge.textContent = 'Индивидуальная маржа';
-                        badge.className = 'margin-status-badge margin-status-individual';
-                    }
-                });
-            };
-            
-            useCommonMarginCheckbox.addEventListener('change', updateMarginFields);
-            updateMarginFields(); // Initial update
-            
-            // Update when margin_percent changes
-            const marginPercentInput = document.getElementById('margin_percent');
-            if (marginPercentInput) {
-                marginPercentInput.addEventListener('input', () => {
-                    if (useCommonMarginCheckbox.checked) {
-                        marginInputs.forEach(input => {
-                            input.placeholder = 'Общая (' + marginPercentInput.value + '%)';
-                        });
-                    }
-                });
-            }
+        // Маржа по позиции: каждая позиция переключается отдельно (общая ↔ персональная)
+        function updateMarginSlots() {
+            const slots = document.querySelectorAll('[data-role="margin-slot"]');
+            slots.forEach(slot => {
+                const isPersonal = slot.dataset.usePersonalMargin === 'true';
+                const trigger = slot.querySelector('[data-role="margin-use-individual"]');
+                const wrap = slot.querySelector('[data-role="margin-input-wrap"]');
+                const input = wrap?.querySelector('.position-margin-input');
+                if (!trigger || !wrap) return;
+                if (input) {
+                    input.disabled = !isPersonal;
+                    input.placeholder = isPersonal ? '%' : ('Общая (' + (document.getElementById('margin_percent')?.value || '30') + '%)');
+                }
+                if (isPersonal) {
+                    trigger.hidden = false;
+                    trigger.textContent = 'Использовать общую маржу';
+                    trigger.title = 'Вернуть общую маржу';
+                    trigger.classList.add('margin-trigger-common');
+                    wrap.hidden = false;
+                } else {
+                    trigger.hidden = false;
+                    trigger.textContent = 'Использовать персональную маржу';
+                    trigger.title = 'Включить индивидуальную маржу';
+                    trigger.classList.remove('margin-trigger-common');
+                    wrap.hidden = true;
+                }
+            });
         }
         
-        // Update summary panel when form changes
+        document.addEventListener('click', function(e) {
+            const trigger = e.target.closest('[data-role="margin-use-individual"]');
+            if (!trigger) return;
+            const slot = trigger.closest('[data-role="margin-slot"]');
+            if (!slot) return;
+            slot.dataset.usePersonalMargin = slot.dataset.usePersonalMargin === 'true' ? 'false' : 'true';
+            updateMarginSlots();
+        });
+        
+        // При загрузке: если у позиции уже есть значение маржи — считаем её персональной
+        (function initMarginSlotsFromForm() {
+            document.querySelectorAll('[data-role="margin-slot"]').forEach(slot => {
+                const input = slot.querySelector('[data-field="position_margin"]');
+                if (input && String(input.value || '').trim() !== '') {
+                    slot.dataset.usePersonalMargin = 'true';
+                }
+            });
+        })();
+        updateMarginSlots();
+        window.__kpUpdateMarginSlots = updateMarginSlots;
+        
+        // Update summary panel when form changes (delegates to first callback's logic + proposal-calculator)
         const updateSummaryPanel = () => {
-            // This will be called from existing functions
-            // For now, we'll set up the structure
+            if (typeof window.__kpUpdateWeight === 'function') {
+                window.__kpUpdateWeight();
+            }
+            if (typeof window.__kpUpdateSummaryStats === 'function') {
+                window.__kpUpdateSummaryStats();
+            }
+            if (window.ProposalCalculator && typeof window.ProposalCalculator.calculateSummary === 'function') {
+                window.ProposalCalculator.calculateSummary();
+            }
         };
         
         // Watch for form changes and update summary panel
@@ -3871,24 +3937,11 @@
                 }, 300);
             };
             
-            // Watch for changes in key fields
-            const watchedFields = [
-                'margin_percent',
-                'logistics',
-                'cost_price',
-                'quantity',
-                'weight',
-                'duty_percent'
-            ];
+            // Watch all form input/change so position fields (cost_price_1, quantity_1, weight_1, …) and others trigger summary
+            form.addEventListener('input', debouncedUpdate);
+            form.addEventListener('change', debouncedUpdate);
             
-            watchedFields.forEach(fieldId => {
-                const field = document.getElementById(fieldId);
-                if (field) {
-                    field.addEventListener('input', debouncedUpdate);
-                }
-            });
-            
-            // Watch for position changes
+            // Watch for position block add/remove
             const positionsContainer = document.getElementById('positionsContainer');
             if (positionsContainer) {
                 const observer = new MutationObserver(debouncedUpdate);

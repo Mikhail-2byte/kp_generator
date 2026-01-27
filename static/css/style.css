@@ -1290,6 +1290,62 @@ body[data-page="index"] .app-content {
   margin-bottom: 0;
 }
 
+.position-header-margin-slot {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  margin-right: 0.5rem;
+}
+
+/* Поле маржи скрыто, когда используется общая маржа */
+[data-role="margin-input-wrap"][hidden] {
+  display: none !important;
+}
+
+.margin-use-individual-trigger {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+  color: var(--muted-foreground);
+  white-space: nowrap;
+  border-radius: var(--radius-sm);
+  background: var(--muted);
+  border: none;
+  cursor: pointer;
+  transition: color var(--transition), background var(--transition);
+}
+
+.margin-use-individual-trigger:hover {
+  color: var(--foreground);
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* Кнопка «Использовать общую маржу» — синяя, когда активна персональная маржа */
+.margin-use-individual-trigger.margin-trigger-common {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.margin-use-individual-trigger.margin-trigger-common:hover {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  opacity: 0.9;
+}
+
+.position-margin-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.position-margin-inline .position-margin-input {
+  width: 4em;
+  min-width: 4em;
+  padding: 4px 8px;
+  font-size: 13px;
+  text-align: center;
+}
+
+
 .parameters-row .field-group {
   flex: 1 1 200px;
 }
@@ -1302,6 +1358,85 @@ body[data-page="index"] .app-content {
 .parameters-row .slim-field {
   flex: 0 0 120px;
   max-width: 140px;
+}
+
+/* Пошлина — уже остальных slim-field (маржа в заголовке позиции) */
+.parameters-row .slim-field.position-duty-field {
+  flex: 0 0 60px;
+  max-width: 70px;
+}
+
+/* Заголовки таблицы позиций — одна строка над всеми позициями */
+.positions-table-header.parameters-row {
+  align-items: center;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.positions-table-header .positions-th,
+.positions-table-header .positions-th-cell {
+  display: flex;
+  align-items: center;
+}
+.positions-table-header .positions-th.parameter-wide {
+  flex: 1.8 1 200px;
+  min-width: 200px;
+}
+.positions-table-header .positions-th.slim-field {
+  flex: 0 0 120px;
+  max-width: 140px;
+}
+.positions-table-header .positions-th.slim-field.position-duty-field {
+  flex: 0 0 60px;
+  max-width: 70px;
+}
+.positions-table-header .position-number-cell.positions-th-cell,
+.positions-table-header .positions-th-cell.position-actions-cell {
+  flex: 0 0 auto;
+}
+.positions-table-header .position-number-cell span,
+.positions-table-header .positions-th span {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--muted-foreground);
+}
+
+/* Ячейка только с инпутом (без лейбла) — выравнивание по центру строки */
+.parameters-row .field-group.position-input-cell {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0;
+}
+
+/* Номер позиции — простая цифра, без бейджа */
+.parameters-row .position-number-cell {
+  flex: 0 0 32px;
+  min-width: 32px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 2px;
+}
+.parameters-row .position-number-cell [data-role="position-number"] {
+  font-size: 13px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted-foreground);
+  line-height: 1.2;
+}
+
+/* Кнопка «Удалить» справа от поля «Пошлина» */
+.parameters-row .position-actions-cell {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 2px;
+}
+.parameters-row .position-actions-cell .remove-position-btn {
+  padding: 6px 8px;
 }
 
 .drawing-field {
@@ -1509,30 +1644,30 @@ body[data-page="index"] .app-content {
 
 .logistics-controls-row {
   display: flex;
-  align-items: flex-end;
-  gap: 16px;
+  align-items: center;
+  gap: 10px;
   flex-wrap: wrap;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
 .logistics-toggle-group {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 4px;
   flex: 1;
-  min-width: 200px;
+  min-width: 120px;
 }
 
 .toggle-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 8px;
 }
 
 .toggle-group {
   display: inline-flex;
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   background: var(--card);
   overflow: hidden;
 }
@@ -1542,8 +1677,8 @@ body[data-page="index"] .app-content {
 }
 
 .toggle-group label {
-  padding: 10px 18px;
-  font-size: 14px;
+  padding: 6px 12px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   border-right: 1px solid var(--border);
@@ -1875,6 +2010,10 @@ textarea {
   .parameters-row .slim-field {
     flex: 1 1 140px;
     max-width: 100%;
+  }
+  .parameters-row .slim-field.position-duty-field {
+    flex: 0 0 60px;
+    max-width: 70px;
   }
 }
 
@@ -4034,11 +4173,11 @@ body[data-page="index"] .section-description {
 }
 
 body[data-page="index"] .form-grid {
-  gap: 12px;
+  gap: 8px;
 }
 
 body[data-page="index"] .parameters-row {
-  gap: 10px;
+  gap: 8px;
 }
 
 body[data-page="index"] .field-label {
@@ -4210,6 +4349,12 @@ body[data-page="index"] .positions-card-title {
   font-size: 14px;
   font-weight: 600;
   color: var(--foreground);
+}
+
+body[data-page="index"] .positions-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 body[data-page="index"] .positions-card-body {
@@ -5401,6 +5546,10 @@ body[data-page="index"] .summary-pill {
   padding-bottom: 24px;
 }
 
+body[data-page="index"] .proposal-form-panel {
+  padding-right: 32px; /* Отступ от правой панели (summary) */
+}
+
 /* Header */
 .proposal-header {
   height: 64px;
@@ -5409,6 +5558,7 @@ body[data-page="index"] .summary-pill {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
   padding: 0 24px 0 24px;
   position: sticky;
   top: 0;
@@ -5419,10 +5569,14 @@ body[data-page="index"] .summary-pill {
 }
 
 /* Ensure header doesn't overlap sidebar toggle button on index page */
+/* Extend header to the left edge of the form panel (cancel panel's padding-left) */
 body[data-page="index"] .proposal-header {
-  margin-left: 0;
-  padding-left: 24px;
-  position: relative; /* Ensure proper stacking context */
+  margin-left: -28px;
+  margin-right: -32px; /* до края панели (компенсируем padding-right панели) */
+  width: calc(100% + 28px + 32px);
+  padding-left: 52px; /* 28px (panel padding) + 24px (original) so content stays aligned */
+  padding-right: 56px; /* 32px (panel) + 24px — кнопки не у самого края */
+  position: relative;
 }
 
 /* Make sure sidebar toggle is always visible on index page */
@@ -5480,6 +5634,36 @@ body[data-page="index"] .proposal-header-brand {
   line-height: 1.2;
 }
 
+.proposal-header-region {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* Компактный селектор региона в шапке */
+.proposal-header .budget-region-selector-inline {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.proposal-header .budget-region-selector-inline .budget-region-options {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.proposal-header .budget-region-selector-inline .budget-region-chip span {
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
 .proposal-header-actions {
   display: flex;
   align-items: center;
@@ -5530,6 +5714,68 @@ body[data-page="index"] .proposal-header-brand {
   overscroll-behavior: contain;
 }
 
+body[data-page="index"] .proposal-form-content {
+  /* Отступ справа, чтобы форма и секции не прижимались к правой панели (summary) */
+  padding-right: 150px;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+/* Форма и секции — не шире контейнера, чтобы не заходить за summary */
+body[data-page="index"] .proposal-form-content #generateForm,
+body[data-page="index"] .proposal-form-content .card-stack,
+body[data-page="index"] .proposal-form-content .proposal-section {
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* Блок позиций — правый отступ от правой панели */
+body[data-page="index"] .proposal-form-content #positionsContainer,
+body[data-page="index"] .proposal-form-content .positions-card-body {
+  min-width: 0;
+  overflow-x: hidden;
+  padding-right: 64px;
+}
+
+body[data-page="index"] .proposal-form-content .positions-card-header {
+  padding-right: 64px;
+}
+
+body[data-page="index"] .proposal-form-content .positions-add-footer {
+  padding-right: 64px;
+  box-sizing: border-box;
+}
+
+/* Строка параметров позиции — перенос, не вылезать за край */
+body[data-page="index"] .proposal-form-content .parameters-row {
+  max-width: 100%;
+  min-width: 0;
+  gap: 8px;
+}
+
+/* Компактные отступы между ячейками и секциями в форме КП (по контейнеру, без привязки к data-page) */
+.content-container.proposal-page-container .proposal-form-content .form-grid,
+body[data-page="index"] .proposal-form-content .form-grid {
+  gap: 8px;
+}
+.content-container.proposal-page-container .proposal-form-content .field-group,
+body[data-page="index"] .proposal-form-content .field-group {
+  gap: 4px;
+}
+.content-container.proposal-page-container .proposal-form-content .parameters-row,
+body[data-page="index"] .proposal-form-content .parameters-row {
+  gap: 8px;
+}
+.content-container.proposal-page-container .proposal-form-content .position-block .form-grid,
+body[data-page="index"] .proposal-form-content .position-block .form-grid {
+  margin-top: 8px;
+}
+.content-container.proposal-page-container .proposal-form-content .position-header,
+body[data-page="index"] .proposal-form-content .position-header {
+  margin-bottom: 6px;
+}
+
 /* Remove card padding and margins for proposal sections */
 .proposal-section .card,
 .proposal-section > .card {
@@ -5541,7 +5787,7 @@ body[data-page="index"] .proposal-header-brand {
 }
 
 .proposal-section {
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
 .proposal-section:last-child {
@@ -5551,13 +5797,13 @@ body[data-page="index"] .proposal-header-brand {
 .proposal-section-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: 8px;
+  margin-bottom: 8px;
   flex-wrap: wrap;
 }
 
 .proposal-separator {
-  margin: 12px 0;
+  margin: 8px 0;
   height: 1px;
   background: var(--border);
   border: none;
@@ -5586,18 +5832,38 @@ body[data-page="index"] .proposal-header-brand {
   flex: 1;
 }
 
-.proposal-section-actions {
+.proposal-section-actions,
+.proposal-section-header-actions {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-left: auto;
 }
 
-/* Separator */
+/* Секция «Товары и услуги»: заголовок и «Импорт из Excel» в одной строке */
+.proposal-section-header-products {
+  flex-wrap: nowrap;
+}
+
+/* Кнопка «Добавить позицию» внизу секции */
+.positions-add-footer {
+  margin-top: 16px;
+  width: 100%;
+}
+
+.positions-add-footer .positions-add-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+}
+
+/* Separator (duplicate rule — keep compact) */
 .proposal-separator {
   height: 1px;
   background: var(--border);
-  margin: 24px 0;
+  margin: 8px 0;
   border: none;
 }
 
@@ -5627,9 +5893,14 @@ body[data-page="index"] .proposal-header-brand {
 }
 
 .summary-header {
-  padding: 16px 20px;
+  height: 64px;
+  min-height: 64px;
+  padding: 0 20px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .summary-header-title {
@@ -5744,7 +6015,7 @@ body[data-page="index"] .proposal-header-brand {
 }
 
 .summary-metric-value {
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--foreground);
   line-height: 1.2;
@@ -5820,7 +6091,7 @@ body[data-page="index"] .proposal-header-brand {
 }
 
 .final-price-rubles-value {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--foreground);
 }
@@ -5963,9 +6234,33 @@ body[data-page="index"] .proposal-header-brand {
   letter-spacing: 0.5px;
 }
 
+.summary-additional-expenses .expenses-form-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.summary-additional-expenses .expense-name-input,
+.summary-additional-expenses .expense-amount-input {
+  flex: 1 1 auto;
+  min-width: 80px;
+}
+
+.summary-additional-expenses .expense-amount-input {
+  max-width: 100px;
+}
+
 .btn-add-expense {
   width: 100%;
   margin-bottom: 12px;
+}
+
+.summary-additional-expenses .btn-add-expense {
+  width: auto;
+  margin-bottom: 0;
+  flex-shrink: 0;
 }
 
 .expenses-list-summary {
@@ -6068,17 +6363,17 @@ body[data-page="index"] .proposal-header-brand {
 .logistics-tabs {
   display: inline-flex;
   background: var(--muted);
-  border-radius: var(--radius-md);
-  padding: 4px;
-  gap: 4px;
+  border-radius: var(--radius-sm);
+  padding: 3px;
+  gap: 2px;
 }
 
 .logistics-tab {
-  padding: 8px 16px;
+  padding: 6px 12px;
   border: none;
   background: transparent;
   border-radius: var(--radius-sm);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--muted-foreground);
   cursor: pointer;

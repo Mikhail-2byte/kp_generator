@@ -35,12 +35,13 @@ class DocumentGenerationService(DocumentGeneratorPort):
         form_data: Dict[str, Any],
         final_price: float,
         general_prise: float,
+        positions: Optional[List[Dict[str, Any]]] = None,
         position_prices: Optional[List[Dict[str, Any]]] = None,
         manager_fio: Optional[str] = None,
         config: Optional[Dict[str, Any]] = None,
     ) -> BytesIO:
         """Готовит Excel-файл в памяти."""
-        positions = self._resolve_positions(form_data, None)
+        positions = self._resolve_positions(form_data, positions)
         processor = self._excel_processor_factory(template_path, config=config)
         return processor.process_multiple_positions(
             positions,
@@ -139,12 +140,13 @@ def generate_excel_document(
     form_data: Dict[str, Any],
     final_price: float,
     general_prise: float,
+    positions: Optional[List[Dict[str, Any]]] = None,
     position_prices: Optional[List[Dict[str, Any]]] = None,
     manager_fio: Optional[str] = None,
     config: Optional[Dict[str, Any]] = None,
 ) -> BytesIO:
     return _default_generator.generate_excel_document(
-        template_path, form_data, final_price, general_prise, position_prices, manager_fio, config=config
+        template_path, form_data, final_price, general_prise, positions, position_prices, manager_fio, config=config
     )
 
 

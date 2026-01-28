@@ -24,7 +24,7 @@ def get_safe_filename(company_name: str) -> str:
     Создаёт безопасное имя файла из названия компании.
     
     Защищает от path traversal атак и других небезопасных символов.
-    Удаляет пути (.., /, \), нормализует имя файла.
+    Удаляет пути (.., /, \\) и нормализует имя файла.
     
     Args:
         company_name: Исходное название компании
@@ -108,14 +108,31 @@ def extract_positions_from_form(
             elif key.startswith(field + '_') and key[len(field) + 1:].isdigit():
                 position_numbers.add(int(key[len(field) + 1:]))
 
+    numeric_position_fields = {'duty_percent', 'quantity', 'weight', 'cost_price', 'cost_price_per_kg'}
+
+    def _add_field(position: dict, field: str, key: str, form_data: dict) -> None:
+        if key not in form_data:
+            return
+        value = form_data[key]
+        if value is None:
+            return
+        if field in numeric_position_fields:
+            # Числовые поля: включаем 0 и '0' (пошлина 0% должна попадать в КП)
+            if value == '' or (isinstance(value, str) and value.strip() == ''):
+                if field == 'duty_percent':
+                    position[field] = '0'
+                return
+            position[field] = value
+        else:
+            if value and (not isinstance(value, str) or value.strip()):
+                position[field] = value
+
     if not position_numbers:
         position = {}
         key_map = {}
         for field in position_fields:
-            if field in form_data and form_data[field]:
-                position[field] = form_data[field]
-            if include_field_keys:
-                key_map[field] = field
+            key_map[field] = field
+            _add_field(position, field, field, form_data)
         if position:
             positions.append(position)
             if include_field_keys:
@@ -129,9 +146,7 @@ def extract_positions_from_form(
         for field in position_fields:
             key = field if pos_num == 1 else f"{field}_{pos_num}"
             key_map[field] = key
-            value = form_data.get(key)
-            if value:
-                position[field] = value
+            _add_field(position, field, key, form_data)
 
         if position:
             positions.append(position)

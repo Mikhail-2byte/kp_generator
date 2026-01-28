@@ -133,8 +133,8 @@ class TestBudgetCreation:
     def test_budget_data_validation(self, orchestrator, single_position_form_data):
         """Тест валидации данных для создания бюджета."""
         # Тест с валидными данными
-        cleaned_data, positions, errors = orchestrator.validate_request(single_position_form_data)
-        
+        cleaned_data, positions, errors, _ = orchestrator.validate_request(single_position_form_data)
+
         assert len(errors) == 0
         assert len(positions) > 0
         assert cleaned_data['company'] == 'ООО Тестовая Компания'
@@ -145,8 +145,8 @@ class TestBudgetCreation:
         invalid_data = single_position_form_data.copy()
         invalid_data['company'] = ''
         
-        cleaned_data, positions, errors = orchestrator.validate_request(invalid_data)
-        
+        cleaned_data, positions, errors, _ = orchestrator.validate_request(invalid_data)
+
         assert len(errors) > 0
         assert any('компани' in error.lower() for error in errors)
     
@@ -196,8 +196,8 @@ class TestBudgetCreation:
     def test_budget_get_data_for_creation(self, orchestrator, single_position_form_data):
         """Тест получения данных для создания бюджета."""
         # Получаем данные через валидацию
-        cleaned_data, positions, errors = orchestrator.validate_request(single_position_form_data)
-        
+        cleaned_data, positions, errors, _ = orchestrator.validate_request(single_position_form_data)
+
         # Проверяем, что данные извлечены корректно
         assert 'company' in cleaned_data
         assert 'logistics' in cleaned_data
@@ -277,8 +277,8 @@ class TestBudgetCreation:
             # Отсутствуют обязательные поля: logistics, margin_percent, delivery_time
         }
         
-        cleaned_data, positions, errors = orchestrator.validate_request(incomplete_data)
-        
+        cleaned_data, positions, errors, _ = orchestrator.validate_request(incomplete_data)
+
         # Должны быть ошибки валидации
         assert len(errors) > 0
         
@@ -290,8 +290,8 @@ class TestBudgetCreation:
     
     def test_budget_extract_positions_from_payload(self, orchestrator, multi_position_form_data):
         """Тест извлечения позиций из JSON payload."""
-        cleaned_data, positions, errors = orchestrator.validate_request(multi_position_form_data)
-        
+        cleaned_data, positions, errors, _ = orchestrator.validate_request(multi_position_form_data)
+
         # Проверяем, что позиции извлечены из payload
         assert len(positions) == 2, f"Ожидалось 2 позиции, получено {len(positions)}. Ошибки: {errors}"
         

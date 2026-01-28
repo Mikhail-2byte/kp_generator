@@ -480,32 +480,48 @@ class MultiPositionProcessor:
             # Пропускаем product, так как он уже обработан выше
             if field == 'product':
                 continue
-                
-            if field in position_data and position_data[field]:
-                value = position_data[field]
-                if field in ['cost_price', 'cost_price_per_kg', 'weight', 'duty_percent']:
-                    try:
-                        value = float(value)
-                        if field == 'duty_percent':
-                            value = value / 100  # Конвертируем проценты в десятичную дробь
-                    except (ValueError, TypeError):
-                        value = 0
-                elif field == 'quantity':
-                    try:
-                        value = int(value)
-                    except (ValueError, TypeError):
-                        value = 1
-                
+
+            # duty_percent всегда записываем, в том числе 0 (иначе 0% не попадает в Excel)
+            if field == 'duty_percent':
+                raw = position_data.get('duty_percent', 0)
+                try:
+                    value = float(raw) if raw not in (None, '') else 0
+                except (ValueError, TypeError):
+                    value = 0
+                value = value / 100  # Конвертируем проценты в десятичную дробь
                 cell = sheet[f"{column}{row_number}"]
                 cell.value = value
-                # Форматируем числа: X-столбец как проценты без десятых, G-столбец как целое число, остальные до двух знаков
-                if isinstance(value, (int, float)):
-                    if column == 'X':
-                        cell.number_format = '0%'
-                    elif column == 'G':
-                        cell.number_format = '0'  # Целое число для количества
-                    else:
-                        cell.number_format = '0.00'
+                cell.number_format = '0%'
+                continue
+
+            # Для остальных полей пропускаем только пустые/отсутствующие (не пропускаем 0 для числовых полей)
+            has_value = (
+                field in position_data
+                and position_data[field] is not None
+                and str(position_data[field]).strip() != ''
+            )
+            if not has_value:
+                continue
+
+            value = position_data[field]
+            if field in ['cost_price', 'cost_price_per_kg', 'weight']:
+                try:
+                    value = float(value)
+                except (ValueError, TypeError):
+                    value = 0
+            elif field == 'quantity':
+                try:
+                    value = int(value)
+                except (ValueError, TypeError):
+                    value = 1
+
+            cell = sheet[f"{column}{row_number}"]
+            cell.value = value
+            if isinstance(value, (int, float)):
+                if column == 'G':
+                    cell.number_format = '0'
+                else:
+                    cell.number_format = '0.00'
 
     def fill_common_data(self, sheet, form_data: Dict[str, Any], final_price: float = None, general_price: float = None, manager_fio: str = None) -> None:
         """Заполняет общие данные (компания, логистика, дата и т.д.) в Excel."""

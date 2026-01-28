@@ -134,6 +134,28 @@ def test_document_generation_service_empty_positions_error():
         )
 
 
+def test_fill_position_data_writes_duty_percent_zero():
+    """Пошлина 0% должна записываться в ячейку Excel (столбец X)."""
+    import openpyxl
+    from app.services.multi_position_processor import MultiPositionProcessor
+
+    wb = openpyxl.Workbook()
+    sheet = wb.active
+    processor = MultiPositionProcessor('dummy.xlsx', config={})
+    row_number = 10
+    position_data = {
+        'product': 'Товар без пошлины',
+        'quantity': '5',
+        'cost_price': '500',
+        'weight': '2',
+        'duty_percent': '0',
+    }
+    processor.fill_position_data(sheet, position_data, row_number)
+    cell_x = sheet[f'X{row_number}']
+    assert cell_x.value is not None
+    assert cell_x.value == 0.0
+
+
 if __name__ == "__main__":
     # Запуск тестов при прямом выполнении файла
     pytest.main([__file__, "-v"])

@@ -69,13 +69,14 @@ class TestGenerationOrchestrator:
             mock_validation.cleaned_data = valid_form_data
             mock_validation.positions = None
             mock_validation.errors = []
+            mock_validation.invalid_fields = []
             mock_validate.return_value = mock_validation
-            
+
             with patch('app.services.generation_orchestrator.extract_positions_from_form') as mock_extract:
                 mock_extract.return_value = [{'quantity': 10, 'cost_price': 100}]
                 
-                cleaned_data, positions, errors = orchestrator.validate_request(valid_form_data)
-                
+                cleaned_data, positions, errors, invalid_fields = orchestrator.validate_request(valid_form_data)
+
                 assert errors == []
                 assert len(positions) > 0
     
@@ -86,10 +87,11 @@ class TestGenerationOrchestrator:
             mock_validation.cleaned_data = valid_form_data
             mock_validation.positions = None
             mock_validation.errors = ['Ошибка валидации']
+            mock_validation.invalid_fields = ['company']
             mock_validate.return_value = mock_validation
-            
-            cleaned_data, positions, errors = orchestrator.validate_request(valid_form_data)
-            
+
+            cleaned_data, positions, errors, invalid_fields = orchestrator.validate_request(valid_form_data)
+
             assert len(errors) > 0
     
     def test_calculate_prices_single_position(self, orchestrator):

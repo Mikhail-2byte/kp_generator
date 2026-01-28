@@ -40,12 +40,14 @@ class GenerationOrchestrator:
         self.app_config = app_config
         self.calculator = MultiPositionCalculator(app_config)
     
-    def validate_request(self, form_data: Dict[str, Any]) -> Tuple[Dict[str, Any], List[Dict[str, Any]], List[str]]:
+    def validate_request(
+        self, form_data: Dict[str, Any]
+    ) -> Tuple[Dict[str, Any], List[Dict[str, Any]], List[str], List[str]]:
         """
         Валидирует данные запроса.
-        
+
         Returns:
-            Tuple[cleaned_data, positions, errors]
+            Tuple[cleaned_data, positions, errors, invalid_fields]
         """
         # Обработка цены за кг
         if not form_data.get('cost_price', '').strip():
@@ -63,8 +65,14 @@ class GenerationOrchestrator:
 
         validation = validate_form_data(form_data)
         form_data = validation.cleaned_data
+        invalid_fields = list(validation.invalid_fields) if validation.invalid_fields else []
 
-        return form_data, validation.positions or extract_positions_from_form(form_data), validation.errors
+        return (
+            form_data,
+            validation.positions or extract_positions_from_form(form_data),
+            validation.errors,
+            invalid_fields,
+        )
     
     def calculate_prices(
         self,
@@ -172,6 +180,7 @@ class GenerationOrchestrator:
             form_data,
             final_price,
             total_general_price,
+            positions=positions,
             position_prices=position_prices,
             manager_fio=manager_fio,
             config=self.app_config,
@@ -239,11 +248,15 @@ class GenerationOrchestrator:
             Tuple[zip_buffer, file_prefix]
         """
         # Шаг 1: Валидация
-        cleaned_data, positions, errors = self.validate_request(form_data)
+        cleaned_data, positions, errors, invalid_fields = self.validate_request(form_data)
         if errors:
             raise ValidationError(
                 'Ошибки валидации данных',
-                details={'errors': errors, 'invalid_fields': cleaned_data.get('_invalid_fields', [])}
+                details={
+                    'errors': errors,
+                    'invalid_fields': invalid_fields,
+                    'cleaned_data': cleaned_data,
+                },
             )
         
         if not positions:

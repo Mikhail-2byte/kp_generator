@@ -1006,15 +1006,18 @@ def generate() -> Union[str, Response]:
         )
 
     except ValidationError as exc:
-        # Обработка ошибок валидации с сохранением формы
+        # Обработка ошибок валидации: сохраняем введённые данные и подсвечиваем незаполненные поля
         for error in exc.details.get('errors', [exc.message]):
             flash(error if isinstance(error, str) else exc.message, 'danger')
-        
-        cleaned_data = exc.details.get('invalid_fields', {})
+
+        cleaned_data = exc.details.get('cleaned_data') or form_data
+        invalid_fields_list = exc.details.get('invalid_fields') or []
+        if invalid_fields_list:
+            cleaned_data = dict(cleaned_data)
+            cleaned_data['_invalid_fields'] = invalid_fields_list
+
         _save_form_session(cleaned_data, session.get('imported_positions'))
-        if exc.details.get('invalid_fields'):
-            cleaned_data['_invalid_fields'] = exc.details['invalid_fields']
-        
+
         cities = _load_logistics_cities_safe()
         return render_template(
             'index.html',
@@ -1022,7 +1025,7 @@ def generate() -> Union[str, Response]:
                 'index',
                 'Создание коммерческого предложения',
                 form_data=cleaned_data,
-                cities=cities
+                cities=cities,
             )
         )
 
@@ -1092,7 +1095,7 @@ def preview_prices() -> Response:
         
         # Валидация (более мягкая для preview)
         try:
-            cleaned_data, positions, errors = orchestrator.validate_request(form_data)
+            cleaned_data, positions, errors, _ = orchestrator.validate_request(form_data)
         except Exception as exc:
             return jsonify({
                 'error': f'Ошибка валидации: {str(exc)}',

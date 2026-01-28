@@ -1049,9 +1049,24 @@
             const fields = ['product', 'drawing_number', 'material', 'cost_price', 'cost_price_per_kg', 'quantity', 'weight', 'duty_percent', 'position_margin'];
             fields.forEach((field) => {
                 const input = block.querySelector(`[name="${field}${withSuffix}"]`);
-                if (input && input.value !== '') {
+                if (!input) return;
+                // duty_percent всегда передаём (в т.ч. 0), иначе 0% не попадает в Excel
+                if (field === 'duty_percent') {
+                    const value = (input.value === '' || input.value == null) ? '0' : input.value;
+                    pos[field] = value;
+                    data[`${field}${withSuffix}`] = value;
+                    return;
+                }
+                // quantity, weight — числовые, пустая строка не передаём
+                if (field === 'quantity' || field === 'weight') {
+                    if (input.value !== '' && input.value != null) {
+                        pos[field] = input.value;
+                        data[`${field}${withSuffix}`] = input.value;
+                    }
+                    return;
+                }
+                if (input.value !== '') {
                     pos[field] = input.value;
-                    // Сохраняем обратно в form_data для полной совместимости
                     data[`${field}${withSuffix}`] = input.value;
                 }
             });
@@ -1287,7 +1302,26 @@
         if (previewMarginMeta) {
             previewMarginMeta.textContent = `(${data.summary.actual_margin_percent.toFixed(1)}% фактическая маржа)`;
         }
-        
+
+        // Синхронизируем панель «Итого» в сайдбаре (ИТОГО, Прибыль, Итоговая цена, Логистика)
+        const conversionRate = data.summary.conversion_rate || 10;
+        const totalFinalPrice = Number(data.summary.total_final_price) || 0;
+        const totalPurchaseCost = Number(data.summary.total_purchase_cost) || 0;
+        const totalLogisticsCost = Number(data.summary.total_logistics_cost) || 0;
+        const totalAdditionalExpenses = Number(data.summary.total_additional_expenses) || 0;
+        const logisticsInYuan = totalLogisticsCost / conversionRate;
+        const profitYuan = totalFinalPrice - totalPurchaseCost - logisticsInYuan - totalAdditionalExpenses;
+        const totalRubles = Math.round(totalFinalPrice * conversionRate);
+
+        const summaryTotalEl = document.getElementById('summaryTotal');
+        const summaryProfitEl = document.getElementById('summaryProfit');
+        const summaryFinalPriceRublesEl = document.getElementById('summaryFinalPriceRubles');
+        const summaryLogisticsCostEl = document.getElementById('summaryLogisticsCost');
+        if (summaryTotalEl) summaryTotalEl.textContent = Math.round(totalFinalPrice).toLocaleString('ru-RU');
+        if (summaryProfitEl) summaryProfitEl.textContent = Math.round(profitYuan).toLocaleString('ru-RU');
+        if (summaryFinalPriceRublesEl) summaryFinalPriceRublesEl.textContent = totalRubles.toLocaleString('ru-RU') + ' ₽';
+        if (summaryLogisticsCostEl) summaryLogisticsCostEl.textContent = Math.round(totalLogisticsCost).toLocaleString('ru-RU') + ' ₽';
+
         // Отображаем позиции
         const previewPositionsTable = document.getElementById('previewPositionsTable');
         const previewPositionsList = document.getElementById('previewPositionsList');
@@ -2616,6 +2650,14 @@
                     }
 
                     applyImportedPositions(payload.positions || []);
+                    // Обновить «Итого» в сайдбаре, если логистика и маржа уже заполнены
+                    const logisticsEl = document.getElementById('logistics');
+                    const marginEl = document.getElementById('margin_percent');
+                    const hasLogistics = logisticsEl && parseFloat(logisticsEl.value || 0) > 0;
+                    const hasMargin = marginEl && parseFloat(marginEl.value || 0) > 0;
+                    if (hasLogistics && hasMargin && typeof performPreCalculation === 'function') {
+                        setTimeout(performPreCalculation, 400);
+                    }
                 } catch (error) {
                     console.error('Excel import failed', error);
                     window.alert('Не удалось загрузить файл. Попробуйте еще раз.');
@@ -3472,7 +3514,11 @@
 
             try {
                 const formData = new FormData(form);
-                
+                // Все позиции из DOM (в т.ч. после импорта Excel) отправляем как JSON — сервер использует positions_payload первым
+                const payload = collectFormData();
+                if (payload.positions && payload.positions.length > 0) {
+                    formData.append('positions_payload', JSON.stringify(payload.positions));
+                }
                 // Добавляем дополнительные расходы как JSON строку
                 if (expensesList && expensesList.length > 0) {
                     const expensesJson = JSON.stringify(expensesList.map(exp => ({

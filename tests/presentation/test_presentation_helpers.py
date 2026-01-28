@@ -223,6 +223,38 @@ class TestExtractPositionsFromForm:
         assert len(positions) == 1
         assert positions[0]['cost_price_per_kg'] == '200'
 
+    def test_extract_positions_duty_percent_zero(self):
+        """Пошлина 0% должна извлекаться и попадать в позиции (для записи в Excel)."""
+        form_data = {
+            'product': 'Товар без пошлины',
+            'quantity': '5',
+            'cost_price': '500',
+            'weight': '2',
+            'duty_percent': '0',
+        }
+        positions = extract_positions_from_form(form_data)
+        assert len(positions) == 1
+        assert positions[0].get('duty_percent') == '0'
+
+    def test_extract_positions_multiple_with_duty_zero_second(self):
+        """Вторая позиция с duty_percent=0 должна извлекаться."""
+        form_data = {
+            'product': 'Товар 1',
+            'quantity': '10',
+            'cost_price': '1000',
+            'weight': '5',
+            'duty_percent': '5',
+            'product_2': 'Товар 2',
+            'quantity_2': '20',
+            'cost_price_2': '2000',
+            'weight_2': '10',
+            'duty_percent_2': '0',
+        }
+        positions = extract_positions_from_form(form_data)
+        assert len(positions) == 2
+        assert positions[0]['duty_percent'] == '5'
+        assert positions[1]['duty_percent'] == '0'
+
     def test_extract_positions_with_payload(self):
         """Тест извлечения позиций из positions_payload."""
         positions_data = [

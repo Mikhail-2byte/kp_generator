@@ -26,6 +26,7 @@ class DocumentGeneratorPort(Protocol):
         form_data: Dict[str, object],
         final_price: float,
         general_price: float,
+        positions: List[Dict[str, object]] | None = None,
         position_prices: List[Dict[str, object]] | None = None,
         manager_fio: str | None = None,
     ) -> BytesIO:

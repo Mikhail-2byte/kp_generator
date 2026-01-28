@@ -15,6 +15,7 @@ from app.services.repositories import (
 from app.services.multi_position_calculator import MultiPositionCalculator
 from app.services.logistics_calculator import calculate_logistics
 from app.services.datasets import get_duty_catalog, get_gb_materials, load_logistics_cities
+from app.services.exchange_rate_service import get_exchange_rate_info, clear_cache
 
 
 api_bp = Blueprint('api', __name__, url_prefix='/api/v1')
@@ -461,4 +462,35 @@ def delete_customer(customer_id: int) -> Dict[str, Any]:
         )
     
     return jsonify({'message': 'Контакт успешно удален'}), 200
+
+
+@api_bp.route('/exchange-rate', methods=['GET'])
+@csrf.exempt
+def get_exchange_rate() -> Dict[str, Any]:
+    """
+    Получить актуальный курс китайского юаня (CNY) к российскому рублю (RUB).
+    
+    Query Parameters:
+        force_refresh: Если true, очищает кэш и принудительно обновляет курс
+    
+    Returns:
+        Словарь с информацией о курсе валют:
+        {
+            "rate": 14.5,
+            "date": "2026-01-28",
+            "source": "api",
+            "cached": false
+        }
+    """
+    from flask import current_app
+    
+    # Проверяем, нужно ли принудительно обновить курс
+    force_refresh = request.args.get('force_refresh', 'false').lower() == 'true'
+    if force_refresh:
+        clear_cache()
+        current_app.logger.info("Кэш курса валют очищен по запросу force_refresh")
+    
+    rate_info = get_exchange_rate_info()
+    current_app.logger.info("Запрос курса валют: rate=%.4f, source=%s", rate_info.get('rate'), rate_info.get('source'))
+    return jsonify(rate_info)
 

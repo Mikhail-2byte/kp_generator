@@ -6224,6 +6224,79 @@ body[data-page="index"] .proposal-form-content .position-header {
   margin-left: auto;
 }
 
+.exchange-value-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.exchange-value-prefix,
+.exchange-value-suffix {
+  font-family: monospace;
+  font-weight: 600;
+  color: var(--foreground);
+  font-size: 13px;
+}
+
+.exchange-value-input {
+  font-family: monospace;
+  font-weight: 600;
+  color: var(--foreground);
+  font-size: 13px;
+  width: 60px;
+  padding: 2px 4px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.exchange-value-input:hover {
+  border-color: var(--border);
+  background: var(--background);
+}
+
+.exchange-value-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: var(--background);
+  box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.1);
+}
+
+.exchange-value-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.exchange-reset-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  opacity: 0.6;
+}
+
+.exchange-reset-btn:hover {
+  background: var(--muted);
+  color: var(--foreground);
+  opacity: 1;
+}
+
+.exchange-reset-btn:active {
+  transform: rotate(180deg);
+}
+
 /* Financing */
 .summary-financing {
   margin-bottom: 20px;

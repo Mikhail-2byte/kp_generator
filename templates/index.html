@@ -1039,6 +1039,9 @@
         if (financeCreditEl) data.finance_credit = financeCreditEl.checked ? (financeCreditEl.value || '1') : '';
         if (financeBankGuaranteeEl) data.finance_bank_guarantee = financeBankGuaranteeEl.checked ? (financeBankGuaranteeEl.value || '1') : '';
 
+        const marginEl = document.getElementById('margin_percent');
+        if (marginEl && marginEl.value !== '') data.margin_percent = marginEl.value;
+
         // Динамические позиции
         const positions = [];
         const blocks = positionsContainer.querySelectorAll('.position-block');
@@ -1084,6 +1087,14 @@
         } else {
             data.additional_expenses = [];
         }
+
+        // Гарантированно передаём ключевые поля для предварительного расчёта (на случай, если не попали из form.querySelectorAll)
+        const logisticsInput = document.getElementById('logistics');
+        if (logisticsInput && (logisticsInput.value !== '' && logisticsInput.value != null)) data.logistics = logisticsInput.value;
+        const deliveryTimeInput = document.getElementById('delivery_time');
+        if (deliveryTimeInput && deliveryTimeInput.value !== '') data.delivery_time = deliveryTimeInput.value;
+        const paymentTermsInput = document.getElementById('payment_terms');
+        if (paymentTermsInput && paymentTermsInput.value !== '') data.payment_terms = paymentTermsInput.value;
 
         return { form_data: data, positions };
     }
@@ -1162,25 +1173,30 @@
     }
 
     async function performPreCalculation() {
-        const previewBtn = document.getElementById('previewPricesBtn');
+        const previewBtn = document.getElementById('previewPricesBtn') || document.getElementById('summaryPreviewBtn');
         const loadingIndicator = document.getElementById('previewLoadingIndicator');
         const previewContent = document.getElementById('previewContent');
         const previewPositionsTable = document.getElementById('previewPositionsTable');
         const previewPositionsList = document.getElementById('previewPositionsList');
         
-        if (!previewBtn || !loadingIndicator || !previewContent) return;
-        
+        if (!previewBtn) return;
+        previewBtn.disabled = true;
+        if (loadingIndicator) loadingIndicator.style.display = 'block';
+        if (previewContent) previewContent.style.display = 'none';
+
         // Валидация формы перед отправкой
         const validation = validateFormForPreview();
         if (!validation.valid) {
             alert(validation.error);
+            previewBtn.disabled = false;
+            if (loadingIndicator) loadingIndicator.style.display = 'none';
+            if (previewContent) previewContent.style.display = 'block';
             return;
         }
         
-        // Показываем индикатор загрузки
-        previewBtn.disabled = true;
-        loadingIndicator.style.display = 'block';
-        previewContent.style.display = 'none';
+        // Показываем индикатор загрузки (элементы могут отсутствовать в разметке)
+        if (loadingIndicator) loadingIndicator.style.display = 'block';
+        if (previewContent) previewContent.style.display = 'none';
         
         try {
             // Собираем данные формы
@@ -1253,9 +1269,9 @@
                 alert('Ошибка при расчете цен: ' + errorMessage);
             }
         } finally {
-            previewBtn.disabled = false;
-            loadingIndicator.style.display = 'none';
-            previewContent.style.display = 'block';
+            if (previewBtn) previewBtn.disabled = false;
+            if (loadingIndicator) loadingIndicator.style.display = 'none';
+            if (previewContent) previewContent.style.display = 'block';
         }
     }
     
@@ -1289,11 +1305,12 @@
             previewLogisticsCost.textContent = formatCurrency(data.summary.total_logistics_cost, '₽');
         }
         if (previewMarginAmount) {
-            // Рассчитываем сумму маржи: итоговая цена - стоимость закупа - логистика (в юанях) - дополнительные расходы
-            const conversionRate = data.summary.conversion_rate || 10; // курс конвертации из API
-            const logisticsInYuan = data.summary.total_logistics_cost / conversionRate;
-            const additionalExpenses = data.summary.total_additional_expenses || 0;
-            const marginValue = data.summary.total_final_price - data.summary.total_purchase_cost - logisticsInYuan - additionalExpenses;
+            // Прибыль (маржинальный доход): итог без НДС − все прямые затраты; при наличии total_direct_costs_yuan из API используем его
+            const totalFinal = Number(data.summary.total_final_price) || 0;
+            const totalDirectCostsYuan = data.summary.total_direct_costs_yuan;
+            const marginValue = (typeof totalDirectCostsYuan === 'number' && !Number.isNaN(totalDirectCostsYuan))
+                ? totalFinal - totalDirectCostsYuan
+                : (totalFinal - (Number(data.summary.total_purchase_cost) || 0) - (Number(data.summary.total_logistics_cost) || 0) / (data.summary.conversion_rate || 10) - (Number(data.summary.total_additional_expenses) || 0));
             previewMarginAmount.textContent = formatCurrency(marginValue, '¥');
         }
         if (previewFinalPrice) {
@@ -1304,23 +1321,57 @@
         }
 
         // Синхронизируем панель «Итого» в сайдбаре (ИТОГО, Прибыль, Итоговая цена, Логистика)
-        const conversionRate = data.summary.conversion_rate || 10;
+        const apiConversionRate = data.summary.conversion_rate || 10;
         const totalFinalPrice = Number(data.summary.total_final_price) || 0;
         const totalPurchaseCost = Number(data.summary.total_purchase_cost) || 0;
         const totalLogisticsCost = Number(data.summary.total_logistics_cost) || 0;
-        const totalAdditionalExpenses = Number(data.summary.total_additional_expenses) || 0;
-        const logisticsInYuan = totalLogisticsCost / conversionRate;
-        const profitYuan = totalFinalPrice - totalPurchaseCost - logisticsInYuan - totalAdditionalExpenses;
+        const totalDirectCostsYuan = data.summary.total_direct_costs_yuan;
+        const profitYuan = (typeof totalDirectCostsYuan === 'number' && !Number.isNaN(totalDirectCostsYuan))
+            ? totalFinalPrice - totalDirectCostsYuan
+            : (totalFinalPrice - totalPurchaseCost - (totalLogisticsCost / apiConversionRate) - (Number(data.summary.total_additional_expenses) || 0));
+        const summaryExchangeRateInput = document.getElementById('summaryExchangeRate');
+        const rateForRubles = (summaryExchangeRateInput && summaryExchangeRateInput.value !== '' && summaryExchangeRateInput.value !== '...') ? parseFloat(String(summaryExchangeRateInput.value).replace(',', '.')) : null;
+        const conversionRate = (rateForRubles != null && !Number.isNaN(rateForRubles) && rateForRubles > 0) ? rateForRubles : apiConversionRate;
         const totalRubles = Math.round(totalFinalPrice * conversionRate);
+        if (summaryExchangeRateInput && (summaryExchangeRateInput.value === '' || summaryExchangeRateInput.value === '...')) {
+            summaryExchangeRateInput.value = apiConversionRate;
+        }
 
         const summaryTotalEl = document.getElementById('summaryTotal');
         const summaryProfitEl = document.getElementById('summaryProfit');
         const summaryFinalPriceRublesEl = document.getElementById('summaryFinalPriceRubles');
         const summaryLogisticsCostEl = document.getElementById('summaryLogisticsCost');
         if (summaryTotalEl) summaryTotalEl.textContent = Math.round(totalFinalPrice).toLocaleString('ru-RU');
-        if (summaryProfitEl) summaryProfitEl.textContent = Math.round(profitYuan).toLocaleString('ru-RU');
+        if (summaryProfitEl) summaryProfitEl.textContent = (Math.round(profitYuan * 100) / 100).toLocaleString('ru-RU', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
         if (summaryFinalPriceRublesEl) summaryFinalPriceRublesEl.textContent = totalRubles.toLocaleString('ru-RU') + ' ₽';
         if (summaryLogisticsCostEl) summaryLogisticsCostEl.textContent = Math.round(totalLogisticsCost).toLocaleString('ru-RU') + ' ₽';
+
+        const summaryTotalItemsEl = document.getElementById('summaryTotalItems');
+        const summaryTotalWeightEl = document.getElementById('summaryTotalWeight');
+        const summaryTotalCostEl = document.getElementById('summaryTotalCost');
+        const summaryDutyEl = document.getElementById('summaryDuty');
+        const summaryCreditEl = document.getElementById('summaryCredit');
+        const summaryBankGuaranteeEl = document.getElementById('summaryBankGuarantee');
+        if (summaryTotalItemsEl && data.positions && data.positions.length >= 0) {
+            summaryTotalItemsEl.textContent = typeof formatPositionsCountLabel === 'function'
+                ? formatPositionsCountLabel(data.positions.length) : `${data.positions.length} позиций`;
+        }
+        if (summaryTotalWeightEl && typeof data.summary.total_weight === 'number') {
+            summaryTotalWeightEl.textContent = `${Number(data.summary.total_weight).toLocaleString('ru-RU', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} кг`;
+        }
+        if (summaryTotalCostEl) {
+            const purchase = Number(data.summary.total_purchase_cost) || 0;
+            summaryTotalCostEl.textContent = `${Math.round(purchase).toLocaleString('ru-RU')} ¥`;
+        }
+        if (summaryDutyEl && data.summary.total_duty_yuan != null) {
+            summaryDutyEl.textContent = formatCurrency(data.summary.total_duty_yuan, '¥');
+        }
+        if (summaryCreditEl && data.summary.total_credit_yuan != null) {
+            summaryCreditEl.textContent = formatCurrency(data.summary.total_credit_yuan, '¥');
+        }
+        if (summaryBankGuaranteeEl && data.summary.total_bank_guarantee_yuan != null) {
+            summaryBankGuaranteeEl.textContent = formatCurrency(data.summary.total_bank_guarantee_yuan, '¥');
+        }
 
         // Отображаем позиции
         const previewPositionsTable = document.getElementById('previewPositionsTable');
@@ -1962,10 +2013,7 @@
 
         const updateSummaryStats = () => {
             const region = getSelectedBudgetRegion();
-            if (summaryTotalItems) {
-                const blocksCount = positionsContainer ? positionsContainer.querySelectorAll('.position-block').length : 0;
-                summaryTotalItems.textContent = formatPositionsCountLabel(blocksCount);
-            }
+            // Позиций в правой панели задаётся только из ответа API (displayPreCalculationResults)
             if (summaryRegionTag) {
                 summaryRegionTag.textContent = regionLabels[region] || '';
             }
@@ -2022,14 +2070,8 @@
             if (totalWeightEl) {
                 totalWeightEl.value = `${formatted} кг`;
             }
-            if (summaryTotalWeight) {
-                summaryTotalWeight.textContent = `${formatted} кг`;
-            }
-            if (summaryTotalCost) {
-                const roundedCost = Math.round(totalCost);
-                summaryTotalCost.textContent = `${roundedCost.toLocaleString('ru-RU')} ¥`;
-            }
-            
+            // Вес и Закуп в правой панели задаются только из ответа API (displayPreCalculationResults)
+
             // Проверка веса и показ уведомления о рекомендации Деловых линий
             if (mainLowWeightWarning) {
                 if (total > 0 && total < 600) {

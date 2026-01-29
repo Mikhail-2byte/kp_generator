@@ -26,6 +26,7 @@ def create_app() -> Flask:
     # Загружаем конфигурацию из файлов/переменных окружения и сохраняем в app.config
     app_config = load_config(app)
     app.config['APP_SETTINGS'] = app_config
+    app.config['PROJECT_ROOT'] = str(PROJECT_ROOT)
 
     # Ограничение размера загружаемых файлов (10 MB)
     app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024

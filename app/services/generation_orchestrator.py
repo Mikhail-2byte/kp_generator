@@ -1,6 +1,7 @@
 """Оркестратор процесса генерации коммерческих предложений."""
 
 import math
+import os
 from typing import Any, Dict, List, Optional, Tuple
 
 from flask import current_app
@@ -172,8 +173,9 @@ class GenerationOrchestrator:
         Returns:
             Tuple[zip_buffer, file_prefix]
         """
-        excel_template_path = 'templates_docs/template.xlsx'
-        word_template_path = 'templates_docs/template.docx'
+        root_path = current_app.config.get('PROJECT_ROOT') or current_app.root_path
+        excel_template_path = os.path.join(root_path, 'templates_docs', 'template.xlsx')
+        word_template_path = os.path.join(root_path, 'templates_docs', 'template.docx')
 
         excel_file = generate_excel_document(
             excel_template_path,
@@ -287,7 +289,9 @@ class GenerationOrchestrator:
             # Пытаемся извлечь число дней из условий оплаты
             # Используем тот же метод, что и в multi_position_processor
             from app.services.multi_position_processor import MultiPositionProcessor
-            processor = MultiPositionProcessor('templates_docs/template.xlsx')
+            root_path = current_app.config.get('PROJECT_ROOT') or current_app.root_path
+            excel_path = os.path.join(root_path, 'templates_docs', 'template.xlsx')
+            processor = MultiPositionProcessor(excel_path)
             payment_days = processor._extract_days_from_payment_terms(payment_terms)
         
         # Шаг 3: Проверка шаблонов

@@ -1,4 +1,5 @@
 import json
+import os
 import re
 from collections import OrderedDict
 from datetime import datetime, timedelta, timezone
@@ -1133,7 +1134,9 @@ def preview_prices() -> Response:
         payment_days = None
         if (use_credit or use_bank_guarantee) and payment_terms:
             from app.services.multi_position_processor import MultiPositionProcessor
-            processor = MultiPositionProcessor('templates_docs/template.xlsx', config=app_config)
+            root_path = current_app.config.get('PROJECT_ROOT') or current_app.root_path
+            excel_path = os.path.join(root_path, 'templates_docs', 'template.xlsx')
+            processor = MultiPositionProcessor(excel_path, config=app_config)
             payment_days = processor._extract_days_from_payment_terms(payment_terms)
         
         # Извлекаем дополнительные расходы (уже обработаны выше)
@@ -1164,6 +1167,20 @@ def preview_prices() -> Response:
         # Формируем ответ
         positions_result = []
         total_purchase_cost = 0
+
+        total_weight = sum(int(p.get('quantity', 0)) * float(p.get('weight', 0)) for p in positions)
+        total_direct_costs_yuan = 0.0
+        total_duty_yuan = 0.0
+        total_credit_yuan = 0.0
+        for position in positions:
+            costs = orchestrator.calculator.calculate_position_costs(
+                position, logistics_rub, delivery_time, total_weight,
+                use_credit=use_credit, payment_days=payment_days
+            )
+            qty = int(position.get('quantity', 0))
+            total_direct_costs_yuan += costs['total_cost']
+            total_duty_yuan += costs.get('duty_per_unit', 0) * qty
+            total_credit_yuan += costs.get('credit_cost_per_unit', 0) * qty
         
         for i, pos_price in enumerate(position_prices):
             position = pos_price.get('position', {})
@@ -1174,44 +1191,51 @@ def preview_prices() -> Response:
             total_price = final_price * quantity
             total_purchase_cost += cost_price * quantity
             
+            margin_val = pos_price.get('actual_margin') or pos_price.get('margin', margin_percent)
             positions_result.append({
                 'index': i,
                 'product_name': position.get('product', f'Позиция {i + 1}'),
                 'final_price': round(final_price, 2),
                 'total_price': round(total_price, 2),
-                'margin': round(pos_price.get('actual_margin', margin_percent), 2)
+                'margin': round(margin_val, 2)
             })
         
-        # Рассчитываем общую маржу
-        total_costs = total_purchase_cost
-        # Добавляем логистику (конвертируем в юани)
         conversion_rate = app_config.get('calculation_constants', {}).get('conversion_rate', 10.0)
-        total_costs += logistics_rub / conversion_rate
         
-        # Рассчитываем сумму дополнительных расходов
+        # Рассчитываем сумму дополнительных расходов (уже в юанях)
         total_additional_expenses = 0
-        # Добавляем дополнительные расходы (уже в юанях)
         for expense in additional_expenses:
             if isinstance(expense, dict):
                 amount = expense.get('amount', 0)
                 try:
                     expense_amount = float(amount)
                     total_additional_expenses += expense_amount
-                    total_costs += expense_amount
                 except (ValueError, TypeError):
                     pass
         
+        # Все прямые затраты: закуп + логистика + конвертация + пошлина + кредит (уже в total_direct_costs_yuan) + доп. расходы
+        total_costs = total_direct_costs_yuan + total_additional_expenses
         actual_margin_percent = 0
-        if total_costs > 0:
-            actual_margin_percent = ((total_general_price - total_costs) / total_general_price * 100) if total_general_price > 0 else 0
-        
+        if total_general_price > 0 and total_costs >= 0:
+            actual_margin_percent = ((total_general_price - total_costs) / total_general_price * 100)
+
+        # Итог как в Excel: там итоговая строка = SUM(I по строкам), где I = round(цена за ед.) * количество
+        total_final_price_display = sum(
+            round(float(pos.get('final_price', 0))) * int(pos.get('position', {}).get('quantity', 0))
+            for pos in position_prices
+        )
+
         return jsonify({
             'positions': positions_result,
             'summary': {
                 'total_purchase_cost': round(total_purchase_cost, 2),
                 'total_logistics_cost': round(logistics_rub, 2),
+                'total_duty_yuan': round(total_duty_yuan, 2),
+                'total_credit_yuan': round(total_credit_yuan, 2),
                 'total_additional_expenses': round(total_additional_expenses, 2),
-                'total_final_price': round(total_general_price, 2),
+                'total_direct_costs_yuan': round(total_direct_costs_yuan, 2),
+                'total_final_price': total_final_price_display,
+                'total_weight': round(total_weight, 2),
                 'target_margin_percent': round(margin_percent, 2),
                 'actual_margin_percent': round(actual_margin_percent, 2),
                 'conversion_rate': conversion_rate

@@ -29,6 +29,21 @@ def app_config():
 
 
 @pytest.fixture
+def app_config_production():
+    """Конфигурация как в config/settings.json (курс 11.5, НДС 0.22)."""
+    return {
+        'calculation_constants': {
+            'conversion_rate': 11.5,
+            'logistics_cnr_ratio': 0.3,
+            'logistics_rf_ratio': 0.7,
+            'conversion_fee_rate': 0.032,
+            'credit_rate': 0.16,
+            'vat_rate': 0.22,
+        }
+    }
+
+
+@pytest.fixture
 def orchestrator(app_config):
     """Создает экземпляр оркестратора для тестов."""
     return GenerationOrchestrator(app_config)
@@ -158,8 +173,8 @@ class TestGenerationOrchestrator:
     def test_orchestrate_success(self, orchestrator, valid_form_data):
         """Тест успешной оркестрации генерации."""
         with patch.object(orchestrator, 'validate_request') as mock_validate:
-            mock_validate.return_value = (valid_form_data, [{'quantity': 10}], [])
-            
+            mock_validate.return_value = (valid_form_data, [{'quantity': 10}], [], [])
+
             with patch.object(orchestrator, 'calculate_prices') as mock_calc:
                 mock_calc.return_value = ([{'final_price': 150.0}], 1500.0)
                 
@@ -183,16 +198,16 @@ class TestGenerationOrchestrator:
     def test_orchestrate_validation_error(self, orchestrator, valid_form_data):
         """Тест обработки ошибок валидации."""
         with patch.object(orchestrator, 'validate_request') as mock_validate:
-            mock_validate.return_value = (valid_form_data, [], ['Ошибка валидации'])
-            
+            mock_validate.return_value = (valid_form_data, [], ['Ошибка валидации'], [])
+
             with pytest.raises(ValidationError):
                 orchestrator.orchestrate(valid_form_data, None)
     
     def test_orchestrate_calculation_error(self, orchestrator, valid_form_data):
         """Тест обработки ошибок расчета."""
         with patch.object(orchestrator, 'validate_request') as mock_validate:
-            mock_validate.return_value = (valid_form_data, [{'quantity': 10}], [])
-            
+            mock_validate.return_value = (valid_form_data, [{'quantity': 10}], [], [])
+
             with patch.object(orchestrator, 'calculate_prices') as mock_calc:
                 mock_calc.side_effect = Exception('Ошибка расчета')
                 
@@ -202,8 +217,8 @@ class TestGenerationOrchestrator:
     def test_orchestrate_document_error(self, orchestrator, valid_form_data):
         """Тест обработки ошибок генерации документов."""
         with patch.object(orchestrator, 'validate_request') as mock_validate:
-            mock_validate.return_value = (valid_form_data, [{'quantity': 10}], [])
-            
+            mock_validate.return_value = (valid_form_data, [{'quantity': 10}], [], [])
+
             with patch.object(orchestrator, 'calculate_prices') as mock_calc:
                 mock_calc.return_value = ([{'final_price': 150.0}], 1500.0)
                 
@@ -218,6 +233,66 @@ class TestGenerationOrchestrator:
                             
                             with pytest.raises(DocumentGenerationError):
                                 orchestrator.orchestrate(valid_form_data, None)
+
+    def test_preview_calculation_reference_excel(self, app_config_production):
+        """
+        Предварительный расчёт: 1 позиция, закуп 10 ¥/кг, 10 шт, вес 1000 кг,
+        пошлина 0, срок поставки 150, условия оплаты 30 дн, Кредит, маржа 30%.
+        Логистика 10000 руб (как в эталонном Excel — даёт ~869.57 ¥).
+        Ожидаемые значения сверяются с эталонным Excel (ТД РИНАКО).
+        """
+        orchestrator = GenerationOrchestrator(app_config_production)
+        # Закуп 10 за кг, 10 шт, вес 1000 кг → cost_price = 10 * 1000 = 10000 ¥/шт
+        positions = [{
+            'quantity': 10,
+            'cost_price': 10000.0,
+            'weight': 1000.0,
+            'duty_percent': 0,
+            'product': 'тест ч.1111',
+            'drawing_number': '1111',
+            'material': '1111',
+        }]
+        logistics_rub = 10000.0
+        delivery_time = 150
+        margin_percent = 30.0
+        use_credit = True
+        payment_days = 30
+
+        position_prices, total_general_price = orchestrator.calculate_prices(
+            positions,
+            logistics_rub,
+            delivery_time,
+            margin_percent,
+            use_credit=use_credit,
+            payment_days=payment_days,
+        )
+
+        assert len(position_prices) == 1
+        res = position_prices[0]
+        final_price = res['final_price']
+        general_price = res['general_price']
+        margin = res['margin']
+
+        # Эталонный Excel: Цена без НДС за ед. ~15994 ¥, Итого по спецификации ~159940 ¥
+        assert abs(final_price - 15994.28) < 1.0, f'final_price={final_price}'
+        assert abs(general_price - 159942.8) < 2.0, f'general_price={general_price}'
+        assert abs(total_general_price - 159942.8) < 2.0
+        assert abs(margin - 30.0) < 0.5, f'margin={margin}'
+
+        # Проверка составляющих через калькулятор (логистика КНР/РФ, конвертация, кредит)
+        costs = orchestrator.calculator.calculate_position_costs(
+            positions[0], logistics_rub, delivery_time, 10000.0,
+            use_credit=use_credit, payment_days=payment_days
+        )
+        logistics_cnr_total = costs['logistics_cnr_per_unit'] * 10
+        logistics_rf_total = costs['logistics_rf_per_unit'] * 10
+        conversion_total = costs['conversion_fee_per_unit'] * 10
+        credit_total = costs['credit_cost_per_unit'] * 10
+        # Эталон: Логистика КНР ~260.90 ¥, РФ ~608.70 ¥, конвертация 3200 ¥, кредит ~7890.41 ¥
+        assert abs(logistics_cnr_total - 260.87) < 1.0
+        assert abs(logistics_rf_total - 608.70) < 1.0
+        assert abs(conversion_total - 3200.0) < 0.1
+        assert abs(credit_total - 7890.41) < 1.0
 
 
 if __name__ == "__main__":

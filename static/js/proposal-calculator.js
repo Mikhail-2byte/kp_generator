@@ -384,35 +384,18 @@
                 bankGuaranteeYuan = isCN ? bankGuaranteeBase : (bankGuaranteeBase / currentRate);
             }
             
-            // Update UI
-            updateMetrics({
-                total: finalPrice + expensesInCurrency,
-                profit: profit,
-                profitability: profitability,
-                totalPurchaseCost: totalPurchaseCost,
-                logistics: logisticsCost,
-                vat: vatAmount,
-                duty: totalDuty,
-                margin: marginAmount,
-                credit: creditYuan,
-                bankGuarantee: bankGuaranteeYuan,
-                finalPriceRubles: finalPriceInRubles,
-                currency: isCN ? '¥' : '₽',
-                exchangeRate: currentRate
-            });
-            
+            // Right panel is updated only from API after "Предварительный расчёт" (displayPreCalculationResults).
+            // No updateMetrics / updateExpensesList here.
+
             // Синхронизация оценочного веса в блоке логистики
             const totalWeightValueEl = document.getElementById('totalWeightValue');
             if (totalWeightValueEl) {
-                const formatted = Number.isFinite(totalWeight) 
-                    ? totalWeight.toLocaleString('ru-RU', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) 
+                const formatted = Number.isFinite(totalWeight)
+                    ? totalWeight.toLocaleString('ru-RU', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
                     : '0';
                 totalWeightValueEl.value = `${formatted} кг`;
             }
-            
-            // Update expenses list in summary
-            updateExpensesList(additionalExpenses, isCN);
-            
+
         } catch (error) {
             console.error('Error calculating summary:', error);
         }

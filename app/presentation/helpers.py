@@ -5,10 +5,21 @@ from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
 
-def check_templates_exist() -> List[str]:
-    """Проверяет существование шаблонов документов перед генерацией."""
-    excel_template_path = os.path.join('templates_docs', 'template.xlsx')
-    word_template_path = os.path.join('templates_docs', 'template.docx')
+def check_templates_exist(root_path: str | Path | None = None) -> List[str]:
+    """Проверяет существование шаблонов документов перед генерацией.
+    Пути строятся относительно root_path (корень проекта).
+    Если root_path не передан, используется current_app.root_path в контексте Flask.
+    """
+    if root_path is None:
+        try:
+            from flask import current_app
+            root_path = current_app.config.get('PROJECT_ROOT') or current_app.root_path
+        except RuntimeError:
+            # Вне контекста приложения — fallback на CWD для тестов
+            root_path = os.getcwd()
+    root_path = os.fspath(root_path)
+    excel_template_path = os.path.join(root_path, 'templates_docs', 'template.xlsx')
+    word_template_path = os.path.join(root_path, 'templates_docs', 'template.docx')
 
     errors = []
     if not os.path.exists(excel_template_path):

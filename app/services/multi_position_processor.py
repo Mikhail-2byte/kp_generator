@@ -399,7 +399,16 @@ class MultiPositionProcessor:
         if finance_credit and str(finance_credit).lower() in ['1', 'true', 'on', 'yes']:
             sheet[f"H{i33_row}"] = "ДА"
         
-        if finance_bank_guarantee and str(finance_bank_guarantee).lower() in ['1', 'true', 'on', 'yes']:
+        # Банковская гарантия: "ДА" только при наличии дней оплаты (согласованность с бэкендом)
+        payment_terms = form_data.get('payment_terms', '') or ''
+        payment_days = self._extract_days_from_payment_terms(
+            payment_terms.strip() if isinstance(payment_terms, str) else ''
+        )
+        if (
+            finance_bank_guarantee
+            and str(finance_bank_guarantee).lower() in ['1', 'true', 'on', 'yes']
+            and payment_days is not None
+        ):
             sheet[f"H{bank_guarantee_row}"] = "ДА"
 
     def update_logistics_columns(self, sheet) -> None:
@@ -551,6 +560,11 @@ class MultiPositionProcessor:
             sheet['B16'] = f"Условия оплаты: {payment_terms}"
         if payment_days is not None:
             sheet['I16'] = payment_days
+        else:
+            # При включённой банковской гарантии без дней оплаты — явно 0 для формулы I15+I16
+            finance_bank_guarantee = form_data.get('finance_bank_guarantee', '')
+            if finance_bank_guarantee and str(finance_bank_guarantee).lower() in ['1', 'true', 'on', 'yes']:
+                sheet['I16'] = 0
         # Срок действия предложения НЕ вставляется в Excel
         
         # Заполняем ФИО менеджера в ячейку N22

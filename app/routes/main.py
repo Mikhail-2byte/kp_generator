@@ -1213,8 +1213,17 @@ def preview_prices() -> Response:
                 except (ValueError, TypeError):
                     pass
         
-        # Все прямые затраты: закуп + логистика + конвертация + пошлина + кредит (уже в total_direct_costs_yuan) + доп. расходы
-        total_costs = total_direct_costs_yuan + total_additional_expenses
+        # Сумма банковской гарантии в юанях (как в Excel: I24*3%/365*(I15+I16))
+        vat_rate = app_config.get('calculation_constants', {}).get('vat_rate', 0.22)
+        total_bank_guarantee_yuan = 0.0
+        if use_bank_guarantee and payment_days is not None:
+            revenue_with_vat = total_general_price * (1 + vat_rate)
+            total_bank_guarantee_yuan = (
+                revenue_with_vat * 0.03 / 365 * (delivery_time + payment_days)
+            )
+
+        # Все затраты для маржи: прямые + доп. расходы + банковская гарантия
+        total_costs = total_direct_costs_yuan + total_additional_expenses + total_bank_guarantee_yuan
         actual_margin_percent = 0
         if total_general_price > 0 and total_costs >= 0:
             actual_margin_percent = ((total_general_price - total_costs) / total_general_price * 100)
@@ -1232,6 +1241,7 @@ def preview_prices() -> Response:
                 'total_logistics_cost': round(logistics_rub, 2),
                 'total_duty_yuan': round(total_duty_yuan, 2),
                 'total_credit_yuan': round(total_credit_yuan, 2),
+                'total_bank_guarantee_yuan': round(total_bank_guarantee_yuan, 2),
                 'total_additional_expenses': round(total_additional_expenses, 2),
                 'total_direct_costs_yuan': round(total_direct_costs_yuan, 2),
                 'total_final_price': total_final_price_display,

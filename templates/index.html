@@ -591,6 +591,7 @@
                         <p class="metric-unit" id="summaryProfitUnit">юаней</p>
                     </div>
                 </div>
+                <p class="summary-margin-actual muted-text" id="summaryActualMargin">Фактическая маржа: —</p>
                 
                 <!-- Final Price in Rubles -->
                 <div class="summary-final-price-rubles">
@@ -1305,12 +1306,14 @@
             previewLogisticsCost.textContent = formatCurrency(data.summary.total_logistics_cost, '₽');
         }
         if (previewMarginAmount) {
-            // Прибыль (маржинальный доход): итог без НДС − все прямые затраты; при наличии total_direct_costs_yuan из API используем его
+            // Прибыль (маржинальный доход): итог без НДС − все затраты (включая банковскую гарантию)
             const totalFinal = Number(data.summary.total_final_price) || 0;
             const totalDirectCostsYuan = data.summary.total_direct_costs_yuan;
-            const marginValue = (typeof totalDirectCostsYuan === 'number' && !Number.isNaN(totalDirectCostsYuan))
+            const totalBankGuaranteeYuan = Number(data.summary.total_bank_guarantee_yuan) || 0;
+            let marginValue = (typeof totalDirectCostsYuan === 'number' && !Number.isNaN(totalDirectCostsYuan))
                 ? totalFinal - totalDirectCostsYuan
                 : (totalFinal - (Number(data.summary.total_purchase_cost) || 0) - (Number(data.summary.total_logistics_cost) || 0) / (data.summary.conversion_rate || 10) - (Number(data.summary.total_additional_expenses) || 0));
+            marginValue -= totalBankGuaranteeYuan;
             previewMarginAmount.textContent = formatCurrency(marginValue, '¥');
         }
         if (previewFinalPrice) {
@@ -1319,16 +1322,22 @@
         if (previewMarginMeta) {
             previewMarginMeta.textContent = `(${data.summary.actual_margin_percent.toFixed(1)}% фактическая маржа)`;
         }
+        const summaryActualMarginEl = document.getElementById('summaryActualMargin');
+        if (summaryActualMarginEl && data.summary.actual_margin_percent != null) {
+            summaryActualMarginEl.textContent = `Фактическая маржа: ${Number(data.summary.actual_margin_percent).toFixed(1)}%`;
+        }
 
-        // Синхронизируем панель «Итого» в сайдбаре (ИТОГО, Прибыль, Итоговая цена, Логистика)
+        // Синхронизируем панель «Итого» в сайдбаре (ИТОГО, Прибыль, Итоговая цена, Логистика). Прибыль — с учётом банковской гарантии.
         const apiConversionRate = data.summary.conversion_rate || 10;
         const totalFinalPrice = Number(data.summary.total_final_price) || 0;
         const totalPurchaseCost = Number(data.summary.total_purchase_cost) || 0;
         const totalLogisticsCost = Number(data.summary.total_logistics_cost) || 0;
         const totalDirectCostsYuan = data.summary.total_direct_costs_yuan;
-        const profitYuan = (typeof totalDirectCostsYuan === 'number' && !Number.isNaN(totalDirectCostsYuan))
+        const totalBankGuaranteeYuan = Number(data.summary.total_bank_guarantee_yuan) || 0;
+        let profitYuan = (typeof totalDirectCostsYuan === 'number' && !Number.isNaN(totalDirectCostsYuan))
             ? totalFinalPrice - totalDirectCostsYuan
             : (totalFinalPrice - totalPurchaseCost - (totalLogisticsCost / apiConversionRate) - (Number(data.summary.total_additional_expenses) || 0));
+        profitYuan -= totalBankGuaranteeYuan;
         const summaryExchangeRateInput = document.getElementById('summaryExchangeRate');
         const rateForRubles = (summaryExchangeRateInput && summaryExchangeRateInput.value !== '' && summaryExchangeRateInput.value !== '...') ? parseFloat(String(summaryExchangeRateInput.value).replace(',', '.')) : null;
         const conversionRate = (rateForRubles != null && !Number.isNaN(rateForRubles) && rateForRubles > 0) ? rateForRubles : apiConversionRate;

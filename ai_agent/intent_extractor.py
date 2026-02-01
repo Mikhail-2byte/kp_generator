@@ -106,7 +106,7 @@ class IntentExtractor:
                 'type': 'duty',
                 'priority': 5
             }),
-            (r'1с|1c|барабаны|вал', {
+            (r'1с|1c', {
                 'type': 'analytics',
                 'priority': 5
             }),
@@ -297,9 +297,24 @@ class IntentExtractor:
         if 'category' not in params:
             categories = self.analytics_helper.get_categories()
             for cat in categories:
-                if cat.lower() in message_lower:
+                cat_lower = cat.lower()
+                # Прямое совпадение
+                if cat_lower in message_lower:
                     params['category'] = cat
                     break
+                # Проверяем начало слова (для склонений: Барабаны -> барабан)
+                cat_base = cat_lower.rstrip('ы').rstrip('и').rstrip('а').rstrip('я')
+                if len(cat_base) >= 3:  # Минимум 3 символа для базы
+                    # Ищем слова, начинающиеся с базы категории
+                    words = message_lower.split()
+                    for word in words:
+                        # Убираем знаки препинания
+                        word_clean = word.strip('.,!?;:()[]{}"\'')
+                        if word_clean.startswith(cat_base) and len(word_clean) >= len(cat_base):
+                            params['category'] = cat
+                            break
+                    if 'category' in params:
+                        break
         
         # Специфичные параметры для разных подтипов
         if subtype == 'top_managers':
@@ -487,9 +502,24 @@ class IntentExtractor:
         # Определяем категорию
         categories = self.analytics_helper.get_categories()
         for cat in categories:
-            if cat.lower() in message_lower:
+            cat_lower = cat.lower()
+            # Прямое совпадение
+            if cat_lower in message_lower:
                 params['category'] = cat
                 break
+            # Проверяем начало слова (для склонений: Барабаны -> барабан)
+            cat_base = cat_lower.rstrip('ы').rstrip('и').rstrip('а').rstrip('я')
+            if len(cat_base) >= 3:  # Минимум 3 символа для базы
+                # Ищем слова, начинающиеся с базы категории
+                words = message_lower.split()
+                for word in words:
+                    # Убираем знаки препинания
+                    word_clean = word.strip('.,!?;:()[]{}"\'')
+                    if word_clean.startswith(cat_base) and len(word_clean) >= len(cat_base):
+                        params['category'] = cat
+                        break
+                if 'category' in params:
+                    break
         
         # Проверяем, нужны ли графики
         chart_keywords = ['график', 'визуализируй', 'покажи график', 'диаграмм']
@@ -531,8 +561,7 @@ class IntentExtractor:
         result['is_duty'] = any(keyword in message_lower for keyword in duty_keywords)
         
         analytics_keywords = [
-            '1с', '1c', 'барабаны', 'вал', 'бандаж', 'блок', 'болт', 'бочка',
-            'найди в 1с', 'покажи данные по', 'сколько записей',
+            '1с', '1c', 'найди в 1с', 'покажи данные по', 'сколько записей',
             'топ заказчиков', 'топ материалов', 'статистика по',
             'график', 'визуализируй', 'покажи график',
             'менеджер', 'топ менеджеров', 'лучший менеджер',

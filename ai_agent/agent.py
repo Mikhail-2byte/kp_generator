@@ -617,6 +617,11 @@ class AIAgent:
             if response.status_code == 200:
                 response_data = response.json()
                 
+                # Проверяем наличие choices в ответе
+                if 'choices' not in response_data:
+                    logger.error(f"API ответ не содержит 'choices': {response_data}")
+                    raise APIError(f"Некорректный ответ API: отсутствует 'choices'. Ответ: {response_data}")
+                
                 # Извлекаем информацию об использовании
                 if self.usage_monitoring:
                     self._log_usage(
@@ -674,8 +679,17 @@ class AIAgent:
             
             else:
                 error_type = "unknown_error"
+                # Логируем тело ответа для диагностики
+                try:
+                    response_body = response.text[:1000]  # Ограничиваем размер лога
+                except Exception:
+                    response_body = "Не удалось получить тело ответа"
+                
                 error_msg = f"Неожиданный статус ответа: {response.status_code}"
                 logger.error(f"API Error {response.status_code}: {error_msg}")
+                logger.error(f"Response body: {response_body}")
+                logger.error(f"Request URL: {self.api_url}")
+                logger.error(f"Request model: {self.model}")
                 
                 if self.usage_monitoring:
                     self._log_usage(user_id=user_id, response_time_ms=response_time_ms, error_type=error_type)
@@ -1849,6 +1863,12 @@ class AIAgent:
         try:
             # Вызываем API с обработкой ошибок
             response_data = self._call_api(api_messages, user_id=user_id)
+            
+            # Проверяем наличие choices
+            if 'choices' not in response_data or not response_data['choices']:
+                logger.error(f"Ответ API не содержит choices: {response_data}")
+                return "⚠️ Ошибка: API вернул некорректный ответ. Попробуйте повторить запрос."
+            
             assistant_message = response_data['choices'][0]['message']
             content = assistant_message.get('content', '')
             

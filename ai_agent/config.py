@@ -22,7 +22,7 @@ load_dotenv(dotenv_path=env_path)
 # API конфигурация
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
-MODEL_NAME = os.getenv("OPENROUTER_MODEL", "xiaomi/mimo-v2-flash:free")
+MODEL_NAME = os.getenv("OPENROUTER_MODEL", "google/gemini-flash-1.5")
 
 # Пути к документации (теперь в папке ai_agent/data/)
 AI_AGENT_DIR = Path(__file__).resolve().parent

@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 # Кэш для хранения курса валют
 _cache: Optional[Tuple[float, str, datetime]] = None
 _CACHE_TTL_HOURS = 1  # Время жизни кэша в часах
+_CACHE_TTL_MINUTES = 30 # Время жизни кэша в минутах
 
 
 def _get_default_rate() -> float:
@@ -53,13 +54,14 @@ def _try_api_source(url: str, headers: dict, timeout: int = 10) -> Optional[Tupl
         response = session.get(url, timeout=timeout, stream=False)
         response.raise_for_status()
         
+        # Парсим JSON ответ
         data = response.json()
-        
-        # Проверяем наличие курса RUB (поддерживаем разные форматы API)
-        if 'rates' not in data or 'RUB' not in data['rates']:
+        rates = data.get('rates', {})
+        rate = rates.get('RUB')
+        if rate is None:
             return None
         
-        rub_rate = data['rates']['RUB']
+        rub_rate = float(rate)
         
         # Получаем дату курса (разные API используют разные поля)
         date_str = (
@@ -72,77 +74,66 @@ def _try_api_source(url: str, headers: dict, timeout: int = 10) -> Optional[Tupl
         if ' ' in str(date_str):
             date_str = str(date_str).split(' ')[0]
         
-        return float(rub_rate), str(date_str)
+        return rub_rate, str(date_str)
     except Exception as e:
         logger.debug("Ошибка при запросе к API источнику %s: %s", url, e)
         return None
 
 
-def get_currency_rate() -> Optional[Tuple[float, str]]:
+def get_currency_rate():
     """
-    Получает актуальный курс CNY к RUB через бесплатный API.
-    Пробует несколько источников с fallback.
-    
-    Returns:
-        Кортеж (курс, дата) или None в случае ошибки
+    Получает актуальный курс CNY к RUB от ЦБ РФ
     """
-    # Список альтернативных API источников (пробуем в порядке приоритета)
-    api_sources = [
-        {
-            'url': 'https://open.er-api.com/v6/latest/CNY',
-            'name': 'open.er-api.com',
-            'timeout': 8  # Более быстрый и надежный источник
-        },
-        {
-            'url': 'https://api.exchangerate-api.com/v4/latest/CNY',
-            'name': 'exchangerate-api.com',
-            'timeout': 8  # Резервный источник
-        }
-    ]
+    import requests
+    import xml.etree.ElementTree as ET
+    from datetime import datetime
     
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'application/json',
-    }
-    
-    logger.info("Попытка получить курс валют из API (пробуем %d источников)", len(api_sources))
-    print(f"[EXCHANGE_RATE] Попытка получить курс из {len(api_sources)} источников...")
-    request_start_time = datetime.now()
-    
-    # Пробуем каждый источник по очереди
-    for idx, source in enumerate(api_sources, 1):
-        url = source['url']
-        name = source['name']
-        timeout = source['timeout']
+    try:
+        # Получаем курс от ЦБ РФ (основной источник)
+        cbr_url = "https://www.cbr.ru/scripts/XML_daily.asp"
+        logger.debug("Запрос курса к ЦБ РФ...")
         
-        logger.info("Попытка %d/%d: %s", idx, len(api_sources), name)
-        print(f"[EXCHANGE_RATE] Попытка {idx}/{len(api_sources)}: {name}")
-        
-        try:
-            result = _try_api_source(url, headers, timeout)
-            if result:
-                rate, date_str = result
-                duration = (datetime.now() - request_start_time).total_seconds()
-                logger.info("✓ Курс валют успешно получен из %s: 1 CNY = %.4f RUB (дата: %s, за %.2f сек)", 
-                           name, rate, date_str, duration)
-                print(f"[EXCHANGE_RATE] ✓ Курс получен из {name}: 1 CNY = {rate:.4f} RUB (дата: {date_str}, за {duration:.2f} сек)")
-                return rate, date_str
-            else:
-                logger.warning("Не удалось получить курс из %s", name)
-                print(f"[EXCHANGE_RATE] Не удалось получить курс из {name}")
-        except Exception as e:
-            duration = (datetime.now() - request_start_time).total_seconds()
-            logger.warning("Ошибка при запросе к %s после %.2f сек: %s", name, duration, e)
-            print(f"[EXCHANGE_RATE] Ошибка при запросе к {name}: {type(e).__name__}")
-            continue
+        response = requests.get(cbr_url, timeout=10)
+        if response.status_code == 200:
+            root = ET.fromstring(response.content)
+            
+            # Ищем курс CNY
+            for valute in root.findall('Valute'):
+                char_code = valute.find('CharCode')
+                if char_code is not None and char_code.text == 'CNY':
+                    name = valute.find('Name')
+                    value = valute.find('Value')
+                    nominal = valute.find('Nominal')
+                    
+                    if name is not None and value is not None and nominal is not None:
+                        rate = float(value.text.replace(',', '.')) / int(nominal.text)
+                        date_str = root.attrib.get('Date', '')
+                        logger.info("Курс получен из ЦБ РФ: 1 CNY = %.4f RUB (дата: %s)", rate, date_str)
+                        return round(rate, 4), date_str
+            
+            logger.error("Курс CNY не найден в ответе ЦБ РФ")
+            
+    except Exception as e:
+        logger.error("Ошибка при получении курса от ЦБ РФ: %s", e)
     
-    # Если все источники не сработали
-    total_duration = (datetime.now() - request_start_time).total_seconds()
-    logger.error("Не удалось получить курс ни из одного источника (всего попыток: %d, время: %.2f сек)", 
-                len(api_sources), total_duration)
-    print(f"[EXCHANGE_RATE] ✗ Не удалось получить курс ни из одного источника (время: {total_duration:.2f} сек)")
+    # Fallback: пробуем Open ER API
+    logger.debug("Пробуем резервный источник - Open ER API...")
+    try:
+        url = "https://open.er-api.com/v6/latest/CNY"
+        response = requests.get(url, timeout=5)
+        if response.status_code == 200:
+            data = response.json()
+            rates = data.get('rates', {})
+            rate = rates.get('RUB')
+            date_str = data.get('time_last_update_utc', '')
+            if rate:
+                logger.info("Курс получен из Open ER API: 1 CNY = %.4f RUB (дата: %s)", rate, date_str)
+                return round(rate, 4), date_str
+    except Exception as e:
+        logger.error("Ошибка при получении курса от Open ER API: %s", e)
     
-    return None
+    logger.error("Не удалось получить курс из всех источников")
+    return None, None
 
 
 def get_cached_rate() -> float:
@@ -173,7 +164,7 @@ def get_cached_rate() -> float:
     rate, date_str, cached_at = _cache
     
     # Проверяем, не устарел ли кэш
-    if datetime.now() - cached_at > timedelta(hours=_CACHE_TTL_HOURS):
+    if datetime.now() - cached_at > timedelta(minutes=_CACHE_TTL_MINUTES):
         # Кэш устарел, пытаемся обновить
         result = get_currency_rate()
         if result:
@@ -190,24 +181,21 @@ def get_cached_rate() -> float:
     return rate
 
 
-def get_exchange_rate_info() -> dict:
+def get_exchange_rate_info():
     """
-    Возвращает информацию о текущем курсе валют для API endpoint.
-    Использует кэш и обновляет его только если он устарел (старше 1 часа).
-    Это предотвращает перегрузку внешнего API.
-    
-    Returns:
-        Словарь с информацией о курсе: rate, date, source, cached
+    Получает информацию о курсе валют с кэшированием
     """
-    global _cache
+    global _cache, cached_at
     
-    # Сначала проверяем кэш
-    if _cache is not None:
-        rate, date_str, cached_at = _cache
+    # Проверяем, есть ли кэш
+    if _cache is not None and cached_at is not None:
+        rate, date_str = _cache
+        
+        # Проверяем, не устарел ли кэш
         cache_age = datetime.now() - cached_at
         
-        # Если кэш свежий (меньше 1 часа), возвращаем его БЕЗ запроса к API
-        if cache_age < timedelta(hours=_CACHE_TTL_HOURS):
+        # Если кэш свежий (меньше 10 минут), возвращаем его БЕЗ запроса к API
+        if cache_age < timedelta(minutes=_CACHE_TTL_MINUTES):
             cache_age_minutes = int(cache_age.total_seconds() / 60)
             logger.debug("Используется кэшированный курс: %.4f RUB (возраст кэша: %d мин)", 
                         rate, cache_age_minutes)
@@ -221,54 +209,37 @@ def get_exchange_rate_info() -> dict:
             }
         else:
             # Кэш устарел, нужно обновить
-            cache_age_hours = cache_age.total_seconds() / 3600
-            logger.info("Кэш устарел (возраст: %.1f часов), обновляем из API...", cache_age_hours)
+            cache_age_minutes = cache_age.total_seconds() / 60
+            logger.info("Кэш устарел (возраст: %.1f мин), обновляем из API...", cache_age_minutes)
     
-    # Кэш отсутствует или устарел - пытаемся получить актуальный курс из API
-    logger.info("Запрос информации о курсе валют (кэш: %s)", "устарел" if _cache else "отсутствует")
-    result = get_currency_rate()
+    # Кэша нет или он устарел - получаем новый курс
+    rate, date_str = get_currency_rate()
     
-    if result:
-        rate, date_str = result
+    if rate is not None:
         # Обновляем кэш
         _cache = (rate, date_str, datetime.now())
-        logger.info("Курс валют обновлен в кэше: %.4f RUB (будет кэширован на %d часов)", 
-                   rate, _CACHE_TTL_HOURS)
+        cached_at = _cache[2]
+        
         return {
             'rate': round(rate, 4),
             'date': date_str,
-            'source': 'api',
-            'cached': False
-        }
-    
-    # Если не удалось получить из API, проверяем старый кэш (даже если устарел)
-    if _cache:
-        rate, date_str, cached_at = _cache
-        cache_age = datetime.now() - cached_at
-        cache_age_hours = cache_age.total_seconds() / 3600
-        logger.warning("Не удалось обновить курс из API, используется устаревший кэш (возраст: %.1f часов)", 
-                      cache_age_hours)
-        return {
-            'rate': round(rate, 4),
-            'date': date_str,
-            'source': 'cache',
-            'cached': True,
+            'source': 'ЦБ РФ + резервный API',
+            'cached': False,
             'cached_at': cached_at.isoformat(),
-            'cache_age_minutes': int(cache_age.total_seconds() / 60),
-            'stale': True  # Помечаем как устаревший
+            'cache_age_minutes': 0
+        }
+    else:
+        # Не удалось получить курс
+        logger.error("Не удалось получить курс валют")
+        return {
+            'rate': 11.05,  # Значение по умолчанию
+            'date': datetime.now().strftime('%d.%m.%Y'),
+            'source': 'default',
+            'cached': False,
+            'cached_at': None,
+            'cache_age_minutes': None
         }
     
-    # Используем значение по умолчанию
-    default_rate = _get_default_rate()
-    logger.warning("Используется курс по умолчанию из конфига: %.2f RUB", default_rate)
-    print(f"[EXCHANGE_RATE] Используется значение по умолчанию: {default_rate} RUB")
-    return {
-        'rate': default_rate,
-        'date': datetime.now().strftime('%Y-%m-%d'),
-        'source': 'config',
-        'cached': False
-    }
-
 
 def clear_cache() -> None:
     """
@@ -277,3 +248,43 @@ def clear_cache() -> None:
     global _cache
     _cache = None
     logger.info("Кэш курса валют очищен")
+
+
+def get_cached_exchange_rate():
+    """
+    Получает курс валют с автоматическим обновлением устаревшего кэша
+    """
+    global _cache, cached_at
+    
+    if _cache is None or cached_at is None:
+        # Нет кэша - получаем курс
+        result = get_currency_rate()
+        if result[0] is not None:
+            rate, date_str = result
+            _cache = (rate, date_str, datetime.now())
+            cached_at = _cache[2]
+            logger.info("Курс валют получен и закэширован: %.4f RUB", rate)
+            return rate
+        else:
+            logger.error("Не удалось получить курс валют")
+            return 11.05  # Значение по умолчанию
+    
+    # Проверяем, не устарел ли кэш
+    rate, date_str, cache_time = _cache
+    if datetime.now() - cache_time > timedelta(minutes=_CACHE_TTL_MINUTES):
+        # Кэш устарел, пытаемся обновить
+        result = get_currency_rate()
+        if result[0] is not None:
+            new_rate, new_date_str = result
+            _cache = (new_rate, new_date_str, datetime.now())
+            logger.info("Курс валют обновлен из API: 1 CNY = %.4f RUB (дата: %s)", new_rate, new_date_str)
+            return new_rate
+        else:
+            # Не удалось обновить, используем старый кэш
+            logger.warning("Не удалось обновить курс из API, используется кэшированное значение: %.2f", rate)
+            return rate
+    else:
+        # Кэш свежий
+        cache_age_minutes = int((datetime.now() - cache_time).total_seconds() / 60)
+        logger.debug("Используется свежий кэш курса: %.4f RUB (возраст: %d мин)", rate, cache_age_minutes)
+        return rate

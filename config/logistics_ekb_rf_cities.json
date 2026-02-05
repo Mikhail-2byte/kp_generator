@@ -104,6 +104,11 @@
       "name": "Березники",
       "region": "Пермскомий край",
       "distance_from_ekb_km": 550
+    },
+    {
+      "name": "Тольятти",
+      "region": "Самарская область",
+      "distance_from_ekb_km": 920
     }
   ]
 }

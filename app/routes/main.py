@@ -41,6 +41,7 @@ from app.services.analytics_enhancements import (
 from app.services.repositories import generation_repository
 from app.services.feedback import save_feedback_entry
 from app.services.excel_importer import ExcelImportError, parse_positions_from_excel
+from app.services.exchange_rate_service import get_exchange_rate_info
 from app.presentation.ui import build_context
 from app.core.extensions import csrf
 from app.core.exceptions import CalculationError, DocumentGenerationError, ValidationError
@@ -532,7 +533,7 @@ def feedback() -> Union[str, Response]:
             'name': name,
             'contact': contact,
             'feedback_text': feedback_text,
-            'improvement_text': improvement_text
+            'improvement': improvement_text
         }
 
         if not feedback_text and not improvement_text:
@@ -620,7 +621,7 @@ def gb_analogs() -> str:
             search_field=search_field
         )
     )
-
+        
 
 @main_bp.route('/orders')
 def orders_page() -> str:
@@ -636,7 +637,7 @@ def orders_page() -> str:
         'orders.html',
         **build_context('orders', 'Распоряжения', orders=orders)
     )
-
+        
 
 @main_bp.route('/templates-library')
 def templates_page() -> str:

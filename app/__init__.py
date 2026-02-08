@@ -1,5 +1,11 @@
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+# Загружаем .env до любых импортов, которые читают переменные окружения (в т.ч. OPENROUTER_MODEL)
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+load_dotenv(PROJECT_ROOT / '.env')
+
 from flask import Flask
 
 from app.core.config import load_config, setup_app_security, setup_logging
@@ -11,8 +17,6 @@ from app.presentation.ui import register_ui
 from app.routes import register_blueprints
 from app.services import datasets
 from app.services.repositories import user_repository
-
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
 def create_app() -> Flask:

@@ -11,14 +11,14 @@
 - Аутентификация, профиль, базовая статистика
 
 ## Быстрый старт (Windows)
-1) Python 3.12, PowerShell:
+1) Python 3.12, PowerShell. Задайте `DATABASE_URL` в `.env` (см. [docs/MSSQL_SETUP.md](docs/MSSQL_SETUP.md)):
 ```powershell
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-alembic upgrade head
 python app.py
 ```
+(миграции применяются при старте приложения)
 2) Продакшн (Waitress):
 ```powershell
 $env:USE_WAITRESS = "1"
@@ -52,11 +52,11 @@ waitress-serve --call "app:create_app"
 - `.env` и `config/settings.json` (переменные, секреты, БД). Минимальный пример `.env`:
   ```
   APP_ENV=development
-  DATABASE_URL=sqlite:///kp_generator.db
+  DATABASE_URL=mssql+pyodbc://USER:PASSWORD@host:1433/kp_generator?driver=ODBC+Driver+17+for+SQL+Server
   SECRET_KEY=dev-secret-key
   LOG_LEVEL=INFO
   ```
-- По умолчанию SQLite: `sqlite:///kp_generator.db`
+- База данных: только **Microsoft SQL Server** (см. [docs/MSSQL_SETUP.md](docs/MSSQL_SETUP.md)).
 - Профили окружений: `config/environments/{development,staging,production}.json`
   - Выбор профиля переменной `APP_ENV` (по умолчанию `development`)
   - Значения `DATABASE_URL`, `SECRET_KEY`, `LOG_LEVEL`, `DEBUG` можно задать в профиле или через переменные окружения

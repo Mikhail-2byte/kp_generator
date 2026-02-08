@@ -8,12 +8,11 @@
 4. [Основная функциональность](#основная-функциональность)
 5. [REST API](#rest-api)
 6. [Расширенная аналитика](#расширенная-аналитика)
-7. [Справочник контактов заказчиков](#справочник-контактов-заказчиков)
-8. [Административная панель](#административная-панель)
-9. [База данных и миграции](#база-данных-и-миграции)
-10. [Тестирование](#тестирование)
-11. [Развертывание](#развертывание)
-12. [Примеры использования](#примеры-использования)
+7. [Административная панель](#административная-панель)
+8. [База данных и миграции](#база-данных-и-миграции)
+9. [Тестирование](#тестирование)
+10. [Развертывание](#развертывание)
+11. [Примеры использования](#примеры-использования)
 
 ---
 
@@ -61,10 +60,10 @@
    pip install -r requirements.txt
    ```
 
-3. **Создайте файл `.env`:**
+3. **Создайте файл `.env`** (обязателен `DATABASE_URL` для Microsoft SQL Server — см. [MSSQL_SETUP.md](MSSQL_SETUP.md)):
    ```env
    APP_ENV=development
-   DATABASE_URL=sqlite:///kp_generator.db
+   DATABASE_URL=mssql+pyodbc://USER:PASSWORD@host:1433/kp_generator?driver=ODBC+Driver+17+for+SQL+Server
    SECRET_KEY=your-secret-key-change-in-production
    FLASK_RUN_HOST=0.0.0.0
    FLASK_RUN_PORT=5000
@@ -95,7 +94,7 @@
 ### Основные директории
 
 - **`app/core/`** - Ядро приложения (конфигурация, расширения Flask, обработка ошибок)
-- **`app/models/`** - Доменные модели (UserRecord, GenerationHistoryRecord, CustomerContactRecord, AuditLogRecord)
+- **`app/models/`** - Доменные модели (UserRecord, GenerationHistoryRecord, AuditLogRecord)
 - **`app/database/`** - Работа с базой данных (CRUD операции, репозитории)
 - **`app/auth/`** - Аутентификация и авторизация
 - **`app/business/`** - Бизнес-логика (расчет цен, генерация документов)
@@ -468,54 +467,6 @@ GET /api/v1/logistics/cities
 }
 ```
 
-### Управление контактами заказчиков (API)
-
-#### Список контактов
-
-```http
-GET /api/v1/customers?search=компания
-```
-
-#### Создание контакта
-
-```http
-POST /api/v1/customers
-Content-Type: application/json
-
-{
-  "company_name": "ООО Компания",
-  "contact_person": "Иван Иванов",
-  "phone": "+7 999 123-45-67",
-  "email": "info@company.ru",
-  "address": "Москва, ул. Примерная, 1",
-  "notes": "Примечания"
-}
-```
-
-#### Получение контакта
-
-```http
-GET /api/v1/customers/{customer_id}
-```
-
-#### Обновление контакта
-
-```http
-PUT /api/v1/customers/{customer_id}
-Content-Type: application/json
-
-{
-  "phone": "+7 999 999-99-99",
-  "email": "new@company.ru"
-}
-```
-
-#### Удаление контакта
-
-```http
-DELETE /api/v1/customers/{customer_id}
-```
-
 ### Примеры использования API
 
 #### Python (requests)
@@ -683,102 +634,6 @@ fetch('http://localhost:5000/api/v1/logistics/calculate', {
 
 ---
 
-## Справочник контактов заказчиков
-
-### Доступ
-
-**Web интерфейс:** через форму генерации КП (выпадающий список компаний)
-
-**API:** `/api/v1/customers`
-
-### Функциональность
-
-#### 1. Создание контакта
-
-**Через форму:**
-1. На главной странице в поле "Компания" начните вводить название
-2. Если контакт существует, он появится в выпадающем списке
-3. Если нет — введите новое название и заполните дополнительные поля:
-   - Контактное лицо
-   - Телефон
-   - Email
-   - Адрес
-   - Заметки
-
-**Через API:**
-```http
-POST /api/v1/customers
-Content-Type: application/json
-
-{
-  "company_name": "ООО Компания",
-  "contact_person": "Иван Иванов",
-  "phone": "+7 999 123-45-67",
-  "email": "info@company.ru",
-  "address": "Москва, ул. Примерная, 1",
-  "notes": "Примечания"
-}
-```
-
-#### 2. Просмотр контактов
-
-**Через форму:**
-- При вводе названия компании в форме генерации КП отображаются подсказки
-
-**Через API:**
-```http
-GET /api/v1/customers?search=компания
-```
-
-#### 3. Редактирование контакта
-
-**Через форму:**
-- Контакты можно редактировать через административную панель (планируется)
-
-**Через API:**
-```http
-PUT /api/v1/customers/{customer_id}
-Content-Type: application/json
-
-{
-  "phone": "+7 999 999-99-99",
-  "email": "new@company.ru"
-}
-```
-
-#### 4. Удаление контакта
-
-**Через API:**
-```http
-DELETE /api/v1/customers/{customer_id}
-```
-
-### Модель данных
-
-```python
-{
-  "id": 1,
-  "company_name": "ООО Компания",
-  "contact_person": "Иван Иванов",
-  "phone": "+7 999 123-45-67",
-  "email": "info@company.ru",
-  "address": "Москва, ул. Примерная, 1",
-  "notes": "Примечания",
-  "created_at": "2025-01-15T10:30:00",
-  "updated_at": "2025-01-15T10:30:00"
-}
-```
-
-### Интеграция с формой генерации
-
-При вводе названия компании в форме генерации КП:
-1. Система автоматически ищет совпадения в справочнике
-2. Отображает выпадающий список с найденными контактами
-3. При выборе контакта автоматически заполняются дополнительные поля (если доступны)
-4. Если контакт не найден, можно создать новый прямо из формы
-
----
-
 ## Административная панель
 
 ### Доступ
@@ -899,20 +754,6 @@ DELETE /api/v1/customers/{customer_id}
 - created_at: DateTime
 ```
 
-#### CustomerContactRecord (Контакты заказчиков)
-
-```python
-- id: Integer (PK)
-- company_name: String
-- contact_person: String
-- phone: String
-- email: String
-- address: Text
-- notes: Text
-- created_at: DateTime
-- updated_at: DateTime
-```
-
 ### Миграции
 
 #### Создание новой миграции
@@ -951,7 +792,6 @@ python -m alembic history
 - `generation_history.user_id, timestamp` (составной)
 - `users.username` (unique)
 - `users.role`
-- `customer_contacts.company_name`
 - `audit_logs.user_id, created_at` (составной)
 - `audit_logs.resource_type, resource_id` (составной)
 
@@ -995,7 +835,6 @@ tests/
 ├── test_smoke_health.py                # Smoke тесты
 ├── test_validators.py                   # Валидаторы
 ├── test_generation_orchestrator.py      # Оркестратор
-├── test_customer_contact_repository.py  # Контакты
 └── test_repositories_integration.py     # Интеграционные тесты
 ```
 
@@ -1014,9 +853,9 @@ pytest --cov=app --cov-report=term-missing
 
 ### Production настройки
 
-1. **Создайте `.env` файл:**
+1. **Создайте `.env` файл** (см. [MSSQL_SETUP.md](MSSQL_SETUP.md)):
 ```env
-DATABASE_URL=postgresql://user:password@localhost/kp_generator
+DATABASE_URL=mssql+pyodbc://user:password@host:1433/kp_generator?driver=ODBC+Driver+17+for+SQL+Server
 SECRET_KEY=<strong-random-secret-key>
 FLASK_ENV=production
 FLASK_DEBUG=False
@@ -1137,14 +976,6 @@ response = requests.post(f"{BASE_URL}/logistics/calculate", json={
 })
 print(response.json())
 
-# 3. Создание контакта
-response = requests.post(f"{BASE_URL}/customers", json={
-    "company_name": "ООО Компания",
-    "contact_person": "Иван Иванов",
-    "phone": "+7 999 123-45-67",
-    "email": "info@company.ru"
-})
-print(response.json())
 ```
 
 ### Пример 5: Анализ маржинальности

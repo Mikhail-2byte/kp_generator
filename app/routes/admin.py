@@ -12,8 +12,6 @@ from app.presentation.forms import (
     AdminUserForm,
     AIAgentCacheForm,
     AIAgentConfigForm,
-    CustomerContactDeleteForm,
-    CustomerContactForm,
     DutyDeleteForm,
     DutyItemForm,
     GBMaterialDeleteForm,
@@ -42,7 +40,7 @@ from app.services.export_service import (
     export_audit_logs_to_excel,
     export_audit_logs_to_pdf,
 )
-from app.services.repositories import admin_stats_repository, audit_log_repository, customer_contact_repository, user_repository
+from app.services.repositories import admin_stats_repository, audit_log_repository, user_repository
 from app.presentation.ui import build_context
 
 
@@ -1904,97 +1902,10 @@ def api_action_distribution() -> Response:
     return jsonify(action_stats)
 
 
-@admin_bp.route('/admin/customers', methods=['GET', 'POST'])
+@admin_bp.route('/admin/audit/api/top-users')
 @admin_required
-def manage_customers() -> Union[str, Response]:
-    """Управление контактами заказчиков: список, создание, редактирование, удаление."""
-    form = CustomerContactForm(prefix='customer')
-    delete_form = CustomerContactDeleteForm(prefix='delete')
-    search_query = request.args.get('search', '').strip()
-    
-    if request.method == 'POST':
-        if form.submit.data and form.validate():
-            contact_id = request.form.get('customer-contact_id')
-            if contact_id:
-                # Редактирование
-                success = customer_contact_repository.update(
-                    int(contact_id),
-                    company_name=form.company_name.data,
-                    contact_person=form.contact_person.data or None,
-                    phone=form.phone.data or None,
-                    email=form.email.data or None,
-                    address=form.address.data or None,
-                    notes=form.notes.data or None
-                )
-                if success:
-                    log_update('customer_contact', contact_id, data_after={
-                        'company_name': form.company_name.data,
-                        'contact_person': form.contact_person.data,
-                    })
-                    flash('Контакт успешно обновлен.', 'success')
-                else:
-                    flash('Ошибка при обновлении контакта.', 'danger')
-            else:
-                # Создание
-                contact_id = customer_contact_repository.create(
-                    company_name=form.company_name.data,
-                    contact_person=form.contact_person.data or None,
-                    phone=form.phone.data or None,
-                    email=form.email.data or None,
-                    address=form.address.data or None,
-                    notes=form.notes.data or None
-                )
-                if contact_id:
-                    log_create('customer_contact', str(contact_id), data={
-                        'company_name': form.company_name.data,
-                    })
-                    flash('Контакт успешно создан.', 'success')
-                else:
-                    flash('Ошибка при создании контакта.', 'danger')
-            return redirect(url_for('admin.manage_customers'))
-        
-        if delete_form.submit.data and delete_form.validate():
-            contact_id = delete_form.contact_id.data
-            contact = customer_contact_repository.get_by_id(int(contact_id))
-            if contact:
-                success = customer_contact_repository.delete(int(contact_id))
-                if success:
-                    log_delete('customer_contact', contact_id, data=contact)
-                    flash('Контакт успешно удален.', 'success')
-                else:
-                    flash('Ошибка при удалении контакта.', 'danger')
-            else:
-                flash('Контакт не найден.', 'danger')
-            return redirect(url_for('admin.manage_customers'))
-    
-    # Получение списка контактов
-    contacts = customer_contact_repository.get_all(search=search_query if search_query else None)
-    
-    # Получение контакта для редактирования
-    edit_id = request.args.get('edit')
-    edit_contact = None
-    if edit_id:
-        edit_contact = customer_contact_repository.get_by_id(int(edit_id))
-        if edit_contact:
-            form.company_name.data = edit_contact['company_name']
-            form.contact_person.data = edit_contact.get('contact_person', '')
-            form.phone.data = edit_contact.get('phone', '')
-            form.email.data = edit_contact.get('email', '')
-            form.address.data = edit_contact.get('address', '')
-            form.notes.data = edit_contact.get('notes', '')
-    
-    return render_template(
-        'admin/customers.html',
-        **build_context(
-            'admin_customers',
-            'Управление контактами заказчиков',
-            contacts=contacts,
-            form=form,
-            delete_form=delete_form,
-            edit_contact=edit_contact,
-            search_query=search_query
-        )
-    )
+def api_top_users() -> Response:
+    """API endpoint для списка наиболее активных пользователей."""
     try:
         limit = int(request.args.get('limit', '10'))
         days = int(request.args.get('days', '30'))
@@ -2016,10 +1927,11 @@ def manage_ai_agent() -> Union[str, Response]:
     config_form = AIAgentConfigForm()
     cache_form = AIAgentCacheForm()
     
-    # Получаем текущие настройки
+    # Получаем текущие настройки (модель из app.config, заполненного из .env при load_config)
+    app_settings = current_app.config.get('APP_SETTINGS') or {}
     current_settings = {
         'api_key_set': bool(os.getenv('OPENROUTER_API_KEY')),
-        'model_name': os.getenv('OPENROUTER_MODEL', 'xiaomi/mimo-v2-flash:free'),
+        'model_name': app_settings.get('openrouter_model') or os.getenv('OPENROUTER_MODEL', 'xiaomi/mimo-v2-flash:free'),
         'timeout': int(os.getenv('OPENROUTER_TIMEOUT', '60')),
         'reasoning_enabled': os.getenv('OPENROUTER_REASONING_ENABLED', 'true').lower() == 'true',
         'fallback_enabled': os.getenv('AI_FALLBACK_ENABLED', 'true').lower() == 'true',

@@ -1,7 +1,1 @@
-{
-  "profile": "staging",
-  "debug": false,
-  "log_level": "INFO",
-  "database_url": "sqlite:///kp_generator_staging.db"
-}
-
+{"profile":"staging","debug":false,"log_level":"INFO","database_url":""}

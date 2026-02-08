@@ -25,7 +25,15 @@ if __name__ == '__main__':
     print(f"  Host: {host}")
     print(f"  Port: {port}")
     print(f"  Debug: {debug}")
-    print(f"  Server: {'Waitress' if use_waitress else 'Flask Development'}")
+    if use_waitress:
+        _threads = os.environ.get('WAITRESS_THREADS', '20')
+        try:
+            _threads = int(_threads)
+        except ValueError:
+            _threads = 20
+        print(f"  Server: Waitress (threads={_threads})")
+    else:
+        print(f"  Server: Flask Development")
     print(f"{'='*60}")
     print(f"\n  Open in browser: http://localhost:{port}")
     print(f"  AI Agent: http://localhost:{port}/ai-agent")
@@ -38,8 +46,8 @@ if __name__ == '__main__':
         except ModuleNotFoundError as exc:  # pragma: no cover - runtime fallback
             raise RuntimeError('waitress is required for production runs. Install via pip install waitress') from exc
 
-        print("Starting Waitress server...")
-        serve(app, host=host, port=port)
+        print(f"Starting Waitress server (threads={_threads})...")
+        serve(app, host=host, port=port, threads=_threads)
     else:
         print("Starting Flask development server...")
         app.run(debug=debug, host=host, port=port)

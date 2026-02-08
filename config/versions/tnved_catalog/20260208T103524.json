@@ -1,0 +1,16 @@
+{
+  "saved_at": "20260208T103524",
+  "actor": "testadmin",
+  "data": {
+    "items": [
+      {
+        "code": "9031908500",
+        "description": "Обновленное описание",
+        "keywords_display": "Обновленные ключевые слова",
+        "examples": "Обновленные примеры",
+        "duty_text": "5%",
+        "duty_percent": 5.0
+      }
+    ]
+  }
+}

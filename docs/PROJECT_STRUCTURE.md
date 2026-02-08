@@ -18,7 +18,7 @@ kp_generator/
 │   │   └── redis_session.py    # Настройка Redis сессий
 │   │
 │   ├── models/                  # Доменные модели
-│   │   └── models.py           # ORM модели (UserRecord, GenerationHistoryRecord, CustomerContactRecord, AuditLogRecord)
+│   │   └── models.py           # ORM модели (UserRecord, GenerationHistoryRecord, AuditLogRecord)
 │   │
 │   ├── database/                # Работа с базой данных
 │   │   ├── __init__.py         # Экспорт функций БД
@@ -171,7 +171,6 @@ ORM модели для работы с базой данных:
 - **models.py**: Определение таблиц и моделей:
   - `UserRecord` - пользователи системы
   - `GenerationHistoryRecord` - история генераций КП
-  - `CustomerContactRecord` - справочник контактов заказчиков
   - `AuditLogRecord` - логи аудита действий пользователей
 
 ### `app/database/` - Работа с базой данных
@@ -276,7 +275,6 @@ Blueprint'ы для организации маршрутов:
 Используется в `app/services/repositories.py` для абстракции работы с БД:
 - `user_repository` - работа с пользователями
 - `generation_repository` - работа с историей генераций
-- `customer_repository` - работа с контактами заказчиков
 
 ### Service Layer Pattern
 Сервисы в `app/services/` инкапсулируют бизнес-логику:

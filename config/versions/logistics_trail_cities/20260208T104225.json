@@ -1,0 +1,18 @@
+{
+  "saved_at": "20260208T104225",
+  "actor": "test_user",
+  "data": {
+    "cities": [
+      {
+        "name": "Город1",
+        "region": "Регион1",
+        "trail_price": 120000.0
+      },
+      {
+        "name": "Город2",
+        "region": "Регион2",
+        "trail_price": 100500.0
+      }
+    ]
+  }
+}

@@ -1,7 +1,1 @@
-{
-  "profile": "development",
-  "debug": true,
-  "log_level": "DEBUG",
-  "database_url": "sqlite:///kp_generator.db"
-}
-
+{"profile":"development","debug":true,"log_level":"DEBUG","database_url":""}

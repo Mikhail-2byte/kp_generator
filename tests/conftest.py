@@ -33,6 +33,7 @@ def app(tmp_path) -> Iterator[Flask]:
 
     with _override_env(
         DATABASE_URL=f"sqlite:///{db_path}",
+        USE_TEST_SQLITE="1",
         SECRET_KEY="test-secret",
         FLASK_ENV="testing",
         FLASK_DEBUG="False",

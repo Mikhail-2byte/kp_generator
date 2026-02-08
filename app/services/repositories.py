@@ -10,7 +10,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.database import DatabaseService, database_service
 from app.database.database import _session_scope
-from app.models.models import AuditLogRecord, CustomerContactRecord, User
+from app.models.models import AuditLogRecord, User
 
 
 class UserRepository:
@@ -398,143 +398,18 @@ class AuditLogRepository:
         }
 
 
-class CustomerContactRepository:
-    """Репозиторий для работы с контактами заказчиков."""
-    
-    def create(
-        self,
-        company_name: str,
-        contact_person: Optional[str] = None,
-        phone: Optional[str] = None,
-        email: Optional[str] = None,
-        address: Optional[str] = None,
-        notes: Optional[str] = None
-    ) -> Optional[int]:
-        """Создает новый контакт заказчика."""
-        with _session_scope() as session:
-            contact = CustomerContactRecord(
-                company_name=company_name,
-                contact_person=contact_person,
-                phone=phone,
-                email=email,
-                address=address,
-                notes=notes
-            )
-            session.add(contact)
-            session.flush()
-            return contact.id
-    
-    def get_by_id(self, contact_id: int) -> Optional[Dict[str, Any]]:
-        """Получает контакт по ID."""
-        with _session_scope() as session:
-            contact = session.query(CustomerContactRecord).filter(
-                CustomerContactRecord.id == contact_id
-            ).first()
-            if not contact:
-                return None
-            return {
-                'id': contact.id,
-                'company_name': contact.company_name,
-                'contact_person': contact.contact_person,
-                'phone': contact.phone,
-                'email': contact.email,
-                'address': contact.address,
-                'notes': contact.notes,
-                'created_at': contact.created_at.isoformat() if contact.created_at else None,
-                'updated_at': contact.updated_at.isoformat() if contact.updated_at else None,
-            }
-    
-    def get_all(self, search: Optional[str] = None) -> List[Dict[str, Any]]:
-        """Получает все контакты с опциональным поиском."""
-        with _session_scope() as session:
-            query = session.query(CustomerContactRecord)
-            if search:
-                # ilike уже case-insensitive, но для SQLite может потребоваться явное приведение
-                search_term = f'%{search}%'
-                query = query.filter(
-                    or_(
-                        CustomerContactRecord.company_name.ilike(search_term),
-                        CustomerContactRecord.contact_person.ilike(search_term),
-                        CustomerContactRecord.phone.ilike(search_term),
-                        CustomerContactRecord.email.ilike(search_term),
-                    )
-                )
-            contacts = query.order_by(CustomerContactRecord.company_name).all()
-            return [
-                {
-                    'id': c.id,
-                    'company_name': c.company_name,
-                    'contact_person': c.contact_person,
-                    'phone': c.phone,
-                    'email': c.email,
-                    'address': c.address,
-                    'notes': c.notes,
-                    'created_at': c.created_at.isoformat() if c.created_at else None,
-                    'updated_at': c.updated_at.isoformat() if c.updated_at else None,
-                }
-                for c in contacts
-            ]
-    
-    def update(
-        self,
-        contact_id: int,
-        company_name: Optional[str] = None,
-        contact_person: Optional[str] = None,
-        phone: Optional[str] = None,
-        email: Optional[str] = None,
-        address: Optional[str] = None,
-        notes: Optional[str] = None
-    ) -> bool:
-        """Обновляет контакт заказчика."""
-        with _session_scope() as session:
-            contact = session.query(CustomerContactRecord).filter(
-                CustomerContactRecord.id == contact_id
-            ).first()
-            if not contact:
-                return False
-            
-            if company_name is not None:
-                contact.company_name = company_name
-            if contact_person is not None:
-                contact.contact_person = contact_person
-            if phone is not None:
-                contact.phone = phone
-            if email is not None:
-                contact.email = email
-            if address is not None:
-                contact.address = address
-            if notes is not None:
-                contact.notes = notes
-            
-            return True
-    
-    def delete(self, contact_id: int) -> bool:
-        """Удаляет контакт заказчика."""
-        with _session_scope() as session:
-            contact = session.query(CustomerContactRecord).filter(
-                CustomerContactRecord.id == contact_id
-            ).first()
-            if not contact:
-                return False
-            session.delete(contact)
-            return True
-
-
 user_repository = UserRepository()
 generation_repository = GenerationRepository()
 admin_stats_repository = AdminStatsRepository()
 audit_log_repository = AuditLogRepository()
-customer_contact_repository = CustomerContactRepository()
 
 __all__ = [
     'user_repository',
     'generation_repository',
     'admin_stats_repository',
     'audit_log_repository',
-    'customer_contact_repository',
     'UserRepository',
     'GenerationRepository',
     'AdminStatsRepository',
     'AuditLogRepository',
-    'CustomerContactRepository',
 ]

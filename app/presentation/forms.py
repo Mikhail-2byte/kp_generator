@@ -241,27 +241,6 @@ class AdminResetPasswordForm(FlaskForm):
     submit = SubmitField('Сбросить пароль')
 
 
-class CustomerContactForm(FlaskForm):
-    """Форма для создания и редактирования контакта заказчика."""
-    company_name = StringField('Название компании', validators=[DataRequired(), Length(min=1, max=200)])
-    contact_person = StringField('Контактное лицо', validators=[Optional(), Length(max=200)])
-    phone = StringField('Телефон', validators=[Optional(), Length(max=50)])
-    email = StringField('Email', validators=[Optional(), Length(max=200)])
-    address = TextAreaField('Адрес', validators=[Optional(), Length(max=500)])
-    notes = TextAreaField('Заметки', validators=[Optional(), Length(max=1000)])
-    submit = SubmitField('Сохранить')
-
-
-class CustomerContactDeleteForm(FlaskForm):
-    """Форма удаления контакта заказчика."""
-    contact_id = HiddenField(validators=[DataRequired()])
-    confirm_delete = BooleanField(
-        'Подтвердить удаление',
-        validators=[DataRequired()]
-    )
-    submit = SubmitField('Удалить контакт')
-
-
 class AIAgentConfigForm(FlaskForm):
     """Форма настройки AI агента."""
     api_key = PasswordField(

@@ -22,7 +22,9 @@ load_dotenv(dotenv_path=env_path)
 # API конфигурация
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
-MODEL_NAME = os.getenv("OPENROUTER_MODEL", "nvidia/nemotron-3-nano-30b-a3b:free")
+# Модель читается из .env (OPENROUTER_MODEL); при работе в Flask — из app.config, заполненного при load_config
+_DEFAULT_MODEL = "nvidia/nemotron-3-nano-30b-a3b:free"
+MODEL_NAME = os.getenv("OPENROUTER_MODEL", _DEFAULT_MODEL)
 
 # Пути к документации (теперь в папке ai_agent/data/)
 AI_AGENT_DIR = Path(__file__).resolve().parent
@@ -103,8 +105,17 @@ def get_api_key() -> str:
 
 
 def get_model_name() -> str:
-    """Возвращает название модели."""
-    return MODEL_NAME
+    """Возвращает название модели из переменной окружения OPENROUTER_MODEL (или из app.config при работе в Flask)."""
+    try:
+        from flask import current_app
+        from flask import has_app_context
+        if has_app_context():
+            model = (current_app.config.get('APP_SETTINGS') or {}).get('openrouter_model')
+            if model:
+                return model
+    except (ImportError, RuntimeError):
+        pass
+    return os.getenv("OPENROUTER_MODEL", _DEFAULT_MODEL)
 
 
 def get_api_url() -> str:

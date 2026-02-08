@@ -6,7 +6,7 @@
 
 - **Python**: 3.12 или выше
 - **ОС**: Windows 10/11, Linux, macOS
-- **База данных**: SQLite (по умолчанию) или PostgreSQL (для production)
+- **База данных**: Microsoft SQL Server (обязательно). Пошаговая настройка: [MSSQL_SETUP.md](MSSQL_SETUP.md)
 - **Redis**: Опционально, для хранения сессий (рекомендуется)
 
 ## Шаг 1: Подготовка окружения
@@ -61,8 +61,8 @@ APP_ENV=development
 FLASK_ENV=development
 FLASK_DEBUG=True
 
-# База данных (SQLite по умолчанию)
-DATABASE_URL=sqlite:///kp_generator.db
+# База данных — обязательно (см. docs/MSSQL_SETUP.md)
+DATABASE_URL=mssql+pyodbc://USER:PASSWORD@host:1433/kp_generator?driver=ODBC+Driver+17+for+SQL+Server
 
 # Секретный ключ (сгенерируйте случайную строку)
 SECRET_KEY=your-secret-key-change-in-production

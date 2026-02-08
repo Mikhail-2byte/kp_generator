@@ -94,9 +94,10 @@ def load_config(app):
 
         env_config = {
             'secret_key': os.environ.get('SECRET_KEY'),
-            'database_url': os.environ.get('DATABASE_URL') or profile_config.get('database_url') or 'sqlite:///kp_generator.db',
+            'database_url': os.environ.get('DATABASE_URL') or profile_config.get('database_url') or '',
             'debug': str(debug_flag).lower() == 'true' if debug_flag is not None else profile_config.get('debug', False),
             'log_level': os.environ.get('LOG_LEVEL') or profile_config.get('log_level', 'INFO'),
+            'openrouter_model': os.environ.get('OPENROUTER_MODEL'),
         }
 
         _deep_update(config_data, env_config)

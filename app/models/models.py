@@ -80,21 +80,6 @@ class AuditLogRecord(Base):
     user = relationship('UserRecord', foreign_keys=[user_id])
 
 
-class CustomerContactRecord(Base):
-    """ORM-модель контактной информации заказчиков."""
-    __tablename__ = 'customer_contacts'
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    company_name = Column(Text, nullable=False)  # Название компании
-    contact_person = Column(Text)  # Контактное лицо
-    phone = Column(Text)  # Телефон
-    email = Column(Text)  # Email
-    address = Column(Text)  # Адрес
-    notes = Column(Text)  # Дополнительные заметки
-    created_at = Column(DateTime, server_default=func.current_timestamp())
-    updated_at = Column(DateTime, server_default=func.current_timestamp(), onupdate=func.current_timestamp())
-
-
 class AIAgentUsageRecord(Base):
     """ORM-модель для мониторинга использования AI агента."""
     __tablename__ = 'ai_agent_usage'

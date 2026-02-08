@@ -1,7 +1,6 @@
 # Database operations
 import logging
 import math
-import sqlite3
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from functools import lru_cache
@@ -21,25 +20,6 @@ from app.core.extensions import SessionLocal, get_database_url
 from app.models.models import GenerationHistoryRecord, UserRecord
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-
-
-def _resolve_sqlite_path(database_url: str) -> str:
-    """Определяет фактический путь к файлу SQLite по строке подключения."""
-    if database_url == 'sqlite:///:memory:':
-        return ':memory:'
-
-    if database_url.startswith('sqlite:////'):
-        return database_url.replace('sqlite:////', '/', 1)
-
-    if database_url.startswith('sqlite:///'):
-        relative_path = database_url.replace('sqlite:///', '', 1)
-        resolved = PROJECT_ROOT / relative_path
-        return str(resolved)
-
-    if database_url.startswith('sqlite://'):
-        return database_url.replace('sqlite://', '', 1)
-
-    raise ValueError(f'Unsupported database URL: {database_url}')
 
 
 def _alembic_ini_path() -> Path:
@@ -150,13 +130,6 @@ def downgrade_migrations(target_revision: str = '-1', *, raise_on_error: bool = 
         if raise_on_error:
             raise
         return False
-
-
-def connect_db():
-    """Устанавливает соединение с базой данных через sqlite3 (наследие)."""
-    database_url = get_database_url()
-    path = _resolve_sqlite_path(database_url)
-    return sqlite3.connect(path, detect_types=sqlite3.PARSE_DECLTYPES)
 
 
 def init_db():

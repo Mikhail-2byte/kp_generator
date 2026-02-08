@@ -1,7 +1,6 @@
 # Database operations
 from .database import (
     apply_migrations,
-    connect_db,
     create_user,
     delete_user,
     downgrade_migrations,
@@ -26,7 +25,6 @@ from .service import DatabaseService, database_service
 
 __all__ = [
     'apply_migrations',
-    'connect_db',
     'create_user',
     'delete_user',
     'downgrade_migrations',

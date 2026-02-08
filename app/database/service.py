@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional
 
 from .database import (
-    connect_db,
     create_user,
     delete_user,
     get_admin_user_activity,
@@ -26,9 +25,6 @@ from .database import (
 
 class DatabaseService:
     """Фасад поверх функций модуля database для удобства внедрения."""
-
-    def connect(self) -> Any:
-        return connect_db()
 
     def init(self) -> None:
         init_db()

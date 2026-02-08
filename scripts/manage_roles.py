@@ -1,76 +1,69 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """
-Утилита для управления ролями пользователей в базе kp_generator.db.
+Утилита для управления ролями пользователей (Microsoft SQL Server).
 
-ВНИМАНИЕ: Этот скрипт устарел.
-Рекомендуется использовать: python scripts/manage_users.py set-role <username> <role>
-Для обратной совместимости скрипт сохранен, но новая функциональность
-добавляется только в scripts/manage_users.py
+Использует DATABASE_URL из .env. Для полного управления пользователями
+используйте: python scripts/manage_users.py (list, reset-password, set-role).
 """
 
 from __future__ import annotations
 
 import argparse
-import sqlite3
 import sys
 from pathlib import Path
 from typing import Iterable
 
-# Путь к базе данных относительно корня проекта (скрипт находится в scripts/)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_DB_PATH = PROJECT_ROOT / "kp_generator.db"
+sys.path.insert(0, str(PROJECT_ROOT))
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv(PROJECT_ROOT / ".env")
+except ImportError:
+    pass
+
+from app import create_app
+from app.database import database_service
+from app.database.database import _session_scope
+from app.models.models import UserRecord
 
 
-def get_connection(db_path: Path) -> sqlite3.Connection:
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
-    return conn
+def _ensure_app_context():
+    """Создаёт приложение и контекст для работы с БД."""
+    app = create_app()
+    return app.app_context()
 
 
-def list_users(conn: sqlite3.Connection) -> None:
-    rows = conn.execute(
-        "SELECT id, username, role, created_at, last_login FROM users ORDER BY username"
-    ).fetchall()
-
-    if not rows:
+def list_users() -> None:
+    """Выводит список пользователей и их ролей (вызывать внутри app context)."""
+    data = database_service.get_users_list(page=1, per_page=10000)
+    items = data.get("items") or []
+    if not items:
         print("Пользователи не найдены.")
         return
-
-    print(f"Найдено {len(rows)} пользователей:")
-    for row in rows:
-        created = row["created_at"] or "—"
-        last_login = row["last_login"] or "—"
-        print(
-            f"- {row['username']} | роль: {row['role']} | создан: {created} | послед. вход: {last_login}"
-        )
+    print(f"Найдено {len(items)} пользователей:")
+    for u in items:
+        created = u.get("created_at") or "—"
+        last_login = u.get("last_login") or "—"
+        print(f"- {u['username']} | роль: {u['role']} | создан: {created} | послед. вход: {last_login}")
 
 
-def update_role(conn: sqlite3.Connection, username: str, role: str) -> None:
-    cur = conn.execute(
-        "UPDATE users SET role = ? WHERE username = ?",
-        (role, username),
-    )
-    if cur.rowcount == 0:
-        raise ValueError(f"Пользователь '{username}' не найден.")
-    conn.commit()
+def update_role(username: str, role: str) -> None:
+    """Изменяет роль пользователя (вызывать внутри app context)."""
+    with _session_scope() as session:
+        user = session.query(UserRecord).filter(UserRecord.username == username).one_or_none()
+        if user is None:
+            raise ValueError(f"Пользователь '{username}' не найден.")
+        user.role = role.lower()
 
 
-def parse_args(args: Iterable[str]) -> argparse.Namespace:
+def parse_args(args: Iterable[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Управление ролями пользователей (admin/user).",
+        description="Управление ролями пользователей (admin/user). Использует DATABASE_URL из .env.",
     )
-
-    parser.add_argument(
-        "--db",
-        type=Path,
-        default=DEFAULT_DB_PATH,
-        help="Путь к файлу базы данных (по умолчанию kp_generator.db в корне проекта).",
-    )
-
     subparsers = parser.add_subparsers(dest="command", required=True)
-
     subparsers.add_parser("list", help="Показать всех пользователей и их роли.")
-
     set_role_parser = subparsers.add_parser("set-role", help="Изменить роль пользователя.")
     set_role_parser.add_argument("username", help="Логин пользователя (username).")
     set_role_parser.add_argument(
@@ -78,34 +71,24 @@ def parse_args(args: Iterable[str]) -> argparse.Namespace:
         choices=["admin", "user"],
         help="Роль, которую нужно назначить.",
     )
-
-    return parser.parse_args(args)
+    return parser.parse_args(args or sys.argv[1:])
 
 
 def main(argv: Iterable[str] | None = None) -> int:
-    args = parse_args(argv or sys.argv[1:])
-
-    db_path: Path = args.db
-    if not db_path.exists():
-        print(f"Файл базы данных не найден: {db_path}", file=sys.stderr)
-        return 1
-
+    args = parse_args(argv)
     try:
-        with get_connection(db_path) as conn:
+        with _ensure_app_context():
             if args.command == "list":
-                list_users(conn)
+                list_users()
             elif args.command == "set-role":
-                update_role(conn, args.username, args.role)
-                print(
-                    f"Роль пользователя '{args.username}' изменена на '{args.role}'."
-                )
+                update_role(args.username, args.role)
+                print(f"Роль пользователя '{args.username}' изменена на '{args.role}'.")
     except ValueError as exc:
         print(str(exc), file=sys.stderr)
         return 1
-    except sqlite3.Error as exc:
+    except Exception as exc:
         print(f"Ошибка работы с базой данных: {exc}", file=sys.stderr)
         return 1
-
     return 0
 
 

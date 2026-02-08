@@ -18,7 +18,7 @@
 
 ### Технологии
 - **Backend**: Flask 2.3.3, Python 3.12+
-- **Database**: SQLite (по умолчанию), PostgreSQL (production), SQLAlchemy ORM
+- **Database**: Microsoft SQL Server (mssql+pyodbc), SQLAlchemy ORM — см. [docs/MSSQL_SETUP.md](docs/MSSQL_SETUP.md)
 - **Migrations**: Alembic
 - **Sessions**: Redis (опционально, с fallback на cookie-based)
 - **Templates**: Jinja2
@@ -68,7 +68,7 @@
    - Не зависит от других слоев
 
 2. **Domain Layer** (`app/models/`) — Доменные модели
-   - ORM модели (UserRecord, GenerationHistoryRecord, CustomerContactRecord, AuditLogRecord)
+   - ORM модели (UserRecord, GenerationHistoryRecord, AuditLogRecord)
    - Определяют структуру данных
 
 3. **Data Layer** (`app/database/`) — Слой данных
@@ -103,7 +103,6 @@
 - **`models.py`** — Все ORM модели:
   - `UserRecord` — пользователи системы
   - `GenerationHistoryRecord` — история генераций КП
-  - `CustomerContactRecord` — справочник контактов заказчиков
   - `AuditLogRecord` — логи аудита действий пользователей
 
 #### `app/database/` — Работа с базой данных
@@ -137,7 +136,6 @@
 - **`repositories.py`** — Репозитории для работы с моделями (Repository pattern):
   - `user_repository` — работа с пользователями
   - `generation_repository` — работа с историей генераций
-  - `customer_repository` — работа с контактами заказчиков
 - **`generation_orchestrator.py`** — Оркестратор генерации КП (координирует весь процесс)
 - **`multi_position_calculator.py`** — Калькулятор множественных позиций с единой маржой
 - **`multi_position_processor.py`** — Обработка множественных позиций в Excel документах
@@ -280,7 +278,7 @@ Return ZIP to user
 ### Data Access (Доступ к данным)
 - **`services/repositories.py`** — Repository pattern
   - Абстракция доступа к данным
-  - `user_repository`, `generation_repository`, `customer_repository`
+  - `user_repository`, `generation_repository`
 - **`database/database.py`** — CRUD операции
   - Работа с историей генераций
   - Статистика пользователей
@@ -370,12 +368,6 @@ flowchart TD
 - **`GET /api/v1/duty/search`** — Поиск пошлин
 - **`GET /api/v1/materials/gb`** — Материалы GB
 - **`GET /api/v1/logistics/cities`** — Города логистики
-- **`GET /api/v1/customers`** — Список контактов заказчиков
-- **`POST /api/v1/customers`** — Создание контакта
-- **`GET /api/v1/customers/<id>`** — Детали контакта
-- **`PUT /api/v1/customers/<id>`** — Обновление контакта
-- **`DELETE /api/v1/customers/<id>`** — Удаление контакта
-
 #### `app/routes/health.py` — Health Check
 - **`GET /health`** — Проверка здоровья системы
 - **`GET /healthz`** — Альтернативный endpoint для health check
@@ -401,7 +393,6 @@ flowchart TD
 - **`app/models/models.py`** — Все ORM модели:
   - `UserRecord` — пользователи
   - `GenerationHistoryRecord` — история генераций (с полем `positions_data` для множественных позиций)
-  - `CustomerContactRecord` — контакты заказчиков
   - `AuditLogRecord` — логи аудита
   - `AIAgentUsageRecord` — мониторинг использования AI агента
 
@@ -429,7 +420,6 @@ flowchart TD
 - **`DutyItemForm`** — Добавление пошлины (product, category, duty_percent)
 - **`TNVEDItemForm`** — Добавление записи ТН-ВЭД (code, description, keywords, duty_percent)
 - **`LogisticsCityForm`** — Добавление города логистики
-- **`CustomerContactForm`** — Форма контакта заказчика
 
 ### Валидация
 
@@ -605,7 +595,6 @@ pytest tests/test_smoke_health.py -v
 ### Модели
 - **`UserRecord`** — пользователи (id, username, password_hash, role, created_at, last_login)
 - **`GenerationHistoryRecord`** — история генераций (id, company, product, positions_data, final_price, timestamp, user_id)
-- **`CustomerContactRecord`** — контакты заказчиков (id, company_name, contact_person, phone, email, address)
 - **`AuditLogRecord`** — логи аудита (id, user_id, action_type, description, created_at)
 
 ### Миграции
@@ -614,8 +603,7 @@ pytest tests/test_smoke_health.py -v
 - Миграции применяются автоматически при старте приложения
 
 ### Подключение
-- По умолчанию: SQLite (`sqlite:///kp_generator.db`)
-- Production: PostgreSQL (через `DATABASE_URL` в `.env`)
+- Единственная БД: **Microsoft SQL Server** (строка подключения в `DATABASE_URL`, формат `mssql+pyodbc://...`). Пошаговая настройка: [docs/MSSQL_SETUP.md](docs/MSSQL_SETUP.md)
 
 ## Справочники
 
@@ -725,9 +713,6 @@ generation_repository.get_by_id(generation_id: int) -> Optional[Dict]
 generation_repository.get_history(page: int, per_page: int, ...) -> Dict
 
 # Контакты заказчиков
-customer_repository.create(...) -> Optional[int]
-customer_repository.get_by_id(customer_id: int) -> Optional[Dict]
-customer_repository.search(search_term: str) -> List[Dict]
 ```
 
 ## Важные замечания
@@ -848,7 +833,6 @@ customer_repository.search(search_term: str) -> List[Dict]
 **Репозитории**:
 - `user_repository` — `UserRepository` класс
 - `generation_repository` — `GenerationRepository` класс  
-- `customer_repository` — `CustomerRepository` класс
 
 **Использование**:
 ```python
